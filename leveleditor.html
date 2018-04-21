@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="styles.css">
+<title>Level editor</title>
+</head>
+<body>
+
+<div id="sprite-list-container">
+  <h1>Levels</h1>
+  <div id="app1">
+    <div class="sprite-item" v-for="level in levels" v-on:click="changeLevel(level)"
+      v-bind:class="{ selected: level === selectedLevel }">{{ level.name }}</div>
+    <br>
+    <button v-on:click="addLevel()">New level</button>
+    <input type="text" v-model="newLevelName" style="width: 140px" />
+
+    <div>
+      Background:
+      <select v-model="selectedBackground" @change="onBackgroundChange(selectedBackground)">
+        <option v-for="background in backgrounds" v-bind:value="background">{{ background.path }}</option>
+      </select>
+    </div>
+
+  </div>
+</div>
+
+<div id="sprite-list-container">
+  <h1>Objects</h1>
+  <div id="app1">
+    <div class="sprite-item" v-for="obj in objs" v-on:click="changeObject(obj)"
+      v-bind:class="{ selected: obj === selectedObj }">{{ obj.name }}</div>
+    <br>
+  </div>
+</div>
+
+<div class="canvas-section">
+
+  <div class="canvas-wrapper" style="width:700px;height:600px">
+    <canvas id="canvas1" width="700" height="600"></canvas>
+  </div>
+
+  <div id="app2">
+    <div v-if="selectedLevel">
+      
+      <button v-on:click="play()">{{ isGamePlaying ? "Stop" : "Play" }}</button>
+      <button v-on:click="saveLevel()">Save</button>
+      
+      Zoom:<input type="number" style="width: 50px" v-model:number="displayZoom" @change="redraw()"> %
+      <!--<input type="checkbox" v-model="hideGizmos" @change="redraw()"/>Hide gizmos-->
+
+      <div id="instance-properties" v-if="selectedInstances.length > 0">
+        <h3>Selected instance properties</h3>
+        Name<input type="text" v-model.number="selectedInstances[0].name" class="short-input" @change="redraw()" />
+        x<input type="text" v-model.number="selectedInstances[0].pos.x" class="short-input" @change="redraw()" />
+        y<input type="text" v-model.number="selectedInstances[0].pos.y" class="short-input" @change="redraw()" />
+        tag<input type="text" v-model.number="selectedInstances[0].tag" class="short-input" @change="redraw()" />        
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script src="https://unpkg.com/vue"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.0"></script>
+<script src="editor/input.js"></script>
+<script src="editor/helpers.js"></script>
+<script src="editor/classes.js"></script>
+<script src="editor/tool.js"></script>
+<script src="editor/levelEditor.js"></script>
+<script src="main.js"></script>
+
+</body>
+</html>

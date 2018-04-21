@@ -6,6 +6,10 @@ function inRect(x,y,rect) {
   return x >= rx && x <= rx2 && y >= ry && y <= ry2;
 }
 
+function drawImage(ctx, imgEl, x, y) {
+  ctx.drawImage(imgEl, Math.round(x), Math.round(y));
+}
+
 function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
   
   ctx.save();
