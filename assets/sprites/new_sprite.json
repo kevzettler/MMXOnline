@@ -1,0 +1,9 @@
+{
+  "className": "Sprite",
+  "hitboxes": [],
+  "frames": [],
+  "name": "new_sprite",
+  "path": "assets/sprites/new_sprite.json",
+  "alignment": "center",
+  "spritesheet": "assets/spritesheets/MMXNormal.png"
+}

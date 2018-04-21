@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "module": "system",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outFile": "main.js",
+        "sourceMap": true,
+        "lib": ["es5", "dom", "es2015.core"],
+        "target": "es5"
+    },
+    "include": [
+        "ts/**/*",
+        "node_modules/@types/jquery/index.d.ts",
+        "node_modules/@types/lodash/index.d.ts"
+    ]
+}
