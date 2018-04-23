@@ -17,7 +17,7 @@
 
     <div>
       Background:
-      <select v-model="selectedBackground" @change="onBackgroundChange(selectedBackground)">
+      <select v-model="selectedBackground" @change="onBackgroundChange(selectedBackground)" style="width: 90%">
         <option v-for="background in backgrounds" v-bind:value="background">{{ background.path }}</option>
       </select>
     </div>
@@ -27,23 +27,23 @@
 
 <div id="sprite-list-container">
   <h1>Objects</h1>
-  <div id="app1">
-    <div class="sprite-item" v-for="obj in objs" v-on:click="changeObject(obj)"
-      v-bind:class="{ selected: obj === selectedObj }">{{ obj.name }}</div>
+  <div id="app2">
+    <div class="sprite-item" v-for="obj in objects" v-on:click="changeObject(obj)"
+      v-bind:class="{ selected: obj === selectedObject }">{{ obj.name }}</div>
     <br>
   </div>
 </div>
 
 <div class="canvas-section">
 
-  <div class="canvas-wrapper" style="width:700px;height:600px">
-    <canvas id="canvas1" width="700" height="600"></canvas>
+  <div class="level-canvas-wrapper" style="width:850px;height:600px">
+    <canvas id="level-canvas" width="850" height="600"></canvas>
   </div>
 
-  <div id="app2">
+  <div id="app3">
     <div v-if="selectedLevel">
       
-      <button v-on:click="play()">{{ isGamePlaying ? "Stop" : "Play" }}</button>
+      <button v-on:click="play()">{{ isPlaying ? "Stop" : "Play" }}</button>
       <button v-on:click="saveLevel()">Save</button>
       
       Zoom:<input type="number" style="width: 50px" v-model:number="displayZoom" @change="redraw()"> %
@@ -52,11 +52,24 @@
       <div id="instance-properties" v-if="selectedInstances.length > 0">
         <h3>Selected instance properties</h3>
         Name<input type="text" v-model.number="selectedInstances[0].name" class="short-input" @change="redraw()" />
+        <!--
         x<input type="text" v-model.number="selectedInstances[0].pos.x" class="short-input" @change="redraw()" />
         y<input type="text" v-model.number="selectedInstances[0].pos.y" class="short-input" @change="redraw()" />
-        tag<input type="text" v-model.number="selectedInstances[0].tag" class="short-input" @change="redraw()" />        
+        -->
+        <!--tag<input type="text" v-model.number="selectedInstances[0].tag" class="short-input" @change="redraw()" />-->
       </div>
 
+    </div>
+  </div>
+</div>
+
+<div id="sprite-list-container">
+  <div id="app4">
+    <h1>Instances</h1>
+    <div v-if="selectedLevel">
+      <div class="sprite-item" v-for="instance in selectedLevel.instances" v-on:click="onInstanceClick(instance)"
+        v-bind:class="{ selected: selectedInstances.indexOf(instance) !== -1 }">{{ instance.name }}</div>
+      <br>
     </div>
   </div>
 </div>
@@ -65,10 +78,11 @@
 <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
 <script src="https://unpkg.com/vue"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.0"></script>
+<script src="editor/objects.js"></script>
 <script src="editor/input.js"></script>
 <script src="editor/helpers.js"></script>
 <script src="editor/classes.js"></script>
-<script src="editor/tool.js"></script>
+<script src="editor/tools.js"></script>
 <script src="editor/levelEditor.js"></script>
 <script src="main.js"></script>
 

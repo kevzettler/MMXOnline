@@ -1,0 +1,4 @@
+-Hotkeys to move, resize stuff
+-Re-test sprite editor
+-Start work on typescript game engine
+-Foreground?

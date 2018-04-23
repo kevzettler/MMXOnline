@@ -36,16 +36,17 @@ var methods = {
   onSpritesheetChange(newSheet) {
     this.selectedSpritesheet = newSheet;
 
-    if(this.selectedSprite)
-      this.selectedSprite.spritesheet = newSheet;
-
-    //this.selectedSprite = null;
-    //this.selectedHitbox = null;
     if(!this.selectedSpritesheet) {
       redrawCanvas1();
       redrawCanvas2();
       return;
     }
+
+    if(this.selectedSprite) {
+      this.selectedSprite.spritesheet = newSheet;
+      this.selectedSprite.spritesheetPath = newSheet.path;
+    }
+
     var spritesheetImg = document.createElement("img");
     spritesheetImg.onload = function() { 
       canvas2.width = spritesheetImg.width;
@@ -130,16 +131,11 @@ var methods = {
     this.isAnimPlaying = !this.isAnimPlaying;
   },
   saveSprite() {
-
-    var savedSpritesheet = this.selectedSprite.spritesheet;
-    this.selectedSprite.spritesheet = savedSpritesheet.path;
-
-    Vue.http.post("save-sprite", this.selectedSprite).then(response => {
+    var jsonStr = serializeES6(this.selectedSprite);
+    Vue.http.post("save-sprite", JSON.parse(jsonStr)).then(response => {
       console.log("Successfully saved sprite");
-      this.selectedSprite.spritesheet = savedSpritesheet;
     }, error => {
       console.log("Failed to save sprite");
-      this.selectedSprite.spritesheet = savedSpritesheet;
     });
   },
   onSpriteAlignmentChange() {
@@ -185,9 +181,6 @@ var app1 = new Vue({
       Vue.http.get("get-sprites").then(response => {
         //console.log(response);
         this.sprites = deserializeES6(response.data);
-        for(var sprite of this.sprites) {
-          sprite.convertSpritesheetToObj();
-        }
       }, error => {
         console.log("Error getting sprites");
       });
@@ -273,60 +266,23 @@ function redrawCanvas1() {
   c1.clearRect(0, 0, canvas1.width, canvas1.height);
   drawRect(c1, createRect(0,0,canvas1.width,canvas1.height), "lightgray", "", null);
 
-  var rect;
-  var offset;
+  var frame;
+
   if(!data.isAnimPlaying) {
     if(data.selectedFrame && data.selectedSpritesheet && data.selectedSpritesheet.imageEl) {
-      rect = data.selectedFrame.rect;
-      offset = data.selectedFrame.offset;
+      frame = data.selectedFrame;
     }
   }
   else {
-    var animFrame = data.selectedSprite.frames[animFrameIndex];
-    rect = animFrame.rect;
-    offset = animFrame.offset;
+    frame = data.selectedSprite.frames[animFrameIndex];
   }
 
   var cX = canvas1.width/2;
   var cY = canvas1.height/2;
 
-  if(rect) {
-    var w = rect.w;
-    var h = rect.h;
+  if(frame) {
 
-    var halfW = w * 0.5;
-    var halfH = h * 0.5;
-
-    var x; var y;
-
-    if(data.selectedSprite.alignment === "topleft") {
-      x = cX; y = cY;
-    }
-    else if(data.selectedSprite.alignment === "topmid") {
-      x = cX - halfW; y = cY;
-    }
-    else if(data.selectedSprite.alignment === "topright") {
-      x = cX - w; y = cY;
-    }
-    else if(data.selectedSprite.alignment === "midleft") {
-      x = cX; y = cY - halfH;
-    }
-    else if(data.selectedSprite.alignment === "center") {
-      x = cX - halfW; y = cY - halfH;
-    }
-    else if(data.selectedSprite.alignment === "midright") {
-      x = cX - w; y = cY - halfH;
-    }
-    else if(data.selectedSprite.alignment === "botleft") {
-      x = cX; y = cY - h;
-    }
-    else if(data.selectedSprite.alignment === "botmid") {
-      x = cX - halfW; y = cY - h;
-    }
-    else if(data.selectedSprite.alignment === "botright") {
-      x = cX - w; y = cY - h;
-    }
-    drawImage(c1, data.selectedSpritesheet.imageEl, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, data.flipX, data.flipY);
+    data.selectedSprite.draw(c1, frame, cX, cY, data.flipX, data.flipY);
 
     if(!data.hideGizmos) {
       for(var hitbox of getVisibleHitboxes()) {

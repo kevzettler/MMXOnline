@@ -49,6 +49,21 @@ router.get('/get-spritesheets', function(req, res) {
 
 });
 
+router.get('/get-backgrounds', function(req, res) {
+  var dirname = "assets/backgrounds/";
+  var paths = [];
+  
+  var fileNames = fs.readdirSync(dirname);
+  
+  for(var filename of fileNames) {
+    paths.push(dirname + filename);
+    
+  }
+
+  res.json(paths);
+
+});
+
 
 router.get('/get-sprites', function(req, res) {
   var dirname = "assets/sprites/";
@@ -67,12 +82,36 @@ router.get('/get-sprites', function(req, res) {
 
 });
 
+router.get('/get-levels', function(req, res) {
+  var dirname = "assets/levels/";
+  var levels = [];
+  
+  var fileNames = fs.readdirSync(dirname);
+  
+  for(var filename of fileNames) {
+    var content = fs.readFileSync(dirname + filename, 'utf-8');
+    var level = JSON.parse(content);
+    level.path = dirname + filename;
+    levels.push(level);
+  }
+
+  res.json(levels);
+
+});
+
 // more routes for our API will happen here
 router.post('/save-sprite', function(req, res) {
   console.log(req);
   fs.writeFileSync("./assets/sprites/" + req.body.name + ".json", JSON.stringify(req.body));
   res.json({message:"Success"});
 
+});
+
+// more routes for our API will happen here
+router.post('/save-level', function(req, res) {
+  console.log(req);
+  fs.writeFileSync("./assets/levels/" + req.body.name + ".json", JSON.stringify(req.body));
+  res.json({message:"Success"});
 });
 
 // REGISTER OUR ROUTES -------------------------------

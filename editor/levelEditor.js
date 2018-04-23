@@ -1,16 +1,15 @@
-
-
 var data = {
+  spritesheets: [],
+  sprites: [],
   levels: [],
   selectedLevel: null,
   backgrounds: [],
   selectedBackground: null,
-  objs: [],
-  selectedObj: null,
-  instances: [],
+  objects: objects,
+  selectedObject: null,
   selectedInstances: [],
   isPlaying: false,
-  zoom: 5,
+  zoom: 1,
   hideGizmos: false,
   newLevelName: ""
 };
@@ -18,9 +17,9 @@ var data = {
 var canvas1DefaultWidth = 700;
 var canvas1DefaultHeight = 600;
 
-var canvas1 = $("#canvas1")[0];
-var canvas1Wrapper = $("#canvas1").parent()[0];
-var c1 = $("#canvas1")[0].getContext("2d");
+var canvas1 = $("#level-canvas")[0];
+var canvas1Wrapper = $("#level-canvas").parent()[0];
+var c1 = $("#level-canvas")[0].getContext("2d");
 
 c1.webkitImageSmoothingEnabled = false;
 c1.mozImageSmoothingEnabled = false;
@@ -30,21 +29,23 @@ var methods = {
   onBackgroundChange(newBackground) {
     this.selectedBackground = newBackground;
 
-    if(this.selectedLevel)
-      this.selectedLevel.background = newBackground;
-
-    //this.selectedSprite = null;
-    //this.selectedHitbox = null;
     if(!this.selectedBackground) {
       redrawCanvas1();
       return;
     }
+
+    if(this.selectedLevel) {
+      this.selectedLevel.background = newBackground;
+      this.selectedLevel.backgroundPath = newBackground.path;
+    }
+
     var backgroundImg = document.createElement("img");
     backgroundImg.onload = function() { 
       canvas1.width = backgroundImg.width;
       canvas1.height = backgroundImg.height;
+      canvas1.savedWidth = canvas1.width;
+      canvas1.savedHeight = canvas1.height;
       c1.drawImage(backgroundImg, 0, 0);      
-      var imageData = c2.getImageData(0,0,canvas2.width,canvas2.height);
       newBackground.imageEl = backgroundImg;
       redrawCanvas1();
     };
@@ -54,14 +55,14 @@ var methods = {
     var newLevel = new Level(this.newLevelName);
     this.changeLevel(newLevel);
     this.levels.push(newLevel);
-    this.selectedObj = null;
+    this.selectedObject = null;
     this.selectedInstances = [];
     resetVue();
   },
   changeLevel(newLevel) {
-    this.selectedSprite = newLevel;
-    this.onSpritesheetChange(newLevel.spritesheet);
-    this.selectedObj = null;
+    this.selectedLevel = newLevel;
+    this.onBackgroundChange(newLevel.background);
+    this.selectedObject = null;
     this.selectedInstances = [];
     redrawCanvas1();
   },
@@ -69,8 +70,8 @@ var methods = {
 
     var savedBackground = this.selectedLevel.background;
     this.selectedLevel.background = savedBackground.path;
-
-    Vue.http.post("save-sprite", this.selectedLevel).then(response => {
+    var jsonStr = serializeES6(this.selectedLevel);
+    Vue.http.post("save-level", JSON.parse(jsonStr)).then(response => {
       console.log("Successfully saved level");
       this.selectedLevel.background = savedBackground;
     }, error => {
@@ -84,6 +85,21 @@ var methods = {
   redraw() {
     redrawCanvas1();
   },
+  changeObject(newObj) {
+    this.selectedInstances = [];
+    this.selectedObject = newObj;
+    if(newObj.name === "Collision Shape") {
+      tool = new CreateTool();
+    }
+    else {
+      tool = new CreateInstanceTool();
+    }
+    redrawCanvas1();
+  },
+  onInstanceClick(instance) {
+    this.selectedInstances = [instance];
+    redrawCanvas1();
+  }
 };
 
 var computed = {
@@ -92,7 +108,7 @@ var computed = {
       return this.zoom * 100;
     },
     set (value) {
-      this.zoom = value;
+      this.zoom = value / 100;
     }
   }
 }
@@ -105,9 +121,13 @@ var app1 = new Vue({
   created: function() {
     Vue.http.get("get-spritesheets").then(response => {
       //console.log(response);
+      console.log("GET SPRITESHEETS");
       this.spritesheets = _.map(response.data, (spritesheet) => {
+        var imageEl = document.createElement("img");
+        imageEl.src = spritesheet;
         return {
-          path: spritesheet
+          path: spritesheet,
+          imageEl: imageEl
         };
       });
     }, error => {
@@ -115,10 +135,8 @@ var app1 = new Vue({
     }).then(response => {
       Vue.http.get("get-sprites").then(response => {
         //console.log(response);
+      console.log("GET SPRITES");
         this.sprites = deserializeES6(response.data);
-        for(var sprite of this.sprites) {
-          sprite.convertSpritesheetToObj();
-        }
       }, error => {
         console.log("Error getting sprites");
       });
@@ -137,9 +155,6 @@ var app1 = new Vue({
       Vue.http.get("get-levels").then(response => {
         //console.log(response);
         this.levels = deserializeES6(response.data);
-        for(var level of this.levels) {
-          level.convertBackgroundToObj();
-        }
       }, error => {
         console.log("Error getting levels");
       });
@@ -162,10 +177,18 @@ var app3 = new Vue({
   computed: computed
 });
 
+var app4 = new Vue({
+  el: '#app4',
+  data: data,
+  methods: methods,
+  computed: computed
+});
+
 function resetVue() {
   app1.$forceUpdate();
   app2.$forceUpdate();
   app3.$forceUpdate();
+  app4.$forceUpdate();
 }
 
 var animFrameIndex = 0;
@@ -188,54 +211,49 @@ function mainLoop() {
   }
 }
 
-function getRealMouseX(rawMouseX) {
-  var zoomProportion = data.zoom - 1;
-  var w = canvas1.width / data.zoom;
-  var w2 = (canvas1.width - w)/2;
-  return w2 + (rawMouseX * (1/data.zoom));
-}
-
-function getRealMouseY(rawMouseY) {
-  var zoomProportion = data.zoom - 1;
-  var h = canvas1.height / data.zoom;
-  var h2 = (canvas1.height - h)/2;
-  return h2 + (rawMouseY * (1/data.zoom));
+function getSelectionRect() {
+  return data.selectedInstances[0].getRect();
 }
 
 function redrawCanvas1() {
 
   var zoomScale = data.zoom;
   
-  c1.setTransform(zoomScale, 0, 0, zoomScale, -(zoomScale - 1) * canvas1.width/2, -(zoomScale - 1) * canvas1.height/2);
+  //c1.setTransform(zoomScale, 0, 0, zoomScale, -(zoomScale - 1) * canvas1.width/2, -(zoomScale - 1) * canvas1.height/2);
+  c1.save();
+
+  canvas1.width = canvas1.savedWidth * zoomScale;
+  canvas1.height = canvas1.savedHeight * zoomScale;
 
   c1.clearRect(0, 0, canvas1.width, canvas1.height);
-  drawImage(data.selectedLevel.background.imageEl, 0, 0);
+  drawRect(c1, createRect(0,0,canvas1.width,canvas1.height), "white", "", null);
 
-  for(var instance of data.instances) {
-    //Draw the instance here...
+  c1.scale(zoomScale, zoomScale);
+
+  if(data.selectedBackground && data.selectedBackground.imageEl) {
+    drawImage(c1, data.selectedBackground.imageEl, 0, 0);
   }
 
-}
-
-canvas1.onclick = function(event) {
-
-  //console.log("CLICK");
-
-  var x = event.pageX - canvas1.offsetLeft + canvas1Wrapper.scrollLeft;
-  var y = event.pageY - canvas1.offsetTop + canvas1Wrapper.scrollTop;
-
-  console.log("Clicked coords " + x + "," + y);
-
-  for(var instance of data.selectedLevel.instances) {
-    if(inRect(x,y,instance.rect)) {
-      data.selectedInstances = [ instance ];
-      redrawCanvas1();
-      return;
+  if(data.selectedLevel) {
+    for(var instance of data.selectedLevel.instances) {
+      //Draw the instance here...
+      instance.draw(c1);
     }
   }
 
-};
+  c1.restore();
 
+  if(tool) tool.draw();
+
+}
+
+/*
+canvas1.onclick = function(event) {
+  //console.log("CLICK");
+};
+*/
+
+var tool = new SelectTool();
 var mouseX = 0;
 var mouseY = 0;
 var mousedown = false;
@@ -247,11 +265,12 @@ canvas1.onmousemove = function(e) {
   let oldMouseX = mouseX;
   let oldMouseY = mouseY;
 
-  var rawMouseX = event.pageX - canvas1.offsetLeft;
-  var rawMouseY = event.pageY - canvas1.offsetTop;
+  var rect = canvas1.getBoundingClientRect(), root = document.documentElement;
+  mouseX = (e.clientX - rect.left - root.scrollLeft) / data.zoom;
+  mouseY = (e.clientY - rect.top - root.scrollTop) / data.zoom;
 
-  mouseX = getRealMouseX(rawMouseX);
-  mouseY = getRealMouseY(rawMouseY);
+  //mouseX = (event.pageX - canvas1.offsetLeft) / data.zoom;
+  //mouseY = (event.pageY - canvas1.offsetTop) / data.zoom;
 
   let deltaX = mouseX - oldMouseX;
   let deltaY = mouseY - oldMouseY;
@@ -267,7 +286,21 @@ canvas1.onmousedown = function(e) {
   //console.log(mouseX + "," + mouseY)
   if(e.which === 1) {
     mousedown = true;
-    //onMouseDown();
+    if(tool) tool.onMouseDown();
+
+    /*
+    console.log("Clicked coords " + mouseX + "," + mouseY);
+
+    if(data.selectedLevel) {
+      for(var instance of data.selectedLevel.instances) {
+        if(inRect(x,y,instance.rect)) {
+          data.selectedInstances = [ instance ];
+          redrawCanvas1();
+          return;
+        }
+      }
+    }
+    */
     e.preventDefault();
   }
   else if(e.which === 2) {
@@ -278,13 +311,13 @@ canvas1.onmousedown = function(e) {
     rightmousedown = true;
     e.preventDefault();
   }
-  
+  redrawCanvas1();
 }
 
 canvas1.onmouseup = function(e) {
   if(e.which === 1) {
     mousedown = false;
-    //onMouseUp();
+    if(tool) tool.onMouseUp();
     e.preventDefault();
   }
   else if(e.which === 2) {
@@ -295,112 +328,72 @@ canvas1.onmouseup = function(e) {
     rightmousedown = false;
     e.preventDefault();
   }
+  redrawCanvas1();
+  resetVue();
 }
 
 canvas1.onmouseleave = function(e) {
-  //onMouseLeaveCanvas();  
+  if(tool) tool.onMouseLeaveCanvas(); 
+  redrawCanvas1(); 
+  resetVue();
 }
 
 canvas1.onmousewheel = function(e) {
-  var delta = (e.wheelDelta/180);
-  data.zoom += delta;
-  if(data.zoom < 1) data.zoom = 1;
-  if(data.zoom > 5) data.zoom = 5;
-  redrawCanvas1();
-  resetVue();
-  /*
-  if(key_down('ctrl')) {
-      set_zoom(zoom + (e.wheelDelta/180)*0.1);
-      e.preventDefault();
+
+  if(keysHeld["alt"]) {
+    var delta = e.wheelDelta * 0.001;
+    data.zoom += delta;
+    if(data.zoom < 1) data.zoom = 1;
+    if(data.zoom > 5) data.zoom = 5;
+    redrawCanvas1();
+    resetVue();
+    e.preventDefault();
   }
-  */
+
 }
 
 document.onkeydown = function(e) {
-  onKeyDown(inputMap[e.keyCode], !keysHeld[e.keyCode]);
-  keysHeld[e.keyCode] = true;
-  //Prevent SPACEBAR default scroll behavior
-  if(e.keyCode === inputMap['space']) {
+  var key = inputMap[e.keyCode];
+  if(tool) tool.onKeyDown(key, !keysHeld[e.keyCode]);
+  keysHeld[key] = true;
+
+  if(key === "+" || key === "-") {
+    if(key === "+") delta = 0.1;
+    else delta = -0.1;
+    data.zoom += delta;
+    if(data.zoom < 1) data.zoom = 1;
+    if(data.zoom > 5) data.zoom = 5;
+  }
+
+  if(key === "space" || key === "tab" || key === "ctrl" || key === "alt") {
     e.preventDefault();
   }
+
+  redrawCanvas1();
+  resetVue();
 }
 
+$(window).bind('mousewheel DOMMouseScroll', function (event) {
+  if (event.ctrlKey == true) {
+    event.preventDefault();
+  }
+});
+
 document.onkeyup = function(e) {
-  keysHeld[e.keyCode] = false;
-  //onKeyUp(e.keyCode);
+  keysHeld[inputMap[e.keyCode]] = false;
+  if(tool) tool.onKeyUp(inputMap[e.keyCode]);
+  redrawCanvas1();
+  resetVue();
 }
 
 function onMouseMove(deltaX, deltaY) {
+
+  if(tool) tool.onMouseMove(deltaX, deltaY);
+  /*
   if(data.selectedInstances.length > 0 && mousedown) {
     for(var instance of data.selectedInstances) {
       instance.move(deltaX, deltaY);
     }
   }
-}
-
-function onKeyDown(key, firstFrame) {
-
-  if(key === "escape") {
-    data.selectedInstances = [];
-  }
-  /*
-  if(data.selectedInstances.length > 0 && firstFrame) {
-    if(key === "a") {
-      if(!ctrlHeld) data.selectedHitbox.move(-1, 0);
-      else data.selectedHitbox.resizeCenter(-1, 0);
-    }
-    else if(key === "d") {
-      if(!ctrlHeld) data.selectedHitbox.move(1, 0);
-      else data.selectedHitbox.resizeCenter(1, 0);
-    }
-    else if(key === "w") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, -1);
-      else data.selectedHitbox.resizeCenter(0, -1);
-    }
-    else if(key === "s") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, 1);
-      else data.selectedHitbox.resizeCenter(0, 1);
-    }
-    else if(key === "leftarrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(-1, 0);
-      else data.selectedHitbox.resizeCenter(-1, 0);
-    }
-    else if(key === "rightarrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(1, 0);
-      else data.selectedHitbox.resizeCenter(1, 0);
-    }
-    else if(key === "uparrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, -1);
-      else data.selectedHitbox.resizeCenter(0, -1);
-    }
-    else if(key === "downarrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, 1);
-      else data.selectedHitbox.resizeCenter(0, 1);
-    }
-  }
-  else if(data.selectedFrame && firstFrame) {
-    if(key === "a") {
-      data.selectedFrame.offset.x -= 1;
-    }
-    else if(key === "d") {
-      data.selectedFrame.offset.x += 1;
-    }
-    else if(key === "w") {
-      data.selectedFrame.offset.y -= 1;
-    }
-    else if(key === "s") {
-      data.selectedFrame.offset.y += 1;
-    }
-  }
-  if(firstFrame) {
-    if(key === "e") {
-      app1.selectNextFrame();
-    } 
-    else if(key === "q") {
-      app1.selectPrevFrame();
-    } 
-  }
-
-  redrawCanvas1();
   */
 }

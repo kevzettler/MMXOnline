@@ -54,12 +54,20 @@
   border: 1px solid black;
 }
 
+.level-canvas-wrapper {
+  overflow: scroll;
+  background: darkgray;
+}
+
 .short-input {
   width: 30px;
 }
 
 #canvas1 {
   border: 1px solid black;
+}
+
+#level-canvas {
 }
 
 #canvas2 {

@@ -6,9 +6,15 @@ function inRect(x,y,rect) {
   return x >= rx && x <= rx2 && y >= ry && y <= ry2;
 }
 
-function drawImage(ctx, imgEl, x, y) {
-  ctx.drawImage(imgEl, Math.round(x), Math.round(y));
+
+function inCircle(x, y, circleX,circleY,r) {
+
+  if(Math.sqrt( Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2)) <= r) {
+      return true;
+  }
+  return false;
 }
+
 
 function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
   
@@ -17,31 +23,22 @@ function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
   flipY = flipY ? -1: 1;
   ctx.scale(flipX, 1);
 
-  /*
-  ctx.drawImage(
-    imgEl,
-    Math.round(sX), //source x
-    Math.round(sY), //source y
-    Math.round(sW), //source width
-    Math.round(sH), //source height
-    Math.round(x),  //dest x
-    Math.round(y),  //dest y
-    Math.round(sW), //dest width
-    Math.round(sH)  //dest height
-  );
-  */
-
-  ctx.drawImage(
-    imgEl,
-    Math.round(sX), //source x
-    Math.round(sY), //source y
-    Math.round(sW), //source width
-    Math.round(sH), //source height
-    flipX * Math.round(x),  //dest x
-    Math.round(y),  //dest y
-    flipX * Math.round(sW), //dest width
-    Math.round(sH)  //dest height
-  );
+  if(sW === undefined || sW === null || sW === "") {
+    ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
+  }
+  else {
+    ctx.drawImage(
+      imgEl,
+      Math.round(sX), //source x
+      Math.round(sY), //source y
+      Math.round(sW), //source width
+      Math.round(sH), //source height
+      flipX * Math.round(x),  //dest x
+      Math.round(y),  //dest y
+      flipX * Math.round(sW), //dest width
+      Math.round(sH)  //dest height
+    );
+  }
 
   ctx.restore();
   //ctx.scale(1, 1);
@@ -74,6 +71,55 @@ function drawRect(ctx, rect, fillColor, strokeColor, strokeWidth, fillAlpha) {
 
   ctx.globalAlpha = 1;
 }
+
+function drawPolygon(ctx, vertices, closed, fillColor, lineColor, lineThickness, fillAlpha) {
+
+  if(fillAlpha) {
+    ctx.globalAlpha = fillAlpha;
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(vertices[0].x, vertices[0].y);
+
+  for(let i = 1; i < vertices.length; i++)
+  {
+      ctx.lineTo(vertices[i].x, vertices[i].y);
+  }
+
+  if(closed) {
+      ctx.closePath();
+
+      if(fillColor) {
+          ctx.fillStyle = fillColor;
+          ctx.fill();
+      }
+  }
+
+  if(lineColor) {
+      ctx.lineWidth = lineThickness;
+      ctx.strokeStyle = lineColor;
+      ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+function pointInPolygon(x, y, vertices) {
+  // ray-casting algorithm based on
+  // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+  var inside = false;
+  for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+      var xi = vertices[i].x, yi = vertices[i].y;
+      var xj = vertices[j].x, yj = vertices[j].y;
+
+      var intersect = ((yi > y) != (yj > y))
+          && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+  }
+
+  return inside;
+};
+
 
 function get2DArrayFromImage(imageData) {
   var data = imageData.data;
@@ -218,6 +264,39 @@ function drawLine(ctx, x, y, x2, y2, color, thickness) {
   ctx.stroke();
 }
 
+function linepointNearestMouse(x0, y0, x1, y1, x, y) {
+  var lerp=function(a,b,x){ return(a+x*(b-a)); };
+  var dx=x1-x0;
+  var dy=y1-y0;
+  var t = ((x-x0)*dx+(y-y0)*dy)/(dx*dx+dy*dy);
+  var lineX = lerp(x0, x1, t);
+  var lineY = lerp(y0, y1, t);
+  return({x:lineX,y:lineY});
+}
+
+function inLine(mouseX, mouseY, x0, y0, x1, y1) {
+
+  var threshold = 4;
+
+  var small_x = Math.min(x0,x1);
+  var big_x = Math.max(x0,x1);
+
+  if(mouseX < small_x - (threshold*0.5) || mouseX > big_x + (threshold*0.5)){
+      return false;
+  }
+
+  var linepoint = linepointNearestMouse(x0, y0, x1, y1, mouseX, mouseY);
+  var dx = mouseX - linepoint.x;
+  var dy = mouseY - linepoint.y;
+  var distance = Math.abs(Math.sqrt(dx*dx+dy*dy));
+  if(distance < threshold){
+      return true;
+  }
+  else{
+      return false;
+  }
+}
+
 function deserializeES6(obj) {
   
   if(Array.isArray(obj)) {
@@ -233,11 +312,52 @@ function deserializeES6(obj) {
       obj = tempObj;
     }
 
+    if(obj.onDeserialize) {
+      //console.log(obj.onDeserialize);
+      obj.onDeserialize();
+    }
+
     for(var key in obj) {
       if(!obj.hasOwnProperty(key)) continue;
       obj[key] = deserializeES6(obj[key]);
     }
   }
   return obj;
+  
+}
+
+function serializeES6(obj) {
+  
+  var retStr = "";
+
+  if(Array.isArray(obj)) {
+    retStr += "[";
+    for(var i = 0; i < obj.length; i++) {
+      retStr += serializeES6(obj[i]) + ",";
+    }
+    if(retStr[retStr.length-1] === ",") retStr = retStr.substring(0,retStr.length-1);
+    retStr += "]";
+  }
+  else if(typeof obj === "object") {
+    retStr += "{";
+    for(var key in obj) {
+      if(key === "spritesheet") continue;
+      if(key === "background") continue;
+      if(key === "sprite") continue;
+      if(!obj.hasOwnProperty(key)) continue;
+      retStr += '"' + key + '":' + serializeES6(obj[key]) + ",";
+    }
+    if(retStr[retStr.length-1] === ",") retStr = retStr.substring(0,retStr.length-1);
+    retStr += "}";
+  }
+  else {
+    if(isNaN(obj)) {
+      retStr = '"' + String(obj) + '"';
+    }
+    else {
+      retStr = String(obj);
+    }
+  }
+  return retStr;
   
 }
