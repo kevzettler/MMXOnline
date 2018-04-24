@@ -1,6 +1,5 @@
 var classes = {};
 
-
 class Spritesheet {
 
   constructor(imgEl, path, imgArr) {
