@@ -1,7 +1,7 @@
 interface GameObject {
-  update();
-  render();
+  update(): void;
+  render(): void;
   collider: Collider;
-  onCollision(other: Collider);
-  onTrigger(other: Collider);
+  onCollision(other: Collider): void;
+  onTrigger(other: Collider): void;
 }

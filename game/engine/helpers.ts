@@ -69,7 +69,7 @@ function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: string,
   ctx.globalAlpha = 1;
 }
 
-function drawPolygon(ctx, vertices, closed, fillColor, lineColor, lineThickness, fillAlpha): void {
+function drawPolygon(ctx: CanvasRenderingContext2D, vertices: Point[], closed: boolean, fillColor: string, lineColor: string, lineThickness: number, fillAlpha: number): void {
 
   if(fillAlpha) {
     ctx.globalAlpha = fillAlpha;
@@ -116,7 +116,7 @@ function pointInPolygon(x: number, y: number, vertices: Point[]): boolean {
   return inside;
 }
 
-function drawText(ctx, text, x, y, color, size, hAlign, vAlign, font) {
+function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number, hAlign: string, vAlign: string, font: string) {
   color = color || "black";
   size = size || 14;
   hAlign = hAlign || "center";  //start,end,left,center,right
@@ -129,7 +129,7 @@ function drawText(ctx, text, x, y, color, size, hAlign, vAlign, font) {
   ctx.strokeText(text,x,y);
 }
 
-function drawCircle(ctx, x, y, r, fillColor, lineColor, lineThickness) {
+function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fillColor: string, lineColor: string, lineThickness: number) {
   ctx.beginPath();
   ctx.arc(x, y, r, 0, 2*Math.PI, false);
   
@@ -146,7 +146,7 @@ function drawCircle(ctx, x, y, r, fillColor, lineColor, lineThickness) {
 
 }
 
-function drawLine(ctx, x, y, x2, y2, color, thickness) {
+function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: number, y2: number, color: string, thickness: number) {
 
   if(!thickness) thickness = 1;
   if(!color) color = 'black';
@@ -159,35 +159,35 @@ function drawLine(ctx, x, y, x2, y2, color, thickness) {
   ctx.stroke();
 }
 
-function linepointNearestMouse(x0, y0, x1, y1, x, y) {
-  var lerp=function(a,b,x){ return(a+x*(b-a)); };
-  var dx=x1-x0;
-  var dy=y1-y0;
-  var t = ((x-x0)*dx+(y-y0)*dy)/(dx*dx+dy*dy);
-  var lineX = lerp(x0, x1, t);
-  var lineY = lerp(y0, y1, t);
-  return({x:lineX,y:lineY});
+function linepointNearestMouse(x0: number, y0: number, x1: number, y1: number, x: number, y: number): Point {
+  let lerp=function(a: number,b: number,x: number):number{ return(a+x*(b-a)); };
+  let dx: number=x1-x0;
+  let dy: number=y1-y0;
+  let t: number = ((x-x0)*dx+(y-y0)*dy)/(dx*dx+dy*dy);
+  let lineX: number = lerp(x0, x1, t);
+  let lineY: number = lerp(y0, y1, t);
+  return new Point(lineX,lineY);
 }
 
-function inLine(mouseX, mouseY, x0, y0, x1, y1) {
+function inLine(mouseX: number, mouseY: number, x0: number, y0: number, x1: number, y1: number): boolean {
 
-  var threshold = 4;
+  let threshold: number = 4;
 
-  var small_x = Math.min(x0,x1);
-  var big_x = Math.max(x0,x1);
+  let small_x: number = Math.min(x0,x1);
+  let big_x: number = Math.max(x0,x1);
 
   if(mouseX < small_x - (threshold*0.5) || mouseX > big_x + (threshold*0.5)){
-      return false;
+    return false;
   }
 
-  var linepoint = linepointNearestMouse(x0, y0, x1, y1, mouseX, mouseY);
-  var dx = mouseX - linepoint.x;
-  var dy = mouseY - linepoint.y;
-  var distance = Math.abs(Math.sqrt(dx*dx+dy*dy));
+  let linepoint: Point = linepointNearestMouse(x0, y0, x1, y1, mouseX, mouseY);
+  let dx: number = mouseX - linepoint.x;
+  let dy: number = mouseY - linepoint.y;
+  let distance: number = Math.abs(Math.sqrt(dx*dx+dy*dy));
   if(distance < threshold){
-      return true;
+    return true;
   }
-  else{
-      return false;
+  else {
+    return false;
   }
 }

@@ -1,37 +1,16 @@
 //Represents a single set of frames and their hitbox data
 class Sprite {
-  hitbox: Collider;
+  hitboxes: Collider[];
   frames: Frame[];
+  alignment: string;
+  spritesheet: HTMLImageElement;
 
-  constructor(name) {
-    this.className = this.constructor.name;
+  constructor() {
     this.hitboxes = [];
     this.frames = [];
-    this.name = name || "new_sprite";
-    this.path = "sprites/" + name + ".json";
-    this.alignment = "center";
   }
 
-  onDeserialize() {
-    this.spritesheet = _.find(data.spritesheets, (loopSheet) => {
-      return loopSheet.path === this.spritesheetPath;
-    });
-  }
-
-  getFrameListStr() {
-    var retStr = "";
-    var i = 1;
-    for(var frame of this.frames) {
-      retStr += String(i) + ",";
-      retStr += frame.duration + "\n";
-      i++;
-    }
-    return retStr;
-  }
-  setFrameListStr(str) {
-    alert("CHANGED: " + str);
-  }
-  draw(ctx, frame, cX, cY, flipX, flipY) {
+  draw(ctx: CanvasRenderingContext2D, frame: Frame, cX: number, cY: number, flipX: number, flipY: number) {
     
     var rect = frame.rect;
     var offset = frame.offset;
@@ -71,7 +50,7 @@ class Sprite {
     else if(this.alignment === "botright") {
       x = cX - w; y = cY - h;
     }
-    drawImage(c1, this.spritesheet.imageEl, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
+    drawImage(ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
 
   }
 }
