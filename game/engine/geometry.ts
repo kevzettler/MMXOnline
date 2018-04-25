@@ -1,9 +1,14 @@
+import { Collider } from "./collider";
+import { game } from "./game";
+import * as Helpers from "./helpers";
+
 //Umbrella class for walls, nav meshes, ladders, etc.
-class Geometry {
+export class Geometry {
 
   collider: Collider;
 
   constructor() {
+    this.collider = new Collider([]);
   }
   
   update() {
@@ -11,8 +16,8 @@ class Geometry {
   }
 
   render() {
-    if(showHitboxes) {
-      drawPolygon(ctx, this.collider.points, true, "blue");
+    if(game.showHitboxes) {
+      Helpers.drawPolygon(game.ctx, this.collider.points, true, "blue");
     }
   }
 

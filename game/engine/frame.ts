@@ -1,4 +1,8 @@
-class Frame {
+import { Rect } from "./rect";
+import { Point } from "./point";
+import { Collider } from "./collider";
+
+export class Frame {
 
   rect: Rect;
   duration: number;

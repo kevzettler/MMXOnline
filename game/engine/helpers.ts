@@ -1,4 +1,7 @@
-function inRect(x: number, y: number, rect: Rect): boolean {
+import { Rect } from "./rect";
+import { Point } from "./point";
+
+export function inRect(x: number, y: number, rect: Rect): boolean {
   let rx:number = rect.x1;
   let ry:number = rect.y1;
   let rx2:number = rect.x2;
@@ -6,7 +9,7 @@ function inRect(x: number, y: number, rect: Rect): boolean {
   return x >= rx && x <= rx2 && y >= ry && y <= ry2;
 }
 
-function inCircle(x: number, y: number, circleX: number, circleY: number, r: number): boolean {
+export function inCircle(x: number, y: number, circleX: number, circleY: number, r: number): boolean {
 
   if(Math.sqrt( Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2)) <= r) {
       return true;
@@ -14,7 +17,7 @@ function inCircle(x: number, y: number, circleX: number, circleY: number, r: num
   return false;
 }
 
-function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, x?: number, y?: number, flipX?: number, flipY?: number): void {
+export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, x?: number, y?: number, flipX?: number, flipY?: number): void {
 
   ctx.save();
   flipX = flipX ? -1: 1;
@@ -41,7 +44,7 @@ function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: n
   ctx.restore();
 }
 
-function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: string, strokeColor?: string, strokeWidth?: number, fillAlpha?: number): void {
+export function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: string, strokeColor?: string, strokeWidth?: number, fillAlpha?: number): void {
   let rx: number = Math.round(rect.x1);
   let ry: number = Math.round(rect.y1);
   let rx2: number = Math.round(rect.x2);
@@ -69,7 +72,7 @@ function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: string,
   ctx.globalAlpha = 1;
 }
 
-function drawPolygon(ctx: CanvasRenderingContext2D, vertices: Point[], closed: boolean, fillColor?: string, lineColor?: string, lineThickness?: number, fillAlpha?: number): void {
+export function drawPolygon(ctx: CanvasRenderingContext2D, vertices: Point[], closed: boolean, fillColor?: string, lineColor?: string, lineThickness?: number, fillAlpha?: number): void {
 
   if(fillAlpha) {
     ctx.globalAlpha = fillAlpha;
@@ -100,7 +103,7 @@ function drawPolygon(ctx: CanvasRenderingContext2D, vertices: Point[], closed: b
   ctx.globalAlpha = 1;
 }
 
-function pointInPolygon(x: number, y: number, vertices: Point[]): boolean {
+export function pointInPolygon(x: number, y: number, vertices: Point[]): boolean {
   // ray-casting algorithm based on
   // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
   let inside: boolean = false;
@@ -116,7 +119,7 @@ function pointInPolygon(x: number, y: number, vertices: Point[]): boolean {
   return inside;
 }
 
-function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number, hAlign: string, vAlign: string, font: string) {
+export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number, hAlign: string, vAlign: string, font: string) {
   color = color || "black";
   size = size || 14;
   hAlign = hAlign || "center";  //start,end,left,center,right
@@ -129,7 +132,7 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.strokeText(text,x,y);
 }
 
-function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fillColor: string, lineColor: string, lineThickness: number) {
+export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fillColor: string, lineColor: string, lineThickness: number) {
   ctx.beginPath();
   ctx.arc(x, y, r, 0, 2*Math.PI, false);
   
@@ -146,7 +149,7 @@ function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: numb
 
 }
 
-function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: number, y2: number, color?: string, thickness?: number) {
+export function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: number, y2: number, color?: string, thickness?: number) {
 
   if(!thickness) thickness = 1;
   if(!color) color = 'black';
@@ -159,7 +162,7 @@ function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: numbe
   ctx.stroke();
 }
 
-function linepointNearestMouse(x0: number, y0: number, x1: number, y1: number, x: number, y: number): Point {
+export function linepointNearestMouse(x0: number, y0: number, x1: number, y1: number, x: number, y: number): Point {
   function lerp(a: number,b: number,x: number):number{ return(a+x*(b-a)); };
   let dx: number=x1-x0;
   let dy: number=y1-y0;
@@ -169,7 +172,7 @@ function linepointNearestMouse(x0: number, y0: number, x1: number, y1: number, x
   return new Point(lineX,lineY);
 }
 
-function inLine(mouseX: number, mouseY: number, x0: number, y0: number, x1: number, y1: number): boolean {
+export function inLine(mouseX: number, mouseY: number, x0: number, y0: number, x1: number, y1: number): boolean {
 
   let threshold: number = 4;
 

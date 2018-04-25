@@ -1,5 +1,12 @@
+import { Collider } from "./collider";
+import { Frame } from "./frame";
+import { Point } from "./point";
+import { Rect } from "./rect";
+import { game } from "./game";
+import * as Helpers from "./helpers";
+
 //Represents a single set of frames and their hitbox data
-class Sprite {
+export class Sprite {
   name: string;
   hitboxes: Collider[];
   frames: Frame[];
@@ -9,8 +16,10 @@ class Sprite {
   constructor(spriteJson: any) {
     this.name = spriteJson.name;
     this.alignment = spriteJson.alignment;
+    this.frames = [];
+    this.hitboxes = [];
     
-    this.spritesheet = getSpritesheet(spriteJson.spritesheetPath);
+    this.spritesheet = game.getSpritesheet(spriteJson.spritesheetPath);
 
     for(let hitboxJson of spriteJson.hitboxes) {
       let hitbox: Collider = new Collider([
@@ -74,7 +83,7 @@ class Sprite {
     else if(this.alignment === "botright") {
       x = cX - w; y = cY - h;
     }
-    drawImage(ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
+    Helpers.drawImage(game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
 
   }
 }

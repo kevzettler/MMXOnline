@@ -1,72 +1,101 @@
-let sprites: { [name: string]: Sprite; } = { };
-let levels: { [name: string]: Level } = { };
-let level: Level;
+import { Sprite } from "./sprite";
+import { Level } from "./level";
+import { spriteJsons } from "../sprites";
+import { levelJsons } from "../levels";
 
-let spritesheets: { [path: string]: HTMLImageElement } = { };
-let backgrounds: { [path: string]: HTMLImageElement } = { };
+class Game {
 
-let isServer: boolean = false;
-let isClient: boolean = !isServer;
+  sprites: { [name: string]: Sprite; };
+  levels: { [name: string]: Level };
+  level: Level;
 
-let showHitboxes = true;
+  spritesheets: { [path: string]: HTMLImageElement };
+  backgrounds: { [path: string]: HTMLImageElement };
 
-let canvas: HTMLCanvasElement = <HTMLCanvasElement>$("#canvas")[0];
-let ctx = canvas.getContext("2d");
+  isServer: boolean;
+  isClient: boolean;
 
-function getSpritesheet(path: string) {
-  if(!spritesheets[path]) {
-    spritesheets[path] = document.createElement("img");
-    spritesheets[path].src = path;
+  showHitboxes: boolean;
+
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+
+  constructor() {
+    this.sprites = {};
+    this.levels = {};
+  
+    this.spritesheets = { };
+    this.backgrounds = { };
+  
+    this.isServer = false;
+    this.isClient = true;
+  
+    this.showHitboxes = true;
+  
+    this.canvas = <HTMLCanvasElement>$("#canvas")[0];
+    this.ctx = this.canvas.getContext("2d");
   }
-  return spritesheets[path];
-}
 
-function getBackground(path: string) {
-  if(!backgrounds[path]) {
-    backgrounds[path] = document.createElement("img");
-    backgrounds[path].src = path;
+  start() {
+    this.loadSprites();
+    this.loadLevels();
+    this.level = this.levels["new_level"];
+    window.setInterval(() => this.gameLoop(), 1000/60);
   }
-  return backgrounds[path];
-}
 
-function loadSprites() {
-  for(var spriteJson of spriteJsons) {
-    let sprite: Sprite = new Sprite(spriteJson);
-    sprites[sprite.name] = sprite;
+  getSpritesheet(path: string) {
+    if(!this.spritesheets[path]) {
+      this.spritesheets[path] = document.createElement("img");
+      this.spritesheets[path].src = path;
+    }
+    return this.spritesheets[path];
   }
-}
 
-function loadLevels() {
-  for(var levelJson of levelJsons) {
-    let level: Level = new Level(levelJson);
-    levels[level.name] = level;
+  getBackground(path: string) {
+    if(!this.backgrounds[path]) {
+      this.backgrounds[path] = document.createElement("img");
+      this.backgrounds[path].src = path;
+    }
+    return this.backgrounds[path];
   }
-}
 
-function isLoaded() {
-  for(let name in sprites) {
-    if(!sprites[name].spritesheet.complete) {
-      return false;
+  loadSprites() {
+    for(var spriteJson of spriteJsons) {
+      let sprite: Sprite = new Sprite(spriteJson);
+      this.sprites[sprite.name] = sprite;
     }
   }
-  for(let name in levels) {
-    if(!levels[name].background.complete) {
-      return false;
+
+  loadLevels() {
+    for(var levelJson of levelJsons) {
+      let level: Level = new Level(levelJson);
+      this.levels[level.name] = level;
     }
   }
-  return true;
-}
 
-//Main game loop
-function gameLoop() {
-  if(isLoaded()) {
-    level.update();
-    level.render();
+  isLoaded() {
+    for(let name in this.sprites) {
+      if(!this.sprites[name].spritesheet.complete) {
+        return false;
+      }
+    }
+    for(let name in this.levels) {
+      if(!this.levels[name].background.complete) {
+        return false;
+      }
+    }
+    return true;
   }
+
+  //Main game loop
+  gameLoop() {
+    if(this.isLoaded()) {
+      this.level.update();
+      this.level.render();
+    }
+  }
+
 }
 
-loadSprites();
-loadLevels();
-level = levels["new_level"];
-
-window.setInterval(gameLoop, 1000/60);
+let game: Game = new Game();
+export {game};

@@ -1,5 +1,9 @@
+import { Sprite } from "./sprite";
+import { Point } from "./point";
+import { Collider } from "./collider";
+
 //Anything that has: a position, rotation and name. Can also have an optional collider
-class Actor {
+export class Actor {
 
   sprite: Sprite; //Current sprite
   frameIndex: number; //Current frame index of sprite

@@ -1,4 +1,6 @@
-class Rect {
+import { Point } from "./point";
+
+export class Rect {
 
   topLeftPoint: Point;
   botRightPoint: Point;
