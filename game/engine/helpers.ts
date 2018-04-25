@@ -69,7 +69,7 @@ function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: string,
   ctx.globalAlpha = 1;
 }
 
-function drawPolygon(ctx: CanvasRenderingContext2D, vertices: Point[], closed: boolean, fillColor: string, lineColor: string, lineThickness: number, fillAlpha: number): void {
+function drawPolygon(ctx: CanvasRenderingContext2D, vertices: Point[], closed: boolean, fillColor?: string, lineColor?: string, lineThickness?: number, fillAlpha?: number): void {
 
   if(fillAlpha) {
     ctx.globalAlpha = fillAlpha;
@@ -146,7 +146,7 @@ function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: numb
 
 }
 
-function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: number, y2: number, color: string, thickness: number) {
+function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: number, y2: number, color?: string, thickness?: number) {
 
   if(!thickness) thickness = 1;
   if(!color) color = 'black';
@@ -160,7 +160,7 @@ function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: numbe
 }
 
 function linepointNearestMouse(x0: number, y0: number, x1: number, y1: number, x: number, y: number): Point {
-  let lerp=function(a: number,b: number,x: number):number{ return(a+x*(b-a)); };
+  function lerp(a: number,b: number,x: number):number{ return(a+x*(b-a)); };
   let dx: number=x1-x0;
   let dy: number=y1-y0;
   let t: number = ((x-x0)*dx+(y-y0)*dy)/(dx*dx+dy*dy);

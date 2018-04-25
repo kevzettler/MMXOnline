@@ -351,7 +351,10 @@ function serializeES6(obj) {
     retStr += "}";
   }
   else {
-    if(isNaN(obj)) {
+    if(obj === null || obj === undefined || obj === "") {
+      retStr += '""';
+    }
+    else if(isNaN(obj)) {
       retStr = '"' + String(obj) + '"';
     }
     else {

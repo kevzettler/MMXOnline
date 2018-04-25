@@ -1,9 +1,13 @@
 class Collider {
 
-  shape: Shape;
+  points: Point[];
   collide: boolean;
   trigger: boolean;
   gameObject: GameObject;
+
+  constructor(points: Point[]) {
+    this.points = points;
+  }
 
   onCollision(other: Collider) {
     

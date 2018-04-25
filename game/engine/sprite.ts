@@ -1,27 +1,51 @@
 //Represents a single set of frames and their hitbox data
 class Sprite {
+  name: string;
   hitboxes: Collider[];
   frames: Frame[];
   alignment: string;
   spritesheet: HTMLImageElement;
 
-  constructor() {
-    this.hitboxes = [];
-    this.frames = [];
+  constructor(spriteJson: any) {
+    this.name = spriteJson.name;
+    this.alignment = spriteJson.alignment;
+    
+    this.spritesheet = getSpritesheet(spriteJson.spritesheetPath);
+
+    for(let hitboxJson of spriteJson.hitboxes) {
+      let hitbox: Collider = new Collider([
+        new Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.topLeftPoint.y),
+        new Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.topLeftPoint.y),
+        new Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.botRightPoint.y),
+        new Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.botRightPoint.y)
+      ]);
+      this.hitboxes.push(hitbox);
+    }
+    for(let frameJson of spriteJson.frames) {
+      let frame: Frame = new Frame(
+        new Rect(new Point(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y), 
+          new Point(frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y)),
+        frameJson.duration,
+        new Point(frameJson.offset.x, frameJson.offset.y)
+      );
+      this.frames.push(frame);
+    }
   }
 
-  draw(ctx: CanvasRenderingContext2D, frame: Frame, cX: number, cY: number, flipX: number, flipY: number) {
+  draw(frameIndex: number, cX: number, cY: number, flipX?: number, flipY?: number) {
     
-    var rect = frame.rect;
-    var offset = frame.offset;
+    let frame = this.frames[frameIndex];
 
-    var w = rect.w;
-    var h = rect.h;
+    let rect = frame.rect;
+    let offset = frame.offset;
 
-    var halfW = w * 0.5;
-    var halfH = h * 0.5;
+    let w = rect.w;
+    let h = rect.h;
 
-    var x; var y;
+    let halfW = w * 0.5;
+    let halfH = h * 0.5;
+
+    let x; let y;
 
     if(this.alignment === "topleft") {
       x = cX; y = cY;

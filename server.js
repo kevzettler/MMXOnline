@@ -72,6 +72,7 @@ router.get('/get-sprites', function(req, res) {
   var fileNames = fs.readdirSync(dirname);
   
   for(var filename of fileNames) {
+    if(!filename.endsWith(".json")) continue;
     var content = fs.readFileSync(dirname + filename, 'utf-8');
     var sprite = JSON.parse(content);
     sprite.path = dirname + filename;
@@ -89,6 +90,7 @@ router.get('/get-levels', function(req, res) {
   var fileNames = fs.readdirSync(dirname);
   
   for(var filename of fileNames) {
+    if(!filename.endsWith(".json")) continue;
     var content = fs.readFileSync(dirname + filename, 'utf-8');
     var level = JSON.parse(content);
     level.path = dirname + filename;
@@ -101,16 +103,41 @@ router.get('/get-levels', function(req, res) {
 
 // more routes for our API will happen here
 router.post('/save-sprite', function(req, res) {
-  console.log(req);
   fs.writeFileSync("./assets/sprites/" + req.body.name + ".json", JSON.stringify(req.body));
-  res.json({message:"Success"});
 
+  var fileNames = fs.readdirSync("assets/sprites/");
+  var jsCode = "var spriteJsons = [";
+  var first = true;
+  for(var filename of fileNames) {
+    if(!filename.endsWith(".json")) continue;
+    if(!first) jsCode += ",";
+    var content = fs.readFileSync("assets/sprites/" + filename, 'utf-8');
+    jsCode += content;
+    first = false;
+  }
+  jsCode += "];";
+  fs.writeFileSync("./game/sprites.ts", jsCode);
+
+  res.json({message:"Success"});
 });
 
 // more routes for our API will happen here
 router.post('/save-level', function(req, res) {
-  console.log(req);
   fs.writeFileSync("./assets/levels/" + req.body.name + ".json", JSON.stringify(req.body));
+
+  var fileNames = fs.readdirSync("assets/levels/");
+  var jsCode = "var levelJsons = [";
+  var first = true;
+  for(var filename of fileNames) {
+    if(!filename.endsWith(".json")) continue;
+    if(!first) jsCode += ",";
+    var content = fs.readFileSync("assets/levels/" + filename, 'utf-8');
+    jsCode += content;
+    first = false;
+  }
+  jsCode += "];";
+  fs.writeFileSync("./game/levels.ts", jsCode);
+
   res.json({message:"Success"});
 });
 

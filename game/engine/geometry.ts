@@ -11,7 +11,9 @@ class Geometry {
   }
 
   render() {
-
+    if(showHitboxes) {
+      drawPolygon(ctx, this.collider.points, true, "blue");
+    }
   }
 
   onCollision(other: Collider) {

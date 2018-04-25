@@ -1,4 +1,3 @@
--Hotkeys to move, resize stuff
--Re-test sprite editor
--Start work on typescript game engine
--Foreground?
+-Clean up tslint.json
+-Visual studio code config settings
+-Sublime text config settings

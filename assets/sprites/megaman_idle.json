@@ -190,7 +190,7 @@
     }
   ],
   "name": "megaman_idle",
-  "alignment": "center",
   "path": "assets/sprites/megaman_idle.json",
+  "alignment": "center",
   "spritesheetPath": "assets/spritesheets/MMXNormal.png"
 }

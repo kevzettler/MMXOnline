@@ -2,6 +2,7 @@
 class Actor {
 
   sprite: Sprite; //Current sprite
+  frameIndex: number; //Current frame index of sprite
   pos: Point; //Current location
   angle: number;
   useGravity: boolean;
@@ -15,7 +16,7 @@ class Actor {
   }
 
   render() {
-
+    this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y)
   }
 
   onCollision(other: Collider) {

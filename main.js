@@ -8,12 +8,15 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var levelJsons = [{ "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 180, "y": 248, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 551, "y": 248, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 551, "y": 363, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 180, "y": 363, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "Instance", "name": "Test", "pos": { "className": "Point", "x": 227, "y": 151 }, "spriteName": "megaman_idle" }], "name": "new_level", "path": "assets/levels/new_level.json", "backgroundPath": "assets/backgrounds/highway.png" }];
+var spriteJsons = [{ "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 20, "height": 40, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 340, "y": 280 }, "botRightPoint": { "className": "Point", "x": 360, "y": 320 } } }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 164, "y": 253 }, "botRightPoint": { "className": "Point", "x": 188, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 189, "y": 249 }, "botRightPoint": { "className": "Point", "x": 204, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 204, "y": 244 }, "botRightPoint": { "className": "Point", "x": 223, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 223, "y": 250 }, "botRightPoint": { "className": "Point", "x": 246, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 247, "y": 249 }, "botRightPoint": { "className": "Point", "x": 274, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 275, "y": 253 }, "botRightPoint": { "className": "Point", "x": 299, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 300, "y": 259 }, "botRightPoint": { "className": "Point", "x": 330, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }], "name": "megaman_idle", "path": "assets/sprites/megaman_idle.json", "alignment": "center", "spritesheetPath": "assets/spritesheets/MMXNormal.png" }];
 var Actor = (function () {
     function Actor() {
     }
     Actor.prototype.update = function () {
     };
     Actor.prototype.render = function () {
+        this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y);
     };
     Actor.prototype.onCollision = function (other) {
     };
@@ -22,7 +25,8 @@ var Actor = (function () {
     return Actor;
 }());
 var Collider = (function () {
-    function Collider() {
+    function Collider(points) {
+        this.points = points;
     }
     Collider.prototype.onCollision = function (other) {
     };
@@ -48,21 +52,76 @@ var Frame = (function () {
     }
     return Frame;
 }());
-var Game = (function () {
-    function Game() {
+var sprites = {};
+var levels = {};
+var level;
+var spritesheets = {};
+var backgrounds = {};
+var isServer = false;
+var isClient = !isServer;
+var showHitboxes = true;
+var canvas = $("#canvas")[0];
+var ctx = canvas.getContext("2d");
+function getSpritesheet(path) {
+    if (!spritesheets[path]) {
+        spritesheets[path] = document.createElement("img");
+        spritesheets[path].src = path;
     }
-    Game.prototype.gameLoop = function () {
-        this.level.update();
-        this.level.render();
-    };
-    return Game;
-}());
+    return spritesheets[path];
+}
+function getBackground(path) {
+    if (!backgrounds[path]) {
+        backgrounds[path] = document.createElement("img");
+        backgrounds[path].src = path;
+    }
+    return backgrounds[path];
+}
+function loadSprites() {
+    for (var _i = 0, spriteJsons_1 = spriteJsons; _i < spriteJsons_1.length; _i++) {
+        var spriteJson = spriteJsons_1[_i];
+        var sprite = new Sprite(spriteJson);
+        sprites[sprite.name] = sprite;
+    }
+}
+function loadLevels() {
+    for (var _i = 0, levelJsons_1 = levelJsons; _i < levelJsons_1.length; _i++) {
+        var levelJson = levelJsons_1[_i];
+        var level_1 = new Level(levelJson);
+        levels[level_1.name] = level_1;
+    }
+}
+function isLoaded() {
+    for (var name_1 in sprites) {
+        if (!sprites[name_1].spritesheet.complete) {
+            return false;
+        }
+    }
+    for (var name_2 in levels) {
+        if (!levels[name_2].background.complete) {
+            return false;
+        }
+    }
+    return true;
+}
+function gameLoop() {
+    if (isLoaded()) {
+        level.update();
+        level.render();
+    }
+}
+loadSprites();
+loadLevels();
+level = levels["new_level"];
+window.setInterval(gameLoop, 1000 / 60);
 var Geometry = (function () {
     function Geometry() {
     }
     Geometry.prototype.update = function () {
     };
     Geometry.prototype.render = function () {
+        if (showHitboxes) {
+            drawPolygon(ctx, this.collider.points, true, "blue");
+        }
     };
     Geometry.prototype.onCollision = function (other) {
     };
@@ -191,7 +250,8 @@ function drawLine(ctx, x, y, x2, y2, color, thickness) {
     ctx.stroke();
 }
 function linepointNearestMouse(x0, y0, x1, y1, x, y) {
-    var lerp = function (a, b, x) { return (a + x * (b - a)); };
+    function lerp(a, b, x) { return (a + x * (b - a)); }
+    ;
     var dx = x1 - x0;
     var dy = y1 - y0;
     var t = ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy);
@@ -218,7 +278,22 @@ function inLine(mouseX, mouseY, x0, y0, x1, y1) {
     }
 }
 var Level = (function () {
-    function Level() {
+    function Level(levelJson) {
+        this.name = levelJson.name;
+        this.background = getBackground(levelJson.backgroundPath);
+        for (var _i = 0, _a = levelJson.instances; _i < _a.length; _i++) {
+            var instance = _a[_i];
+            if (instance.className === "ShapeInstance") {
+                var wall = new Wall();
+                for (var _b = 0, _c = instance.points; _b < _c.length; _b++) {
+                    var point = _c[_b];
+                    wall.collider.points.push(new Point(point.x, point.y));
+                    this.gameObjects.push(wall);
+                }
+            }
+            else {
+            }
+        }
     }
     Level.prototype.update = function () {
         for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
@@ -231,6 +306,7 @@ var Level = (function () {
             var go = _a[_i];
             go.render();
         }
+        drawImage(ctx, this.background, 0, 0);
     };
     return Level;
 }());
@@ -298,17 +374,29 @@ var Rect = (function () {
     };
     return Rect;
 }());
-var Shape = (function () {
-    function Shape() {
-    }
-    return Shape;
-}());
 var Sprite = (function () {
-    function Sprite() {
-        this.hitboxes = [];
-        this.frames = [];
+    function Sprite(spriteJson) {
+        this.name = spriteJson.name;
+        this.alignment = spriteJson.alignment;
+        this.spritesheet = getSpritesheet(spriteJson.spritesheetPath);
+        for (var _i = 0, _a = spriteJson.hitboxes; _i < _a.length; _i++) {
+            var hitboxJson = _a[_i];
+            var hitbox = new Collider([
+                new Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.topLeftPoint.y),
+                new Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.topLeftPoint.y),
+                new Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.botRightPoint.y),
+                new Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.botRightPoint.y)
+            ]);
+            this.hitboxes.push(hitbox);
+        }
+        for (var _b = 0, _c = spriteJson.frames; _b < _c.length; _b++) {
+            var frameJson = _c[_b];
+            var frame = new Frame(new Rect(new Point(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y), new Point(frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y)), frameJson.duration, new Point(frameJson.offset.x, frameJson.offset.y));
+            this.frames.push(frame);
+        }
     }
-    Sprite.prototype.draw = function (ctx, frame, cX, cY, flipX, flipY) {
+    Sprite.prototype.draw = function (frameIndex, cX, cY, flipX, flipY) {
+        var frame = this.frames[frameIndex];
         var rect = frame.rect;
         var offset = frame.offset;
         var w = rect.w;
