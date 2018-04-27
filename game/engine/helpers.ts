@@ -187,7 +187,7 @@ export function inLine(mouseX: number, mouseY: number, x0: number, y0: number, x
   let dx: number = mouseX - linepoint.x;
   let dy: number = mouseY - linepoint.y;
   let distance: number = Math.abs(Math.sqrt(dx*dx+dy*dy));
-  if(distance < threshold){
+  if(distance < threshold) {
     return true;
   }
   else {

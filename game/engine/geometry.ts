@@ -17,7 +17,7 @@ export class Geometry {
 
   render() {
     if(game.showHitboxes) {
-      Helpers.drawPolygon(game.ctx, this.collider.points, true, "blue");
+      Helpers.drawPolygon(game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
     }
   }
 

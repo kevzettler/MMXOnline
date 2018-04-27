@@ -23,10 +23,10 @@ export class Sprite {
 
     for(let hitboxJson of spriteJson.hitboxes) {
       let hitbox: Collider = new Collider([
-        new Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.topLeftPoint.y),
-        new Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.topLeftPoint.y),
-        new Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.botRightPoint.y),
-        new Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.botRightPoint.y)
+        new Point(hitboxJson.offset.x, hitboxJson.offset.y),
+        new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
+        new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
+        new Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
       ]);
       this.hitboxes.push(hitbox);
     }
@@ -41,8 +41,8 @@ export class Sprite {
     }
   }
 
-  draw(frameIndex: number, cX: number, cY: number, flipX?: number, flipY?: number) {
-    
+  //Given the sprite's alignment, get the offset x and y on where to actually draw the sprite
+  getAlignOffset(frameIndex: number): Point {
     let frame = this.frames[frameIndex];
 
     let rect = frame.rect;
@@ -55,6 +55,8 @@ export class Sprite {
     let halfH = h * 0.5;
 
     let x; let y;
+    let cX = 0;
+    let cY = 0;
 
     if(this.alignment === "topleft") {
       x = cX; y = cY;
@@ -83,6 +85,15 @@ export class Sprite {
     else if(this.alignment === "botright") {
       x = cX - w; y = cY - h;
     }
+    return new Point(x + offset.x, y + offset.y);
+  }
+
+  draw(frameIndex: number, x: number, y: number, flipX?: number, flipY?: number) {
+    
+    let frame = this.frames[frameIndex];
+    let rect = frame.rect;
+    let offset = this.getAlignOffset(frameIndex);
+
     Helpers.drawImage(game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
 
   }

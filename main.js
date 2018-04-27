@@ -44,6 +44,40 @@ System.register("engine/point", [], function (exports_3, context_3) {
                     this.x = x;
                     this.y = y;
                 }
+                Object.defineProperty(Point.prototype, "ix", {
+                    get: function () {
+                        return Math.round(this.x);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Point.prototype, "iy", {
+                    get: function () {
+                        return Math.round(this.y);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Point.prototype.add = function (other) {
+                    this.x += other.x;
+                    this.y += other.y;
+                    return this;
+                };
+                Point.prototype.multiply = function (num) {
+                    this.x *= num;
+                    this.y *= num;
+                    return this;
+                };
+                Object.defineProperty(Point.prototype, "magnitude", {
+                    get: function () {
+                        return Math.sqrt(this.x * this.x + this.y * this.y);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Point.prototype.clone = function () {
+                    return new Point(this.x, this.y);
+                };
                 return Point;
             }());
             exports_3("Point", Point);
@@ -59,30 +93,9 @@ System.register("engine/gameObject", [], function (exports_4, context_4) {
         }
     };
 });
-System.register("engine/collider", [], function (exports_5, context_5) {
+System.register("engine/rect", ["engine/point"], function (exports_5, context_5) {
     "use strict";
     var __moduleName = context_5 && context_5.id;
-    var Collider;
-    return {
-        setters: [],
-        execute: function () {
-            Collider = (function () {
-                function Collider(points) {
-                    this.points = points;
-                }
-                Collider.prototype.onCollision = function (other) {
-                };
-                Collider.prototype.onTrigger = function (other) {
-                };
-                return Collider;
-            }());
-            exports_5("Collider", Collider);
-        }
-    };
-});
-System.register("engine/rect", ["engine/point"], function (exports_6, context_6) {
-    "use strict";
-    var __moduleName = context_6 && context_6.id;
     var point_1, Rect;
     return {
         setters: [
@@ -148,13 +161,144 @@ System.register("engine/rect", ["engine/point"], function (exports_6, context_6)
                 };
                 return Rect;
             }());
-            exports_6("Rect", Rect);
+            exports_5("Rect", Rect);
         }
     };
 });
-System.register("engine/frame", [], function (exports_7, context_7) {
+System.register("engine/shape", ["engine/point", "engine/rect"], function (exports_6, context_6) {
+    "use strict";
+    var __moduleName = context_6 && context_6.id;
+    var point_2, rect_1, Line, Shape;
+    return {
+        setters: [
+            function (point_2_1) {
+                point_2 = point_2_1;
+            },
+            function (rect_1_1) {
+                rect_1 = rect_1_1;
+            }
+        ],
+        execute: function () {
+            Line = (function () {
+                function Line(point1, point2) {
+                    this.point1 = point1;
+                    this.point2 = point2;
+                }
+                Line.prototype.intersectsLine = function (other) {
+                    var a = this.point1.x;
+                    var b = this.point1.y;
+                    var c = this.point2.x;
+                    var d = this.point2.y;
+                    var p = other.point1.x;
+                    var q = other.point1.y;
+                    var r = other.point2.x;
+                    var s = other.point2.y;
+                    var det, gamma, lambda;
+                    det = (c - a) * (s - q) - (r - p) * (d - b);
+                    if (det === 0) {
+                        return false;
+                    }
+                    else {
+                        lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
+                        gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+                        return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+                    }
+                };
+                return Line;
+            }());
+            Shape = (function () {
+                function Shape(points) {
+                    this.points = points;
+                }
+                Shape.prototype.getRect = function () {
+                    if (this.points.length !== 4)
+                        return undefined;
+                    if (this.points[0].ix === this.points[3].ix && this.points[1].ix === this.points[2].ix && this.points[0].iy === this.points[1].iy && this.points[2].iy === this.points[3].iy) {
+                        return new rect_1.Rect(this.points[0], this.points[2]);
+                    }
+                    return undefined;
+                };
+                Shape.prototype.getLines = function () {
+                    var lines = [];
+                    for (var i = 0; i < this.points.length; i++) {
+                        var next = i + 1;
+                        if (next >= this.points.length)
+                            next = 0;
+                        lines.push(new Line(this.points[i], this.points[next]));
+                    }
+                    return lines;
+                };
+                Shape.prototype.intersectsShape = function (other) {
+                    var rect1 = this.getRect();
+                    var rect2 = other.getRect();
+                    if (rect1 && rect2) {
+                        if (rect1.x1 > rect2.x2 || rect2.x1 > rect1.x2)
+                            return false;
+                        if (rect1.y1 > rect2.y2 || rect2.y1 > rect1.y2)
+                            return false;
+                        return true;
+                    }
+                    else {
+                        var lines1 = this.getLines();
+                        var lines2 = other.getLines();
+                        for (var _i = 0, lines1_1 = lines1; _i < lines1_1.length; _i++) {
+                            var line1 = lines1_1[_i];
+                            for (var _a = 0, lines2_1 = lines2; _a < lines2_1.length; _a++) {
+                                var line2 = lines2_1[_a];
+                                if (line1.intersectsLine(line2)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    }
+                };
+                Shape.prototype.clone = function (x, y) {
+                    var points = [];
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        points.push(new point_2.Point(point.x + x, point.y + y));
+                    }
+                    return new Shape(points);
+                };
+                return Shape;
+            }());
+            exports_6("Shape", Shape);
+        }
+    };
+});
+System.register("engine/collider", ["engine/shape"], function (exports_7, context_7) {
     "use strict";
     var __moduleName = context_7 && context_7.id;
+    var shape_1, Collider;
+    return {
+        setters: [
+            function (shape_1_1) {
+                shape_1 = shape_1_1;
+            }
+        ],
+        execute: function () {
+            Collider = (function () {
+                function Collider(points) {
+                    this.shape = new shape_1.Shape(points);
+                }
+                Collider.prototype.onCollision = function (other) {
+                };
+                Collider.prototype.onTrigger = function (other) {
+                };
+                Collider.prototype.clone = function (x, y) {
+                    var shape = this.shape.clone(x, y);
+                    return new Collider(shape.points);
+                };
+                return Collider;
+            }());
+            exports_7("Collider", Collider);
+        }
+    };
+});
+System.register("engine/frame", [], function (exports_8, context_8) {
+    "use strict";
+    var __moduleName = context_8 && context_8.id;
     var Frame;
     return {
         setters: [],
@@ -168,13 +312,13 @@ System.register("engine/frame", [], function (exports_7, context_7) {
                 }
                 return Frame;
             }());
-            exports_7("Frame", Frame);
+            exports_8("Frame", Frame);
         }
     };
 });
-System.register("engine/helpers", ["engine/point"], function (exports_8, context_8) {
+System.register("engine/helpers", ["engine/point"], function (exports_9, context_9) {
     "use strict";
-    var __moduleName = context_8 && context_8.id;
+    var __moduleName = context_9 && context_9.id;
     function inRect(x, y, rect) {
         var rx = rect.x1;
         var ry = rect.y1;
@@ -182,14 +326,14 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         var ry2 = rect.y2;
         return x >= rx && x <= rx2 && y >= ry && y <= ry2;
     }
-    exports_8("inRect", inRect);
+    exports_9("inRect", inRect);
     function inCircle(x, y, circleX, circleY, r) {
         if (Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2)) <= r) {
             return true;
         }
         return false;
     }
-    exports_8("inCircle", inCircle);
+    exports_9("inCircle", inCircle);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
         ctx.save();
         flipX = flipX ? -1 : 1;
@@ -203,7 +347,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         }
         ctx.restore();
     }
-    exports_8("drawImage", drawImage);
+    exports_9("drawImage", drawImage);
     function drawRect(ctx, rect, fillColor, strokeColor, strokeWidth, fillAlpha) {
         var rx = Math.round(rect.x1);
         var ry = Math.round(rect.y1);
@@ -226,7 +370,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         }
         ctx.globalAlpha = 1;
     }
-    exports_8("drawRect", drawRect);
+    exports_9("drawRect", drawRect);
     function drawPolygon(ctx, vertices, closed, fillColor, lineColor, lineThickness, fillAlpha) {
         if (fillAlpha) {
             ctx.globalAlpha = fillAlpha;
@@ -250,7 +394,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         }
         ctx.globalAlpha = 1;
     }
-    exports_8("drawPolygon", drawPolygon);
+    exports_9("drawPolygon", drawPolygon);
     function pointInPolygon(x, y, vertices) {
         var inside = false;
         for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
@@ -263,7 +407,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         }
         return inside;
     }
-    exports_8("pointInPolygon", pointInPolygon);
+    exports_9("pointInPolygon", pointInPolygon);
     function drawText(ctx, text, x, y, color, size, hAlign, vAlign, font) {
         color = color || "black";
         size = size || 14;
@@ -276,7 +420,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         ctx.textBaseline = vAlign;
         ctx.strokeText(text, x, y);
     }
-    exports_8("drawText", drawText);
+    exports_9("drawText", drawText);
     function drawCircle(ctx, x, y, r, fillColor, lineColor, lineThickness) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * Math.PI, false);
@@ -290,7 +434,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
             ctx.stroke();
         }
     }
-    exports_8("drawCircle", drawCircle);
+    exports_9("drawCircle", drawCircle);
     function drawLine(ctx, x, y, x2, y2, color, thickness) {
         if (!thickness)
             thickness = 1;
@@ -303,7 +447,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         ctx.strokeStyle = color;
         ctx.stroke();
     }
-    exports_8("drawLine", drawLine);
+    exports_9("drawLine", drawLine);
     function linepointNearestMouse(x0, y0, x1, y1, x, y) {
         function lerp(a, b, x) { return (a + x * (b - a)); }
         ;
@@ -312,9 +456,9 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
         var t = ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy);
         var lineX = lerp(x0, x1, t);
         var lineY = lerp(y0, y1, t);
-        return new point_2.Point(lineX, lineY);
+        return new point_3.Point(lineX, lineY);
     }
-    exports_8("linepointNearestMouse", linepointNearestMouse);
+    exports_9("linepointNearestMouse", linepointNearestMouse);
     function inLine(mouseX, mouseY, x0, y0, x1, y1) {
         var threshold = 4;
         var small_x = Math.min(x0, x1);
@@ -333,21 +477,21 @@ System.register("engine/helpers", ["engine/point"], function (exports_8, context
             return false;
         }
     }
-    exports_8("inLine", inLine);
-    var point_2;
+    exports_9("inLine", inLine);
+    var point_3;
     return {
         setters: [
-            function (point_2_1) {
-                point_2 = point_2_1;
+            function (point_3_1) {
+                point_3 = point_3_1;
             }
         ],
         execute: function () {
         }
     };
 });
-System.register("engine/geometry", ["engine/collider", "engine/game", "engine/helpers"], function (exports_9, context_9) {
+System.register("engine/geometry", ["engine/collider", "engine/game", "engine/helpers"], function (exports_10, context_10) {
     "use strict";
-    var __moduleName = context_9 && context_9.id;
+    var __moduleName = context_10 && context_10.id;
     var collider_1, game_1, Helpers, Geometry;
     return {
         setters: [
@@ -370,7 +514,7 @@ System.register("engine/geometry", ["engine/collider", "engine/game", "engine/he
                 };
                 Geometry.prototype.render = function () {
                     if (game_1.game.showHitboxes) {
-                        Helpers.drawPolygon(game_1.game.ctx, this.collider.points, true, "blue");
+                        Helpers.drawPolygon(game_1.game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
                     }
                 };
                 Geometry.prototype.onCollision = function (other) {
@@ -379,13 +523,13 @@ System.register("engine/geometry", ["engine/collider", "engine/game", "engine/he
                 };
                 return Geometry;
             }());
-            exports_9("Geometry", Geometry);
+            exports_10("Geometry", Geometry);
         }
     };
 });
-System.register("engine/wall", ["engine/geometry"], function (exports_10, context_10) {
+System.register("engine/wall", ["engine/geometry"], function (exports_11, context_11) {
     "use strict";
-    var __moduleName = context_10 && context_10.id;
+    var __moduleName = context_11 && context_11.id;
     var geometry_1, Wall;
     return {
         setters: [
@@ -401,32 +545,36 @@ System.register("engine/wall", ["engine/geometry"], function (exports_10, contex
                 }
                 return Wall;
             }(geometry_1.Geometry));
-            exports_10("Wall", Wall);
+            exports_11("Wall", Wall);
         }
     };
 });
-System.register("engine/level", ["engine/wall", "engine/point", "engine/game", "engine/helpers"], function (exports_11, context_11) {
+System.register("engine/level", ["engine/wall", "engine/point", "engine/game", "engine/helpers", "engine/actor"], function (exports_12, context_12) {
     "use strict";
-    var __moduleName = context_11 && context_11.id;
-    var wall_1, point_3, game_2, Helpers, Level;
+    var __moduleName = context_12 && context_12.id;
+    var wall_1, point_4, game_2, Helpers, actor_1, Level;
     return {
         setters: [
             function (wall_1_1) {
                 wall_1 = wall_1_1;
             },
-            function (point_3_1) {
-                point_3 = point_3_1;
+            function (point_4_1) {
+                point_4 = point_4_1;
             },
             function (game_2_1) {
                 game_2 = game_2_1;
             },
             function (Helpers_2) {
                 Helpers = Helpers_2;
+            },
+            function (actor_1_1) {
+                actor_1 = actor_1_1;
             }
         ],
         execute: function () {
             Level = (function () {
                 function Level(levelJson) {
+                    this.gravity = 1000;
                     this.name = levelJson.name;
                     this.background = game_2.game.getBackground(levelJson.backgroundPath);
                     this.gameObjects = [];
@@ -436,11 +584,16 @@ System.register("engine/level", ["engine/wall", "engine/point", "engine/game", "
                             var wall = new wall_1.Wall();
                             for (var _b = 0, _c = instance.points; _b < _c.length; _b++) {
                                 var point = _c[_b];
-                                wall.collider.points.push(new point_3.Point(point.x, point.y));
-                                this.gameObjects.push(wall);
+                                wall.collider.shape.points.push(new point_4.Point(point.x, point.y));
                             }
+                            this.gameObjects.push(wall);
                         }
                         else {
+                            var actor = new actor_1.Actor();
+                            actor.sprite = game_2.game.sprites[instance.spriteName];
+                            actor.pos = new point_4.Point(instance.pos.x, instance.pos.y);
+                            actor.name = instance.name;
+                            this.gameObjects.push(actor);
                         }
                     }
                 }
@@ -451,21 +604,38 @@ System.register("engine/level", ["engine/wall", "engine/point", "engine/game", "
                     }
                 };
                 Level.prototype.render = function () {
+                    game_2.game.ctx.clearRect(0, 0, game_2.game.canvas.width, game_2.game.canvas.height);
+                    Helpers.drawImage(game_2.game.ctx, this.background, 0, 0);
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
                         go.render();
                     }
-                    Helpers.drawImage(game_2.game.ctx, this.background, 0, 0);
+                };
+                Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY) {
+                    if (!actor.collider || actor.collider.isTrigger)
+                        return false;
+                    for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
+                        var go = _a[_i];
+                        if (go === actor)
+                            continue;
+                        if (!go.collider || go.collider.isTrigger)
+                            continue;
+                        var actorShape = actor.collider.shape.clone(offsetX, offsetY);
+                        if (go.collider.shape.intersectsShape(actorShape)) {
+                            return true;
+                        }
+                    }
+                    return false;
                 };
                 return Level;
             }());
-            exports_11("Level", Level);
+            exports_12("Level", Level);
         }
     };
 });
-System.register("engine/game", ["engine/sprite", "engine/level", "sprites", "levels"], function (exports_12, context_12) {
+System.register("engine/game", ["engine/sprite", "engine/level", "sprites", "levels"], function (exports_13, context_13) {
     "use strict";
-    var __moduleName = context_12 && context_12.id;
+    var __moduleName = context_13 && context_13.id;
     var sprite_1, level_1, sprites_1, levels_1, Game, game;
     return {
         setters: [
@@ -485,6 +655,8 @@ System.register("engine/game", ["engine/sprite", "engine/level", "sprites", "lev
         execute: function () {
             Game = (function () {
                 function Game() {
+                    this.startTime = Date.now();
+                    this.deltaTime = 1 / 60;
                     this.sprites = {};
                     this.levels = {};
                     this.spritesheets = {};
@@ -545,21 +717,23 @@ System.register("engine/game", ["engine/sprite", "engine/level", "sprites", "lev
                 };
                 Game.prototype.gameLoop = function () {
                     if (this.isLoaded()) {
+                        this.deltaTime = (Date.now() - this.startTime) / 1000;
                         this.level.update();
                         this.level.render();
+                        this.startTime = Date.now();
                     }
                 };
                 return Game;
             }());
             game = new Game();
-            exports_12("game", game);
+            exports_13("game", game);
         }
     };
 });
-System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/point", "engine/rect", "engine/game", "engine/helpers"], function (exports_13, context_13) {
+System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/point", "engine/rect", "engine/game", "engine/helpers"], function (exports_14, context_14) {
     "use strict";
-    var __moduleName = context_13 && context_13.id;
-    var collider_2, frame_1, point_4, rect_1, game_3, Helpers, Sprite;
+    var __moduleName = context_14 && context_14.id;
+    var collider_2, frame_1, point_5, rect_2, game_3, Helpers, Sprite;
     return {
         setters: [
             function (collider_2_1) {
@@ -568,11 +742,11 @@ System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/poi
             function (frame_1_1) {
                 frame_1 = frame_1_1;
             },
-            function (point_4_1) {
-                point_4 = point_4_1;
+            function (point_5_1) {
+                point_5 = point_5_1;
             },
-            function (rect_1_1) {
-                rect_1 = rect_1_1;
+            function (rect_2_1) {
+                rect_2 = rect_2_1;
             },
             function (game_3_1) {
                 game_3 = game_3_1;
@@ -592,20 +766,20 @@ System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/poi
                     for (var _i = 0, _a = spriteJson.hitboxes; _i < _a.length; _i++) {
                         var hitboxJson = _a[_i];
                         var hitbox = new collider_2.Collider([
-                            new point_4.Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.topLeftPoint.y),
-                            new point_4.Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.topLeftPoint.y),
-                            new point_4.Point(hitboxJson.rect.botRightPoint.x, hitboxJson.rect.botRightPoint.y),
-                            new point_4.Point(hitboxJson.rect.topLeftPoint.x, hitboxJson.rect.botRightPoint.y)
+                            new point_5.Point(hitboxJson.offset.x, hitboxJson.offset.y),
+                            new point_5.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
+                            new point_5.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
+                            new point_5.Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
                         ]);
                         this.hitboxes.push(hitbox);
                     }
                     for (var _b = 0, _c = spriteJson.frames; _b < _c.length; _b++) {
                         var frameJson = _c[_b];
-                        var frame = new frame_1.Frame(new rect_1.Rect(new point_4.Point(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y), new point_4.Point(frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y)), frameJson.duration, new point_4.Point(frameJson.offset.x, frameJson.offset.y));
+                        var frame = new frame_1.Frame(new rect_2.Rect(new point_5.Point(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y), new point_5.Point(frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y)), frameJson.duration, new point_5.Point(frameJson.offset.x, frameJson.offset.y));
                         this.frames.push(frame);
                     }
                 }
-                Sprite.prototype.draw = function (frameIndex, cX, cY, flipX, flipY) {
+                Sprite.prototype.getAlignOffset = function (frameIndex) {
                     var frame = this.frames[frameIndex];
                     var rect = frame.rect;
                     var offset = frame.offset;
@@ -615,6 +789,8 @@ System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/poi
                     var halfH = h * 0.5;
                     var x;
                     var y;
+                    var cX = 0;
+                    var cY = 0;
                     if (this.alignment === "topleft") {
                         x = cX;
                         y = cY;
@@ -651,42 +827,105 @@ System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/poi
                         x = cX - w;
                         y = cY - h;
                     }
+                    return new point_5.Point(x + offset.x, y + offset.y);
+                };
+                Sprite.prototype.draw = function (frameIndex, x, y, flipX, flipY) {
+                    var frame = this.frames[frameIndex];
+                    var rect = frame.rect;
+                    var offset = this.getAlignOffset(frameIndex);
                     Helpers.drawImage(game_3.game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
                 };
                 return Sprite;
             }());
-            exports_13("Sprite", Sprite);
+            exports_14("Sprite", Sprite);
         }
     };
 });
-System.register("engine/actor", [], function (exports_14, context_14) {
+System.register("engine/actor", ["engine/point", "engine/game", "engine/helpers"], function (exports_15, context_15) {
     "use strict";
-    var __moduleName = context_14 && context_14.id;
-    var Actor;
+    var __moduleName = context_15 && context_15.id;
+    var point_6, game_4, Helpers, Actor;
     return {
-        setters: [],
+        setters: [
+            function (point_6_1) {
+                point_6 = point_6_1;
+            },
+            function (game_4_1) {
+                game_4 = game_4_1;
+            },
+            function (Helpers_4) {
+                Helpers = Helpers_4;
+            }
+        ],
         execute: function () {
             Actor = (function () {
                 function Actor() {
+                    this.pos = new point_6.Point(0, 0);
+                    this.vel = new point_6.Point(0, 0);
+                    this.angle = 0;
+                    this.useGravity = true;
+                    this.frameIndex = 0;
+                    this.name = "";
                 }
                 Actor.prototype.update = function () {
+                    if (this.useGravity) {
+                        this.vel.y += game_4.game.level.gravity * game_4.game.deltaTime;
+                        if (this.vel.y > 1000) {
+                            this.vel.y = 0;
+                        }
+                    }
+                    var inc = this.vel.clone();
+                    while (inc.magnitude > 0) {
+                        if (game_4.game.level.checkCollisionActor(this, inc.x * game_4.game.deltaTime, inc.y * game_4.game.deltaTime)) {
+                            inc.multiply(0.5);
+                            if (inc.magnitude < 0.5) {
+                                inc.x = 0;
+                                inc.y = 0;
+                                break;
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    this.pos.add(inc.multiply(game_4.game.deltaTime));
                 };
                 Actor.prototype.render = function () {
                     this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y);
+                    if (game_4.game.showHitboxes && this.collider) {
+                        Helpers.drawPolygon(game_4.game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
+                    }
                 };
                 Actor.prototype.onCollision = function (other) {
                 };
                 Actor.prototype.onTrigger = function (other) {
                 };
+                Object.defineProperty(Actor.prototype, "collider", {
+                    get: function () {
+                        if (this.sprite.hitboxes.length === 0)
+                            return undefined;
+                        var offset = this.sprite.getAlignOffset(this.frameIndex);
+                        return this.sprite.hitboxes[0].clone(this.pos.x + offset.x, this.pos.y + offset.y);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Actor.prototype.hasCollisionBox = function () {
+                    if (this.sprite.hitboxes.length === 0)
+                        return false;
+                    if (this.sprite.hitboxes[0].isTrigger)
+                        return false;
+                    return true;
+                };
                 return Actor;
             }());
-            exports_14("Actor", Actor);
+            exports_15("Actor", Actor);
         }
     };
 });
-System.register("engine/color", [], function (exports_15, context_15) {
+System.register("engine/color", [], function (exports_16, context_16) {
     "use strict";
-    var __moduleName = context_15 && context_15.id;
+    var __moduleName = context_16 && context_16.id;
     var Color;
     return {
         setters: [],
@@ -700,7 +939,7 @@ System.register("engine/color", [], function (exports_15, context_15) {
                 }
                 return Color;
             }());
-            exports_15("Color", Color);
+            exports_16("Color", Color);
         }
     };
 });

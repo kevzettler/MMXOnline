@@ -1,15 +1,15 @@
 import { Point } from "./point";
 import { GameObject } from "./gameObject";
+import { Shape } from "./shape";
 
 export class Collider {
 
-  points: Point[];
-  collide: boolean;
-  trigger: boolean;
+  shape: Shape;
+  isTrigger: boolean;
   gameObject: GameObject;
 
   constructor(points: Point[]) {
-    this.points = points;
+    this.shape = new Shape(points);
   }
 
   onCollision(other: Collider) {
@@ -18,6 +18,11 @@ export class Collider {
 
   onTrigger(other: Collider) {
 
+  }
+
+  clone(x: number, y: number) {
+    let shape = this.shape.clone(x, y);
+    return new Collider(shape.points);
   }
 
 }

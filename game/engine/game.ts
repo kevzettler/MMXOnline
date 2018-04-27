@@ -20,6 +20,9 @@ class Game {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 
+  startTime: number = Date.now();
+  deltaTime: number = 1/60;
+
   constructor() {
     this.sprites = {};
     this.levels = {};
@@ -34,6 +37,7 @@ class Game {
   
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.ctx = this.canvas.getContext("2d");
+
   }
 
   start() {
@@ -90,8 +94,13 @@ class Game {
   //Main game loop
   gameLoop() {
     if(this.isLoaded()) {
+      this.deltaTime = (Date.now() - this.startTime) /1000;
+    
       this.level.update();
       this.level.render();
+
+      //console.log(this.deltaTime);
+      this.startTime = Date.now();
     }
   }
 
