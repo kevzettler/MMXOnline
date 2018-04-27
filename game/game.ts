@@ -1,7 +1,7 @@
 import { Sprite } from "./sprite";
 import { Level } from "./level";
-import { spriteJsons } from "../sprites";
-import { levelJsons } from "../levels";
+import { spriteJsons } from "./sprites";
+import { levelJsons } from "./levels";
 
 class Game {
 

@@ -8,33 +8,9 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-System.register("levels", [], function (exports_1, context_1) {
+System.register("point", [], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
-    var levelJsons;
-    return {
-        setters: [],
-        execute: function () {
-            levelJsons = [{ "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 180, "y": 248, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 551, "y": 248, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 551, "y": 363, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 180, "y": 363, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "Instance", "name": "Test", "pos": { "className": "Point", "x": 227, "y": 151 }, "spriteName": "megaman_idle" }], "name": "new_level", "path": "assets/levels/new_level.json", "backgroundPath": "assets/backgrounds/highway.png" }];
-            exports_1("levelJsons", levelJsons);
-        }
-    };
-});
-System.register("sprites", [], function (exports_2, context_2) {
-    "use strict";
-    var __moduleName = context_2 && context_2.id;
-    var spriteJsons;
-    return {
-        setters: [],
-        execute: function () {
-            spriteJsons = [{ "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 20, "height": 40, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 340, "y": 280 }, "botRightPoint": { "className": "Point", "x": 360, "y": 320 } } }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 164, "y": 253 }, "botRightPoint": { "className": "Point", "x": 188, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 189, "y": 249 }, "botRightPoint": { "className": "Point", "x": 204, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 204, "y": 244 }, "botRightPoint": { "className": "Point", "x": 223, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 223, "y": 250 }, "botRightPoint": { "className": "Point", "x": 246, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 247, "y": 249 }, "botRightPoint": { "className": "Point", "x": 274, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 275, "y": 253 }, "botRightPoint": { "className": "Point", "x": 299, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 300, "y": 259 }, "botRightPoint": { "className": "Point", "x": 330, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }], "name": "megaman_idle", "path": "assets/sprites/megaman_idle.json", "alignment": "center", "spritesheetPath": "assets/spritesheets/MMXNormal.png" }];
-            exports_2("spriteJsons", spriteJsons);
-        }
-    };
-});
-System.register("engine/point", [], function (exports_3, context_3) {
-    "use strict";
-    var __moduleName = context_3 && context_3.id;
     var Point;
     return {
         setters: [],
@@ -80,22 +56,22 @@ System.register("engine/point", [], function (exports_3, context_3) {
                 };
                 return Point;
             }());
-            exports_3("Point", Point);
+            exports_1("Point", Point);
         }
     };
 });
-System.register("engine/gameObject", [], function (exports_4, context_4) {
+System.register("gameObject", [], function (exports_2, context_2) {
     "use strict";
-    var __moduleName = context_4 && context_4.id;
+    var __moduleName = context_2 && context_2.id;
     return {
         setters: [],
         execute: function () {
         }
     };
 });
-System.register("engine/rect", ["engine/point"], function (exports_5, context_5) {
+System.register("rect", ["point"], function (exports_3, context_3) {
     "use strict";
-    var __moduleName = context_5 && context_5.id;
+    var __moduleName = context_3 && context_3.id;
     var point_1, Rect;
     return {
         setters: [
@@ -161,13 +137,13 @@ System.register("engine/rect", ["engine/point"], function (exports_5, context_5)
                 };
                 return Rect;
             }());
-            exports_5("Rect", Rect);
+            exports_3("Rect", Rect);
         }
     };
 });
-System.register("engine/shape", ["engine/point", "engine/rect"], function (exports_6, context_6) {
+System.register("shape", ["point", "rect"], function (exports_4, context_4) {
     "use strict";
-    var __moduleName = context_6 && context_6.id;
+    var __moduleName = context_4 && context_4.id;
     var point_2, rect_1, Line, Shape;
     return {
         setters: [
@@ -263,13 +239,13 @@ System.register("engine/shape", ["engine/point", "engine/rect"], function (expor
                 };
                 return Shape;
             }());
-            exports_6("Shape", Shape);
+            exports_4("Shape", Shape);
         }
     };
 });
-System.register("engine/collider", ["engine/shape"], function (exports_7, context_7) {
+System.register("collider", ["shape"], function (exports_5, context_5) {
     "use strict";
-    var __moduleName = context_7 && context_7.id;
+    var __moduleName = context_5 && context_5.id;
     var shape_1, Collider;
     return {
         setters: [
@@ -292,13 +268,13 @@ System.register("engine/collider", ["engine/shape"], function (exports_7, contex
                 };
                 return Collider;
             }());
-            exports_7("Collider", Collider);
+            exports_5("Collider", Collider);
         }
     };
 });
-System.register("engine/frame", [], function (exports_8, context_8) {
+System.register("frame", [], function (exports_6, context_6) {
     "use strict";
-    var __moduleName = context_8 && context_8.id;
+    var __moduleName = context_6 && context_6.id;
     var Frame;
     return {
         setters: [],
@@ -312,13 +288,13 @@ System.register("engine/frame", [], function (exports_8, context_8) {
                 }
                 return Frame;
             }());
-            exports_8("Frame", Frame);
+            exports_6("Frame", Frame);
         }
     };
 });
-System.register("engine/helpers", ["engine/point"], function (exports_9, context_9) {
+System.register("helpers", ["point"], function (exports_7, context_7) {
     "use strict";
-    var __moduleName = context_9 && context_9.id;
+    var __moduleName = context_7 && context_7.id;
     function inRect(x, y, rect) {
         var rx = rect.x1;
         var ry = rect.y1;
@@ -326,14 +302,14 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         var ry2 = rect.y2;
         return x >= rx && x <= rx2 && y >= ry && y <= ry2;
     }
-    exports_9("inRect", inRect);
+    exports_7("inRect", inRect);
     function inCircle(x, y, circleX, circleY, r) {
         if (Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2)) <= r) {
             return true;
         }
         return false;
     }
-    exports_9("inCircle", inCircle);
+    exports_7("inCircle", inCircle);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
         ctx.save();
         flipX = flipX ? -1 : 1;
@@ -347,7 +323,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         }
         ctx.restore();
     }
-    exports_9("drawImage", drawImage);
+    exports_7("drawImage", drawImage);
     function drawRect(ctx, rect, fillColor, strokeColor, strokeWidth, fillAlpha) {
         var rx = Math.round(rect.x1);
         var ry = Math.round(rect.y1);
@@ -370,7 +346,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         }
         ctx.globalAlpha = 1;
     }
-    exports_9("drawRect", drawRect);
+    exports_7("drawRect", drawRect);
     function drawPolygon(ctx, vertices, closed, fillColor, lineColor, lineThickness, fillAlpha) {
         if (fillAlpha) {
             ctx.globalAlpha = fillAlpha;
@@ -394,7 +370,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         }
         ctx.globalAlpha = 1;
     }
-    exports_9("drawPolygon", drawPolygon);
+    exports_7("drawPolygon", drawPolygon);
     function pointInPolygon(x, y, vertices) {
         var inside = false;
         for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
@@ -407,7 +383,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         }
         return inside;
     }
-    exports_9("pointInPolygon", pointInPolygon);
+    exports_7("pointInPolygon", pointInPolygon);
     function drawText(ctx, text, x, y, color, size, hAlign, vAlign, font) {
         color = color || "black";
         size = size || 14;
@@ -420,7 +396,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         ctx.textBaseline = vAlign;
         ctx.strokeText(text, x, y);
     }
-    exports_9("drawText", drawText);
+    exports_7("drawText", drawText);
     function drawCircle(ctx, x, y, r, fillColor, lineColor, lineThickness) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * Math.PI, false);
@@ -434,7 +410,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
             ctx.stroke();
         }
     }
-    exports_9("drawCircle", drawCircle);
+    exports_7("drawCircle", drawCircle);
     function drawLine(ctx, x, y, x2, y2, color, thickness) {
         if (!thickness)
             thickness = 1;
@@ -447,7 +423,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         ctx.strokeStyle = color;
         ctx.stroke();
     }
-    exports_9("drawLine", drawLine);
+    exports_7("drawLine", drawLine);
     function linepointNearestMouse(x0, y0, x1, y1, x, y) {
         function lerp(a, b, x) { return (a + x * (b - a)); }
         ;
@@ -458,7 +434,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         var lineY = lerp(y0, y1, t);
         return new point_3.Point(lineX, lineY);
     }
-    exports_9("linepointNearestMouse", linepointNearestMouse);
+    exports_7("linepointNearestMouse", linepointNearestMouse);
     function inLine(mouseX, mouseY, x0, y0, x1, y1) {
         var threshold = 4;
         var small_x = Math.min(x0, x1);
@@ -477,7 +453,7 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
             return false;
         }
     }
-    exports_9("inLine", inLine);
+    exports_7("inLine", inLine);
     var point_3;
     return {
         setters: [
@@ -489,9 +465,9 @@ System.register("engine/helpers", ["engine/point"], function (exports_9, context
         }
     };
 });
-System.register("engine/geometry", ["engine/collider", "engine/game", "engine/helpers"], function (exports_10, context_10) {
+System.register("geometry", ["collider", "game", "helpers"], function (exports_8, context_8) {
     "use strict";
-    var __moduleName = context_10 && context_10.id;
+    var __moduleName = context_8 && context_8.id;
     var collider_1, game_1, Helpers, Geometry;
     return {
         setters: [
@@ -523,13 +499,13 @@ System.register("engine/geometry", ["engine/collider", "engine/game", "engine/he
                 };
                 return Geometry;
             }());
-            exports_10("Geometry", Geometry);
+            exports_8("Geometry", Geometry);
         }
     };
 });
-System.register("engine/wall", ["engine/geometry"], function (exports_11, context_11) {
+System.register("wall", ["geometry"], function (exports_9, context_9) {
     "use strict";
-    var __moduleName = context_11 && context_11.id;
+    var __moduleName = context_9 && context_9.id;
     var geometry_1, Wall;
     return {
         setters: [
@@ -545,13 +521,13 @@ System.register("engine/wall", ["engine/geometry"], function (exports_11, contex
                 }
                 return Wall;
             }(geometry_1.Geometry));
-            exports_11("Wall", Wall);
+            exports_9("Wall", Wall);
         }
     };
 });
-System.register("engine/level", ["engine/wall", "engine/point", "engine/game", "engine/helpers", "engine/actor"], function (exports_12, context_12) {
+System.register("level", ["wall", "point", "game", "helpers", "actor"], function (exports_10, context_10) {
     "use strict";
-    var __moduleName = context_12 && context_12.id;
+    var __moduleName = context_10 && context_10.id;
     var wall_1, point_4, game_2, Helpers, actor_1, Level;
     return {
         setters: [
@@ -629,11 +605,35 @@ System.register("engine/level", ["engine/wall", "engine/point", "engine/game", "
                 };
                 return Level;
             }());
-            exports_12("Level", Level);
+            exports_10("Level", Level);
         }
     };
 });
-System.register("engine/game", ["engine/sprite", "engine/level", "sprites", "levels"], function (exports_13, context_13) {
+System.register("sprites", [], function (exports_11, context_11) {
+    "use strict";
+    var __moduleName = context_11 && context_11.id;
+    var spriteJsons;
+    return {
+        setters: [],
+        execute: function () {
+            spriteJsons = [{ "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 20, "height": 40, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 340, "y": 280 }, "botRightPoint": { "className": "Point", "x": 360, "y": 320 } } }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 164, "y": 253 }, "botRightPoint": { "className": "Point", "x": 188, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 189, "y": 249 }, "botRightPoint": { "className": "Point", "x": 204, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 204, "y": 244 }, "botRightPoint": { "className": "Point", "x": 223, "y": 290 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 223, "y": 250 }, "botRightPoint": { "className": "Point", "x": 246, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 247, "y": 249 }, "botRightPoint": { "className": "Point", "x": 274, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 275, "y": 253 }, "botRightPoint": { "className": "Point", "x": 299, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 300, "y": 259 }, "botRightPoint": { "className": "Point", "x": 330, "y": 291 } }, "duration": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [] }], "name": "megaman_idle", "path": "assets/sprites/megaman_idle.json", "alignment": "center", "spritesheetPath": "assets/spritesheets/MMXNormal.png" }];
+            exports_11("spriteJsons", spriteJsons);
+        }
+    };
+});
+System.register("levels", [], function (exports_12, context_12) {
+    "use strict";
+    var __moduleName = context_12 && context_12.id;
+    var levelJsons;
+    return {
+        setters: [],
+        execute: function () {
+            levelJsons = [{ "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 180, "y": 248, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 551, "y": 248, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 551, "y": 363, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 180, "y": 363, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "Instance", "name": "Test", "pos": { "className": "Point", "x": 227, "y": 151 }, "spriteName": "megaman_idle" }], "name": "new_level", "path": "assets/levels/new_level.json", "backgroundPath": "assets/backgrounds/highway.png" }];
+            exports_12("levelJsons", levelJsons);
+        }
+    };
+});
+System.register("game", ["sprite", "level", "sprites", "levels"], function (exports_13, context_13) {
     "use strict";
     var __moduleName = context_13 && context_13.id;
     var sprite_1, level_1, sprites_1, levels_1, Game, game;
@@ -730,7 +730,7 @@ System.register("engine/game", ["engine/sprite", "engine/level", "sprites", "lev
         }
     };
 });
-System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/point", "engine/rect", "engine/game", "engine/helpers"], function (exports_14, context_14) {
+System.register("sprite", ["collider", "frame", "point", "rect", "game", "helpers"], function (exports_14, context_14) {
     "use strict";
     var __moduleName = context_14 && context_14.id;
     var collider_2, frame_1, point_5, rect_2, game_3, Helpers, Sprite;
@@ -841,7 +841,7 @@ System.register("engine/sprite", ["engine/collider", "engine/frame", "engine/poi
         }
     };
 });
-System.register("engine/actor", ["engine/point", "engine/game", "engine/helpers"], function (exports_15, context_15) {
+System.register("actor", ["point", "game", "helpers"], function (exports_15, context_15) {
     "use strict";
     var __moduleName = context_15 && context_15.id;
     var point_6, game_4, Helpers, Actor;
@@ -923,7 +923,7 @@ System.register("engine/actor", ["engine/point", "engine/game", "engine/helpers"
         }
     };
 });
-System.register("engine/color", [], function (exports_16, context_16) {
+System.register("color", [], function (exports_16, context_16) {
     "use strict";
     var __moduleName = context_16 && context_16.id;
     var Color;
@@ -943,4 +943,9 @@ System.register("engine/color", [], function (exports_16, context_16) {
         }
     };
 });
+var Player = (function () {
+    function Player() {
+    }
+    return Player;
+}());
 //# sourceMappingURL=main.js.map
