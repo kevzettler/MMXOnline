@@ -11,6 +11,8 @@ export class Level {
   gameObjects: GameObject[];
   background: HTMLImageElement;
   gravity: number;
+  localPlayers: Player[];
+  players: Player[];
 
   constructor(levelJson: any) {
     this.gravity = 1000;

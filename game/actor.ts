@@ -9,6 +9,8 @@ export class Actor {
 
   sprite: Sprite; //Current sprite
   frameIndex: number; //Current frame index of sprite
+  frameSpeed: number; //Multiplier for how fast frameIndex gets incremented. defaults to 1
+  frameTime: number;  //The current time of the frame
   pos: Point; //Current location
   vel: Point;
   angle: number;
@@ -21,10 +23,34 @@ export class Actor {
     this.angle = 0;
     this.useGravity = true;
     this.frameIndex = 0;
+    this.frameSpeed = 1;
     this.name = "";
   }
 
+  changeSprite(sprite: Sprite, resetFrame: boolean) {
+    this.sprite = sprite;
+    if(resetFrame) {
+      this.frameIndex = 0;
+      this.frameTime = 0;
+    }
+    else if(this.frameIndex >= this.sprite.frames.length) {
+      this.frameIndex = 0;
+    }
+  }
+
+  get currentFrame() {
+    return this.sprite.frames[this.frameIndex];
+  }
+
   update() {
+
+    this.frameTime += game.deltaTime * this.frameSpeed;
+    if(this.frameTime >= this.currentFrame.duration) {
+      this.frameTime = 0;
+      this.frameIndex++;
+      if(this.frameIndex >= this.sprite.frames.length) this.frameIndex = 0;
+    }
+
     if(this.useGravity) {
       this.vel.y += game.level.gravity * game.deltaTime;
       if(this.vel.y > 1000) {

@@ -96,8 +96,16 @@ class Game {
     if(this.isLoaded()) {
       this.deltaTime = (Date.now() - this.startTime) /1000;
     
+      for(let player of this.level.players) {
+        player.detectInput();
+      }
+
       this.level.update();
       this.level.render();
+
+      for(let player of this.level.players) {
+        player.resetInput();
+      }
 
       //console.log(this.deltaTime);
       this.startTime = Date.now();

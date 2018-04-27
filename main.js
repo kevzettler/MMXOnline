@@ -718,8 +718,16 @@ System.register("game", ["sprite", "level", "sprites", "levels"], function (expo
                 Game.prototype.gameLoop = function () {
                     if (this.isLoaded()) {
                         this.deltaTime = (Date.now() - this.startTime) / 1000;
+                        for (var _i = 0, _a = this.level.players; _i < _a.length; _i++) {
+                            var player = _a[_i];
+                            player.detectInput();
+                        }
                         this.level.update();
                         this.level.render();
+                        for (var _b = 0, _c = this.level.players; _b < _c.length; _b++) {
+                            var player = _c[_b];
+                            player.resetInput();
+                        }
                         this.startTime = Date.now();
                     }
                 };
@@ -865,9 +873,34 @@ System.register("actor", ["point", "game", "helpers"], function (exports_15, con
                     this.angle = 0;
                     this.useGravity = true;
                     this.frameIndex = 0;
+                    this.frameSpeed = 1;
                     this.name = "";
                 }
+                Actor.prototype.changeSprite = function (sprite, resetFrame) {
+                    this.sprite = sprite;
+                    if (resetFrame) {
+                        this.frameIndex = 0;
+                        this.frameTime = 0;
+                    }
+                    else if (this.frameIndex >= this.sprite.frames.length) {
+                        this.frameIndex = 0;
+                    }
+                };
+                Object.defineProperty(Actor.prototype, "currentFrame", {
+                    get: function () {
+                        return this.sprite.frames[this.frameIndex];
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Actor.prototype.update = function () {
+                    this.frameTime += game_4.game.deltaTime * this.frameSpeed;
+                    if (this.frameTime >= this.currentFrame.duration) {
+                        this.frameTime = 0;
+                        this.frameIndex++;
+                        if (this.frameIndex >= this.sprite.frames.length)
+                            this.frameIndex = 0;
+                    }
                     if (this.useGravity) {
                         this.vel.y += game_4.game.level.gravity * game_4.game.deltaTime;
                         if (this.vel.y > 1000) {
@@ -923,9 +956,126 @@ System.register("actor", ["point", "game", "helpers"], function (exports_15, con
         }
     };
 });
-System.register("color", [], function (exports_16, context_16) {
+System.register("character", ["actor", "game", "point"], function (exports_16, context_16) {
     "use strict";
     var __moduleName = context_16 && context_16.id;
+    var actor_2, game_5, point_7, Character, CharState, Idle, Run, Jump, Fall;
+    return {
+        setters: [
+            function (actor_2_1) {
+                actor_2 = actor_2_1;
+            },
+            function (game_5_1) {
+                game_5 = game_5_1;
+            },
+            function (point_7_1) {
+                point_7 = point_7_1;
+            }
+        ],
+        execute: function () {
+            Character = (function (_super) {
+                __extends(Character, _super);
+                function Character() {
+                    var _this = _super.call(this) || this;
+                    _this.charState = new Idle();
+                    return _this;
+                }
+                Character.prototype.update = function () {
+                    this.changeSprite(this.charState.sprite);
+                    this.charState.update();
+                    _super.prototype.update.call(this);
+                };
+                Character.prototype.render = function () {
+                    _super.prototype.render.call(this);
+                };
+                return Character;
+            }(actor_2.Actor));
+            CharState = (function () {
+                function CharState(sprite) {
+                    this.sprite = sprite;
+                }
+                Object.defineProperty(CharState.prototype, "player", {
+                    get: function () {
+                        return this.character.player;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                CharState.prototype.update = function () { };
+                CharState.prototype.airCode = function () {
+                    var move = new point_7.Point(0, 0);
+                    if (this.player.input["left"]) {
+                        move.x = -this.character.runSpeed;
+                    }
+                    else if (this.player.input["right"]) {
+                        move.x = this.character.runSpeed;
+                    }
+                    if (move.magnitude > 0) {
+                        this.character.move(move);
+                    }
+                };
+                return CharState;
+            }());
+            Idle = (function (_super) {
+                __extends(Idle, _super);
+                function Idle() {
+                    return _super.call(this, game_5.game.sprites["megaman_idle"]) || this;
+                }
+                Idle.prototype.update = function () {
+                    if (this.player.input["left"] || this.player.input["right"]) {
+                        this.character.changeState(new Run());
+                    }
+                };
+                return Idle;
+            }(CharState));
+            Run = (function (_super) {
+                __extends(Run, _super);
+                function Run() {
+                    return _super.call(this, game_5.game.sprites["megaman_idle"]) || this;
+                }
+                Run.prototype.update = function () {
+                    var move = new point_7.Point(0, 0);
+                    if (this.player.input["left"]) {
+                        move.x = -this.character.runSpeed;
+                    }
+                    else if (this.player.input["right"]) {
+                        move.x = this.character.runSpeed;
+                    }
+                    if (move.magnitude > 0) {
+                        this.character.move(move);
+                    }
+                    else {
+                        this.character.changeState(new Idle());
+                    }
+                };
+                return Run;
+            }(CharState));
+            Jump = (function (_super) {
+                __extends(Jump, _super);
+                function Jump() {
+                    return _super.call(this, game_5.game.sprites["megaman_jump"]) || this;
+                }
+                Jump.prototype.update = function () {
+                    this.airCode();
+                };
+                return Jump;
+            }(CharState));
+            Fall = (function (_super) {
+                __extends(Fall, _super);
+                function Fall() {
+                    return _super.call(this, game_5.game.sprites["megaman_fall"]) || this;
+                }
+                Fall.prototype.update = function () {
+                    this.airCode();
+                };
+                return Fall;
+            }(CharState));
+        }
+    };
+});
+System.register("color", [], function (exports_17, context_17) {
+    "use strict";
+    var __moduleName = context_17 && context_17.id;
     var Color;
     return {
         setters: [],
@@ -939,7 +1089,7 @@ System.register("color", [], function (exports_16, context_16) {
                 }
                 return Color;
             }());
-            exports_16("Color", Color);
+            exports_17("Color", Color);
         }
     };
 });
