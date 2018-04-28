@@ -96,12 +96,12 @@ export class Actor {
     this.pos.add(inc.multiply(game.deltaTime));
   }
 
-  render() {
+  render(x: number, y: number) {
     //console.log(this.pos.x + "," + this.pos.y);
-    this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y, this.xDir, this.yDir);
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir);
     if(game.showHitboxes && this.collider) {
-      Helpers.drawPolygon(game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
-      Helpers.drawCircle(game.ctx, this.pos.x, this.pos.y, 1, "red");
+      Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+      Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
     }
   }
 

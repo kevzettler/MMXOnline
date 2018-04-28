@@ -1,5 +1,6 @@
 import { Rect } from "./rect";
 import { Point } from "./point";
+import { Shape } from "./shape";
 
 export function inRect(x: number, y: number, rect: Rect): boolean {
   let rx:number = rect.x1;
@@ -72,7 +73,9 @@ export function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: 
   ctx.globalAlpha = 1;
 }
 
-export function drawPolygon(ctx: CanvasRenderingContext2D, vertices: Point[], closed: boolean, fillColor?: string, lineColor?: string, lineThickness?: number, fillAlpha?: number): void {
+export function drawPolygon(ctx: CanvasRenderingContext2D, shape: Shape, closed: boolean, fillColor?: string, lineColor?: string, lineThickness?: number, fillAlpha?: number): void {
+
+  let vertices = shape.points;
 
   if(fillAlpha) {
     ctx.globalAlpha = fillAlpha;

@@ -61,13 +61,13 @@ export class Level {
     if(this.mainPlayer.character) {
       this.computeCamPos(this.mainPlayer.character);
     }
-    game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, Math.round(-this.camX * this.zoomScale), Math.round(-this.camY * this.zoomScale));
+    game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
     Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
-    Helpers.drawImage(game.ctx, this.background, 0, 0);
+    Helpers.drawImage(game.ctx, this.background, -this.camX, -this.camY);
     
     for(let go of this.gameObjects) {
-      go.render();
+      go.render(-this.camX, -this.camY);
     }
   }
 

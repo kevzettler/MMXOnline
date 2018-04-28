@@ -34,7 +34,7 @@ class Game {
     this.isServer = false;
     this.isClient = true;
   
-    this.showHitboxes = true;
+    this.showHitboxes = false;
   
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.ctx = this.canvas.getContext("2d");
@@ -85,7 +85,7 @@ class Game {
       }
     }
 
-    window.setInterval(() => this.gameLoop(), 1000/60);
+    this.gameLoop();
 
   }
 
@@ -152,6 +152,7 @@ class Game {
       //console.log(this.deltaTime);
       this.startTime = Date.now();
     }
+    window.requestAnimationFrame(() => this.gameLoop());
   }
 
 }

@@ -350,7 +350,8 @@ System.register("helpers", ["point"], function (exports_7, context_7) {
         ctx.globalAlpha = 1;
     }
     exports_7("drawRect", drawRect);
-    function drawPolygon(ctx, vertices, closed, fillColor, lineColor, lineThickness, fillAlpha) {
+    function drawPolygon(ctx, shape, closed, fillColor, lineColor, lineThickness, fillAlpha) {
+        var vertices = shape.points;
         if (fillAlpha) {
             ctx.globalAlpha = fillAlpha;
         }
@@ -491,9 +492,9 @@ System.register("geometry", ["collider", "game", "helpers"], function (exports_8
                 }
                 Geometry.prototype.update = function () {
                 };
-                Geometry.prototype.render = function () {
+                Geometry.prototype.render = function (x, y) {
                     if (game_1.game.showHitboxes) {
-                        Helpers.drawPolygon(game_1.game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
+                        Helpers.drawPolygon(game_1.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
                 };
                 Geometry.prototype.onCollision = function (other) {
@@ -572,9 +573,6 @@ System.register("character", ["actor", "game", "point", "collider", "rect"], fun
                     newState.character = this;
                     this.changeSprite(newState.sprite, false);
                     this.charState = newState;
-                };
-                Character.prototype.render = function () {
-                    _super.prototype.render.call(this);
                 };
                 return Character;
             }(actor_1.Actor));
@@ -791,13 +789,13 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                     if (this.mainPlayer.character) {
                         this.computeCamPos(this.mainPlayer.character);
                     }
-                    game_3.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, Math.round(-this.camX * this.zoomScale), Math.round(-this.camY * this.zoomScale));
+                    game_3.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
                     game_3.game.ctx.clearRect(0, 0, game_3.game.canvas.width, game_3.game.canvas.height);
                     Helpers.drawRect(game_3.game.ctx, new rect_3.Rect(0, 0, game_3.game.canvas.width, game_3.game.canvas.height), "gray");
-                    Helpers.drawImage(game_3.game.ctx, this.background, 0, 0);
+                    Helpers.drawImage(game_3.game.ctx, this.background, -this.camX, -this.camY);
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
-                        go.render();
+                        go.render(-this.camX, -this.camY);
                     }
                 };
                 Level.prototype.computeCamPos = function (actor) {
@@ -896,7 +894,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                     this.backgrounds = {};
                     this.isServer = false;
                     this.isClient = true;
-                    this.showHitboxes = true;
+                    this.showHitboxes = false;
                     this.canvas = $("#canvas")[0];
                     this.ctx = this.canvas.getContext("2d");
                     this.ctx.webkitImageSmoothingEnabled = false;
@@ -939,7 +937,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                             player.onKeyUp(e.keyCode);
                         }
                     };
-                    window.setInterval(function () { return _this.gameLoop(); }, 1000 / 60);
+                    this.gameLoop();
                 };
                 Game.prototype.getSpritesheet = function (path) {
                     if (!this.spritesheets[path]) {
@@ -983,6 +981,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                     return true;
                 };
                 Game.prototype.gameLoop = function () {
+                    var _this = this;
                     if (this.isLoaded()) {
                         this.deltaTime = (Date.now() - this.startTime) / 1000;
                         for (var _i = 0, _a = this.level.players; _i < _a.length; _i++) {
@@ -995,6 +994,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                         }
                         this.startTime = Date.now();
                     }
+                    window.requestAnimationFrame(function () { return _this.gameLoop(); });
                 };
                 return Game;
             }());
@@ -1216,11 +1216,11 @@ System.register("actor", ["point", "game", "helpers"], function (exports_17, con
                     }
                     this.pos.add(inc.multiply(game_5.game.deltaTime));
                 };
-                Actor.prototype.render = function () {
-                    this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y, this.xDir, this.yDir);
+                Actor.prototype.render = function (x, y) {
+                    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir);
                     if (game_5.game.showHitboxes && this.collider) {
-                        Helpers.drawPolygon(game_5.game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
-                        Helpers.drawCircle(game_5.game.ctx, this.pos.x, this.pos.y, 1, "red");
+                        Helpers.drawPolygon(game_5.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                        Helpers.drawCircle(game_5.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
                     }
                 };
                 Actor.prototype.onCollision = function (other) {

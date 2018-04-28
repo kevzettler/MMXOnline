@@ -33,10 +33,11 @@ export class Character extends Actor {
     this.changeSprite(newState.sprite, false);
     this.charState = newState;
   }
-
+  /*
   render() {
     super.render();
   }
+  */
 
 }
 
