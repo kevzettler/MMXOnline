@@ -42,7 +42,7 @@ export class Shape {
   getRect(): Rect {
     if(this.points.length !== 4) return undefined;
     if(this.points[0].ix === this.points[3].ix && this.points[1].ix === this.points[2].ix && this.points[0].iy === this.points[1].iy && this.points[2].iy === this.points[3].iy) {
-      return new Rect(this.points[0], this.points[2]);
+      return Rect.Create(this.points[0], this.points[2]);
     }
     return undefined;
   }

@@ -11,11 +11,15 @@ export class Actor {
   frameIndex: number; //Current frame index of sprite
   frameSpeed: number; //Multiplier for how fast frameIndex gets incremented. defaults to 1
   frameTime: number;  //The current time of the frame
+  xDir: number; //-1 or 1
+  yDir: number;
   pos: Point; //Current location
   vel: Point;
   angle: number;
   useGravity: boolean;
+  grounded: boolean;
   name: string;
+  globalCollider: Collider; //If no collider data found in sprite, fall back to this one
 
   constructor() {
     this.pos = new Point(0, 0);
@@ -24,7 +28,11 @@ export class Actor {
     this.useGravity = true;
     this.frameIndex = 0;
     this.frameSpeed = 1;
+    this.frameTime = 0;
     this.name = "";
+    this.xDir = 1;
+    this.yDir = 1;
+    game.level.addGameObject(this);
   }
 
   changeSprite(sprite: Sprite, resetFrame: boolean) {
@@ -43,7 +51,7 @@ export class Actor {
   }
 
   update() {
-
+    this.grounded = false;
     this.frameTime += game.deltaTime * this.frameSpeed;
     if(this.frameTime >= this.currentFrame.duration) {
       this.frameTime = 0;
@@ -57,7 +65,15 @@ export class Actor {
         this.vel.y = 0;
       }
     }
-    let inc: Point = this.vel.clone();
+    if(game.level.checkCollisionActor(this, 0, this.vel.y * game.deltaTime)) {
+      this.grounded = true;
+      this.vel.y = 0;
+    }
+    this.move(this.vel);
+  }
+
+  move(amount: Point) {
+    let inc: Point = amount.clone();
     while(inc.magnitude > 0) {
       if(game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime)) {
         inc.multiply(0.5);
@@ -76,7 +92,7 @@ export class Actor {
 
   render() {
     //console.log(this.pos.x + "," + this.pos.y);
-    this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y);
+    this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y, this.xDir, this.yDir);
     if(game.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
     }
@@ -91,8 +107,14 @@ export class Actor {
   }
 
   get collider(): Collider {
-    if(this.sprite.hitboxes.length === 0) return undefined;
-    let offset = this.sprite.getAlignOffset(this.frameIndex);
+    let offset = this.sprite.getAlignOffset(0);
+
+    if(this.sprite.hitboxes.length === 0) {
+      if(this.globalCollider) {
+        return this.globalCollider.clone(this.pos.x + offset.x, this.pos.y + offset.y);
+      }
+      return undefined;
+    }
     return this.sprite.hitboxes[0].clone(this.pos.x + offset.x, this.pos.y + offset.y);
   }
 

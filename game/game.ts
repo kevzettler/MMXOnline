@@ -2,6 +2,7 @@ import { Sprite } from "./sprite";
 import { Level } from "./level";
 import { spriteJsons } from "./sprites";
 import { levelJsons } from "./levels";
+import { Player } from "./player";
 
 class Game {
 
@@ -38,13 +39,53 @@ class Game {
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.ctx = this.canvas.getContext("2d");
 
+    this.ctx.webkitImageSmoothingEnabled = false;
+    this.ctx.mozImageSmoothingEnabled = false;
+    this.ctx.imageSmoothingEnabled = false; /// future
   }
 
   start() {
     this.loadSprites();
     this.loadLevels();
-    this.level = this.levels["new_level"];
+    this.loadLevel("new_level");
+  }
+
+  startVue() {
+    // @ts-ignore
+    var app1 = new Vue({
+      el: '#app',
+      data: {
+        showHitboxes: true
+      },
+      methods: {
+        onHitboxCheckChange() {
+          game.showHitboxes = this.showHitboxes;
+        }
+      }
+    });
+  }
+
+  loadLevel(name: string) {
+
+    this.level = this.levels[name];
+
+    let player1: Player = new Player();
+    this.level.localPlayers.push(player1);
+   
+    document.onkeydown = (e) => {
+      for(let player of this.level.localPlayers) {
+        player.onKeyDown(e.keyCode);
+      }
+    }
+
+    document.onkeyup = (e) => {
+      for(let player of this.level.localPlayers) {
+        player.onKeyUp(e.keyCode);
+      }
+    }
+
     window.setInterval(() => this.gameLoop(), 1000/60);
+
   }
 
   getSpritesheet(path: string) {
@@ -97,14 +138,14 @@ class Game {
       this.deltaTime = (Date.now() - this.startTime) /1000;
     
       for(let player of this.level.players) {
-        player.detectInput();
+        //player.detectInput();
       }
 
       this.level.update();
       this.level.render();
 
       for(let player of this.level.players) {
-        player.resetInput();
+        //player.resetInput();
       }
 
       //console.log(this.deltaTime);

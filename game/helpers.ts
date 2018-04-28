@@ -20,8 +20,8 @@ export function inCircle(x: number, y: number, circleX: number, circleY: number,
 export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, x?: number, y?: number, flipX?: number, flipY?: number): void {
 
   ctx.save();
-  flipX = flipX ? -1: 1;
-  flipY = flipY ? -1: 1;
+  flipX = flipX || 1;
+  flipY = flipY || 1;
   ctx.scale(flipX, 1);
 
   if(!sW) {

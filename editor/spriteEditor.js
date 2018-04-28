@@ -33,7 +33,22 @@ c1.mozImageSmoothingEnabled = false;
 c1.imageSmoothingEnabled = false; /// future
 
 var methods = {
-  onSpritesheetChange(newSheet) {
+  onSpritesheetChange(newSheet, isNew) {
+
+    var newSpriteAndSheetSel = isNew && this.selectedSpritesheet;
+    
+    if(newSpriteAndSheetSel) {
+      this.selectedSprite.spritesheet = this.selectedSpritesheet;
+      this.selectedSprite.spritesheetPath = this.selectedSpritesheet.path;
+      return;
+    }
+
+    /*
+    if(newSheet === this.selectedSpritesheet) {
+      return;
+    }
+    */
+
     this.selectedSpritesheet = newSheet;
 
     if(!this.selectedSpritesheet) {
@@ -61,16 +76,17 @@ var methods = {
     spritesheetImg.src = newSheet.path;
   },
   addSprite() {
-    var newSprite = new Sprite(this.newSpriteName);
-    this.changeSprite(newSprite);
+    var spritename = prompt("Enter a sprite name");
+    var newSprite = new Sprite(spritename);
+    this.changeSprite(newSprite, true);
     this.sprites.push(newSprite);
     this.selectedFrame = null;
     this.selectedHitbox = null;
     resetVue();
   },
-  changeSprite(newSprite) {
+  changeSprite(newSprite, isNew) {
     this.selectedSprite = newSprite;
-    this.onSpritesheetChange(newSprite.spritesheet);
+    this.onSpritesheetChange(newSprite.spritesheet, isNew);
     this.selectedHitbox = null;
     this.selectedFrame = this.selectedSprite.frames[0];
     redrawCanvas1();
@@ -219,9 +235,9 @@ setInterval(mainLoop, 1000 / 60);
 
 function mainLoop() {
   if(data.isAnimPlaying) {
-    animTime++;
+    animTime += 1000 / 60;
     var frames = data.selectedSprite.frames;
-    if(animTime >= frames[animFrameIndex].duration) {
+    if(animTime >= frames[animFrameIndex].duration * 1000) {
       animFrameIndex++;
       if(animFrameIndex >= frames.length) {
         animFrameIndex = 0;
@@ -290,6 +306,8 @@ function redrawCanvas1() {
         var hx; var hY;
         halfW = hitbox.width * 0.5;
         halfH = hitbox.height * 0.5;
+        var w = halfW * 2;
+        var h = halfH * 2;
         if(data.selectedSprite.alignment === "topleft") {
           hx = cX; hy = cY;
         }
@@ -393,7 +411,7 @@ canvas2.onclick = function(event) {
   //No frame clicked, see if continous image was clicked, if so add to pending
   var rect = getPixelClumpRect(x, y, data.selectedSpritesheet.imageArr);
   if(rect) {
-    data.selectedFrame = new Frame(rect, 5, new Point(0,0));
+    data.selectedFrame = new Frame(rect, 0.066, new Point(0,0));
     redrawCanvas1();
     redrawCanvas2();
   }
@@ -479,6 +497,7 @@ canvas1.onmousewheel = function(e) {
   */
 }
 
+var ctrlHeld = false;
 document.onkeydown = function(e) {
   onKeyDown(inputMap[e.keyCode], !keysHeld[e.keyCode]);
   keysHeld[e.keyCode] = true;
@@ -486,11 +505,17 @@ document.onkeydown = function(e) {
   if(e.keyCode === inputMap['space']) {
     e.preventDefault();
   }
+  if(e.keyCode === inputMap['ctrl']) {
+    ctrlHeld = true;
+  }
 }
 
 document.onkeyup = function(e) {
   keysHeld[e.keyCode] = false;
   //onKeyUp(e.keyCode);
+  if(e.keyCode === inputMap['ctrl']) {
+    ctrlHeld = false;
+  }
 }
 
 function onMouseMove(deltaX, deltaY) {
@@ -517,38 +542,36 @@ function onKeyDown(key, firstFrame) {
     data.selectedHitbox = null;
   }
 
+  if(data.selectedFrame && !app1.isSelectedFrameAdded()) {
+    if(key === "f") {
+      app1.addPendingFrame();
+    }
+  }
+
   if(data.selectedHitbox && firstFrame) {
     if(key === "a") {
-      if(!ctrlHeld) data.selectedHitbox.move(-1, 0);
-      else data.selectedHitbox.resizeCenter(-1, 0);
+      data.selectedHitbox.move(-1, 0);
     }
     else if(key === "d") {
-      if(!ctrlHeld) data.selectedHitbox.move(1, 0);
-      else data.selectedHitbox.resizeCenter(1, 0);
+      data.selectedHitbox.move(1, 0);
     }
     else if(key === "w") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, -1);
-      else data.selectedHitbox.resizeCenter(0, -1);
+      data.selectedHitbox.move(0, -1);
     }
     else if(key === "s") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, 1);
-      else data.selectedHitbox.resizeCenter(0, 1);
+      data.selectedHitbox.move(0, 1);
     }
     else if(key === "leftarrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(-1, 0);
-      else data.selectedHitbox.resizeCenter(-1, 0);
+      data.selectedHitbox.resizeCenter(-1, 0);
     }
     else if(key === "rightarrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(1, 0);
-      else data.selectedHitbox.resizeCenter(1, 0);
-    }
-    else if(key === "uparrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, -1);
-      else data.selectedHitbox.resizeCenter(0, -1);
+      data.selectedHitbox.resizeCenter(1, 0);
     }
     else if(key === "downarrow") {
-      if(!ctrlHeld) data.selectedHitbox.move(0, 1);
-      else data.selectedHitbox.resizeCenter(0, 1);
+      data.selectedHitbox.resizeCenter(0, -1);
+    }
+    else if(key === "uparrow") {
+      data.selectedHitbox.resizeCenter(0, 1);
     }
   }
   else if(data.selectedFrame && firstFrame) {

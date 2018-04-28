@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/gamePage.css">
 <title>Game</title>
 </head>
 <body>
 
 <canvas id="canvas" width="850" height="600"></canvas>
+
+<div id="app">
+  Show hitboxes? <input type="checkbox" v-model="showHitboxes" @change="onHitboxCheckChange()">
+</div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
@@ -17,6 +21,7 @@
 <script>
   SystemJS.import("game").then(function(game) {
     game.game.start();
+    game.game.startVue();
   });
 </script>
 

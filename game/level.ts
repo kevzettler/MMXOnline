@@ -4,6 +4,8 @@ import { Point } from "./point";
 import { game } from "./game";
 import * as Helpers from "./helpers";
 import { Actor } from "./actor";
+import { Player } from "./player";
+import { Rect } from "./rect";
 
 export class Level {
 
@@ -35,6 +37,8 @@ export class Level {
         this.gameObjects.push(actor);
       }
     }
+    this.localPlayers = [];
+    this.players = [];
   }
   
   update() {
@@ -44,13 +48,23 @@ export class Level {
   }
 
   render() {
+    
+    let zoomScale = 2;
+    
+    game.ctx.setTransform(zoomScale, 0, 0, zoomScale, 0, 0);
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+    Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
+    
     Helpers.drawImage(game.ctx, this.background, 0, 0);
     for(let go of this.gameObjects) {
       go.render();
     }
   }
   
+  addGameObject(go: GameObject) {
+    this.gameObjects.push(go);
+  }
+
   checkCollisionActor(actor: Actor, offsetX: number, offsetY: number): boolean {
     
     if(!actor.collider || actor.collider.isTrigger) return false;

@@ -13,7 +13,6 @@
       v-bind:class="{ selected: sprite === selectedSprite }">{{ sprite.name }}</div>
     <br>
     <button v-on:click="addSprite()">New sprite</button>
-    <input type="text" v-model="newSpriteName" style="width: 140px" />
   </div>
 </div>
 
@@ -82,12 +81,12 @@
   </div>
   <div id="app3">
     <div v-if="selectedSpritesheet">
-      <div v-for="(frame, index) in selectedSprite.frames" class="frame-data" v-bind:class=" { 'selected-frame': selectedFrame === frame }">
+      <div v-for="(frame, index) in selectedSprite.frames" v-on:click="selectFrame(frame)" class="frame-data unselectable" v-bind:class=" { 'selected-frame': selectedFrame === frame }">
         <b>Frame {{ index + 1 }} </b>
-        frames: <input type="number" style="width: 40px" v-model.number="frame.duration" /> 
+        secs: <input type="number" style="width: 40px" v-model.number="frame.duration" /> 
         x-off: <input type="number" style="width: 40px" v-model.number="frame.offset.x" @change="redraw()" /> 
         y-off: <input type="number" style="width: 40px" v-model.number="frame.offset.y" @change="redraw()" /> 
-        <button v-on:click="selectFrame(frame)">Select</button>
+        <!--<button v-on:click="selectFrame(frame)">Select</button>-->
         <button v-on:click="deleteFrame(frame)">Delete</button>
       </div>
       <div v-if="selectedSprite.frames.length > 0">

@@ -76,6 +76,7 @@ router.get('/get-sprites', function(req, res) {
     var content = fs.readFileSync(dirname + filename, 'utf-8');
     var sprite = JSON.parse(content);
     sprite.path = dirname + filename;
+    sprite.name = filename.split(".")[0];
     sprites.push(sprite);
   }
 
@@ -106,7 +107,7 @@ router.post('/save-sprite', function(req, res) {
   fs.writeFileSync("./assets/sprites/" + req.body.name + ".json", JSON.stringify(req.body));
 
   var fileNames = fs.readdirSync("assets/sprites/");
-  var jsCode = "var spriteJsons = [";
+  var jsCode = "var spriteJsons: any = [";
   var first = true;
   for(var filename of fileNames) {
     if(!filename.endsWith(".json")) continue;
@@ -115,7 +116,8 @@ router.post('/save-sprite', function(req, res) {
     jsCode += content;
     first = false;
   }
-  jsCode += "];";
+  jsCode += "];\n";
+  jsCode += "export {spriteJsons};"
   fs.writeFileSync("./game/sprites.ts", jsCode);
 
   res.json({message:"Success"});
@@ -126,7 +128,7 @@ router.post('/save-level', function(req, res) {
   fs.writeFileSync("./assets/levels/" + req.body.name + ".json", JSON.stringify(req.body));
 
   var fileNames = fs.readdirSync("assets/levels/");
-  var jsCode = "var levelJsons = [";
+  var jsCode = "var levelJsons: any = [";
   var first = true;
   for(var filename of fileNames) {
     if(!filename.endsWith(".json")) continue;
@@ -135,7 +137,8 @@ router.post('/save-level', function(req, res) {
     jsCode += content;
     first = false;
   }
-  jsCode += "];";
+  jsCode += "];\n";
+  jsCode += "export {levelJsons};"
   fs.writeFileSync("./game/levels.ts", jsCode);
 
   res.json({message:"Success"});

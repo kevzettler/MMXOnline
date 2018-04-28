@@ -5,9 +5,13 @@ export class Rect {
   topLeftPoint: Point;
   botRightPoint: Point;
 
-  constructor(topLeftPoint: Point, botRightPoint: Point) {    
-    this.topLeftPoint = topLeftPoint;
-    this.botRightPoint = botRightPoint;
+  static Create(topLeftPoint: Point, botRightPoint: Point) {
+    return new Rect(topLeftPoint.x, topLeftPoint.y, botRightPoint.x, botRightPoint.y);
+  }
+
+  constructor(x1: number, y1: number, x2: number, y2: number) {    
+    this.topLeftPoint = new Point(x1, y1);
+    this.botRightPoint = new Point(x2, y2);
   }
 
   get x1(): number {

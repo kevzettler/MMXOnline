@@ -32,8 +32,7 @@ export class Sprite {
     }
     for(let frameJson of spriteJson.frames) {
       let frame: Frame = new Frame(
-        new Rect(new Point(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y), 
-          new Point(frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y)),
+        new Rect(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y,  frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y),
         frameJson.duration,
         new Point(frameJson.offset.x, frameJson.offset.y)
       );
@@ -42,7 +41,11 @@ export class Sprite {
   }
 
   //Given the sprite's alignment, get the offset x and y on where to actually draw the sprite
-  getAlignOffset(frameIndex: number): Point {
+  getAlignOffset(frameIndex: number, flipX?: number, flipY?: number): Point {
+    
+    flipX = flipX || 1;
+    flipY = flipY || 1;
+
     let frame = this.frames[frameIndex];
 
     let rect = frame.rect;
@@ -85,14 +88,17 @@ export class Sprite {
     else if(this.alignment === "botright") {
       x = cX - w; y = cY - h;
     }
-    return new Point(x + offset.x, y + offset.y);
+    return new Point(x + offset.x * flipX, y + offset.y * flipY);
   }
 
   draw(frameIndex: number, x: number, y: number, flipX?: number, flipY?: number) {
     
+    flipX = flipX || 1;
+    flipY = flipY || 1;
+
     let frame = this.frames[frameIndex];
     let rect = frame.rect;
-    let offset = this.getAlignOffset(frameIndex);
+    let offset = this.getAlignOffset(frameIndex, flipX, flipY);
 
     Helpers.drawImage(game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
 
