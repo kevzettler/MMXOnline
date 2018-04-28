@@ -42,6 +42,10 @@
         <select v-model="selectedSprite.alignment" @change="onSpriteAlignmentChange()">
           <option v-for="alignment in alignments" v-bind:value="alignment">{{ alignment }}</option>
         </select>
+        Wrap mode:
+        <select v-model="selectedSprite.wrapMode" @change="onWrapModeChange()">
+          <option v-for="wrapMode in wrapModes" v-bind:value="wrapMode">{{ wrapMode }}</option>
+        </select>
       </div>
 
       <div class="hitbox-section">

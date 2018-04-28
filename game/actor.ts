@@ -32,6 +32,7 @@ export class Actor {
     this.name = "";
     this.xDir = 1;
     this.yDir = 1;
+    this.grounded = false;
     game.level.addGameObject(this);
   }
 
@@ -51,25 +52,30 @@ export class Actor {
   }
 
   update() {
-    this.grounded = false;
-    this.frameTime += game.deltaTime * this.frameSpeed;
-    if(this.frameTime >= this.currentFrame.duration) {
-      this.frameTime = 0;
-      this.frameIndex++;
-      if(this.frameIndex >= this.sprite.frames.length) this.frameIndex = 0;
-    }
-
-    if(this.useGravity) {
-      this.vel.y += game.level.gravity * game.deltaTime;
-      if(this.vel.y > 1000) {
-        this.vel.y = 0;
+    let onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
+    if(!onceEnd) {
+      this.frameTime += game.deltaTime * this.frameSpeed;
+      if(this.frameTime >= this.currentFrame.duration) {
+        this.frameTime = 0;
+        this.frameIndex++;
+        if(this.frameIndex >= this.sprite.frames.length) this.frameIndex = 0;
       }
     }
-    if(game.level.checkCollisionActor(this, 0, this.vel.y * game.deltaTime)) {
+
+    if(this.useGravity && !this.grounded) {
+      this.vel.y += game.level.gravity * game.deltaTime;
+      if(this.vel.y > 1000) {
+        this.vel.y = 1000;
+      }
+    }
+    this.move(this.vel);
+    if(game.level.checkCollisionActor(this, 0, 1)) {
       this.grounded = true;
       this.vel.y = 0;
     }
-    this.move(this.vel);
+    else {
+      this.grounded = false;
+    }
   }
 
   move(amount: Point) {
@@ -95,6 +101,7 @@ export class Actor {
     this.sprite.draw(this.frameIndex, this.pos.x, this.pos.y, this.xDir, this.yDir);
     if(game.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.points, true, "blue", "", 0, 0.5);
+      Helpers.drawCircle(game.ctx, this.pos.x, this.pos.y, 1, "red");
     }
   }
 
@@ -107,14 +114,15 @@ export class Actor {
   }
 
   get collider(): Collider {
-    let offset = this.sprite.getAlignOffset(0);
-
     if(this.sprite.hitboxes.length === 0) {
       if(this.globalCollider) {
+        let rect = this.globalCollider.shape.getRect();
+        let offset = this.sprite.getAlignOffsetHelper(rect, new Point(0,0), this.xDir, this.yDir);
         return this.globalCollider.clone(this.pos.x + offset.x, this.pos.y + offset.y);
       }
       return undefined;
     }
+    let offset = this.sprite.getAlignOffset(0, this.xDir, this.yDir);
     return this.sprite.hitboxes[0].clone(this.pos.x + offset.x, this.pos.y + offset.y);
   }
 

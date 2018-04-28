@@ -132,7 +132,7 @@ export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number,
   ctx.strokeText(text,x,y);
 }
 
-export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fillColor: string, lineColor: string, lineThickness: number) {
+export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fillColor?: string, lineColor?: string, lineThickness?: number) {
   ctx.beginPath();
   ctx.arc(x, y, r, 0, 2*Math.PI, false);
   

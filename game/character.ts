@@ -19,17 +19,17 @@ export class Character extends Actor {
     this.player = player;
     let rect = new Rect(0, 0, 24, 34);
     this.globalCollider = new Collider(rect.getPoints());
-    this.changeState(new Idle(this));
+    this.changeState(new Idle());
     this.runSpeed = 100;
   }
 
   update() {
     this.charState.update();
-
     super.update();
   }
 
   changeState(newState: CharState) {
+    newState.character = this;
     this.changeSprite(newState.sprite, false);
     this.charState = newState;
   }
@@ -46,9 +46,8 @@ class CharState {
   busterOffset: Point;
   character: Character;
 
-  constructor(sprite: Sprite, character: Character) {
+  constructor(sprite: Sprite) {
     this.sprite = sprite;
-    this.character = character;
   }
 
   get player() {
@@ -59,7 +58,7 @@ class CharState {
 
   airCode() {
     if(this.character.grounded) {
-      this.character.changeState(new Idle(this.character));
+      this.character.changeState(new Idle());
       return;
     }
     let move = new Point(0, 0);
@@ -78,11 +77,11 @@ class CharState {
 
   groundCode() {
     if(!this.character.grounded) {
-      this.character.changeState(new Fall(this.character));
+      this.character.changeState(new Fall());
     }
     else if(this.player.input["jump"]) {
       this.character.vel.y = -400;
-      this.character.changeState(new Jump(this.character));
+      this.character.changeState(new Jump());
     }
   }
 
@@ -90,13 +89,13 @@ class CharState {
 
 class Idle extends CharState {
 
-  constructor(character: Character) {
-    super(game.sprites["mmx_idle"], character);
+  constructor() {
+    super(game.sprites["mmx_idle"]);
   }
 
   update() {
     if(this.player.input["left"] || this.player.input["right"]) {
-      this.character.changeState(new Run(this.character));
+      this.character.changeState(new Run());
     }
     this.groundCode();
   }
@@ -105,8 +104,8 @@ class Idle extends CharState {
 
 class Run extends CharState {
 
-  constructor(character: Character) {
-    super(game.sprites["mmx_run"], character);
+  constructor() {
+    super(game.sprites["mmx_run"]);
   }
 
   update() {
@@ -123,7 +122,7 @@ class Run extends CharState {
       this.character.move(move);
     }
     else {
-      this.character.changeState(new Idle(this.character));
+      this.character.changeState(new Idle());
     }
     this.groundCode();
   }
@@ -132,20 +131,23 @@ class Run extends CharState {
 
 class Jump extends CharState {
 
-  constructor(character: Character) {
-    super(game.sprites["mmx_jump"], character);
+  constructor() {
+    super(game.sprites["mmx_jump"]);
   }
 
   update() {
     this.airCode();
+    if(this.character.vel.y > 0) {
+      this.character.changeState(new Fall());
+    }
   }
 
 }
 
 class Fall extends CharState {
 
-  constructor(character: Character) {
-    super(game.sprites["mmx_fall"], character);
+  constructor() {
+    super(game.sprites["mmx_fall"]);
   }
 
   update() {

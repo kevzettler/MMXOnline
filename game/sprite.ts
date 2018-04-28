@@ -12,10 +12,13 @@ export class Sprite {
   frames: Frame[];
   alignment: string;
   spritesheet: HTMLImageElement;
+  wrapMode: string; //Can be "once", "loop" or "pingpong"
 
   constructor(spriteJson: any) {
     this.name = spriteJson.name;
     this.alignment = spriteJson.alignment;
+    this.wrapMode = spriteJson.wrapMode;
+    if(!this.wrapMode) console.error("NO WRAP MODE");
     this.frames = [];
     this.hitboxes = [];
     
@@ -40,16 +43,20 @@ export class Sprite {
     }
   }
 
-  //Given the sprite's alignment, get the offset x and y on where to actually draw the sprite
   getAlignOffset(frameIndex: number, flipX?: number, flipY?: number): Point {
-    
-    flipX = flipX || 1;
-    flipY = flipY || 1;
-
     let frame = this.frames[frameIndex];
 
     let rect = frame.rect;
     let offset = frame.offset;
+
+    return this.getAlignOffsetHelper(rect, offset, flipX, flipY);
+  }
+
+  //Given the sprite's alignment, get the offset x and y on where to actually draw the sprite
+  getAlignOffsetHelper(rect: Rect, offset: Point, flipX?: number, flipY?: number): Point {
+    
+    flipX = flipX || 1;
+    flipY = flipY || 1;
 
     let w = rect.w;
     let h = rect.h;

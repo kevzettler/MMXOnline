@@ -7,6 +7,7 @@ var data = {
   selectedFrame: null,
   isAnimPlaying: false,
   alignments: [ "topleft", "topmid", "topright", "midleft", "center", "midright,", "botleft", "botmid", "botright"],
+  wrapModes: ["loop", "once", "pingpong", "pingpongonce"],
   zoom: 5,
   offsetX: 0,
   offsetY: 0,

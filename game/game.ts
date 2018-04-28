@@ -71,6 +71,7 @@ class Game {
 
     let player1: Player = new Player();
     this.level.localPlayers.push(player1);
+    this.level.mainPlayer = player1;
    
     document.onkeydown = (e) => {
       for(let player of this.level.localPlayers) {

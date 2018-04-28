@@ -96,6 +96,7 @@ class Sprite {
     this.name = name || "new_sprite";
     this.path = "sprites/" + name + ".json";
     this.alignment = "center";
+    this.wrapMode = "once";
   }
 
   onDeserialize() {

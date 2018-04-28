@@ -15,8 +15,17 @@ export class Level {
   gravity: number;
   localPlayers: Player[];
   players: Player[];
+  camX: number;
+  camY: number;
+  fixedCam: boolean;
+  zoomScale: number;
+  mainPlayer: Player;
 
   constructor(levelJson: any) {
+    this.zoomScale = 3;
+    this.camX = 0;
+    this.camY = 0;
+    this.fixedCam = false;
     this.gravity = 1000;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
@@ -49,16 +58,31 @@ export class Level {
 
   render() {
     
-    let zoomScale = 2;
-    
-    game.ctx.setTransform(zoomScale, 0, 0, zoomScale, 0, 0);
+    if(this.mainPlayer.character) {
+      this.computeCamPos(this.mainPlayer.character);
+    }
+    game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, Math.round(-this.camX * this.zoomScale), Math.round(-this.camY * this.zoomScale));
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
     Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
-    
     Helpers.drawImage(game.ctx, this.background, 0, 0);
+    
     for(let go of this.gameObjects) {
       go.render();
     }
+  }
+
+  computeCamPos(actor: Actor) {
+    let scaledCanvasW = game.canvas.width / this.zoomScale;
+    let scaledCanvasH = game.canvas.height / this.zoomScale;
+    
+    this.camX = actor.pos.x - scaledCanvasW/2;
+    this.camY = actor.pos.y - scaledCanvasH/2;
+
+    if(this.camX < 0) this.camX = 0;
+    if(this.camY < 0) this.camY = 0;
+
+    if(this.camX > this.background.width - scaledCanvasW/2) this.camX = this.background.width - scaledCanvasW/2;
+    if(this.camY > this.background.height - scaledCanvasH/2) this.camY = this.background.height - scaledCanvasH/2;
   }
   
   addGameObject(go: GameObject) {
