@@ -22,7 +22,6 @@ export class Projectile extends Actor {
   }
 
   onTrigger(other: Collider) {
-    console.log("TRIGGERED");
     let character = <Character> other.gameObject;
     if(character && character.player.alliance !== this.damager.owner.alliance) {
       character.applyDamage(this.damager.damage);

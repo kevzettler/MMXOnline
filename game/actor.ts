@@ -3,7 +3,7 @@ import { Point } from "./point";
 import { Collider } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
-import { Anim } from "./anim";
+//import { Anim } from "./anim";
 
 //Anything that has: a position, rotation and name. Can also have an optional collider
 export class Actor {
@@ -57,16 +57,17 @@ export class Actor {
   }
 
   update() {
-    let onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
-    if(!onceEnd) {
-      this.frameTime += game.deltaTime * this.frameSpeed;
-      if(this.frameTime >= this.currentFrame.duration) {
+    
+    this.frameTime += game.deltaTime * this.frameSpeed;
+    if(this.frameTime >= this.currentFrame.duration) {
+      let onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
+      if(!onceEnd) {
         this.frameTime = 0;
         this.frameIndex++;
         if(this.frameIndex >= this.sprite.frames.length) this.frameIndex = 0;
       }
     }
-
+    
     if(this.useGravity && !this.grounded) {
       this.vel.y += game.level.gravity * game.deltaTime;
       if(this.vel.y > 1000) {
@@ -74,18 +75,21 @@ export class Actor {
       }
     }
     this.move(this.vel);
-    if(game.level.checkCollisionActor(this, 0, 1)) {
-      this.grounded = true;
-      this.vel.y = 0;
-    }
-    else {
-      this.grounded = false;
-    }
 
-    let trigger = game.level.checkTriggerActor(this, 0, 0);
-    if(trigger) {
-      console.log("REGISTER");
-      this.registerTrigger(trigger);
+    if(this.collider && !this.collider.isTrigger) {
+      if(game.level.checkCollisionActor(this, 0, 1)) {
+        this.grounded = true;
+        this.vel.y = 0;
+      }
+      else {
+        this.grounded = false;
+      }
+    }
+    else if(this.collider) {
+      let trigger = game.level.checkTriggerActor(this, 0, 0);
+      if(trigger) {
+        this.registerTrigger(trigger);
+      }
     }
   }
 
@@ -164,11 +168,31 @@ export class Actor {
 
   //Optionally take in a sprite to draw when destroyed
   destroySelf(sprite?: Sprite) {
-    game.level.gameObjects.splice(game.level.gameObjects.indexOf(this));
-    //_.remove(game.level.gameObjects, this);
+    game.level.gameObjects.splice(game.level.gameObjects.indexOf(this), 1);
     if(sprite) {
-      let anim = new Anim(this.pos.x, this.pos.y, this.sprite);
+      let anim = new Anim(this.pos.x, this.pos.y, sprite);
     }
   }
 
 }
+
+
+class Anim extends Actor {
+
+  constructor(x: number, y: number, sprite: Sprite) {
+    super();
+    this.pos.x = x;
+    this.pos.y = y;
+    this.sprite = sprite;
+    this.useGravity = false;
+  }
+
+  update() {
+    super.update();
+    if(this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration) {
+      this.destroySelf();
+    }
+  }
+
+}
+

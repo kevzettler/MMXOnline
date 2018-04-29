@@ -111,7 +111,8 @@ export class Level {
     if(!actor.collider) return undefined;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
-      if(!go.collider || !go.collider.isTrigger) continue;
+      if(!go.collider) continue;
+      if(!go.collider.isTrigger && !actor.collider.isTrigger) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
         return go.collider;
