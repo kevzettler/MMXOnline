@@ -23,6 +23,7 @@
       
       <button v-on:click="playAnim()">{{ isAnimPlaying ? "Stop" : "Play" }}</button>
       <button v-on:click="saveSprite()">Save</button>
+      <button v-on:click="saveSprites()">Save All</button>
       
       Zoom:<input type="number" style="width: 50px" v-model:number="displayZoom" @change="redraw()"> %
       <input type="checkbox" v-model="hideGizmos" @change="redraw()"/>Hide gizmos
@@ -56,6 +57,7 @@
           x-off<input type="text" v-model.number="hitbox.offset.x" class="short-input" @change="redraw()" />
           y-off<input type="text" v-model.number="hitbox.offset.y" class="short-input" @change="redraw()" />
           flag<input type="text" class="hitbox-tag-input" v-model="hitbox.tags" @change="redraw()" />
+          tr?<input type="checkbox" class="hitbox-tag-input" v-model="hitbox.isTrigger" @change="redraw()" />
           <button v-on:click="selectHitbox(hitbox)">Select</button>
           <button v-on:click="deleteHitbox(selectedSprite.hitboxes, hitbox)">Delete</button>
         </div>
@@ -69,11 +71,25 @@
           h<input type="text" v-model.number="hitbox.height" class="short-input" @change="redraw()" />
           x-off<input type="text" v-model.number="hitbox.offset.x" class="short-input" @change="redraw()" />
           y-off<input type="text" v-model.number="hitbox.offset.y" class="short-input" @change="redraw()" />
-          <input type="text" class="hitbox-tag-input" v-model="hitbox.tags" @change="redraw()" />
+          flag<input type="text" class="hitbox-tag-input" v-model="hitbox.tags" @change="redraw()" />
+          tr?<input type="checkbox" class="hitbox-tag-input" v-model="hitbox.isTrigger" @change="redraw()" />
           <button v-on:click="selectHitbox(hitbox)">Select</button>
           <button v-on:click="deleteHitbox(selectedFrame.hitboxes, hitbox)">Delete</button>
         </div>
         <button v-on:click="addHitbox(selectedSprite)">New hitbox</button>
+      </div>
+
+      <br/>
+      <div class="hitbox-section" v-if="selectedFrame">
+        Frame POIs<br>
+        <div v-for="poi in selectedFrame.POIs" class="frame-data" v-bind:class="{ 'selected-frame': selectedPOI === poi }">
+          x<input type="text" v-model.number="poi.x" class="short-input" @change="redraw()" />
+          y<input type="text" v-model.number="poi.y" class="short-input" @change="redraw()" />
+          <input type="text" class="hitbox-tag-input" v-model="poi.tags" @change="redraw()" />
+          <button v-on:click="selectPOI(poi)">Select</button>
+          <button v-on:click="deletePOI(selectedFrame.POIs, poi)">Delete</button>
+        </div>
+        <button v-on:click="addPOIMode = true;">New POI</button>
       </div>
 
     </div>

@@ -6,6 +6,7 @@ var data = {
   selectedHitbox: null,
   selectedFrame: null,
   isAnimPlaying: false,
+  addPOIMode: false,
   alignments: [ "topleft", "topmid", "topright", "midleft", "center", "midright,", "botleft", "botmid", "botright"],
   wrapModes: ["loop", "once", "pingpong", "pingpongonce"],
   zoom: 5,
@@ -15,7 +16,8 @@ var data = {
   flipX: false,
   flipY: false,
   bulkDuration: 0,
-  newSpriteName: ""
+  newSpriteName: "",
+  selectedPOI: null
 };
 
 var canvas1DefaultWidth = 700;
@@ -63,6 +65,10 @@ var methods = {
       this.selectedSprite.spritesheetPath = newSheet.path;
     }
 
+    if(newSheet.imageEl) {
+      return;
+    }
+
     var spritesheetImg = document.createElement("img");
     spritesheetImg.onload = function() { 
       canvas2.width = spritesheetImg.width;
@@ -92,6 +98,21 @@ var methods = {
     this.selectedFrame = this.selectedSprite.frames[0];
     redrawCanvas1();
     redrawCanvas2();
+  },
+  addPOI(spriteOrFrame, x, y) {
+    var poi = new POI(x,y);
+    spriteOrFrame.POIs.push(poi);
+    this.selectPOI(poi);
+    redrawCanvas1();
+  },
+  selectPOI(poi) {
+    this.selectedPOI = poi;
+    selection = poi;
+    redrawCanvas1();
+  },
+  deletePOI(poiArr, poi) {
+    _.pull(poiArr, poi);
+    resetVue();
   },
   addHitbox(spriteOrFrame) {
     var hitbox = new Hitbox();
@@ -153,6 +174,22 @@ var methods = {
       console.log("Successfully saved sprite");
     }, error => {
       console.log("Failed to save sprite");
+    });
+  },
+  saveSprites() {
+
+    var jsonStr = "[";
+    for(var sprite of this.sprites) {
+      jsonStr += serializeES6(sprite);
+      jsonStr += ",";
+    }
+    if(jsonStr[jsonStr.length - 1] === ",") jsonStr = jsonStr.slice(0, -1);
+    jsonStr += "]";
+    
+    Vue.http.post("save-sprites", JSON.parse(jsonStr)).then(response => {
+      console.log("Successfully saved sprites");
+    }, error => {
+      console.log("Failed to save sprites");
     });
   },
   onSpriteAlignmentChange() {
@@ -260,6 +297,17 @@ function getVisibleHitboxes() {
   return hitboxes;
 }
 
+function getVisiblePOIs() {
+  var POIs = [];
+  if(data.selectedSprite) {
+    POIs = POIs.concat(data.selectedSprite.POIs);
+  }
+  if(data.selectedFrame) {
+    POIs = POIs.concat(data.selectedFrame.POIs);
+  }
+  return POIs;
+}
+
 function getRealMouseX(rawMouseX) {
   var zoomProportion = data.zoom - 1;
   var w = canvas1.width / data.zoom;
@@ -351,12 +399,17 @@ function redrawCanvas1() {
 
         drawRect(c1, offsetRect, "blue", strokeColor, strokeWidth, 0.25);
       }
-
+      
       var len = 1000;
       drawLine(c1, cX, cY - len, cX, cY + len, "red", 1);
       drawLine(c1, cX - len, cY, cX + len, cY, "red", 1);
       drawCircle(c1, cX, cY, 1, "red");
       //drawStroked(c1, "+", cX, cY);
+
+      for(var poi of getVisiblePOIs()) {
+
+        drawCircle(c1, cX + poi.x, cY + poi.y, 1, "green");
+      }
 
     }
     
@@ -526,6 +579,15 @@ function onMouseMove(deltaX, deltaY) {
 }
 
 function onMouseDown(selectables) {
+
+  if(data.addPOIMode) {
+    data.addPOIMode = false;
+    var cX = canvas1.width/2;
+    var cY = canvas1.height/2;
+    app1.addPOI(data.selectedFrame, mouseX - cX, mouseY - cY);
+    return;
+  }
+
   var found = false;
   for(var selectable of selectables) {
     if(inRect(mouseX, mouseY, selectable.getRect())) {
@@ -549,7 +611,21 @@ function onKeyDown(key, firstFrame) {
     }
   }
 
-  if(data.selectedHitbox && firstFrame) {
+  if(data.selectedPOI && firstFrame) {
+    if(key === "a") {
+      data.selectedPOI.x -= 1;
+    }
+    else if(key === "d") {
+      data.selectedPOI.x += 1;
+    }
+    else if(key === "w") {
+      data.selectedPOI.y -= 1;
+    }
+    else if(key === "s") {
+      data.selectedPOI.y += 1;
+    }
+  }
+  else if(data.selectedHitbox && firstFrame) {
     if(key === "a") {
       data.selectedHitbox.move(-1, 0);
     }

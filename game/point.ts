@@ -11,11 +11,19 @@ export class Point {
   get iy() {
     return Math.round(this.y);
   }
+
+  //Returns new point
   add(other: Point) {
+    let point = new Point(this.x + other.x, this.y + other.y);
+    return point;
+  }
+  
+  //Mutates this point
+  inc(other: Point): void {
     this.x += other.x;
     this.y += other.y;
-    return this;
   }
+  
   multiply(num: number) {
     this.x *= num;
     this.y *= num;

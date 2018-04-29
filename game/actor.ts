@@ -93,7 +93,7 @@ export class Actor {
         break;
       }
     }
-    this.pos.add(inc.multiply(game.deltaTime));
+    this.pos.inc(inc.multiply(game.deltaTime));
   }
 
   render(x: number, y: number) {

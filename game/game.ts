@@ -69,8 +69,10 @@ class Game {
 
     this.level = this.levels[name];
 
-    let player1: Player = new Player();
+    let player1: Player = new Player(200, 100, false, 0);
+    let cpu1: Player = new Player(400, 100, true, 1);
     this.level.localPlayers.push(player1);
+    this.level.localPlayers.push(cpu1);
     this.level.mainPlayer = player1;
    
     document.onkeydown = (e) => {

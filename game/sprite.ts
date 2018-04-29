@@ -18,7 +18,9 @@ export class Sprite {
     this.name = spriteJson.name;
     this.alignment = spriteJson.alignment;
     this.wrapMode = spriteJson.wrapMode;
-    if(!this.wrapMode) console.error("NO WRAP MODE");
+    if(!this.wrapMode) { 
+      console.error("NO WRAP MODE FOR SPRITE " + this.name);
+    }
     this.frames = [];
     this.hitboxes = [];
     
@@ -30,7 +32,10 @@ export class Sprite {
         new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
         new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
         new Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
-      ]);
+      ], hitboxJson.isTrigger ? true : false, null);
+      //if(Helpers.hasTag(hitboxJson.tags, "t")) {
+      //  hitbox.isTrigger = true;
+      //}
       this.hitboxes.push(hitbox);
     }
     for(let frameJson of spriteJson.frames) {
@@ -39,6 +44,11 @@ export class Sprite {
         frameJson.duration,
         new Point(frameJson.offset.x, frameJson.offset.y)
       );
+      if(frameJson.POIs) {
+        for(let poi of frameJson.POIs) {
+          frame.POIs.push(new Point(poi.x, poi.y));
+        }
+      }
       this.frames.push(frame);
     }
   }

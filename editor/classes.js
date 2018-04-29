@@ -74,6 +74,15 @@ function createFrame(topLeftPoint, botRightPoint, frames) {
   return new Frame(rect, frames);
 }
 
+class POI {
+  constructor(x, y) {
+    this.className = this.constructor.name;
+    this.x = x;
+    this.y = y;
+  }
+}
+classes["POI"] = POI;
+
 class Frame {
 
   constructor(rect, duration, offset) {
@@ -82,6 +91,7 @@ class Frame {
     this.duration = duration;
     this.offset = offset;
     this.hitboxes = [];
+    this.POIs = [];
   }
 
 }
@@ -93,6 +103,7 @@ class Sprite {
     this.className = this.constructor.name;
     this.hitboxes = [];
     this.frames = [];
+    this.POIs = [];
     this.name = name || "new_sprite";
     this.path = "sprites/" + name + ".json";
     this.alignment = "center";

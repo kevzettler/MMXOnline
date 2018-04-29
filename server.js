@@ -102,10 +102,11 @@ router.get('/get-levels', function(req, res) {
 
 });
 
-// more routes for our API will happen here
-router.post('/save-sprite', function(req, res) {
-  fs.writeFileSync("./assets/sprites/" + req.body.name + ".json", JSON.stringify(req.body));
+function saveSpriteHelper(req) {
+  fs.writeFileSync("./assets/sprites/" + req.name + ".json", JSON.stringify(req));
+}
 
+function writeSpriteFileHelper() {
   var fileNames = fs.readdirSync("assets/sprites/");
   var jsCode = "var spriteJsons: any = [";
   var first = true;
@@ -119,7 +120,21 @@ router.post('/save-sprite', function(req, res) {
   jsCode += "];\n";
   jsCode += "export {spriteJsons};"
   fs.writeFileSync("./game/sprites.ts", jsCode);
+}
 
+// more routes for our API will happen here
+router.post('/save-sprite', function(req, res) {
+  saveSpriteHelper(req.body);
+  writeSpriteFileHelper();
+  res.json({message:"Success"});
+});
+
+// more routes for our API will happen here
+router.post('/save-sprites', function(req, res) {
+  for(var sprite of req.body) {
+    saveSpriteHelper(sprite);
+  }
+  writeSpriteFileHelper();
   res.json({message:"Success"});
 });
 
