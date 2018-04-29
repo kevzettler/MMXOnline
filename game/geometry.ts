@@ -10,6 +10,10 @@ export class Geometry {
   constructor() {
     this.collider = new Collider([], false, this);
   }
+
+  preUpdate() {
+    
+  }
   
   update() {
 

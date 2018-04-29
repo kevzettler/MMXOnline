@@ -23,9 +23,9 @@ export class Collider {
 
   }
 
-  clone(x: number, y: number) {
+  clone(x: number, y: number, gameObject: GameObject) {
     let shape = this.shape.clone(x, y);
-    return new Collider(shape.points, this.isTrigger, this.gameObject);
+    return new Collider(shape.points, this.isTrigger, gameObject);
   }
 
 }

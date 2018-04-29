@@ -3,6 +3,7 @@ import { Point } from "./point";
 import { Collider } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
+import { Anim } from "./anim";
 
 //Anything that has: a position, rotation and name. Can also have an optional collider
 export class Actor {
@@ -20,6 +21,8 @@ export class Actor {
   grounded: boolean;
   name: string;
   globalCollider: Collider; //If no collider data found in sprite, fall back to this one
+  collidedInFrame: Set<Collider>;
+  triggeredInFrame: Set<Collider>;
 
   constructor() {
     this.pos = new Point(0, 0);
@@ -34,6 +37,8 @@ export class Actor {
     this.yDir = 1;
     this.grounded = false;
     game.level.addGameObject(this);
+    this.collidedInFrame = new Set<Collider>();
+    this.triggeredInFrame = new Set<Collider>();
   }
 
   changeSprite(sprite: Sprite, resetFrame: boolean) {
@@ -76,12 +81,25 @@ export class Actor {
     else {
       this.grounded = false;
     }
+
+    let trigger = game.level.checkTriggerActor(this, 0, 0);
+    if(trigger) {
+      console.log("REGISTER");
+      this.registerTrigger(trigger);
+    }
+  }
+
+  preUpdate() {
+    this.triggeredInFrame.clear();
+    this.collidedInFrame.clear();
   }
 
   move(amount: Point) {
     let inc: Point = amount.clone();
     while(inc.magnitude > 0) {
-      if(game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime)) {
+      let collider = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
+      if(collider) {
+        this.registerCollision(collider);
         inc.multiply(0.5);
         if(inc.magnitude < 0.5) {
           inc.x = 0;
@@ -105,12 +123,24 @@ export class Actor {
     }
   }
 
+  registerCollision(other: Collider) {
+    if(!this.collidedInFrame.has(other)) {
+      this.collidedInFrame.add(other);
+      this.onCollision(other);
+    }
+  }
+
+  registerTrigger(other: Collider) {
+    if(!this.triggeredInFrame.has(other)) {
+      this.triggeredInFrame.add(other);
+      this.onTrigger(other);
+    }
+  }
+
   onCollision(other: Collider) {
-    
   }
 
   onTrigger(other: Collider) {
-
   }
 
   get collider(): Collider {
@@ -118,18 +148,27 @@ export class Actor {
       if(this.globalCollider) {
         let rect = this.globalCollider.shape.getRect();
         let offset = this.sprite.getAlignOffsetHelper(rect, new Point(0,0), this.xDir, this.yDir);
-        return this.globalCollider.clone(this.pos.x + offset.x, this.pos.y + offset.y);
+        return this.globalCollider.clone(this.pos.x + offset.x, this.pos.y + offset.y, this);
       }
       return undefined;
     }
     let offset = this.sprite.getAlignOffset(0, this.xDir, this.yDir);
-    return this.sprite.hitboxes[0].clone(this.pos.x + offset.x, this.pos.y + offset.y);
+    return this.sprite.hitboxes[0].clone(this.pos.x + offset.x, this.pos.y + offset.y, this);
   }
 
   hasCollisionBox() {
     if(this.sprite.hitboxes.length === 0) return false;
     if(this.sprite.hitboxes[0].isTrigger) return false;
     return true;
+  }
+
+  //Optionally take in a sprite to draw when destroyed
+  destroySelf(sprite?: Sprite) {
+    game.level.gameObjects.splice(game.level.gameObjects.indexOf(this));
+    //_.remove(game.level.gameObjects, this);
+    if(sprite) {
+      let anim = new Anim(this.pos.x, this.pos.y, this.sprite);
+    }
   }
 
 }

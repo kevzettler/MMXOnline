@@ -6,7 +6,7 @@
     "preserveConstEnums": true,
     "outFile": "main.js",
     "sourceMap": true,
-    "lib": ["es5", "dom", "es2015.core"],
+    "lib": ["es5", "dom", "es2015.core","es2016","es2017.object"],
     "target": "es5"
   },
   "include": [

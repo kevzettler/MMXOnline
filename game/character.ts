@@ -14,6 +14,8 @@ export class Character extends Actor {
   runSpeed: number;
   isShooting: boolean;
   shootTime: number;
+  health: number;
+  maxHealth: number;
 
   constructor(player: Player, x: number, y: number) {
     super();
@@ -24,6 +26,8 @@ export class Character extends Actor {
     this.globalCollider = new Collider(rect.getPoints(), false, this);
     this.changeState(new Idle());
     this.runSpeed = 100;
+    this.health = 100;
+    this.maxHealth = this.health;
   }
 
   update() {
@@ -79,6 +83,11 @@ export class Character extends Actor {
     super.render();
   }
   */
+
+  applyDamage(damage: number) {
+    console.log("APPLYING DAMAGE");
+    this.health -= damage;
+  }
 
 }
 

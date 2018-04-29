@@ -6,6 +6,7 @@ import * as Helpers from "./helpers";
 import { Actor } from "./actor";
 import { Player } from "./player";
 import { Rect } from "./rect";
+import { Collider } from "./collider";
 
 export class Level {
 
@@ -52,6 +53,7 @@ export class Level {
   
   update() {
     for(let go of this.gameObjects) {
+      go.preUpdate();
       go.update();
     }
   }
@@ -89,18 +91,33 @@ export class Level {
     this.gameObjects.push(go);
   }
 
-  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number): boolean {
+  //Checks for collisions and returns the first one collided.
+  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number): Collider {
     
-    if(!actor.collider || actor.collider.isTrigger) return false;
+    if(!actor.collider || actor.collider.isTrigger) return undefined;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
       if(!go.collider || go.collider.isTrigger) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        return true;
+        return go.collider;
       }
     }
-    return false;
+    return undefined;
+  }
+
+  checkTriggerActor(actor: Actor, offsetX: number, offsetY: number): Collider {
+    
+    if(!actor.collider) return undefined;
+    for(let go of this.gameObjects) {
+      if(go === actor) continue;
+      if(!go.collider || !go.collider.isTrigger) continue;
+      let actorShape = actor.collider.shape.clone(offsetX, offsetY);
+      if(go.collider.shape.intersectsShape(actorShape)) {
+        return go.collider;
+      }
+    }
+    return undefined;
   }
 
 }
