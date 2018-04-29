@@ -267,18 +267,79 @@ System.register("helpers", ["point"], function (exports_5, context_5) {
         return false;
     }
     exports_5("inCircle", inCircle);
-    function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
-        ctx.save();
-        flipX = flipX || 1;
-        flipY = flipY || 1;
-        ctx.scale(flipX, 1);
-        if (!sW) {
-            ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
+    function toZero(num, inc, dir) {
+        if (dir === 1) {
+            num -= inc;
+            if (num < 0)
+                num = 0;
+            return num;
+        }
+        else if (dir === -1) {
+            num += inc;
+            if (num > 0)
+                num = 0;
+            return num;
         }
         else {
-            ctx.drawImage(imgEl, Math.round(sX), Math.round(sY), Math.round(sW), Math.round(sH), flipX * Math.round(x), Math.round(y), flipX * Math.round(sW), Math.round(sH));
+            throw "Must pass in -1 or 1 for dir";
         }
-        ctx.restore();
+    }
+    exports_5("toZero", toZero);
+    function clampMax(num, max) {
+        return num < max ? num : max;
+    }
+    exports_5("clampMax", clampMax);
+    function clampMin(num, min) {
+        return num > min ? num : min;
+    }
+    exports_5("clampMin", clampMin);
+    function clamp(num, min, max) {
+        if (num < min)
+            return min;
+        if (num > max)
+            return max;
+        return num;
+    }
+    exports_5("clamp", clamp);
+    function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options) {
+        if (!sW) {
+            ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
+            return;
+        }
+        helperCanvas.width = Math.round(sW);
+        helperCanvas.height = Math.round(sH);
+        helperCtx.save();
+        flipX = flipX || 1;
+        flipY = flipY || 1;
+        helperCtx.scale(flipX, 1);
+        helperCtx.clearRect(0, 0, helperCanvas.width, helperCanvas.height);
+        helperCtx.drawImage(imgEl, Math.round(sX), Math.round(sY), Math.round(sW), Math.round(sH), 0, 0, flipX * Math.round(sW), flipY * Math.round(sH));
+        if (options === "flash") {
+            helperCanvas2.width = helperCanvas.width;
+            helperCanvas2.height = helperCanvas.height;
+            helperCtx2.drawImage(helperCanvas, 0, 0);
+            helperCtx2.globalCompositeOperation = "source-atop";
+            helperCtx2.fillStyle = "rgb(128,128,255)";
+            helperCtx2.fillRect(0, 0, helperCanvas.width, helperCanvas.height);
+            helperCtx2.globalCompositeOperation = "source-over";
+            helperCanvas3.width = helperCanvas.width;
+            helperCanvas3.height = helperCanvas.height;
+            helperCtx3.drawImage(helperCanvas, 0, 0);
+            helperCtx3.globalCompositeOperation = "lighter";
+            helperCtx3.drawImage(helperCanvas2, 0, 0);
+            helperCtx3.globalCompositeOperation = "source-over";
+            if (flipX === 1)
+                ctx.drawImage(helperCanvas3, Math.round(x), Math.round(y));
+            else
+                ctx.drawImage(helperCanvas3, Math.ceil(x), Math.ceil(y));
+        }
+        else {
+            if (flipX === 1)
+                ctx.drawImage(helperCanvas, Math.round(x), Math.round(y));
+            else
+                ctx.drawImage(helperCanvas, Math.ceil(x), Math.ceil(y));
+        }
+        helperCtx.restore();
     }
     exports_5("drawImage", drawImage);
     function drawRect(ctx, rect, fillColor, strokeColor, strokeWidth, fillAlpha) {
@@ -412,7 +473,7 @@ System.register("helpers", ["point"], function (exports_5, context_5) {
         }
     }
     exports_5("inLine", inLine);
-    var point_3;
+    var point_3, helperCanvas, helperCtx, helperCanvas2, helperCtx2, helperCanvas3, helperCtx3;
     return {
         setters: [
             function (point_3_1) {
@@ -420,6 +481,12 @@ System.register("helpers", ["point"], function (exports_5, context_5) {
             }
         ],
         execute: function () {
+            helperCanvas = document.createElement("canvas");
+            helperCtx = helperCanvas.getContext("2d");
+            helperCanvas2 = document.createElement("canvas");
+            helperCtx2 = helperCanvas2.getContext("2d");
+            helperCanvas3 = document.createElement("canvas");
+            helperCtx3 = helperCanvas3.getContext("2d");
         }
     };
 });
@@ -503,10 +570,10 @@ System.register("damager", [], function (exports_8, context_8) {
         }
     };
 });
-System.register("projectile", ["actor", "damager", "game"], function (exports_9, context_9) {
+System.register("projectile", ["actor", "damager", "character", "game"], function (exports_9, context_9) {
     "use strict";
     var __moduleName = context_9 && context_9.id;
-    var actor_1, damager_1, game_2, Projectile;
+    var actor_1, damager_1, character_1, game_2, Projectile;
     return {
         setters: [
             function (actor_1_1) {
@@ -514,6 +581,9 @@ System.register("projectile", ["actor", "damager", "game"], function (exports_9,
             },
             function (damager_1_1) {
                 damager_1 = damager_1_1;
+            },
+            function (character_1_1) {
+                character_1 = character_1_1;
             },
             function (game_2_1) {
                 game_2 = game_2_1;
@@ -532,8 +602,9 @@ System.register("projectile", ["actor", "damager", "game"], function (exports_9,
                     return _this;
                 }
                 Projectile.prototype.onTrigger = function (other) {
-                    var character = other.gameObject;
+                    var character = (other.gameObject instanceof character_1.Character) ? other.gameObject : undefined;
                     if (character && character.player.alliance !== this.damager.owner.alliance) {
+                        character.isFlashing = true;
                         character.applyDamage(this.damager.damage);
                         this.destroySelf(game_2.game.sprites["buster1_fade"]);
                     }
@@ -547,10 +618,10 @@ System.register("projectile", ["actor", "damager", "game"], function (exports_9,
         }
     };
 });
-System.register("character", ["actor", "game", "point", "collider", "rect", "projectile"], function (exports_10, context_10) {
+System.register("character", ["actor", "game", "point", "collider", "rect", "projectile", "helpers"], function (exports_10, context_10) {
     "use strict";
     var __moduleName = context_10 && context_10.id;
-    var actor_2, game_3, point_4, collider_2, rect_2, projectile_1, Character, CharState, Idle, Run, Jump, Fall;
+    var actor_2, game_3, point_4, collider_2, rect_2, projectile_1, Helpers, Character, CharState, Idle, Run, Jump, Fall, Dash, WallSlide, WallKick;
     return {
         setters: [
             function (actor_2_1) {
@@ -570,6 +641,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
             },
             function (projectile_1_1) {
                 projectile_1 = projectile_1_1;
+            },
+            function (Helpers_2) {
+                Helpers = Helpers_2;
             }
         ],
         execute: function () {
@@ -580,6 +654,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     _this.pos.x = x;
                     _this.pos.y = y;
                     _this.player = player;
+                    _this.isShooting = false;
+                    _this.isDashing = false;
                     var rect = new rect_2.Rect(0, 0, 24, 34);
                     _this.globalCollider = new collider_2.Collider(rect.getPoints(), false, _this);
                     _this.changeState(new Idle());
@@ -597,6 +673,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                             this.stopShoot();
                         }
                     }
+                };
+                Character.prototype.getDashSpeed = function () {
+                    if (this.isDashing)
+                        return 2.5;
+                    return 1;
                 };
                 Character.prototype.getShootPos = function () {
                     var busterOffset = this.currentFrame.getBusterOffset().clone();
@@ -627,7 +708,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     else {
                         this.changeSprite(newState.shootSprite, true);
                     }
+                    var oldState = this.charState;
+                    if (oldState)
+                        oldState.onExit(newState);
                     this.charState = newState;
+                    newState.onEnter(oldState);
                     if (!newState.canShoot) {
                         this.stopShoot();
                     }
@@ -658,6 +743,13 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     enumerable: true,
                     configurable: true
                 });
+                CharState.prototype.onExit = function (newState) {
+                    if (!(newState instanceof Jump) && !(newState instanceof Fall) && !(newState instanceof Dash)) {
+                        this.character.isDashing = false;
+                    }
+                };
+                CharState.prototype.onEnter = function (oldState) {
+                };
                 CharState.prototype.update = function () {
                     if (this.canShoot) {
                         if (this.player.input["shoot"]) {
@@ -671,25 +763,44 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                         return;
                     }
                     var move = new point_4.Point(0, 0);
+                    var wallKick = (this instanceof WallKick) ? this : null;
                     if (this.player.input["left"]) {
-                        move.x = -this.character.runSpeed;
-                        this.character.xDir = -1;
+                        if (!wallKick || wallKick.kickSpeed <= 0) {
+                            move.x = -this.character.runSpeed * this.character.getDashSpeed();
+                            this.character.xDir = -1;
+                        }
                     }
                     else if (this.player.input["right"]) {
-                        move.x = this.character.runSpeed;
-                        this.character.xDir = 1;
+                        if (!wallKick || wallKick.kickSpeed >= 0) {
+                            move.x = this.character.runSpeed * this.character.getDashSpeed();
+                            this.character.xDir = 1;
+                        }
                     }
                     if (move.magnitude > 0) {
                         this.character.move(move);
+                    }
+                    if (this.player.input["left"]) {
+                        if (game_3.game.level.checkCollisionActor(this.character, -1, 0)) {
+                            this.player.character.changeState(new WallSlide(-1));
+                            return;
+                        }
+                    }
+                    else if (this.player.input["right"]) {
+                        if (game_3.game.level.checkCollisionActor(this.character, 1, 0)) {
+                            this.player.character.changeState(new WallSlide(1));
+                            return;
+                        }
                     }
                 };
                 CharState.prototype.groundCode = function () {
                     if (!this.character.grounded) {
                         this.character.changeState(new Fall());
+                        return;
                     }
                     else if (this.player.input["jump"]) {
                         this.character.vel.y = -400;
                         this.character.changeState(new Jump());
+                        return;
                     }
                 };
                 return CharState;
@@ -705,6 +816,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                         this.character.changeState(new Run());
                     }
                     this.groundCode();
+                    if (this.player.input["dash"]) {
+                        this.character.changeState(new Dash());
+                    }
                 };
                 return Idle;
             }(CharState));
@@ -731,6 +845,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                         this.character.changeState(new Idle());
                     }
                     this.groundCode();
+                    if (this.player.input["dash"]) {
+                        this.character.changeState(new Dash());
+                    }
                 };
                 return Run;
             }(CharState));
@@ -759,17 +876,94 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 };
                 return Fall;
             }(CharState));
+            Dash = (function (_super) {
+                __extends(Dash, _super);
+                function Dash() {
+                    var _this = _super.call(this, game_3.game.sprites["mmx_dash"], game_3.game.sprites["mmx_dash_shoot"]) || this;
+                    _this.dashTime = 0;
+                    return _this;
+                }
+                Dash.prototype.onEnter = function (oldState) {
+                    _super.prototype.onEnter.call(this, oldState);
+                    this.character.isDashing = true;
+                };
+                Dash.prototype.update = function () {
+                    _super.prototype.update.call(this);
+                    this.groundCode();
+                    if (!this.player.input["dash"]) {
+                        this.character.changeState(new Idle());
+                        return;
+                    }
+                    this.dashTime += game_3.game.deltaTime;
+                    if (this.dashTime > 0.75) {
+                        this.character.changeState(new Idle());
+                        return;
+                    }
+                    var move = new point_4.Point(0, 0);
+                    move.x = this.character.runSpeed * this.character.getDashSpeed() * this.character.xDir;
+                    this.character.move(move);
+                };
+                return Dash;
+            }(CharState));
+            WallSlide = (function (_super) {
+                __extends(WallSlide, _super);
+                function WallSlide(wallDir) {
+                    var _this = _super.call(this, game_3.game.sprites["mmx_wall_slide"], game_3.game.sprites["mmx_wall_slide_shoot"]) || this;
+                    _this.wallDir = wallDir;
+                    return _this;
+                }
+                WallSlide.prototype.update = function () {
+                    if (this.character.grounded) {
+                        this.character.changeState(new Idle());
+                        return;
+                    }
+                    if (this.player.input["jump"]) {
+                        this.character.vel.y = -300;
+                        this.character.changeState(new WallKick(this.wallDir * -1));
+                        return;
+                    }
+                    this.character.useGravity = false;
+                    this.character.vel.y = 0;
+                    var dirHeld = this.wallDir === -1 ? this.player.input["left"] : this.player.input["right"];
+                    if (!dirHeld || !game_3.game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
+                        this.player.character.changeState(new Fall());
+                    }
+                    this.character.move(new point_4.Point(0, 100));
+                };
+                WallSlide.prototype.onExit = function (newState) {
+                    this.character.useGravity = true;
+                    _super.prototype.onExit.call(this, newState);
+                };
+                return WallSlide;
+            }(CharState));
+            WallKick = (function (_super) {
+                __extends(WallKick, _super);
+                function WallKick(kickDir) {
+                    var _this = _super.call(this, game_3.game.sprites["mmx_wall_kick"], game_3.game.sprites["mmx_wall_kick_shoot"]) || this;
+                    _this.kickDir = kickDir;
+                    _this.kickSpeed = kickDir * 100;
+                    return _this;
+                }
+                WallKick.prototype.update = function () {
+                    if (this.kickSpeed !== 0) {
+                        this.kickSpeed = Helpers.toZero(this.kickSpeed, 1000 * game_3.game.deltaTime, this.kickDir);
+                        this.character.move(new point_4.Point(this.kickSpeed, 0));
+                    }
+                    this.airCode();
+                };
+                return WallKick;
+            }(CharState));
         }
     };
 });
 System.register("player", ["character"], function (exports_11, context_11) {
     "use strict";
     var __moduleName = context_11 && context_11.id;
-    var character_1, Player;
+    var character_2, Player;
     return {
         setters: [
-            function (character_1_1) {
-                character_1 = character_1_1;
+            function (character_2_1) {
+                character_2 = character_2_1;
             }
         ],
         execute: function () {
@@ -790,7 +984,7 @@ System.register("player", ["character"], function (exports_11, context_11) {
                         this.inputMapping[65] = "weaponleft";
                         this.inputMapping[83] = "weaponright";
                     }
-                    this.character = new character_1.Character(this, x, y);
+                    this.character = new character_2.Character(this, x, y);
                 }
                 Player.prototype.onKeyDown = function (keycode) {
                     if (this.isAI)
@@ -825,8 +1019,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
             function (game_4_1) {
                 game_4 = game_4_1;
             },
-            function (Helpers_2) {
-                Helpers = Helpers_2;
+            function (Helpers_3) {
+                Helpers = Helpers_3;
             },
             function (actor_3_1) {
                 actor_3 = actor_3_1;
@@ -845,6 +1039,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                     this.gravity = 1000;
                     this.name = levelJson.name;
                     this.background = game_4.game.getBackground(levelJson.backgroundPath);
+                    game_4.game.canvas.width = Math.min(game_4.game.canvas.width, this.background.width * this.zoomScale);
+                    game_4.game.canvas.height = Math.min(game_4.game.canvas.height, this.background.height * this.zoomScale);
                     this.gameObjects = [];
                     for (var _i = 0, _a = levelJson.instances; _i < _a.length; _i++) {
                         var instance = _a[_i];
@@ -896,10 +1092,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                         this.camX = 0;
                     if (this.camY < 0)
                         this.camY = 0;
-                    if (this.camX > this.background.width - scaledCanvasW / 2)
-                        this.camX = this.background.width - scaledCanvasW / 2;
-                    if (this.camY > this.background.height - scaledCanvasH / 2)
-                        this.camY = this.background.height - scaledCanvasH / 2;
+                    var maxX = this.background.width - scaledCanvasW;
+                    var maxY = this.background.height - scaledCanvasH;
+                    if (this.camX > maxX)
+                        this.camX = maxX;
+                    if (this.camY > maxY)
+                        this.camY = maxY;
                 };
                 Level.prototype.addGameObject = function (go) {
                     this.gameObjects.push(go);
@@ -951,7 +1149,7 @@ System.register("sprites", [], function (exports_13, context_13) {
     return {
         setters: [],
         execute: function () {
-            spriteJsons = [{ "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 8, "height": 6, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346, "y": 297 }, "botRightPoint": { "className": "Point", "x": 354, "y": 303 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 123, "y": 253 }, "botRightPoint": { "className": "Point", "x": 131, "y": 259 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "buster1", "path": "assets/sprites/buster1.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 137, "y": 250 }, "botRightPoint": { "className": "Point", "x": 149, "y": 262 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 154, "y": 249 }, "botRightPoint": { "className": "Point", "x": 167, "y": 262 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 172, "y": 248 }, "botRightPoint": { "className": "Point", "x": 187, "y": 263 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "buster1_fade", "path": "assets/sprites/buster1_fade.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 253, "y": 58 }, "botRightPoint": { "className": "Point", "x": 276, "y": 99 } }, "duration": 0.12, "offset": { "className": "Point", "x": -2, "y": -1 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 278, "y": 57 }, "botRightPoint": { "className": "Point", "x": 305, "y": 99 } }, "duration": 0.12, "offset": { "className": "Point", "x": -3, "y": 1 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_fall", "path": "assets/sprites/mmx_fall.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 128, "y": 147 }, "botRightPoint": { "className": "Point", "x": 159, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 16.600000000000023, "y": -28.399999999999977, "tags": "bo" }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 160, "y": 146 }, "botRightPoint": { "className": "Point", "x": 191, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 2, "y": 1 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 16.600000000000023, "y": -28.600000000000023, "tags": "bo" }] }], "POIs": [], "name": "mmx_fall_shoot", "path": "assets/sprites/mmx_fall_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 302, "y": 16 }, "botRightPoint": { "className": "Point", "x": 332, "y": 50 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_idle", "path": "assets/sprites/mmx_idle.json", "alignment": "botmid", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 181, "y": 62 }, "botRightPoint": { "className": "Point", "x": 205, "y": 99 } }, "duration": 0.08, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 210, "y": 58 }, "botRightPoint": { "className": "Point", "x": 225, "y": 99 } }, "duration": 0.08, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 231, "y": 53 }, "botRightPoint": { "className": "Point", "x": 250, "y": 99 } }, "duration": 0.08, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_jump", "path": "assets/sprites/mmx_jump.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 45, "y": 151 }, "botRightPoint": { "className": "Point", "x": 74, "y": 188 } }, "duration": 0.08, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 15.800000000000011, "y": -23.19999999999999 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 76, "y": 147 }, "botRightPoint": { "className": "Point", "x": 100, "y": 188 } }, "duration": 0.08, "offset": { "className": "Point", "x": 5, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 15.600000000000023, "y": -28.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 100, "y": 142 }, "botRightPoint": { "className": "Point", "x": 127, "y": 188 } }, "duration": 0.08, "offset": { "className": "Point", "x": 3, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 15.800000000000011, "y": -30.399999999999977 }] }], "POIs": [], "name": "mmx_jump_shoot", "path": "assets/sprites/mmx_jump_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 116, "y": 106 }, "botRightPoint": { "className": "Point", "x": 136, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 137, "y": 105 }, "botRightPoint": { "className": "Point", "x": 160, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 160, "y": 106 }, "botRightPoint": { "className": "Point", "x": 192, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 192, "y": 107 }, "botRightPoint": { "className": "Point", "x": 226, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 226, "y": 107 }, "botRightPoint": { "className": "Point", "x": 252, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 255, "y": 106 }, "botRightPoint": { "className": "Point", "x": 277, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 277, "y": 105 }, "botRightPoint": { "className": "Point", "x": 302, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 305, "y": 106 }, "botRightPoint": { "className": "Point", "x": 335, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 336, "y": 107 }, "botRightPoint": { "className": "Point", "x": 370, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 370, "y": 107 }, "botRightPoint": { "className": "Point", "x": 399, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_run", "path": "assets/sprites/mmx_run.json", "alignment": "botmid", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 76, "y": 192 }, "botRightPoint": { "className": "Point", "x": 105, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 5, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.80000000000001, "y": -20.600000000000023 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 105, "y": 191 }, "botRightPoint": { "className": "Point", "x": 137, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 4, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -22 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 137, "y": 192 }, "botRightPoint": { "className": "Point", "x": 172, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -20.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 173, "y": 193 }, "botRightPoint": { "className": "Point", "x": 211, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -19.19999999999999 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 212, "y": 193 }, "botRightPoint": { "className": "Point", "x": 246, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 3, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -19.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 246, "y": 192 }, "botRightPoint": { "className": "Point", "x": 277, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 4, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.600000000000023, "y": -20.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 277, "y": 191 }, "botRightPoint": { "className": "Point", "x": 310, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 3, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 19, "y": -21.600000000000023 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 310, "y": 192 }, "botRightPoint": { "className": "Point", "x": 345, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -20.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346, "y": 193 }, "botRightPoint": { "className": "Point", "x": 383, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.80000000000001, "y": -19.80000000000001 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 383, "y": 193 }, "botRightPoint": { "className": "Point", "x": 418, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -19.80000000000001 }] }], "POIs": [], "name": "mmx_run_shoot", "path": "assets/sprites/mmx_run_shoot.json", "alignment": "botmid", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 112, "y": 65 }, "botRightPoint": { "className": "Point", "x": 142, "y": 99 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 13.600000000000023, "y": -18.80000000000001, "tags": "bo" }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 147, "y": 65 }, "botRightPoint": { "className": "Point", "x": 176, "y": 99 } }, "duration": 0.5, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 12.800000000000011, "y": -18.19999999999999, "tags": "bo" }] }], "POIs": [], "name": "mmx_shoot", "path": "assets/sprites/mmx_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }];
+            spriteJsons = [{ "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 8, "height": 6, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346, "y": 297 }, "botRightPoint": { "className": "Point", "x": 354, "y": 303 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 123, "y": 253 }, "botRightPoint": { "className": "Point", "x": 131, "y": 259 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "buster1", "path": "assets/sprites/buster1.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 137, "y": 250 }, "botRightPoint": { "className": "Point", "x": 149, "y": 262 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 154, "y": 249 }, "botRightPoint": { "className": "Point", "x": 167, "y": 262 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 172, "y": 248 }, "botRightPoint": { "className": "Point", "x": 187, "y": 263 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "buster1_fade", "path": "assets/sprites/buster1_fade.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 264, "y": 157 }, "botRightPoint": { "className": "Point", "x": 292, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 296, "y": 162 }, "botRightPoint": { "className": "Point", "x": 334, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_dash", "path": "sprites/mmx_dash.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 340, "y": 157 }, "botRightPoint": { "className": "Point", "x": 378, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 383, "y": 162 }, "botRightPoint": { "className": "Point", "x": 432, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_dash_shoot", "path": "sprites/mmx_dash_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 253, "y": 58 }, "botRightPoint": { "className": "Point", "x": 276, "y": 99 } }, "duration": 0.12, "offset": { "className": "Point", "x": -2, "y": -1 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 278, "y": 57 }, "botRightPoint": { "className": "Point", "x": 305, "y": 99 } }, "duration": 0.12, "offset": { "className": "Point", "x": -3, "y": 1 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_fall", "path": "assets/sprites/mmx_fall.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 128, "y": 147 }, "botRightPoint": { "className": "Point", "x": 159, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 16.600000000000023, "y": -28.399999999999977, "tags": "bo" }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 160, "y": 146 }, "botRightPoint": { "className": "Point", "x": 191, "y": 188 } }, "duration": 0.12, "offset": { "className": "Point", "x": 2, "y": 1 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 16.600000000000023, "y": -28.600000000000023, "tags": "bo" }] }], "POIs": [], "name": "mmx_fall_shoot", "path": "assets/sprites/mmx_fall_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 302, "y": 16 }, "botRightPoint": { "className": "Point", "x": 332, "y": 50 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_idle", "path": "assets/sprites/mmx_idle.json", "alignment": "botmid", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 181, "y": 62 }, "botRightPoint": { "className": "Point", "x": 205, "y": 99 } }, "duration": 0.08, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 210, "y": 58 }, "botRightPoint": { "className": "Point", "x": 225, "y": 99 } }, "duration": 0.08, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 231, "y": 53 }, "botRightPoint": { "className": "Point", "x": 250, "y": 99 } }, "duration": 0.08, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_jump", "path": "assets/sprites/mmx_jump.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 45, "y": 151 }, "botRightPoint": { "className": "Point", "x": 74, "y": 188 } }, "duration": 0.08, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 15.800000000000011, "y": -23.19999999999999 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 76, "y": 147 }, "botRightPoint": { "className": "Point", "x": 100, "y": 188 } }, "duration": 0.08, "offset": { "className": "Point", "x": 5, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 15.600000000000023, "y": -28.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 100, "y": 142 }, "botRightPoint": { "className": "Point", "x": 127, "y": 188 } }, "duration": 0.08, "offset": { "className": "Point", "x": 3, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 15.800000000000011, "y": -30.399999999999977 }] }], "POIs": [], "name": "mmx_jump_shoot", "path": "assets/sprites/mmx_jump_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 116, "y": 106 }, "botRightPoint": { "className": "Point", "x": 136, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 137, "y": 105 }, "botRightPoint": { "className": "Point", "x": 160, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 160, "y": 106 }, "botRightPoint": { "className": "Point", "x": 192, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 192, "y": 107 }, "botRightPoint": { "className": "Point", "x": 226, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 226, "y": 107 }, "botRightPoint": { "className": "Point", "x": 252, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 255, "y": 106 }, "botRightPoint": { "className": "Point", "x": 277, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 277, "y": 105 }, "botRightPoint": { "className": "Point", "x": 302, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 305, "y": 106 }, "botRightPoint": { "className": "Point", "x": 335, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 336, "y": 107 }, "botRightPoint": { "className": "Point", "x": 370, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 370, "y": 107 }, "botRightPoint": { "className": "Point", "x": 399, "y": 140 } }, "duration": 0.066, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_run", "path": "assets/sprites/mmx_run.json", "alignment": "botmid", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 76, "y": 192 }, "botRightPoint": { "className": "Point", "x": 105, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 5, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.80000000000001, "y": -20.600000000000023 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 105, "y": 191 }, "botRightPoint": { "className": "Point", "x": 137, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 4, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -22 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 137, "y": 192 }, "botRightPoint": { "className": "Point", "x": 172, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -20.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 173, "y": 193 }, "botRightPoint": { "className": "Point", "x": 211, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -19.19999999999999 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 212, "y": 193 }, "botRightPoint": { "className": "Point", "x": 246, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 3, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -19.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 246, "y": 192 }, "botRightPoint": { "className": "Point", "x": 277, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 4, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.600000000000023, "y": -20.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 277, "y": 191 }, "botRightPoint": { "className": "Point", "x": 310, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 3, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 19, "y": -21.600000000000023 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 310, "y": 192 }, "botRightPoint": { "className": "Point", "x": 345, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -20.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346, "y": 193 }, "botRightPoint": { "className": "Point", "x": 383, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.80000000000001, "y": -19.80000000000001 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 383, "y": 193 }, "botRightPoint": { "className": "Point", "x": 418, "y": 226 } }, "duration": 0.066, "offset": { "className": "Point", "x": 2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 18.399999999999977, "y": -19.80000000000001 }] }], "POIs": [], "name": "mmx_run_shoot", "path": "assets/sprites/mmx_run_shoot.json", "alignment": "botmid", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 112, "y": 65 }, "botRightPoint": { "className": "Point", "x": 142, "y": 99 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 13.600000000000023, "y": -18.80000000000001, "tags": "bo" }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 147, "y": 65 }, "botRightPoint": { "className": "Point", "x": 176, "y": 99 } }, "duration": 0.5, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 12.800000000000011, "y": -18.19999999999999, "tags": "bo" }] }], "POIs": [], "name": "mmx_shoot", "path": "assets/sprites/mmx_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 140, "y": 284 }, "botRightPoint": { "className": "Point", "x": 170, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 170, "y": 279 }, "botRightPoint": { "className": "Point", "x": 197, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_wall_kick", "path": "assets/sprites/mmx_wall_kick.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 309, "y": 284 }, "botRightPoint": { "className": "Point", "x": 340, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 342, "y": 283 }, "botRightPoint": { "className": "Point", "x": 375, "y": 322 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_wall_kick_shoot", "path": "sprites/mmx_wall_kick_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 51, "y": 281 }, "botRightPoint": { "className": "Point", "x": 76, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 78, "y": 280 }, "botRightPoint": { "className": "Point", "x": 105, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 107, "y": 281 }, "botRightPoint": { "className": "Point", "x": 135, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_wall_slide", "path": "sprites/mmx_wall_slide.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 235, "y": 281 }, "botRightPoint": { "className": "Point", "x": 267, "y": 324 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 273, "y": 280 }, "botRightPoint": { "className": "Point", "x": 305, "y": 322 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_wall_slide_shoot", "path": "sprites/mmx_wall_slide_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }];
             exports_13("spriteJsons", spriteJsons);
         }
     };
@@ -963,7 +1161,7 @@ System.register("levels", [], function (exports_14, context_14) {
     return {
         setters: [],
         execute: function () {
-            levelJsons = [{ "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 46, "y": 124, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 807, "y": 124, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 807, "y": 181, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 46, "y": 181, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }], "name": "new_level", "path": "assets/levels/new_level.json", "backgroundPath": "assets/backgrounds/highway.png" }];
+            levelJsons = [{ "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 46, "y": 124, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 807, "y": 124, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 807, "y": 181, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 46, "y": 181, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": -3, "y": 2, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 47, "y": 2, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 47, "y": 233, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": -3, "y": 233, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }], "name": "new_level", "path": "assets/levels/new_level.json", "backgroundPath": "assets/backgrounds/highway.png" }, { "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 8.208955223880588, "y": 194.02985074626852, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 256.61194029850725, "y": 194.02985074626852, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 256.61194029850725, "y": 209.597014925373, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 8.208955223880588, "y": 209.597014925373, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 0.37313432835820876, "y": 1.1194029850746263, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 15.194029850746261, "y": 1.1194029850746263, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 15.194029850746261, "y": 199.8955223880596, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 0.37313432835820876, "y": 199.8955223880596, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 239.17910447761182, "y": 4.850746268656714, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 255.11940298507446, "y": 4.850746268656714, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 255.11940298507446, "y": 196.1641791044775, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 239.17910447761182, "y": 196.1641791044775, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Shape Instance", "points": [{ "className": "Point", "x": 13.432835820895514, "y": 3.7313432835820874, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 240.94029850746256, "y": 3.7313432835820874, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 240.94029850746256, "y": 28.253731343283587, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 13.432835820895514, "y": 28.253731343283587, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }], "name": "sm_bossroom", "path": "levels/sm_bossroom.json", "backgroundPath": "assets/backgrounds/sm_bossroom.png" }];
             exports_14("levelJsons", levelJsons);
         }
     };
@@ -1011,7 +1209,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                 Game.prototype.start = function () {
                     this.loadSprites();
                     this.loadLevels();
-                    this.loadLevel("new_level");
+                    this.loadLevel("sm_bossroom");
                 };
                 Game.prototype.startVue = function () {
                     var app1 = new Vue({
@@ -1029,10 +1227,8 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                 Game.prototype.loadLevel = function (name) {
                     var _this = this;
                     this.level = this.levels[name];
-                    var player1 = new player_1.Player(200, 100, false, 0);
-                    var cpu1 = new player_1.Player(400, 100, true, 1);
+                    var player1 = new player_1.Player(60, 100, false, 0);
                     this.level.localPlayers.push(player1);
-                    this.level.localPlayers.push(cpu1);
                     this.level.mainPlayer = player1;
                     document.onkeydown = function (e) {
                         for (var _i = 0, _a = _this.level.localPlayers; _i < _a.length; _i++) {
@@ -1190,8 +1386,8 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
             function (game_5_1) {
                 game_5 = game_5_1;
             },
-            function (Helpers_3) {
-                Helpers = Helpers_3;
+            function (Helpers_4) {
+                Helpers = Helpers_4;
             }
         ],
         execute: function () {
@@ -1283,13 +1479,13 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     }
                     return new point_6.Point(x + offset.x * flipX, y + offset.y * flipY);
                 };
-                Sprite.prototype.draw = function (frameIndex, x, y, flipX, flipY) {
+                Sprite.prototype.draw = function (frameIndex, x, y, flipX, flipY, options) {
                     flipX = flipX || 1;
                     flipY = flipY || 1;
                     var frame = this.frames[frameIndex];
                     var rect = frame.rect;
                     var offset = this.getAlignOffset(frameIndex, flipX, flipY);
-                    Helpers.drawImage(game_5.game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY);
+                    Helpers.drawImage(game_5.game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options);
                 };
                 return Sprite;
             }());
@@ -1309,8 +1505,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_19, con
             function (game_6_1) {
                 game_6 = game_6_1;
             },
-            function (Helpers_4) {
-                Helpers = Helpers_4;
+            function (Helpers_5) {
+                Helpers = Helpers_5;
             }
         ],
         execute: function () {
@@ -1330,6 +1526,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_19, con
                     game_6.game.level.addGameObject(this);
                     this.collidedInFrame = new Set();
                     this.triggeredInFrame = new Set();
+                    this.isFlashing = false;
                 }
                 Actor.prototype.changeSprite = function (sprite, resetFrame) {
                     this.sprite = sprite;
@@ -1406,7 +1603,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_19, con
                     this.pos.inc(inc.multiply(game_6.game.deltaTime));
                 };
                 Actor.prototype.render = function (x, y) {
-                    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir);
+                    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.isFlashing ? "flash" : "");
+                    this.isFlashing = false;
                     if (game_6.game.showHitboxes && this.collider) {
                         Helpers.drawPolygon(game_6.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                         Helpers.drawCircle(game_6.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
@@ -1481,42 +1679,9 @@ System.register("actor", ["point", "game", "helpers"], function (exports_19, con
         }
     };
 });
-System.register("anim", ["actor"], function (exports_20, context_20) {
+System.register("color", [], function (exports_20, context_20) {
     "use strict";
     var __moduleName = context_20 && context_20.id;
-    var actor_4, Anim;
-    return {
-        setters: [
-            function (actor_4_1) {
-                actor_4 = actor_4_1;
-            }
-        ],
-        execute: function () {
-            Anim = (function (_super) {
-                __extends(Anim, _super);
-                function Anim(x, y, sprite) {
-                    var _this = _super.call(this) || this;
-                    _this.pos.x = x;
-                    _this.pos.y = y;
-                    _this.sprite = sprite;
-                    _this.useGravity = false;
-                    return _this;
-                }
-                Anim.prototype.update = function () {
-                    _super.prototype.update.call(this);
-                    if (this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration) {
-                        this.destroySelf();
-                    }
-                };
-                return Anim;
-            }(actor_4.Actor));
-            exports_20("Anim", Anim);
-        }
-    };
-});
-System.register("color", [], function (exports_21, context_21) {
-    "use strict";
-    var __moduleName = context_21 && context_21.id;
     var Color;
     return {
         setters: [],
@@ -1530,16 +1695,16 @@ System.register("color", [], function (exports_21, context_21) {
                 }
                 return Color;
             }());
-            exports_21("Color", Color);
+            exports_20("Color", Color);
         }
     };
 });
-System.register("vue", [], function (exports_22, context_22) {
+System.register("vue", [], function (exports_21, context_21) {
     "use strict";
-    var __moduleName = context_22 && context_22.id;
+    var __moduleName = context_21 && context_21.id;
     function startVue() {
     }
-    exports_22("startVue", startVue);
+    exports_21("startVue", startVue);
     return {
         setters: [],
         execute: function () {

@@ -18,13 +18,59 @@ export function inCircle(x: number, y: number, circleX: number, circleY: number,
   return false;
 }
 
-export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, x?: number, y?: number, flipX?: number, flipY?: number): void {
+export function toZero(num: number, inc: number, dir: number) {
+  if(dir === 1) {
+    num -= inc;
+    if(num < 0) num = 0;
+    return num;
+  }
+  else if(dir === -1) {
+    num += inc;
+    if(num > 0) num = 0;
+    return num;
+  }
+  else {
+    throw "Must pass in -1 or 1 for dir";
+  }
+}
 
+export function clampMax(num: number, max: number) {
+  return num < max ? num : max;
+}
+
+export function clampMin(num: number, min: number) {
+  return num > min ? num : min;
+}
+
+export function clamp(num: number, min: number, max: number) {
+  if(num < min) return min;
+  if(num > max) return max;
+  return num;
+}
+
+let helperCanvas = document.createElement("canvas");
+let helperCtx = helperCanvas.getContext("2d");
+
+let helperCanvas2 = document.createElement("canvas");
+let helperCtx2 = helperCanvas2.getContext("2d");
+
+let helperCanvas3 = document.createElement("canvas");
+let helperCtx3 = helperCanvas3.getContext("2d");
+
+export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, 
+  x?: number, y?: number, flipX?: number, flipY?: number, options?: string): void {
+  
+  if(!sW) {
+    ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
+    return;
+  }
+
+  /*
   ctx.save();
   flipX = flipX || 1;
   flipY = flipY || 1;
   ctx.scale(flipX, 1);
-
+  
   if(!sW) {
     ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
   } 
@@ -43,6 +89,58 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   }
 
   ctx.restore();
+  */
+
+  helperCanvas.width = Math.round(sW);
+  helperCanvas.height = Math.round(sH);
+  
+  helperCtx.save();
+  flipX = flipX || 1;
+  flipY = flipY || 1;
+  helperCtx.scale(flipX, 1);
+
+  helperCtx.clearRect(0, 0, helperCanvas.width, helperCanvas.height);
+  helperCtx.drawImage(
+    imgEl,
+    Math.round(sX), //source x
+    Math.round(sY), //source y
+    Math.round(sW), //source width
+    Math.round(sH), //source height
+    0,  //dest x
+    0, //dest y
+    flipX * Math.round(sW), //dest width
+    flipY * Math.round(sH)  //dest height
+  );
+
+  if(options === "flash") {
+    
+    helperCanvas2.width = helperCanvas.width;
+    helperCanvas2.height = helperCanvas.height;
+
+    helperCtx2.drawImage(helperCanvas, 0, 0);
+    helperCtx2.globalCompositeOperation = "source-atop";
+    helperCtx2.fillStyle = "rgb(128,128,255)";
+    helperCtx2.fillRect(0, 0, helperCanvas.width, helperCanvas.height);  // apply the comp filter
+    helperCtx2.globalCompositeOperation = "source-over";  // restore default comp
+    
+    helperCanvas3.width = helperCanvas.width;
+    helperCanvas3.height = helperCanvas.height;
+
+    helperCtx3.drawImage(helperCanvas, 0, 0);
+    helperCtx3.globalCompositeOperation = "lighter";
+    helperCtx3.drawImage(helperCanvas2, 0, 0);
+    helperCtx3.globalCompositeOperation = "source-over";  // restore default comp
+    
+    if(flipX === 1) ctx.drawImage(helperCanvas3, Math.round(x), Math.round(y));
+    else ctx.drawImage(helperCanvas3, Math.ceil(x), Math.ceil(y));
+    
+  }
+  else {
+    if(flipX === 1) ctx.drawImage(helperCanvas, Math.round(x), Math.round(y));
+    else ctx.drawImage(helperCanvas, Math.ceil(x), Math.ceil(y));
+  }
+
+  helperCtx.restore();
 }
 
 export function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: string, strokeColor?: string, strokeWidth?: number, fillAlpha?: number): void {

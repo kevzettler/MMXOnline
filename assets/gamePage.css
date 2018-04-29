@@ -1,3 +1,10 @@
 body {
-  background-color: white;
+  background-color: lightgray;
+}
+
+#canvas {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  border: 5px solid gray;
 }

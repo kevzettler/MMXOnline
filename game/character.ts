@@ -6,6 +6,7 @@ import { Player } from "./player";
 import { Collider } from "./collider";
 import { Rect } from "./rect";
 import { Projectile } from "./projectile";
+import * as Helpers from "./helpers";
 
 export class Character extends Actor {
 
@@ -13,18 +14,23 @@ export class Character extends Actor {
   player: Player;
   runSpeed: number;
   isShooting: boolean;
+  isDashing: boolean;
   shootTime: number;
   health: number;
   maxHealth: number;
-
+  
   constructor(player: Player, x: number, y: number) {
     super();
     this.pos.x = x;
     this.pos.y = y;
     this.player = player;
+    this.isShooting = false;
+    this.isDashing = false;
+
     let rect = new Rect(0, 0, 24, 34);
     this.globalCollider = new Collider(rect.getPoints(), false, this);
     this.changeState(new Idle());
+    
     this.runSpeed = 100;
     this.health = 100;
     this.maxHealth = this.health;
@@ -39,6 +45,11 @@ export class Character extends Actor {
         this.stopShoot();
       }
     }
+  }
+
+  getDashSpeed() {
+    if(this.isDashing) return 2.5;
+    return 1;
   }
 
   getShootPos() {
@@ -73,7 +84,11 @@ export class Character extends Actor {
     else { 
       this.changeSprite(newState.shootSprite, true);
     }
+    let oldState = this.charState;
+    if(oldState) oldState.onExit(newState);
     this.charState = newState;
+    newState.onEnter(oldState);
+    
     if(!newState.canShoot) {
       this.stopShoot();
     }
@@ -111,6 +126,16 @@ class CharState {
     return this.character.player;
   }
 
+  onExit(newState: CharState) {
+    if(!(newState instanceof Jump) && !(newState instanceof Fall) && !(newState instanceof Dash)) {
+      this.character.isDashing = false;
+    }
+  }
+
+  onEnter(oldState: CharState) {
+    
+  }
+
   update() {
     if(this.canShoot) {
       if(this.player.input["shoot"]) {
@@ -125,26 +150,50 @@ class CharState {
       return;
     }
     let move = new Point(0, 0);
+
+    //Cast from base to derived
+    let wallKick = (this instanceof WallKick) ? <WallKick> <any> this : null;
+
     if(this.player.input["left"]) {
-      move.x = -this.character.runSpeed;
-      this.character.xDir = -1;
+      if(!wallKick || wallKick.kickSpeed <= 0) {
+        move.x = -this.character.runSpeed * this.character.getDashSpeed();
+        this.character.xDir = -1;
+      }
     }
     else if(this.player.input["right"]) {
-      move.x = this.character.runSpeed;
-      this.character.xDir = 1;
+      if(!wallKick || wallKick.kickSpeed >= 0) {
+        move.x = this.character.runSpeed * this.character.getDashSpeed();
+        this.character.xDir = 1;
+      }
+
     }
     if(move.magnitude > 0) {
       this.character.move(move);
+    }
+
+    if(this.player.input["left"]) {
+      if(game.level.checkCollisionActor(this.character, -1, 0)) {
+        this.player.character.changeState(new WallSlide(-1));
+        return;
+      }
+    }
+    else if(this.player.input["right"]) {
+      if(game.level.checkCollisionActor(this.character, 1, 0)) {
+        this.player.character.changeState(new WallSlide(1));
+        return;
+      }
     }
   }
 
   groundCode() {
     if(!this.character.grounded) {
       this.character.changeState(new Fall());
+      return;
     }
     else if(this.player.input["jump"]) {
       this.character.vel.y = -400;
       this.character.changeState(new Jump());
+      return;
     }
   }
 
@@ -162,6 +211,9 @@ class Idle extends CharState {
       this.character.changeState(new Run());
     }
     this.groundCode();
+    if(this.player.input["dash"]) {
+      this.character.changeState(new Dash());
+    }
   }
 
 }
@@ -190,6 +242,9 @@ class Run extends CharState {
       this.character.changeState(new Idle());
     }
     this.groundCode();
+    if(this.player.input["dash"]) {
+      this.character.changeState(new Dash());
+    }
   }
 
 }
@@ -218,6 +273,93 @@ class Fall extends CharState {
 
   update() {
     super.update();
+    this.airCode();
+  }
+
+}
+
+class Dash extends CharState {
+
+  dashTime: number = 0;
+
+  constructor() {
+    super(game.sprites["mmx_dash"], game.sprites["mmx_dash_shoot"]);
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+    this.character.isDashing = true;
+  }
+
+  update() {
+    super.update();
+    this.groundCode();
+    if(!this.player.input["dash"]) {
+      this.character.changeState(new Idle());
+      return;
+    }
+    this.dashTime += game.deltaTime;
+    if(this.dashTime > 0.75) {
+      this.character.changeState(new Idle());
+      return;
+    }
+    let move = new Point(0, 0);
+    move.x = this.character.runSpeed * this.character.getDashSpeed() * this.character.xDir;
+    this.character.move(move);
+  }
+
+}
+
+class WallSlide extends CharState {
+  
+  wallDir: number;
+  constructor(wallDir: number) {
+    super(game.sprites["mmx_wall_slide"], game.sprites["mmx_wall_slide_shoot"]);
+    this.wallDir = wallDir;
+  }
+
+  update() {
+    if(this.character.grounded) {
+      this.character.changeState(new Idle());
+      return;
+    }
+    if(this.player.input["jump"]) {
+      this.character.vel.y = -300;
+      this.character.changeState(new WallKick(this.wallDir * -1));
+      return;
+    }
+    this.character.useGravity = false;
+    this.character.vel.y = 0;
+    let dirHeld = this.wallDir === -1 ? this.player.input["left"] : this.player.input["right"];
+
+    if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
+      this.player.character.changeState(new Fall());
+    }
+    this.character.move(new Point(0, 100));
+  }
+
+  onExit(newState: CharState) {
+    this.character.useGravity = true;
+    super.onExit(newState);
+  }
+
+}
+
+class WallKick extends CharState {
+
+  kickDir: number;
+  kickSpeed: number;
+  constructor(kickDir: number) {
+    super(game.sprites["mmx_wall_kick"], game.sprites["mmx_wall_kick_shoot"]);
+    this.kickDir = kickDir;
+    this.kickSpeed = kickDir * 100;
+  }
+
+  update() {
+    if(this.kickSpeed !== 0) {
+      this.kickSpeed = Helpers.toZero(this.kickSpeed, 1000 * game.deltaTime, this.kickDir);
+      this.character.move(new Point(this.kickSpeed, 0));
+    }
     this.airCode();
   }
 

@@ -30,6 +30,9 @@ export class Level {
     this.gravity = 1000;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
+    game.canvas.width = Math.min(game.canvas.width, this.background.width * this.zoomScale);
+    game.canvas.height = Math.min(game.canvas.height, this.background.height * this.zoomScale);
+
     this.gameObjects = [];
     for(var instance of levelJson.instances) {
       if(instance.className === "ShapeInstance") {
@@ -83,8 +86,11 @@ export class Level {
     if(this.camX < 0) this.camX = 0;
     if(this.camY < 0) this.camY = 0;
 
-    if(this.camX > this.background.width - scaledCanvasW/2) this.camX = this.background.width - scaledCanvasW/2;
-    if(this.camY > this.background.height - scaledCanvasH/2) this.camY = this.background.height - scaledCanvasH/2;
+    let maxX = this.background.width - scaledCanvasW;
+    let maxY = this.background.height - scaledCanvasH;
+
+    if(this.camX > maxX) this.camX = maxX;
+    if(this.camY > maxY) this.camY = maxY;
   }
   
   addGameObject(go: GameObject) {

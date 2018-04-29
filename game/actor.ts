@@ -3,7 +3,6 @@ import { Point } from "./point";
 import { Collider } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
-//import { Anim } from "./anim";
 
 //Anything that has: a position, rotation and name. Can also have an optional collider
 export class Actor {
@@ -23,6 +22,7 @@ export class Actor {
   globalCollider: Collider; //If no collider data found in sprite, fall back to this one
   collidedInFrame: Set<Collider>;
   triggeredInFrame: Set<Collider>;
+  isFlashing: boolean;
 
   constructor() {
     this.pos = new Point(0, 0);
@@ -39,6 +39,7 @@ export class Actor {
     game.level.addGameObject(this);
     this.collidedInFrame = new Set<Collider>();
     this.triggeredInFrame = new Set<Collider>();
+    this.isFlashing = false;
   }
 
   changeSprite(sprite: Sprite, resetFrame: boolean) {
@@ -120,7 +121,8 @@ export class Actor {
 
   render(x: number, y: number) {
     //console.log(this.pos.x + "," + this.pos.y);
-    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir);
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.isFlashing ? "flash" : "");
+    this.isFlashing = false;
     if(game.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
@@ -176,7 +178,6 @@ export class Actor {
 
 }
 
-
 class Anim extends Actor {
 
   constructor(x: number, y: number, sprite: Sprite) {
@@ -185,6 +186,7 @@ class Anim extends Actor {
     this.pos.y = y;
     this.sprite = sprite;
     this.useGravity = false;
+    
   }
 
   update() {
@@ -195,4 +197,3 @@ class Anim extends Actor {
   }
 
 }
-

@@ -17,7 +17,8 @@ var data = {
   flipY: false,
   bulkDuration: 0,
   newSpriteName: "",
-  selectedPOI: null
+  selectedPOI: null,
+  ghost: null
 };
 
 var canvas1DefaultWidth = 700;
@@ -25,6 +26,9 @@ var canvas1DefaultHeight = 600;
 
 var canvas1 = $("#canvas1")[0];
 var canvas2 = $("#canvas2")[0];
+
+var helperCanvas = document.createElement("canvas");
+var helperCtx = helperCanvas.getContext("2d");
 
 var canvas2Wrapper = $("#canvas2").parent()[0];
 
@@ -34,6 +38,11 @@ var c2 = $("#canvas2")[0].getContext("2d");
 c1.webkitImageSmoothingEnabled = false;
 c1.mozImageSmoothingEnabled = false;
 c1.imageSmoothingEnabled = false; /// future
+
+var dragStartX = 0;
+var dragStartY = 0;
+var dragEndX = 0;
+var dragEndY = 0;
 
 var methods = {
   onSpritesheetChange(newSheet, isNew) {
@@ -116,6 +125,8 @@ var methods = {
   },
   addHitbox(spriteOrFrame) {
     var hitbox = new Hitbox();
+    hitbox.width = this.selectedFrame.rect.w;
+    hitbox.height = this.selectedFrame.rect.h;
     spriteOrFrame.hitboxes.push(hitbox);
     this.selectHitbox(hitbox);
     redrawCanvas1();
@@ -349,6 +360,12 @@ function redrawCanvas1() {
 
     data.selectedSprite.draw(c1, frame, cX, cY, data.flipX, data.flipY);
 
+    if(data.ghost) {
+      c1.globalAlpha = 0.5;
+      data.ghost.sprite.draw(c1, data.ghost.frame, cX, cY, data.flipX, data.flipY);  
+      c1.globalAlpha = 1;
+    }
+
     if(!data.hideGizmos) {
       for(var hitbox of getVisibleHitboxes()) {
 
@@ -421,6 +438,10 @@ function redrawCanvas2() {
 
   c2.clearRect(0, 0, canvas2.width, canvas2.height);
   
+  if(mouseDownCanvas2) {
+    drawRect(c2, createRect(dragStartX, dragStartY, dragEndX, dragEndY), "", "blue", 1);
+  }
+
   if(data.selectedSpritesheet && data.selectedSpritesheet.imageEl) {
     c2.drawImage(data.selectedSpritesheet.imageEl, 0, 0);
   }
@@ -469,6 +490,7 @@ canvas2.onclick = function(event) {
     redrawCanvas1();
     redrawCanvas2();
   }
+
 };
 
 var mouseX = 0;
@@ -476,6 +498,48 @@ var mouseY = 0;
 var mousedown = false;
 var middlemousedown = false;
 var rightmousedown = false;
+var mouseDownCanvas2 = false;
+
+canvas2.onmousedown = function(e) {
+  if(e.which === 1) {
+      
+    if(!mouseDownCanvas2) {
+      var x = event.pageX - canvas2.offsetLeft + canvas2Wrapper.scrollLeft;
+      var y = event.pageY - canvas2.offsetTop + canvas2Wrapper.scrollTop;
+      mouseDownCanvas2 = true;
+      dragStartX = x;
+      dragStartY = y;
+      dragEndX = x;
+      dragEndY = y;
+    }
+
+    redrawCanvas2();
+    event.preventDefault();
+  }
+}
+
+canvas2.onmouseup = function(e) {
+  if(e.which === 1) {
+    mouseDownCanvas2 = false;
+    redrawCanvas2();
+    event.preventDefault();
+  }
+}
+
+canvas2.onmousemove = function(event) {
+  if(mouseDownCanvas2) {
+    var x = event.pageX - canvas2.offsetLeft + canvas2Wrapper.scrollLeft;
+    var y = event.pageY - canvas2.offsetTop + canvas2Wrapper.scrollTop;
+    dragEndX = x;
+    dragEndY = y;
+    redrawCanvas2();
+  }
+};
+
+canvas2.onmouseleave = function(event) {
+  mouseDownCanvas2 = false;
+  redrawCanvas2();
+}
 
 canvas1.onmousemove = function(e) {
 
@@ -603,11 +667,21 @@ function onKeyDown(key, firstFrame) {
 
   if(key === "escape") {
     data.selectedHitbox = null;
+    data.ghost = null;
   }
 
   if(data.selectedFrame && !app1.isSelectedFrameAdded()) {
     if(key === "f") {
       app1.addPendingFrame();
+    }
+  }
+
+  if(data.selectedFrame) {
+    if(key === "g") {
+      data.ghost = {
+        frame: data.selectedFrame,
+        sprite: data.selectedSprite
+      };
     }
   }
 

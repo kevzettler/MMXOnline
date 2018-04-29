@@ -22,8 +22,9 @@ export class Projectile extends Actor {
   }
 
   onTrigger(other: Collider) {
-    let character = <Character> other.gameObject;
+    let character = (other.gameObject instanceof Character) ? <Character> other.gameObject : undefined;
     if(character && character.player.alliance !== this.damager.owner.alliance) {
+      character.isFlashing = true;
       character.applyDamage(this.damager.damage);
       this.destroySelf(game.sprites["buster1_fade"]);
     }
