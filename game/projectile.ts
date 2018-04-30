@@ -21,6 +21,14 @@ export class Projectile extends Actor {
     this.damager = new Damager(player, damage);
   }
 
+  update() {
+    super.update();
+    let leeway = 500;
+    if(this.pos.x > game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game.level.height + leeway || this.pos.y < -leeway) {
+      this.destroySelf();
+    }
+  }
+
   onTrigger(other: Collider) {
     let character = (other.gameObject instanceof Character) ? <Character> other.gameObject : undefined;
     if(character && character.player.alliance !== this.damager.owner.alliance) {

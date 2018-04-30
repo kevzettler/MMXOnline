@@ -3,6 +3,7 @@ import { Character } from "./character";
 export class Player {
   
   input: { [name: string]: boolean; };
+  inputPressed: { [name: string]: boolean };
   inputMapping: { [code: number]: string }; //Map game keycodes (i.e. "jump", "shoot" to js keycodes)
   character: Character;
   isAI: boolean;
@@ -12,6 +13,7 @@ export class Player {
     this.alliance = alliance;
     this.isAI = isAI;
     this.input = {};
+    this.inputPressed = {};
     if(!isAI) {
       this.inputMapping = {};
       this.inputMapping[37] = "left";
@@ -30,6 +32,7 @@ export class Player {
   onKeyDown(keycode: number) {
     if(this.isAI) return;
     let key = this.inputMapping[keycode];
+    if(!this.input[key]) this.inputPressed[key] = true;
     this.input[key] = true;
   }
 
@@ -37,6 +40,11 @@ export class Player {
     if(this.isAI) return;
     let key = this.inputMapping[keycode];
     this.input[key] = false;
+    this.inputPressed[key] = false;
+  }
+
+  clearInputPressed() {
+    this.inputPressed = {};
   }
 
 }

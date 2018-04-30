@@ -18,6 +18,7 @@ export class Character extends Actor {
   shootTime: number;
   health: number;
   maxHealth: number;
+  jumpPower: number;
   
   constructor(player: Player, x: number, y: number) {
     super();
@@ -27,10 +28,11 @@ export class Character extends Actor {
     this.isShooting = false;
     this.isDashing = false;
 
-    let rect = new Rect(0, 0, 24, 34);
+    let rect = new Rect(0, 0, 18, 34);
     this.globalCollider = new Collider(rect.getPoints(), false, this);
     this.changeState(new Idle());
     
+    this.jumpPower = 350;
     this.runSpeed = 100;
     this.health = 100;
     this.maxHealth = this.health;
@@ -41,14 +43,14 @@ export class Character extends Actor {
     super.update();
     if(this.isShooting) {
       this.shootTime += game.deltaTime;
-      if(this.shootTime > 0.2) {
+      if(this.shootTime > 0.15) {
         this.stopShoot();
       }
     }
   }
 
   getDashSpeed() {
-    if(this.isDashing) return 2.5;
+    if(this.isDashing) return 2;
     return 1;
   }
 
@@ -64,6 +66,7 @@ export class Character extends Actor {
       this.shootTime = 0;
       this.changeSprite(this.charState.shootSprite, false);
       let vel = new Point(350 * this.xDir, 0);
+      if(this.charState instanceof WallSlide) vel.x *= -1;
       let proj = new Projectile(this.getShootPos(), vel, 1, this.player, game.sprites["buster1"]);
     }
   }
@@ -100,7 +103,6 @@ export class Character extends Actor {
   */
 
   applyDamage(damage: number) {
-    console.log("APPLYING DAMAGE");
     this.health -= damage;
   }
 
@@ -112,10 +114,14 @@ class CharState {
   shootSprite: Sprite;
   busterOffset: Point;
   character: Character;
+  lastLeftWall: Collider;
+  lastRightWall: Collider;
+  stateTime: number;
 
   constructor(sprite: Sprite, shootSprite?: Sprite) {
     this.sprite = sprite;
     this.shootSprite = shootSprite;
+    this.stateTime = 0;
   }
 
   get canShoot(): boolean {
@@ -127,7 +133,8 @@ class CharState {
   }
 
   onExit(newState: CharState) {
-    if(!(newState instanceof Jump) && !(newState instanceof Fall) && !(newState instanceof Dash)) {
+    //Stop the dash speed on transition to any frame except jump/fall (dash lingers in air) or dash itself
+    if(!(newState instanceof Jump) && !(newState instanceof Fall) && !(newState instanceof WallKick) && !(newState instanceof Dash)) {
       this.character.isDashing = false;
     }
   }
@@ -137,11 +144,17 @@ class CharState {
   }
 
   update() {
+    
+    this.stateTime += game.deltaTime;
     if(this.canShoot) {
-      if(this.player.input["shoot"]) {
+      if(this.player.inputPressed["shoot"]) {
         this.character.shoot();
       }
     }
+    
+    this.lastLeftWall = game.level.checkCollisionActor(this.character, -1, 0);
+    this.lastRightWall = game.level.checkCollisionActor(this.character, 1, 0);
+    
   }
 
   airCode() {
@@ -149,6 +162,15 @@ class CharState {
       this.character.changeState(new Idle());
       return;
     }
+
+    if(!this.player.input["jump"] && this.character.vel.y < 0) {
+      this.character.vel.y = 0;
+    }
+
+    if(game.level.checkCollisionActor(this.character, 0, -1)) {
+      this.character.vel.y = 0;
+    }
+
     let move = new Point(0, 0);
 
     //Cast from base to derived
@@ -171,18 +193,21 @@ class CharState {
       this.character.move(move);
     }
 
-    if(this.player.input["left"]) {
-      if(game.level.checkCollisionActor(this.character, -1, 0)) {
+    //This logic can be abit confusing, but we are trying to mirror the actual Mega man X wall climb physics
+    //In the actual game, X will not initiate a climb if you directly hugging a wall, jump and push in its direction UNTIL you start falling OR you move away and jump into it
+    if(this.player.inputPressed["left"] || (this.player.input["left"] && (this.character.vel.y > 0 || !this.lastLeftWall))) {
+      if(this.lastLeftWall) {
         this.player.character.changeState(new WallSlide(-1));
-        return;
+        //return;
       }
     }
-    else if(this.player.input["right"]) {
-      if(game.level.checkCollisionActor(this.character, 1, 0)) {
+    else if(this.player.inputPressed["right"] || (this.player.input["right"] && (this.character.vel.y > 0 || !this.lastRightWall))) {
+      if(this.lastRightWall) {
         this.player.character.changeState(new WallSlide(1));
-        return;
+        //return;
       }
     }
+
   }
 
   groundCode() {
@@ -190,8 +215,8 @@ class CharState {
       this.character.changeState(new Fall());
       return;
     }
-    else if(this.player.input["jump"]) {
-      this.character.vel.y = -400;
+    else if(this.player.inputPressed["jump"]) {
+      this.character.vel.y = -this.character.jumpPower;
       this.character.changeState(new Jump());
       return;
     }
@@ -211,7 +236,7 @@ class Idle extends CharState {
       this.character.changeState(new Run());
     }
     this.groundCode();
-    if(this.player.input["dash"]) {
+    if(this.player.inputPressed["dash"]) {
       this.character.changeState(new Dash());
     }
   }
@@ -242,7 +267,7 @@ class Run extends CharState {
       this.character.changeState(new Idle());
     }
     this.groundCode();
-    if(this.player.input["dash"]) {
+    if(this.player.inputPressed["dash"]) {
       this.character.changeState(new Dash());
     }
   }
@@ -261,6 +286,14 @@ class Jump extends CharState {
     if(this.character.vel.y > 0) {
       this.character.changeState(new Fall());
     }
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+  }
+
+  onExit(newState: CharState) {
+    super.onEnter(newState);
   }
 
 }
@@ -299,7 +332,7 @@ class Dash extends CharState {
       return;
     }
     this.dashTime += game.deltaTime;
-    if(this.dashTime > 0.75) {
+    if(this.dashTime > 0.5) {
       this.character.changeState(new Idle());
       return;
     }
@@ -319,23 +352,31 @@ class WallSlide extends CharState {
   }
 
   update() {
+    super.update();
     if(this.character.grounded) {
       this.character.changeState(new Idle());
       return;
     }
-    if(this.player.input["jump"]) {
-      this.character.vel.y = -300;
+    if(this.player.inputPressed["jump"]) {
+      if(this.player.input["dash"]) {
+        this.character.isDashing = true;
+      }
+      this.character.vel.y = -this.character.jumpPower;
       this.character.changeState(new WallKick(this.wallDir * -1));
       return;
     }
     this.character.useGravity = false;
     this.character.vel.y = 0;
-    let dirHeld = this.wallDir === -1 ? this.player.input["left"] : this.player.input["right"];
 
-    if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
-      this.player.character.changeState(new Fall());
+    if(this.stateTime > 0.15) {
+      let dirHeld = this.wallDir === -1 ? this.player.input["left"] : this.player.input["right"];
+
+      if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
+        this.player.character.changeState(new Fall());
+      }
+      this.character.move(new Point(0, 100));
     }
-    this.character.move(new Point(0, 100));
+
   }
 
   onExit(newState: CharState) {
@@ -352,15 +393,30 @@ class WallKick extends CharState {
   constructor(kickDir: number) {
     super(game.sprites["mmx_wall_kick"], game.sprites["mmx_wall_kick_shoot"]);
     this.kickDir = kickDir;
-    this.kickSpeed = kickDir * 100;
+    this.kickSpeed = kickDir * 150;
   }
 
   update() {
+    super.update();
+    if(this.character.isDashing) {
+      this.kickSpeed = 0;
+    }
     if(this.kickSpeed !== 0) {
-      this.kickSpeed = Helpers.toZero(this.kickSpeed, 1000 * game.deltaTime, this.kickDir);
+      this.kickSpeed = Helpers.toZero(this.kickSpeed, 800 * game.deltaTime, this.kickDir);
       this.character.move(new Point(this.kickSpeed, 0));
     }
     this.airCode();
+    if(this.character.vel.y > 0) {
+      this.character.changeState(new Fall());
+    }
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+  }
+
+  onExit(newState: CharState) {
+    super.onEnter(newState);
   }
 
 }

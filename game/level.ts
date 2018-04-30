@@ -27,7 +27,7 @@ export class Level {
     this.camX = 0;
     this.camY = 0;
     this.fixedCam = false;
-    this.gravity = 1000;
+    this.gravity = 900;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
     game.canvas.width = Math.min(game.canvas.width, this.background.width * this.zoomScale);
@@ -55,10 +55,18 @@ export class Level {
   }
   
   update() {
+
     for(let go of this.gameObjects) {
       go.preUpdate();
       go.update();
     }
+   
+    this.render();
+
+    for(let player of this.localPlayers) {
+      player.clearInputPressed();
+    }
+
   }
 
   render() {
@@ -75,6 +83,9 @@ export class Level {
       go.render(-this.camX, -this.camY);
     }
   }
+
+  get width() { return this.background.width; }
+  get height() { return this.background.height; }
 
   computeCamPos(actor: Actor) {
     let scaledCanvasW = game.canvas.width / this.zoomScale;

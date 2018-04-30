@@ -1,19 +1,11 @@
--If pushing against wall don't play run animation
--Investigate left run anim being off
-
--Input system needs "press" concept
-  -Polish/fix dash, climb and jump using this concept
-  -Jump/wallkick: holding frames
-
--Fix sprites, polish positions
 -Hurt/death
 
--AI
 -Sound
 -Weapons
 -Charge shot
 -HUD
 -Player 2
+-AI
 -More levles/background+foreground system
 
 -Collision system
@@ -32,7 +24,7 @@ Cast to type
 Useful optimizations and fixes
 ========================
 -requestAnimationFrame
--
+-If pushing against wall don't play run animation
 
 ========================
 Sprite editor useful features
