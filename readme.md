@@ -1,11 +1,9 @@
--Hurt/death
-
 -Sound
--Weapons
--Charge shot
--HUD
+-HUD/Weapons/Charge shot
+-Hurt/death
 -Player 2
 -AI
+-Menu system
 -More levles/background+foreground system
 
 -Collision system

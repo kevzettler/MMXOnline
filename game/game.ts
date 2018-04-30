@@ -70,15 +70,15 @@ class Game {
     this.level = this.levels[name];
 
     let player1: Player = new Player(60, 100, false, 0);
-    //let cpu1: Player = new Player(200, 100, true, 1);
+    let cpu1: Player = new Player(200, 100, false, 1);
     this.level.localPlayers.push(player1);
-    //this.level.localPlayers.push(cpu1);
+    this.level.localPlayers.push(cpu1);
     this.level.mainPlayer = player1;
    
     document.onkeydown = (e) => {
       for(let player of this.level.localPlayers) {
         player.onKeyDown(e.keyCode);
-      }
+    }
     }
 
     document.onkeyup = (e) => {

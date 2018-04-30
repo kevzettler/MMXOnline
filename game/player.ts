@@ -26,6 +26,12 @@ export class Player {
       this.inputMapping[65] = "weaponleft";
       this.inputMapping[83] = "weaponright";
     }
+
+    if(alliance === 1) {
+      this.inputMapping = {};
+      this.inputMapping[65] = "shoot";
+    }
+
     this.character = new Character(this, x, y);
   }
 
