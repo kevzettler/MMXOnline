@@ -68,6 +68,7 @@ export class Character extends Actor {
       let vel = new Point(350 * this.xDir, 0);
       if(this.charState instanceof WallSlide) vel.x *= -1;
       let proj = new Projectile(this.getShootPos(), vel, 1, this.player, game.sprites["buster1"]);
+      game.playSound("buster");
     }
   }
 
@@ -80,6 +81,7 @@ export class Character extends Actor {
   }
 
   changeState(newState: CharState) {
+    if(this.charState && newState && this.charState.constructor === newState.constructor) return;
     newState.character = this;
     if(!this.isShooting || !newState.canShoot) {
       this.changeSprite(newState.sprite, true);
@@ -117,6 +119,7 @@ class CharState {
   lastLeftWall: Collider;
   lastRightWall: Collider;
   stateTime: number;
+  enterSound: string;
 
   constructor(sprite: Sprite, shootSprite?: Sprite) {
     this.sprite = sprite;
@@ -140,7 +143,7 @@ class CharState {
   }
 
   onEnter(oldState: CharState) {
-    
+    if(this.enterSound) game.playSound(this.enterSound);
   }
 
   update() {
@@ -159,6 +162,7 @@ class CharState {
 
   airCode() {
     if(this.character.grounded) {
+      game.playSound("land");
       this.character.changeState(new Idle());
       return;
     }
@@ -278,6 +282,7 @@ class Jump extends CharState {
 
   constructor() {
     super(game.sprites["mmx_jump"], game.sprites["mmx_jump_shoot"]);
+    this.enterSound = "jump";
   }
 
   update() {
@@ -293,7 +298,7 @@ class Jump extends CharState {
   }
 
   onExit(newState: CharState) {
-    super.onEnter(newState);
+    super.onExit(newState);
   }
 
 }
@@ -317,6 +322,7 @@ class Dash extends CharState {
 
   constructor() {
     super(game.sprites["mmx_dash"], game.sprites["mmx_dash_shoot"]);
+    this.enterSound = "dash";
   }
 
   onEnter(oldState: CharState) {
@@ -349,6 +355,7 @@ class WallSlide extends CharState {
   constructor(wallDir: number) {
     super(game.sprites["mmx_wall_slide"], game.sprites["mmx_wall_slide_shoot"]);
     this.wallDir = wallDir;
+    this.enterSound = "land";
   }
 
   update() {
@@ -394,6 +401,7 @@ class WallKick extends CharState {
     super(game.sprites["mmx_wall_kick"], game.sprites["mmx_wall_kick_shoot"]);
     this.kickDir = kickDir;
     this.kickSpeed = kickDir * 150;
+    this.enterSound = "jump";
   }
 
   update() {
@@ -416,7 +424,7 @@ class WallKick extends CharState {
   }
 
   onExit(newState: CharState) {
-    super.onEnter(newState);
+    super.onExit(newState);
   }
 
 }

@@ -1,4 +1,7 @@
--Sound
+-Double-tap sound on wall climb
+-Characters y positions can be inconsistent on ground
+-Investigate screen not showing sometimes
+
 -HUD/Weapons/Charge shot
 -Hurt/death
 -Player 2

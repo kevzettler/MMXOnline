@@ -613,6 +613,7 @@ System.register("projectile", ["actor", "damager", "character", "game"], functio
                     if (character && character.player.alliance !== this.damager.owner.alliance) {
                         character.isFlashing = true;
                         character.applyDamage(this.damager.damage);
+                        game_2.game.playSound("hit");
                         this.destroySelf(game_2.game.sprites["buster1_fade"]);
                     }
                     var wall = other.gameObject;
@@ -701,6 +702,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                         if (this.charState instanceof WallSlide)
                             vel.x *= -1;
                         var proj = new projectile_1.Projectile(this.getShootPos(), vel, 1, this.player, game_3.game.sprites["buster1"]);
+                        game_3.game.playSound("buster");
                     }
                 };
                 Character.prototype.stopShoot = function () {
@@ -711,6 +713,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     }
                 };
                 Character.prototype.changeState = function (newState) {
+                    if (this.charState && newState && this.charState.constructor === newState.constructor)
+                        return;
                     newState.character = this;
                     if (!this.isShooting || !newState.canShoot) {
                         this.changeSprite(newState.sprite, true);
@@ -759,6 +763,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     }
                 };
                 CharState.prototype.onEnter = function (oldState) {
+                    if (this.enterSound)
+                        game_3.game.playSound(this.enterSound);
                 };
                 CharState.prototype.update = function () {
                     this.stateTime += game_3.game.deltaTime;
@@ -772,6 +778,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 };
                 CharState.prototype.airCode = function () {
                     if (this.character.grounded) {
+                        game_3.game.playSound("land");
                         this.character.changeState(new Idle());
                         return;
                     }
@@ -871,7 +878,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
             Jump = (function (_super) {
                 __extends(Jump, _super);
                 function Jump() {
-                    return _super.call(this, game_3.game.sprites["mmx_jump"], game_3.game.sprites["mmx_jump_shoot"]) || this;
+                    var _this = _super.call(this, game_3.game.sprites["mmx_jump"], game_3.game.sprites["mmx_jump_shoot"]) || this;
+                    _this.enterSound = "jump";
+                    return _this;
                 }
                 Jump.prototype.update = function () {
                     _super.prototype.update.call(this);
@@ -884,7 +893,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     _super.prototype.onEnter.call(this, oldState);
                 };
                 Jump.prototype.onExit = function (newState) {
-                    _super.prototype.onEnter.call(this, newState);
+                    _super.prototype.onExit.call(this, newState);
                 };
                 return Jump;
             }(CharState));
@@ -904,6 +913,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 function Dash() {
                     var _this = _super.call(this, game_3.game.sprites["mmx_dash"], game_3.game.sprites["mmx_dash_shoot"]) || this;
                     _this.dashTime = 0;
+                    _this.enterSound = "dash";
                     return _this;
                 }
                 Dash.prototype.onEnter = function (oldState) {
@@ -933,6 +943,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 function WallSlide(wallDir) {
                     var _this = _super.call(this, game_3.game.sprites["mmx_wall_slide"], game_3.game.sprites["mmx_wall_slide_shoot"]) || this;
                     _this.wallDir = wallDir;
+                    _this.enterSound = "land";
                     return _this;
                 }
                 WallSlide.prototype.update = function () {
@@ -971,6 +982,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     var _this = _super.call(this, game_3.game.sprites["mmx_wall_kick"], game_3.game.sprites["mmx_wall_kick_shoot"]) || this;
                     _this.kickDir = kickDir;
                     _this.kickSpeed = kickDir * 150;
+                    _this.enterSound = "jump";
                     return _this;
                 }
                 WallKick.prototype.update = function () {
@@ -991,7 +1003,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     _super.prototype.onEnter.call(this, oldState);
                 };
                 WallKick.prototype.onExit = function (newState) {
-                    _super.prototype.onEnter.call(this, newState);
+                    _super.prototype.onExit.call(this, newState);
                 };
                 return WallKick;
             }(CharState));
@@ -1265,6 +1277,8 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                     this.levels = {};
                     this.spritesheets = {};
                     this.backgrounds = {};
+                    this.sounds = {};
+                    this.soundLoadCount = 0;
                     this.isServer = false;
                     this.isClient = true;
                     this.showHitboxes = false;
@@ -1275,9 +1289,21 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                     this.ctx.imageSmoothingEnabled = false;
                 }
                 Game.prototype.start = function () {
+                    var _this = this;
                     this.loadSprites();
                     this.loadLevels();
                     this.loadLevel("sm_bossroom");
+                    for (var _i = 0, soundFiles_1 = soundFiles; _i < soundFiles_1.length; _i++) {
+                        var soundFile = soundFiles_1[_i];
+                        var sound = new Howl({
+                            src: ["assets/sounds/" + soundFile],
+                            onload: function () {
+                                console.log("LOADED SOUND");
+                                _this.soundLoadCount++;
+                            }
+                        });
+                        this.sounds[soundFile.split(".")[0]] = sound;
+                    }
                 };
                 Game.prototype.startVue = function () {
                     var app1 = new Vue({
@@ -1353,6 +1379,10 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                             return false;
                         }
                     }
+                    var keys = Object.getOwnPropertyNames(this.sounds);
+                    if (keys.length !== this.soundLoadCount) {
+                        return false;
+                    }
                     return true;
                 };
                 Game.prototype.gameLoop = function () {
@@ -1363,6 +1393,9 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                         this.startTime = Date.now();
                     }
                     window.requestAnimationFrame(function () { return _this.gameLoop(); });
+                };
+                Game.prototype.playSound = function (clip) {
+                    this.sounds[clip].play();
                 };
                 return Game;
             }());
@@ -1762,6 +1795,7 @@ System.register("color", [], function (exports_20, context_20) {
         }
     };
 });
+var soundFiles = ["buster.wav", "buster2.wav", "buster3.wav", "buster4.wav", "charge_loop.wav", "charge_start.wav", "dash.wav", "die.wav", "explode.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav"];
 System.register("vue", [], function (exports_21, context_21) {
     "use strict";
     var __moduleName = context_21 && context_21.id;

@@ -12,6 +12,8 @@ class Game {
 
   spritesheets: { [path: string]: HTMLImageElement };
   backgrounds: { [path: string]: HTMLImageElement };
+  sounds: { [path: string]: Howl };
+  soundLoadCount: number;
 
   isServer: boolean;
   isClient: boolean;
@@ -30,7 +32,10 @@ class Game {
   
     this.spritesheets = { };
     this.backgrounds = { };
+    this.sounds = { };
   
+    this.soundLoadCount = 0;
+
     this.isServer = false;
     this.isClient = true;
   
@@ -47,7 +52,17 @@ class Game {
   start() {
     this.loadSprites();
     this.loadLevels();
-    this.loadLevel("sm_bossroom");
+    this.loadLevel("sm_bossroom");  
+    for(let soundFile of soundFiles) {
+      let sound = new Howl({
+        src: ["assets/sounds/" + soundFile],
+        onload: () => {
+          console.log("LOADED SOUND");
+          this.soundLoadCount++;
+        }
+      });
+      this.sounds[soundFile.split(".")[0]] = sound;
+    }
   }
 
   startVue() {
@@ -78,7 +93,7 @@ class Game {
     document.onkeydown = (e) => {
       for(let player of this.level.localPlayers) {
         player.onKeyDown(e.keyCode);
-    }
+      }
     }
 
     document.onkeyup = (e) => {
@@ -132,6 +147,10 @@ class Game {
         return false;
       }
     }
+    var keys = Object.getOwnPropertyNames(this.sounds);
+    if(keys.length !== this.soundLoadCount) {
+      return false;
+    }
     return true;
   }
 
@@ -146,6 +165,10 @@ class Game {
       this.startTime = Date.now();
     }
     window.requestAnimationFrame(() => this.gameLoop());
+  }
+
+  playSound(clip: string) {
+    this.sounds[clip].play();
   }
 
 }

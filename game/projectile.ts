@@ -34,6 +34,7 @@ export class Projectile extends Actor {
     if(character && character.player.alliance !== this.damager.owner.alliance) {
       character.isFlashing = true;
       character.applyDamage(this.damager.damage);
+      game.playSound("hit");
       this.destroySelf(game.sprites["buster1_fade"]);
     }
     let wall = <Wall> other.gameObject;

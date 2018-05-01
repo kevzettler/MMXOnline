@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "typescript": "^2.4.1",
+    "howler": "^2.0.9",
     "@types/jquery": "^3.3.1",
     "@types/lodash": "~4.14.108",
     "@types/node": "^9.6.4",
