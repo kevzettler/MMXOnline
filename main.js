@@ -673,6 +673,10 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     _this.maxHealth = _this.health;
                     return _this;
                 }
+                Character.prototype.preUpdate = function () {
+                    _super.prototype.preUpdate.call(this);
+                    this.changedStateInFrame = false;
+                };
                 Character.prototype.update = function () {
                     this.charState.update();
                     _super.prototype.update.call(this);
@@ -715,6 +719,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 Character.prototype.changeState = function (newState) {
                     if (this.charState && newState && this.charState.constructor === newState.constructor)
                         return;
+                    if (this.changedStateInFrame)
+                        return;
+                    this.changedStateInFrame = true;
                     newState.character = this;
                     if (!this.isShooting || !newState.canShoot) {
                         this.changeSprite(newState.sprite, true);
@@ -808,11 +815,13 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                     if (this.player.inputPressed["left"] || (this.player.input["left"] && (this.character.vel.y > 0 || !this.lastLeftWall))) {
                         if (this.lastLeftWall) {
                             this.player.character.changeState(new WallSlide(-1));
+                            return;
                         }
                     }
                     else if (this.player.inputPressed["right"] || (this.player.input["right"] && (this.character.vel.y > 0 || !this.lastRightWall))) {
                         if (this.lastRightWall) {
                             this.player.character.changeState(new WallSlide(1));
+                            return;
                         }
                     }
                 };
@@ -884,10 +893,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 }
                 Jump.prototype.update = function () {
                     _super.prototype.update.call(this);
-                    this.airCode();
                     if (this.character.vel.y > 0) {
                         this.character.changeState(new Fall());
+                        return;
                     }
+                    this.airCode();
                 };
                 Jump.prototype.onEnter = function (oldState) {
                     _super.prototype.onEnter.call(this, oldState);
@@ -1104,8 +1114,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                     this.gravity = 900;
                     this.name = levelJson.name;
                     this.background = game_4.game.getBackground(levelJson.backgroundPath);
-                    game_4.game.canvas.width = Math.min(game_4.game.canvas.width, this.background.width * this.zoomScale);
-                    game_4.game.canvas.height = Math.min(game_4.game.canvas.height, this.background.height * this.zoomScale);
                     this.gameObjects = [];
                     for (var _i = 0, _a = levelJson.instances; _i < _a.length; _i++) {
                         var instance = _a[_i];
@@ -1141,6 +1149,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                     }
                 };
                 Level.prototype.render = function () {
+                    game_4.game.canvas.width = Math.min(game_4.game.canvas.width, this.background.width * this.zoomScale);
+                    game_4.game.canvas.height = Math.min(game_4.game.canvas.height, this.background.height * this.zoomScale);
                     if (this.mainPlayer.character) {
                         this.computeCamPos(this.mainPlayer.character);
                     }

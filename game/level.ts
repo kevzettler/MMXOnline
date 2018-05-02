@@ -30,8 +30,6 @@ export class Level {
     this.gravity = 900;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
-    game.canvas.width = Math.min(game.canvas.width, this.background.width * this.zoomScale);
-    game.canvas.height = Math.min(game.canvas.height, this.background.height * this.zoomScale);
 
     this.gameObjects = [];
     for(var instance of levelJson.instances) {
@@ -71,6 +69,9 @@ export class Level {
 
   render() {
     
+    game.canvas.width = Math.min(game.canvas.width, this.background.width * this.zoomScale);
+    game.canvas.height = Math.min(game.canvas.height, this.background.height * this.zoomScale);
+
     if(this.mainPlayer.character) {
       this.computeCamPos(this.mainPlayer.character);
     }

@@ -19,6 +19,7 @@ export class Character extends Actor {
   health: number;
   maxHealth: number;
   jumpPower: number;
+  changedStateInFrame: boolean;
   
   constructor(player: Player, x: number, y: number) {
     super();
@@ -36,6 +37,11 @@ export class Character extends Actor {
     this.runSpeed = 100;
     this.health = 100;
     this.maxHealth = this.health;
+  }
+
+  preUpdate() {
+    super.preUpdate();
+    this.changedStateInFrame = false;
   }
 
   update() {
@@ -82,6 +88,8 @@ export class Character extends Actor {
 
   changeState(newState: CharState) {
     if(this.charState && newState && this.charState.constructor === newState.constructor) return;
+    if(this.changedStateInFrame) return;
+    this.changedStateInFrame = true;
     newState.character = this;
     if(!this.isShooting || !newState.canShoot) {
       this.changeSprite(newState.sprite, true);
@@ -202,13 +210,13 @@ class CharState {
     if(this.player.inputPressed["left"] || (this.player.input["left"] && (this.character.vel.y > 0 || !this.lastLeftWall))) {
       if(this.lastLeftWall) {
         this.player.character.changeState(new WallSlide(-1));
-        //return;
+        return;
       }
     }
     else if(this.player.inputPressed["right"] || (this.player.input["right"] && (this.character.vel.y > 0 || !this.lastRightWall))) {
       if(this.lastRightWall) {
         this.player.character.changeState(new WallSlide(1));
-        //return;
+        return;
       }
     }
 
@@ -287,10 +295,11 @@ class Jump extends CharState {
 
   update() {
     super.update();
-    this.airCode();
     if(this.character.vel.y > 0) {
       this.character.changeState(new Fall());
+      return;
     }
+    this.airCode();
   }
 
   onEnter(oldState: CharState) {

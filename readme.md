@@ -1,7 +1,3 @@
--Double-tap sound on wall climb
--Characters y positions can be inconsistent on ground
--Investigate screen not showing sometimes
-
 -HUD/Weapons/Charge shot
 -Hurt/death
 -Player 2
@@ -26,6 +22,9 @@ Useful optimizations and fixes
 ========================
 -requestAnimationFrame
 -If pushing against wall don't play run animation
+-Quadtrees
+-Snap to ground on move() function
+  -Characters y positions can be inconsistent on ground
 
 ========================
 Sprite editor useful features
