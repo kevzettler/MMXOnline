@@ -83,6 +83,58 @@ export class Level {
     for(let go of this.gameObjects) {
       go.render(-this.camX, -this.camY);
     }
+
+    this.drawHUD();
+  }
+
+  drawHUD() {
+    let player1 = this.localPlayers[0];
+    this.drawPlayerHUD(player1, 1);
+    if(this.localPlayers.length > 1) {      
+      let player2 = this.localPlayers[1];
+      this.drawPlayerHUD(player2, 2);
+    }
+  }
+
+  drawPlayerHUD(player: Player, playerNum: number) {
+    
+    //Health
+    let baseX = 10;
+    if(playerNum === 2) baseX = game.canvas.width/this.zoomScale - 4 - baseX;
+    
+    let baseY = game.canvas.height/this.zoomScale/2;
+    baseY += 25;
+    game.sprites["hud_health_base"].draw(0, baseX, baseY);
+    baseY -= 16;
+    for(let i = 0; i < player.health; i++) {
+      game.sprites["hud_health_full"].draw(0, baseX, baseY);
+      baseY -= 2;
+    }
+    for(let i = 0; i < player.maxHealth - player.health; i++) {
+      game.sprites["hud_health_empty"].draw(0, baseX, baseY);
+      baseY -= 2;
+    }
+    game.sprites["hud_health_top"].draw(0, baseX, baseY);
+
+    //Weapon
+    if(player.weaponIndex !== 0) {
+      baseX = 25;
+      if(playerNum === 2) baseX = game.canvas.width/this.zoomScale - 4 - baseX;
+      
+      baseY = game.canvas.height/this.zoomScale/2;
+      baseY += 25;
+      game.sprites["hud_weapon_base"].draw(player.weapon.index - 1, baseX, baseY);
+      baseY -= 16;
+      for(let i = 0; i < player.weapon.ammo; i++) {
+        game.sprites["hud_weapon_full"].draw(player.weapon.index - 1, baseX, baseY);
+        baseY -= 2;
+      }
+      for(let i = 0; i < player.weapon.maxAmmo - player.weapon.ammo; i++) {
+        game.sprites["hud_health_empty"].draw(0, baseX, baseY);
+        baseY -= 2;
+      }
+      game.sprites["hud_health_top"].draw(0, baseX, baseY);
+    }
   }
 
   get width() { return this.background.width; }

@@ -7,6 +7,7 @@ import { Collider } from "./collider";
 import { Rect } from "./rect";
 import { Projectile } from "./projectile";
 import * as Helpers from "./helpers";
+import { Weapon, Buster } from "./weapon";
 
 export class Character extends Actor {
 
@@ -16,8 +17,6 @@ export class Character extends Actor {
   isShooting: boolean;
   isDashing: boolean;
   shootTime: number;
-  health: number;
-  maxHealth: number;
   jumpPower: number;
   changedStateInFrame: boolean;
   
@@ -35,8 +34,6 @@ export class Character extends Actor {
     
     this.jumpPower = 350;
     this.runSpeed = 100;
-    this.health = 100;
-    this.maxHealth = this.health;
   }
 
   preUpdate() {
@@ -52,6 +49,12 @@ export class Character extends Actor {
       if(this.shootTime > 0.15) {
         this.stopShoot();
       }
+    }
+    if(this.player.inputPressed["weaponleft"]) {
+      this.player.weaponIndex = Helpers.decrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
+    }
+    else if(this.player.inputPressed["weaponright"]) {
+      this.player.weaponIndex = Helpers.incrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
     }
   }
 
@@ -73,8 +76,8 @@ export class Character extends Actor {
       this.changeSprite(this.charState.shootSprite, false);
       let vel = new Point(350 * this.xDir, 0);
       if(this.charState instanceof WallSlide) vel.x *= -1;
-      let proj = new Projectile(this.getShootPos(), vel, 1, this.player, game.sprites["buster1"]);
-      game.playSound("buster");
+      this.player.weapon.shoot(this.getShootPos(), vel, this.player);
+
     }
   }
 
@@ -113,7 +116,7 @@ export class Character extends Actor {
   */
 
   applyDamage(damage: number) {
-    this.health -= damage;
+    this.player.health -= damage;
   }
 
 }
@@ -158,7 +161,7 @@ class CharState {
     
     this.stateTime += game.deltaTime;
     if(this.canShoot) {
-      if(this.player.inputPressed["shoot"]) {
+      if(this.player.inputPressed["shoot"] && this.player.weapon.ammo > 0) {
         this.character.shoot();
       }
     }

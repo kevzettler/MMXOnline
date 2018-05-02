@@ -1,4 +1,5 @@
 import { Character } from "./character";
+import { Weapon, Buster, Torpedo } from "./weapon";
 
 export class Player {
   
@@ -8,6 +9,10 @@ export class Player {
   character: Character;
   isAI: boolean;
   alliance: number;
+  health: number;
+  maxHealth: number;
+  weapons: Weapon[];
+  weaponIndex: number;
 
   constructor(x: number, y: number, isAI: boolean, alliance: number) {
     this.alliance = alliance;
@@ -29,10 +34,21 @@ export class Player {
 
     if(alliance === 1) {
       this.inputMapping = {};
-      this.inputMapping[65] = "shoot";
+      //this.inputMapping[65] = "shoot";
     }
 
     this.character = new Character(this, x, y);
+    this.health = 32;
+    this.maxHealth = this.health;
+    this.weapons = [
+      new Buster(),
+      new Torpedo()
+    ];
+    this.weaponIndex = 0;
+  }
+
+  get weapon() {
+    return this.weapons[this.weaponIndex];
   }
 
   onKeyDown(keycode: number) {

@@ -34,6 +34,18 @@ export function toZero(num: number, inc: number, dir: number) {
   }
 }
 
+export function incrementRange(num: number, min: number, max: number) {
+  num++;
+  if(num >= max) num = min;
+  return num;
+}
+
+export function decrementRange(num: number, min: number, max: number) {
+  num--;
+  if(num < min) num = max - 1;
+  return num;
+}
+
 export function clampMax(num: number, max: number) {
   return num < max ? num : max;
 }

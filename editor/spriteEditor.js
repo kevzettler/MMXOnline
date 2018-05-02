@@ -493,6 +493,16 @@ canvas2.onclick = function(event) {
 
 };
 
+function getSelectedPixels() {
+  if(!data.selectedSpritesheet) return;
+  var rect = getSelectedPixelRect(dragStartX, dragStartY, dragEndX, dragEndY, data.selectedSpritesheet.imageArr);
+  if(rect) {
+    data.selectedFrame = new Frame(rect, 0.066, new Point(0,0));
+    redrawCanvas1();
+    redrawCanvas2();
+  }
+}
+
 var mouseX = 0;
 var mouseY = 0;
 var mousedown = false;
@@ -521,6 +531,7 @@ canvas2.onmousedown = function(e) {
 canvas2.onmouseup = function(e) {
   if(e.which === 1) {
     mouseDownCanvas2 = false;
+    getSelectedPixels();
     redrawCanvas2();
     event.preventDefault();
   }

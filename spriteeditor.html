@@ -57,7 +57,7 @@
           x-off<input type="text" v-model.number="hitbox.offset.x" class="short-input" @change="redraw()" />
           y-off<input type="text" v-model.number="hitbox.offset.y" class="short-input" @change="redraw()" />
           flag<input type="text" class="hitbox-tag-input" v-model="hitbox.tags" @change="redraw()" />
-          tr?<input type="checkbox" class="hitbox-tag-input" v-model="hitbox.isTrigger" @change="redraw()" />
+          trigger?<input type="checkbox" class="hitbox-tag-input" v-model="hitbox.isTrigger" @change="redraw()" />
           <button v-on:click="selectHitbox(hitbox)">Select</button>
           <button v-on:click="deleteHitbox(selectedSprite.hitboxes, hitbox)">Delete</button>
         </div>

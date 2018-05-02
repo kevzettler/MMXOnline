@@ -1,1 +1,1 @@
-{"className":"Sprite","hitboxes":[],"frames":[],"POIs":[],"name":"mmx_die","path":"sprites/mmx_die.json","alignment":"botmid","wrapMode":"once","spritesheetPath":"assets/spritesheets/MegamanX.png"}
+{"className":"Sprite","hitboxes":[],"frames":[],"POIs":[],"name":"mmx_die","path":"assets/sprites/mmx_die.json","alignment":"botmid","wrapMode":"once","spritesheetPath":"assets/spritesheets/MegamanX.png"}

@@ -11,6 +11,9 @@ import { game } from "./game";
 export class Projectile extends Actor {
 
   damager: Damager;
+  flinch: boolean;
+  fadeSprite: Sprite;
+  fadeSound: string;
 
   constructor(pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
     super();
@@ -18,6 +21,7 @@ export class Projectile extends Actor {
     this.pos = pos;
     this.sprite = sprite;
     this.useGravity = false;
+    this.flinch = false;
     this.damager = new Damager(player, damage);
   }
 
@@ -32,15 +36,43 @@ export class Projectile extends Actor {
   onTrigger(other: Collider) {
     let character = (other.gameObject instanceof Character) ? <Character> other.gameObject : undefined;
     if(character && character.player.alliance !== this.damager.owner.alliance) {
-      character.isFlashing = true;
-      character.applyDamage(this.damager.damage);
-      game.playSound("hit");
-      this.destroySelf(game.sprites["buster1_fade"]);
+      this.onHit(character);
     }
     let wall = <Wall> other.gameObject;
     if(wall) {
       //Destroy projectile
     }
+  }
+
+  onHit(character: Character) {
+    character.isFlashing = true;
+    character.applyDamage(this.damager.damage);
+    if(!this.flinch) {
+      game.playSound("hit");
+    }
+    else {
+      game.playSound("hurt");
+    }
+    this.destroySelf(this.fadeSprite, this.fadeSound);
+  }
+
+}
+
+export class BusterProj extends Projectile {
+
+  constructor(pos: Point, vel: Point, player: Player) {
+    super(pos, vel, 1, player, game.sprites["buster1"]);
+    this.fadeSprite = game.sprites["buster1_fade"];
+  }
+
+}
+
+export class TorpedoProj extends Projectile {
+
+  constructor(pos: Point, vel: Point, player: Player) {
+    super(pos, vel, 1, player, game.sprites["torpedo"]);
+    this.fadeSprite = game.sprites["explosion"];
+    this.fadeSound = "explosion";
   }
 
 }

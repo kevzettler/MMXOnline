@@ -169,10 +169,13 @@ export class Actor {
   }
 
   //Optionally take in a sprite to draw when destroyed
-  destroySelf(sprite?: Sprite) {
+  destroySelf(sprite?: Sprite, fadeSound?: string) {
     game.level.gameObjects.splice(game.level.gameObjects.indexOf(this), 1);
     if(sprite) {
       let anim = new Anim(this.pos.x, this.pos.y, sprite);
+    }
+    if(fadeSound) {
+      game.playSound(fadeSound);
     }
   }
 

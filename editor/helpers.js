@@ -214,6 +214,29 @@ function getPixelClumpRect(x, y, imageArr) {
 
 }
 
+function getSelectedPixelRect(x,y,endX,endY,imageArr) {
+  
+  var minX = Infinity;
+  var minY = Infinity;
+  var maxX = -1;
+  var maxY = -1;
+
+  for(var i = y; i <= endY; i++) {
+    for(var j = x; j <= endX; j++) {
+      if(imageArr[i][j].rgb.a !== 0) {
+        if(i < minY) minY = i;
+        if(i > maxY) maxY = i;
+        if(j < minX) minX = j;
+        if(j > maxX) maxX = j;
+      }
+    }
+  }
+
+  if(!isFinite(minX) || !isFinite(minY) || maxX === -1 || maxY === -1) return;
+
+  return createRect(Math.round(minX),Math.round(minY),Math.round(maxX+1),Math.round(maxY+1));
+}
+
 function get2DArrayEl(arr, i, j) {
   if(i < 0 || i >= arr.length) return null;
   if(j < 0 || j >= arr[0].length) return null;
