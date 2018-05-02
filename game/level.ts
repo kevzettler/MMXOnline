@@ -21,6 +21,8 @@ export class Level {
   fixedCam: boolean;
   zoomScale: number;
   mainPlayer: Player;
+  frameCount: number;
+  twoFrameCycle: number;
 
   constructor(levelJson: any) {
     this.zoomScale = 3;
@@ -30,6 +32,7 @@ export class Level {
     this.gravity = 900;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
+    this.frameCount = 0;
 
     this.gameObjects = [];
     for(var instance of levelJson.instances) {
@@ -50,6 +53,7 @@ export class Level {
     }
     this.localPlayers = [];
     this.players = [];
+    this.twoFrameCycle = 0;
   }
   
   update() {
@@ -64,6 +68,11 @@ export class Level {
     for(let player of this.localPlayers) {
       player.clearInputPressed();
     }
+
+    this.frameCount++;
+    
+    this.twoFrameCycle++;
+    if(this.twoFrameCycle > 2) this.twoFrameCycle = -2;
 
   }
 

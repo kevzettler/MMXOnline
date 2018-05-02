@@ -45,7 +45,7 @@ export class Projectile extends Actor {
   }
 
   onHit(character: Character) {
-    character.isFlashing = true;
+    character.renderEffect = "flashonce";
     character.applyDamage(this.damager.damage);
     if(!this.flinch) {
       game.playSound("hit");
@@ -63,6 +63,26 @@ export class BusterProj extends Projectile {
   constructor(pos: Point, vel: Point, player: Player) {
     super(pos, vel, 1, player, game.sprites["buster1"]);
     this.fadeSprite = game.sprites["buster1_fade"];
+  }
+
+}
+
+export class Buster2Proj extends Projectile {
+
+  constructor(pos: Point, vel: Point, player: Player) {
+    super(pos, vel, 2, player, game.sprites["buster2"]);
+    this.fadeSprite = game.sprites["buster2_fade"];
+    this.flinch = true;
+  }
+
+}
+
+export class Buster3Proj extends Projectile {
+
+  constructor(pos: Point, vel: Point, player: Player) {
+    super(pos, vel, 3, player, game.sprites["buster3"]);
+    this.fadeSprite = game.sprites["buster3_fade"];
+    this.flinch = true;
   }
 
 }

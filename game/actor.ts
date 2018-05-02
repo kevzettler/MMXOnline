@@ -22,7 +22,7 @@ export class Actor {
   globalCollider: Collider; //If no collider data found in sprite, fall back to this one
   collidedInFrame: Set<Collider>;
   triggeredInFrame: Set<Collider>;
-  isFlashing: boolean;
+  renderEffect: string;
 
   constructor() {
     this.pos = new Point(0, 0);
@@ -39,7 +39,7 @@ export class Actor {
     game.level.addGameObject(this);
     this.collidedInFrame = new Set<Collider>();
     this.triggeredInFrame = new Set<Collider>();
-    this.isFlashing = false;
+    this.renderEffect = "";
   }
 
   changeSprite(sprite: Sprite, resetFrame: boolean) {
@@ -121,8 +121,8 @@ export class Actor {
 
   render(x: number, y: number) {
     //console.log(this.pos.x + "," + this.pos.y);
-    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.isFlashing ? "flash" : "");
-    this.isFlashing = false;
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect);
+    this.renderEffect = "";
     if(game.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");

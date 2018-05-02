@@ -1,4 +1,9 @@
--HUD/Weapons/Charge shot
+-Fix framerate
+-Quadtrees
+-Snap to ground on move() function
+  -Characters y positions can be inconsistent on ground
+-Charge sound and effect
+
 -Hurt/death
 -Player 2
 -AI
@@ -22,9 +27,6 @@ Useful optimizations and fixes
 ========================
 -requestAnimationFrame
 -If pushing against wall don't play run animation
--Quadtrees
--Snap to ground on move() function
-  -Characters y positions can be inconsistent on ground
 
 ========================
 Sprite editor useful features

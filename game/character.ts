@@ -19,6 +19,10 @@ export class Character extends Actor {
   shootTime: number;
   jumpPower: number;
   changedStateInFrame: boolean;
+  chargeTime: number;
+  charge1Time: number;
+  charge2Time: number;
+  charge3Time: number;
   
   constructor(player: Player, x: number, y: number) {
     super();
@@ -34,6 +38,11 @@ export class Character extends Actor {
     
     this.jumpPower = 350;
     this.runSpeed = 100;
+
+    this.chargeTime = 0;
+    this.charge1Time = 0.75;
+    this.charge2Time = 1.5;
+    this.charge3Time = 2.25;
   }
 
   preUpdate() {
@@ -46,7 +55,7 @@ export class Character extends Actor {
     super.update();
     if(this.isShooting) {
       this.shootTime += game.deltaTime;
-      if(this.shootTime > 0.15) {
+      if(this.shootTime >= this.player.weapon.rateOfFire) {
         this.stopShoot();
       }
     }
@@ -56,6 +65,13 @@ export class Character extends Actor {
     else if(this.player.inputPressed["weaponright"]) {
       this.player.weaponIndex = Helpers.incrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
     }
+    if(this.isCharging()) {
+      this.renderEffect = game.level.twoFrameCycle > 0 ? "flash" : "";
+    }
+  }
+
+  isCharging() {
+    return this.chargeTime >= this.charge1Time;
   }
 
   getDashSpeed() {
@@ -69,6 +85,11 @@ export class Character extends Actor {
     return this.pos.add(busterOffset);
   }
 
+  stopCharge() {
+    this.chargeTime = 0;
+    this.renderEffect = "";
+  }
+
   shoot() {
     if(!this.isShooting) {
       this.isShooting = true;
@@ -76,7 +97,19 @@ export class Character extends Actor {
       this.changeSprite(this.charState.shootSprite, false);
       let vel = new Point(350 * this.xDir, 0);
       if(this.charState instanceof WallSlide) vel.x *= -1;
-      this.player.weapon.shoot(this.getShootPos(), vel, this.player);
+
+      if(this.chargeTime < this.charge1Time) {
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 1);
+      }
+      else if(this.chargeTime >= this.charge1Time && this.chargeTime < this.charge2Time) {
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 2);
+      }
+      else if(this.chargeTime >= this.charge2Time && this.chargeTime < this.charge3Time) {
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 3);
+      }
+      else if(this.chargeTime >= this.charge3Time) {
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 4);
+      }
 
     }
   }
@@ -163,6 +196,15 @@ class CharState {
     if(this.canShoot) {
       if(this.player.inputPressed["shoot"] && this.player.weapon.ammo > 0) {
         this.character.shoot();
+      }
+      if(this.player.input["shoot"]) {
+        this.character.chargeTime += game.deltaTime;
+      }
+      else {
+        if(this.character.isCharging()) {
+          this.character.shoot();
+        }
+        this.character.stopCharge();
       }
     }
     
