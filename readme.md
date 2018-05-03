@@ -25,7 +25,6 @@ Cast to type
 ========================
 Useful optimizations and fixes
 ========================
--requestAnimationFrame
 -If pushing against wall don't play run animation
 
 ========================

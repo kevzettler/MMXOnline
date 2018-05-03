@@ -1353,6 +1353,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                         go.render(-this.camX, -this.camY);
                     }
                     this.drawHUD();
+                    Helpers.drawText(game_5.game.ctx, "FPS: " + game_5.game.fps, 10, 10, "white", 8, "left", "top", "");
                 };
                 Level.prototype.drawHUD = function () {
                     var player1 = this.localPlayers[0];
@@ -1516,8 +1517,8 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
         execute: function () {
             Game = (function () {
                 function Game() {
-                    this.startTime = Date.now();
-                    this.deltaTime = 1 / 60;
+                    this.startTime = 0;
+                    this.deltaTime = 0;
                     this.sprites = {};
                     this.levels = {};
                     this.spritesheets = {};
@@ -1583,7 +1584,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                             player.onKeyUp(e.keyCode);
                         }
                     };
-                    this.gameLoop();
+                    this.gameLoop(0);
                 };
                 Game.prototype.getSpritesheet = function (path) {
                     if (!this.spritesheets[path]) {
@@ -1630,15 +1631,24 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player"], func
                     }
                     return true;
                 };
-                Game.prototype.gameLoop = function () {
+                Game.prototype.gameLoop = function (currentTime) {
                     var _this = this;
                     if (this.isLoaded()) {
-                        this.deltaTime = (Date.now() - this.startTime) / 1000;
+                        this.deltaTime = (currentTime - this.startTime) / 1000;
+                        if (this.deltaTime > 1 / 30)
+                            this.deltaTime = 1 / 30;
                         this.level.update();
-                        this.startTime = Date.now();
+                        this.startTime = currentTime;
                     }
-                    window.requestAnimationFrame(function () { return _this.gameLoop(); });
+                    window.requestAnimationFrame(function (currentTime) { return _this.gameLoop(currentTime); });
                 };
+                Object.defineProperty(Game.prototype, "fps", {
+                    get: function () {
+                        return Math.round(1 / this.deltaTime);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Game.prototype.playSound = function (clip) {
                     this.sounds[clip].play();
                 };

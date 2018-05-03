@@ -94,6 +94,7 @@ export class Level {
     }
 
     this.drawHUD();
+    Helpers.drawText(game.ctx, "FPS: " + game.fps, 10, 10, "white", 8, "left", "top", "");
   }
 
   drawHUD() {

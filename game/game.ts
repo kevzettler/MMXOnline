@@ -23,8 +23,8 @@ class Game {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 
-  startTime: number = Date.now();
-  deltaTime: number = 1/60;
+  startTime: number = 0;
+  deltaTime: number = 0;
 
   constructor() {
     this.sprites = {};
@@ -102,7 +102,7 @@ class Game {
       }
     }
 
-    this.gameLoop();
+    this.gameLoop(0);
 
   }
 
@@ -155,16 +155,18 @@ class Game {
   }
 
   //Main game loop
-  gameLoop() {
+  gameLoop(currentTime: number) {
     if(this.isLoaded()) {
-      this.deltaTime = (Date.now() - this.startTime) /1000;
-    
+      this.deltaTime = (currentTime - this.startTime) /1000;
+      if(this.deltaTime > 1/30) this.deltaTime = 1/30;
       this.level.update();
-
-      //console.log(this.deltaTime);
-      this.startTime = Date.now();
+      this.startTime = currentTime;
     }
-    window.requestAnimationFrame(() => this.gameLoop());
+    window.requestAnimationFrame((currentTime) => this.gameLoop(currentTime));
+  }
+
+  get fps() {
+    return Math.round(1 / this.deltaTime);
   }
 
   playSound(clip: string) {
