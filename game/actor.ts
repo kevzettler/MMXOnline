@@ -24,7 +24,7 @@ export class Actor {
   triggeredInFrame: Set<Collider>;
   renderEffect: string;
 
-  constructor() {
+  constructor(sprite: Sprite) {
     this.pos = new Point(0, 0);
     this.vel = new Point(0, 0);
     this.angle = 0;
@@ -40,10 +40,15 @@ export class Actor {
     this.collidedInFrame = new Set<Collider>();
     this.triggeredInFrame = new Set<Collider>();
     this.renderEffect = "";
+    this.changeSprite(sprite, true);
   }
 
   changeSprite(sprite: Sprite, resetFrame: boolean) {
-    this.sprite = sprite;
+    if(!sprite) return;
+
+    ///@ts-ignoretsignore
+    this.sprite = _.cloneDeep(sprite);
+    
     if(resetFrame) {
       this.frameIndex = 0;
       this.frameTime = 0;
@@ -63,7 +68,7 @@ export class Actor {
     if(this.frameTime >= this.currentFrame.duration) {
       let onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
       if(!onceEnd) {
-        this.frameTime = 0;
+        this.frameTime = this.sprite.loopStartFrame;
         this.frameIndex++;
         if(this.frameIndex >= this.sprite.frames.length) this.frameIndex = 0;
       }
@@ -168,6 +173,10 @@ export class Actor {
     return true;
   }
 
+  isAnimOver() {
+    return this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration;
+  }
+
   //Optionally take in a sprite to draw when destroyed
   destroySelf(sprite?: Sprite, fadeSound?: string) {
     game.level.gameObjects.splice(game.level.gameObjects.indexOf(this), 1);
@@ -184,17 +193,16 @@ export class Actor {
 class Anim extends Actor {
 
   constructor(x: number, y: number, sprite: Sprite) {
-    super();
+    super(sprite);
     this.pos.x = x;
     this.pos.y = y;
-    this.sprite = sprite;
     this.useGravity = false;
     
   }
 
   update() {
     super.update();
-    if(this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration) {
+    if(this.isAnimOver()) {
       this.destroySelf();
     }
   }

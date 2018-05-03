@@ -23,6 +23,7 @@ export class Weapon {
 
   shoot(pos: Point, vel: Point, player: Player, chargeLevel: number) {
     let proj = this.getProjectile(pos, vel, player, chargeLevel);
+    proj.xDir = player.character.xDir;
     game.playSound(this.shootSounds[chargeLevel]);
     if(!(this instanceof Buster)) this.ammo--;
   }
@@ -38,10 +39,11 @@ export class Buster extends Weapon {
   }
 
   getProjectile (pos: Point, vel: Point, player: Player, chargeLevel: number): Projectile {
-    if(chargeLevel === 1) return new BusterProj(pos, vel, player);
-    else if(chargeLevel === 2) return new Buster2Proj(pos, vel, player);
+    if(chargeLevel === 0) return new BusterProj(pos, vel, player);
+    else if(chargeLevel === 1) return new Buster2Proj(pos, vel, player);
+    else if(chargeLevel === 2) return new Buster3Proj(pos, vel, player);
     else if(chargeLevel === 3) return new Buster3Proj(pos, vel, player);
-    //if(chargeLevel === 1) return new Buster4Proj(pos, vel, player);
+    //else if(chargeLevel === 4) return new Buster4Proj(pos, vel, player);
   }
   
 }

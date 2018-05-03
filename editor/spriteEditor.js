@@ -215,6 +215,13 @@ var methods = {
       frame.duration = this.bulkDuration;
     }
     resetVue();
+  },
+  onLoopStartChange() {
+    resetVue();
+  },
+  onWrapModeChange() {
+    redrawCanvas1();
+    resetVue();
   }
 };
 

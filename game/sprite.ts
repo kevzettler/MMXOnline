@@ -9,22 +9,25 @@ import * as Helpers from "./helpers";
 export class Sprite {
   name: string;
   hitboxes: Collider[];
+  loopStartFrame: number;
   frames: Frame[];
   alignment: string;
-  spritesheet: HTMLImageElement;
+  spritesheetPath: string;
   wrapMode: string; //Can be "once", "loop" or "pingpong"
 
   constructor(spriteJson: any) {
     this.name = spriteJson.name;
     this.alignment = spriteJson.alignment;
     this.wrapMode = spriteJson.wrapMode;
+    this.loopStartFrame = spriteJson.loopStartFrame || 0;
+    this.spritesheetPath = spriteJson.spritesheetPath;
     if(!this.wrapMode) { 
       console.error("NO WRAP MODE FOR SPRITE " + this.name);
     }
     this.frames = [];
     this.hitboxes = [];
     
-    this.spritesheet = game.getSpritesheet(spriteJson.spritesheetPath);
+    game.getSpritesheet(spriteJson.spritesheetPath);
 
     for(let hitboxJson of spriteJson.hitboxes) {
       let hitbox: Collider = new Collider([
@@ -51,6 +54,10 @@ export class Sprite {
       }
       this.frames.push(frame);
     }
+  }
+
+  get spritesheet() {
+    return game.getSpritesheet(this.spritesheetPath);
   }
 
   getAlignOffset(frameIndex: number, flipX?: number, flipY?: number): Point {

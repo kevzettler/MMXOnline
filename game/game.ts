@@ -25,6 +25,7 @@ class Game {
 
   startTime: number = 0;
   deltaTime: number = 0;
+  interval: number;
 
   constructor() {
     this.sprites = {};
@@ -52,16 +53,28 @@ class Game {
   start() {
     this.loadSprites();
     this.loadLevels();
-    this.loadLevel("sm_bossroom");  
     for(let soundFile of soundFiles) {
       let sound = new Howl({
         src: ["assets/sounds/" + soundFile],
         onload: () => {
-          console.log("LOADED SOUND");
+          //console.log("LOADED SOUND");
           this.soundLoadCount++;
         }
       });
       this.sounds[soundFile.split(".")[0]] = sound;
+    }
+    this.interval = window.setInterval(() => this.onLoad(), 1);
+  }
+
+  onLoad() {
+    if(this.isLoaded()) {
+      //console.log("LOADED");
+      window.clearInterval(this.interval);
+      this.loadLevel("sm_bossroom");
+      this.gameLoop(0);
+    }
+    else {
+      //console.log("LOADING...");
     }
   }
 
@@ -101,9 +114,6 @@ class Game {
         player.onKeyUp(e.keyCode);
       }
     }
-
-    this.gameLoop(0);
-
   }
 
   getSpritesheet(path: string) {
@@ -156,12 +166,10 @@ class Game {
 
   //Main game loop
   gameLoop(currentTime: number) {
-    if(this.isLoaded()) {
-      this.deltaTime = (currentTime - this.startTime) /1000;
-      if(this.deltaTime > 1/30) this.deltaTime = 1/30;
-      this.level.update();
-      this.startTime = currentTime;
-    }
+    this.deltaTime = (currentTime - this.startTime) /1000;
+    if(this.deltaTime > 1/30) this.deltaTime = 1/30;
+    this.level.update();
+    this.startTime = currentTime;
     window.requestAnimationFrame((currentTime) => this.gameLoop(currentTime));
   }
 
@@ -170,7 +178,7 @@ class Game {
   }
 
   playSound(clip: string) {
-    this.sounds[clip].play();
+    return this.sounds[clip].play();
   }
 
 }

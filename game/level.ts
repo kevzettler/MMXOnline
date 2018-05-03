@@ -44,8 +44,7 @@ export class Level {
         this.gameObjects.push(wall);
       }
       else {
-        let actor: Actor = new Actor();
-        actor.sprite = game.sprites[instance.spriteName];
+        let actor: Actor = new Actor(game.sprites[instance.spriteName]);
         actor.pos = new Point(instance.pos.x, instance.pos.y);
         actor.name = instance.name;
         this.gameObjects.push(actor);

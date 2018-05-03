@@ -16,10 +16,9 @@ export class Projectile extends Actor {
   fadeSound: string;
 
   constructor(pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
-    super();
+    super(sprite);
     this.vel = vel;
     this.pos = pos;
-    this.sprite = sprite;
     this.useGravity = false;
     this.flinch = false;
     this.damager = new Damager(player, damage);
@@ -45,13 +44,14 @@ export class Projectile extends Actor {
   }
 
   onHit(character: Character) {
-    character.renderEffect = "flashonce";
+    character.renderEffect = "flash";
     character.applyDamage(this.damager.damage);
     if(!this.flinch) {
       game.playSound("hit");
     }
     else {
       game.playSound("hurt");
+      character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
     }
     this.destroySelf(this.fadeSprite, this.fadeSound);
   }

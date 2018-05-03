@@ -1,10 +1,13 @@
--Fix framerate
--Quadtrees
+-Hurt/death
+-Sprite effects
+  -Dash smoke/sparks
+  -Charge particles
+  -Climb smoke
+  -Die sparkle
+
 -Snap to ground on move() function
   -Characters y positions can be inconsistent on ground
--Charge sound and effect
 
--Hurt/death
 -Player 2
 -AI
 -Menu system

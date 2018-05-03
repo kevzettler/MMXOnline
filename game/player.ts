@@ -69,4 +69,9 @@ export class Player {
     this.inputPressed = {};
   }
 
+  destroyCharacter() {
+    this.character.destroySelf();
+    this.character = undefined;
+  }
+
 }

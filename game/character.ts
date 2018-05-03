@@ -23,9 +23,14 @@ export class Character extends Actor {
   charge1Time: number;
   charge2Time: number;
   charge3Time: number;
+  chargeFlashTime: number;
+  chargeSound: Howl;
+  chargeSoundId: number;
+  chargeLoopSound: Howl;
+  chargeLoopSoundId: number;
   
   constructor(player: Player, x: number, y: number) {
-    super();
+    super(undefined);
     this.pos.x = x;
     this.pos.y = y;
     this.player = player;
@@ -43,6 +48,11 @@ export class Character extends Actor {
     this.charge1Time = 0.75;
     this.charge2Time = 1.5;
     this.charge3Time = 2.25;
+
+    this.chargeFlashTime = 0;
+    this.chargeSound = game.sounds["charge_start"];
+    this.chargeLoopSound = game.sounds["charge_loop"];
+    this.chargeLoopSound.loop(true);
   }
 
   preUpdate() {
@@ -66,7 +76,24 @@ export class Character extends Actor {
       this.player.weaponIndex = Helpers.incrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
     }
     if(this.isCharging()) {
-      this.renderEffect = game.level.twoFrameCycle > 0 ? "flash" : "";
+      let maxFlashTime = 0.1;
+      if(!this.chargeSoundId && !this.chargeLoopSoundId) {
+        this.chargeSoundId = this.chargeSound.play();
+      }
+      if(this.chargeSoundId && !this.chargeSound.playing(this.chargeSoundId)) {
+        this.chargeSoundId = undefined;
+        this.chargeLoopSoundId = this.chargeLoopSound.play();
+      }
+      this.chargeFlashTime += game.deltaTime;
+      if(this.chargeFlashTime > maxFlashTime) {
+        this.chargeFlashTime = 0;
+      }
+      if(this.chargeFlashTime > maxFlashTime * 0.5) {        
+        this.renderEffect = "flash";
+      }
+      else {
+        this.renderEffect = "";
+      }
     }
   }
 
@@ -88,6 +115,15 @@ export class Character extends Actor {
   stopCharge() {
     this.chargeTime = 0;
     this.renderEffect = "";
+    this.chargeFlashTime = 0;
+    if(this.chargeSoundId) {
+      this.chargeSound.stop(this.chargeSoundId);
+      this.chargeSoundId = undefined;
+    }
+    if(this.chargeLoopSoundId) {
+      this.chargeLoopSound.stop(this.chargeLoopSoundId);
+      this.chargeLoopSoundId = undefined;
+    }
   }
 
   shoot() {
@@ -99,16 +135,16 @@ export class Character extends Actor {
       if(this.charState instanceof WallSlide) vel.x *= -1;
 
       if(this.chargeTime < this.charge1Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 1);
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 0);
       }
       else if(this.chargeTime >= this.charge1Time && this.chargeTime < this.charge2Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 2);
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 1);
       }
       else if(this.chargeTime >= this.charge2Time && this.chargeTime < this.charge3Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 3);
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 2);
       }
       else if(this.chargeTime >= this.charge3Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 4);
+        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 3);
       }
 
     }
@@ -150,6 +186,14 @@ export class Character extends Actor {
 
   applyDamage(damage: number) {
     this.player.health -= damage;
+    if(this.player.health <= 0) {
+      this.player.health = 0;
+      this.changeState(new Die());
+    }
+  }
+
+  setHurt(dir: number) {
+    this.changeState(new Hurt(dir));
   }
 
 }
@@ -479,6 +523,56 @@ class WallKick extends CharState {
 
   onExit(newState: CharState) {
     super.onExit(newState);
+  }
+
+}
+
+class Hurt extends CharState {
+
+  hurtDir: number;
+  hurtSpeed: number;
+  constructor(dir: number) {
+    super(game.sprites["mmx_hurt"]);
+    this.hurtDir = dir;
+    this.hurtSpeed = dir * 100;
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+    this.character.vel.y = -100;
+  }
+
+  update() {
+    super.update();
+    if(this.hurtSpeed !== 0) {
+      this.hurtSpeed = Helpers.toZero(this.hurtSpeed, 400 * game.deltaTime, this.hurtDir);
+      this.character.move(new Point(this.hurtSpeed, 0));
+    }
+    if(this.character.isAnimOver()) {
+      this.character.changeState(new Idle());
+    }
+  }
+
+}
+
+class Die extends CharState {
+
+  constructor() {
+    super(game.sprites["mmx_die"]);
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+    this.character.useGravity = false;
+    this.character.globalCollider = undefined;
+  }
+
+  update() {
+    super.update();
+    if(this.stateTime > 0.75) {
+      game.playSound("die");
+      this.player.destroyCharacter();
+    }
   }
 
 }
