@@ -7,11 +7,13 @@ import { Actor } from "./actor";
 import { Player } from "./player";
 import { Rect } from "./rect";
 import { Collider } from "./collider";
+import { Effect } from "./effects";
 
 export class Level {
 
   name: string;
   gameObjects: GameObject[];
+  effects: Effect[] = [];
   background: HTMLImageElement;
   gravity: number;
   localPlayers: Player[];
@@ -61,7 +63,10 @@ export class Level {
       go.preUpdate();
       go.update();
     }
-   
+    for(let effect of this.effects) {
+      effect.update();
+    }
+
     this.render();
 
     for(let player of this.localPlayers) {
@@ -90,6 +95,10 @@ export class Level {
     
     for(let go of this.gameObjects) {
       go.render(-this.camX, -this.camY);
+    }
+
+    for(let effect of this.effects) {
+      effect.render(-this.camX, -this.camY);
     }
 
     this.drawHUD();
@@ -168,6 +177,10 @@ export class Level {
   
   addGameObject(go: GameObject) {
     this.gameObjects.push(go);
+  }
+
+  addEffect(effect: Effect) {
+    this.effects.push(effect);
   }
 
   //Checks for collisions and returns the first one collided.

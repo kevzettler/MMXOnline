@@ -8,6 +8,7 @@ import { Rect } from "./rect";
 import { Projectile } from "./projectile";
 import * as Helpers from "./helpers";
 import { Weapon, Buster } from "./weapon";
+import { ChargeEffect, DieEffect } from "./effects";
 
 export class Character extends Actor {
 
@@ -28,6 +29,7 @@ export class Character extends Actor {
   chargeSoundId: number;
   chargeLoopSound: Howl;
   chargeLoopSoundId: number;
+  chargeEffect: ChargeEffect;
   
   constructor(player: Player, x: number, y: number) {
     super(undefined);
@@ -94,7 +96,15 @@ export class Character extends Actor {
       else {
         this.renderEffect = "";
       }
+      if(!this.chargeEffect) {
+        this.chargeEffect = new ChargeEffect();
+      }
+
+      this.chargeEffect.update(this.pos, this.getChargeLevel());
     }
+  }
+
+  drawCharge() {
   }
 
   isCharging() {
@@ -124,6 +134,7 @@ export class Character extends Actor {
       this.chargeLoopSound.stop(this.chargeLoopSoundId);
       this.chargeLoopSoundId = undefined;
     }
+    this.chargeEffect = undefined;
   }
 
   shoot() {
@@ -134,19 +145,22 @@ export class Character extends Actor {
       let vel = new Point(350 * this.xDir, 0);
       if(this.charState instanceof WallSlide) vel.x *= -1;
 
-      if(this.chargeTime < this.charge1Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 0);
-      }
-      else if(this.chargeTime >= this.charge1Time && this.chargeTime < this.charge2Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 1);
-      }
-      else if(this.chargeTime >= this.charge2Time && this.chargeTime < this.charge3Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 2);
-      }
-      else if(this.chargeTime >= this.charge3Time) {
-        this.player.weapon.shoot(this.getShootPos(), vel, this.player, 3);
-      }
+      this.player.weapon.shoot(this.getShootPos(), vel, this.player, this.getChargeLevel());
+    }
+  }
 
+  getChargeLevel() {
+    if(this.chargeTime < this.charge1Time) {
+      return 0;
+    }
+    else if(this.chargeTime >= this.charge1Time && this.chargeTime < this.charge2Time) {
+      return 1;
+    }
+    else if(this.chargeTime >= this.charge2Time && this.chargeTime < this.charge3Time) {
+      return 2;
+    }
+    else if(this.chargeTime >= this.charge3Time) {
+      return 3;
     }
   }
 
@@ -178,12 +192,14 @@ export class Character extends Actor {
       this.stopShoot();
     }
   }
-  /*
-  render() {
-    super.render();
+  
+  render(x: number, y: number) {
+    super.render(x, y);
+    if(this.chargeEffect) {
+      this.chargeEffect.render(this.pos.add(new Point(x, y - 18)), this.getChargeLevel())
+    }
   }
-  */
-
+  
   applyDamage(damage: number) {
     this.player.health -= damage;
     if(this.player.health <= 0) {
@@ -571,6 +587,7 @@ class Die extends CharState {
     super.update();
     if(this.stateTime > 0.75) {
       game.playSound("die");
+      new DieEffect(this.character.pos);
       this.player.destroyCharacter();
     }
   }

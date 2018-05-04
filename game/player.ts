@@ -1,5 +1,6 @@
 import { Character } from "./character";
 import { Weapon, Buster, Torpedo } from "./weapon";
+import { game } from "./game";
 
 export class Player {
   
@@ -56,6 +57,13 @@ export class Player {
     let key = this.inputMapping[keycode];
     if(!this.input[key]) this.inputPressed[key] = true;
     this.input[key] = true;
+
+    if(keycode === 49) {
+      for(let player of game.level.localPlayers) {
+        player.health = 1;
+      }
+    }
+
   }
 
   onKeyUp(keycode: number) {

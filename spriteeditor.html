@@ -113,7 +113,8 @@
         Set bulk duration: <input type="number" style="width: 40px" v-model.number="bulkDuration" @change="onBulkDurationChange()" /><br>
         Loop start frame: <input type="number" style="width: 40px" v-model.number="selectedSprite.loopStartFrame" @change="onLoopStartChange()" /><br>
       </div>
-      <button v-if="this.selectedFrame && !isSelectedFrameAdded()" v-on:click="addPendingFrame()">Add as frame</button>    
+      <button v-if="this.selectedFrame && !isSelectedFrameAdded()" v-on:click="addPendingFrame()">Add as frame</button>
+      <button v-if="selectedSprite.frames.length > 0" v-on:click="reverseFrames()">Reverse frames</button>    
     </div>
   </div>
 </div>

@@ -23,7 +23,7 @@ export class Weapon {
 
   shoot(pos: Point, vel: Point, player: Player, chargeLevel: number) {
     let proj = this.getProjectile(pos, vel, player, chargeLevel);
-    proj.xDir = player.character.xDir;
+    proj.xDir = Math.sign(vel.x);
     game.playSound(this.shootSounds[chargeLevel]);
     if(!(this instanceof Buster)) this.ammo--;
   }

@@ -4,7 +4,8 @@ import { Collider } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
 
-//Anything that has: a position, rotation and name. Can also have an optional collider
+//Anything that has: a position, rotation, name and sprite. Can also have an optional collider
+//This MUST have a sprite. There is too much maintenance effort to support a sprite-less actor class
 export class Actor {
 
   sprite: Sprite; //Current sprite

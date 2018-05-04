@@ -222,6 +222,11 @@ var methods = {
   onWrapModeChange() {
     redrawCanvas1();
     resetVue();
+  },
+  reverseFrames() {
+    _.reverse(this.selectedSprite.frames);
+    redrawCanvas1();
+    resetVue();
   }
 };
 

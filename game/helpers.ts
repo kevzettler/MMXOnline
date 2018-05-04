@@ -46,6 +46,12 @@ export function decrementRange(num: number, min: number, max: number) {
   return num;
 }
 
+export function clamp01(num: number) {
+  if(num < 0) num = 0;
+  if(num > 1) num = 1;
+  return num;
+}
+
 export function clampMax(num: number, max: number) {
   return num < max ? num : max;
 }
@@ -60,6 +66,22 @@ export function clamp(num: number, min: number, max: number) {
   return num;
 }
 
+export function sin(degrees: number) {
+  let rads = degrees * Math.PI / 180;
+  return Math.sin(rads);
+}
+
+export function cos(degrees: number) {
+  let rads = degrees * Math.PI / 180;
+  return Math.cos(rads);
+}
+
+export function moveTo(num: number, dest: number, inc: number) {
+  inc *= Math.sign(dest - num);
+  num += inc;
+  return num;
+}
+
 let helperCanvas = document.createElement("canvas");
 let helperCtx = helperCanvas.getContext("2d");
 
@@ -70,38 +92,14 @@ let helperCanvas3 = document.createElement("canvas");
 let helperCtx3 = helperCanvas3.getContext("2d");
 
 export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, 
-  x?: number, y?: number, flipX?: number, flipY?: number, options?: string): void {
+  x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number): void {
   
   if(!sW) {
     ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
     return;
   }
 
-  /*
-  ctx.save();
-  flipX = flipX || 1;
-  flipY = flipY || 1;
-  ctx.scale(flipX, 1);
-  
-  if(!sW) {
-    ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
-  } 
-  else {
-    ctx.drawImage(
-      imgEl,
-      Math.round(sX), //source x
-      Math.round(sY), //source y
-      Math.round(sW), //source width
-      Math.round(sH), //source height
-      flipX * Math.round(x),  //dest x
-      Math.round(y),  //dest y
-      flipX * Math.round(sW), //dest width
-      Math.round(sH)  //dest height
-    );
-  }
-
-  ctx.restore();
-  */
+  ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;
 
   helperCanvas.width = Math.round(sW);
   helperCanvas.height = Math.round(sH);
@@ -152,6 +150,7 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
     else ctx.drawImage(helperCanvas, Math.ceil(x), Math.ceil(y));
   }
 
+  ctx.globalAlpha = 1;
   helperCtx.restore();
 }
 

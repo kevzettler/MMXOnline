@@ -1,4 +1,3 @@
--Hurt/death
 -Sprite effects
   -Dash smoke/sparks
   -Charge particles
@@ -10,6 +9,7 @@
 
 -Player 2
 -AI
+-All the weapons
 -Menu system
 -More levles/background+foreground system
 
