@@ -1,14 +1,12 @@
--Sprite effects
-  -Dash smoke/sparks
-  -Charge particles
-  -Climb smoke
-  -Die sparkle
+
+-Player 2 colors
+-Player 2
+-AI
 
 -Snap to ground on move() function
   -Characters y positions can be inconsistent on ground
 
--Player 2
--AI
+
 -All the weapons
 -Menu system
 -More levles/background+foreground system

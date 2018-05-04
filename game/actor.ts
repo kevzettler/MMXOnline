@@ -182,22 +182,23 @@ export class Actor {
   destroySelf(sprite?: Sprite, fadeSound?: string) {
     game.level.gameObjects.splice(game.level.gameObjects.indexOf(this), 1);
     if(sprite) {
-      let anim = new Anim(this.pos.x, this.pos.y, sprite);
+      let anim = new Anim(this.pos, sprite, this.xDir);
     }
     if(fadeSound) {
       game.playSound(fadeSound);
     }
   }
-
+  
 }
 
-class Anim extends Actor {
+export class Anim extends Actor {
 
-  constructor(x: number, y: number, sprite: Sprite) {
+  constructor(pos: Point, sprite: Sprite, xDir: number) {
     super(sprite);
-    this.pos.x = x;
-    this.pos.y = y;
+    this.pos.x = pos.x;
+    this.pos.y = pos.y;
     this.useGravity = false;
+    this.xDir = xDir;
     
   }
 

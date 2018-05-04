@@ -1,4 +1,4 @@
-import { Actor } from "./actor";
+import { Actor, Anim } from "./actor";
 import { Sprite } from "./sprite";
 import { game } from "./game";
 import { Point } from "./point";
@@ -442,6 +442,7 @@ class Dash extends CharState {
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
     this.character.isDashing = true;
+    new Anim(this.character.pos, game.sprites["dash_sparks"], this.character.xDir);
   }
 
   update() {
@@ -459,6 +460,10 @@ class Dash extends CharState {
     let move = new Point(0, 0);
     move.x = this.character.runSpeed * this.character.getDashSpeed() * this.character.xDir;
     this.character.move(move);
+    if(this.stateTime > 0.1) {
+      this.stateTime = 0;
+      new Anim(this.character.pos.addxy(0, -4), game.sprites["dust"], this.character.xDir);
+    }
   }
 
 }
@@ -466,6 +471,7 @@ class Dash extends CharState {
 class WallSlide extends CharState {
   
   wallDir: number;
+  dustTime: number = 0;
   constructor(wallDir: number) {
     super(game.sprites["mmx_wall_slide"], game.sprites["mmx_wall_slide_shoot"]);
     this.wallDir = wallDir;
@@ -496,6 +502,12 @@ class WallSlide extends CharState {
         this.player.character.changeState(new Fall());
       }
       this.character.move(new Point(0, 100));
+    }
+
+    this.dustTime += game.deltaTime;
+    if(this.stateTime > 0.2 && this.dustTime > 0.1) {
+      this.dustTime = 0;
+      new Anim(this.character.pos.addxy(this.character.xDir * 12, 0), game.sprites["dust"], this.character.xDir);
     }
 
   }
@@ -535,6 +547,7 @@ class WallKick extends CharState {
 
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
+    new Anim(this.character.pos.addxy(12*this.character.xDir,0), game.sprites["wall_sparks"], this.character.xDir);
   }
 
   onExit(newState: CharState) {
@@ -581,6 +594,7 @@ class Die extends CharState {
     super.onEnter(oldState);
     this.character.useGravity = false;
     this.character.globalCollider = undefined;
+    new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"], 1);
   }
 
   update() {

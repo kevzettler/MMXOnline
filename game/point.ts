@@ -12,6 +12,11 @@ export class Point {
     return Math.round(this.y);
   }
 
+  addxy(x: number, y: number) {
+    let point = new Point(this.x + x, this.y + y);
+    return point;
+  }
+
   //Returns new point
   add(other: Point) {
     let point = new Point(this.x + other.x, this.y + other.y);
