@@ -3,45 +3,33 @@ import { Level } from "./level";
 import { spriteJsons } from "./sprites";
 import { levelJsons } from "./levels";
 import { Player } from "./player";
+import { Palette } from "./color";
 
 class Game {
 
-  sprites: { [name: string]: Sprite; };
-  levels: { [name: string]: Level };
+  sprites: { [name: string]: Sprite; } = {};
+  levels: { [name: string]: Level } = {};
   level: Level;
 
-  spritesheets: { [path: string]: HTMLImageElement };
-  backgrounds: { [path: string]: HTMLImageElement };
-  sounds: { [path: string]: Howl };
-  soundLoadCount: number;
+  spritesheets: { [path: string]: HTMLImageElement } = {};
+  backgrounds: { [path: string]: HTMLImageElement } = {};
+  sounds: { [path: string]: Howl } = {};
+  soundLoadCount: number = 0;
+  palettes: { [path: string]: Palette } = {};
 
-  isServer: boolean;
-  isClient: boolean;
+  isServer: boolean = false;
+  isClient: boolean = true;
 
-  showHitboxes: boolean;
+  showHitboxes: boolean = false;
 
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 
   startTime: number = 0;
   deltaTime: number = 0;
-  interval: number;
+  interval: number = 0;
 
   constructor() {
-    this.sprites = {};
-    this.levels = {};
-  
-    this.spritesheets = { };
-    this.backgrounds = { };
-    this.sounds = { };
-  
-    this.soundLoadCount = 0;
-
-    this.isServer = false;
-    this.isClient = true;
-  
-    this.showHitboxes = false;
-  
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.ctx = this.canvas.getContext("2d");
 
@@ -53,6 +41,8 @@ class Game {
   start() {
     this.loadSprites();
     this.loadLevels();
+    this.loadPalettes();
+    
     for(let soundFile of soundFiles) {
       let sound = new Howl({
         src: ["assets/sounds/" + soundFile],
@@ -99,6 +89,7 @@ class Game {
 
     let player1: Player = new Player(60, 100, false, 0);
     let cpu1: Player = new Player(200, 100, false, 1);
+    cpu1.character.palette = this.palettes["red"];
     this.level.localPlayers.push(player1);
     this.level.localPlayers.push(cpu1);
     this.level.mainPlayer = player1;
@@ -146,6 +137,10 @@ class Game {
     }
   }
 
+  loadPalettes() {
+    this.palettes["red"] = new Palette("assets/palettes/red.png");
+  }
+
   isLoaded() {
     for(let name in this.sprites) {
       if(!this.sprites[name].spritesheet.complete) {
@@ -154,6 +149,11 @@ class Game {
     }
     for(let name in this.levels) {
       if(!this.levels[name].background.complete) {
+        return false;
+      }
+    }
+    for(let name in this.palettes) {
+      if(!this.palettes[name].imageEl.complete) {
         return false;
       }
     }

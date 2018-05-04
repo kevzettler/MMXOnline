@@ -1,6 +1,7 @@
 import { Rect } from "./rect";
 import { Point } from "./point";
 import { Shape } from "./shape";
+import { Palette } from "./color";
 
 export function inRect(x: number, y: number, rect: Rect): boolean {
   let rx:number = rect.x1;
@@ -82,6 +83,10 @@ export function moveTo(num: number, dest: number, inc: number) {
   return num;
 }
 
+export function getHex(r: number, g: number, b: number, a: number) {
+  return "#" + r.toString(16) + g.toString(16) + b.toString(16) + a.toString(16);
+}
+
 let helperCanvas = document.createElement("canvas");
 let helperCtx = helperCanvas.getContext("2d");
 
@@ -92,7 +97,7 @@ let helperCanvas3 = document.createElement("canvas");
 let helperCtx3 = helperCanvas3.getContext("2d");
 
 export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, 
-  x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number): void {
+  x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette): void {
   
   if(!sW) {
     ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
@@ -122,33 +127,42 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
     flipY * Math.round(sH)  //dest height
   );
 
+  if(palette) {
+    let imageData = helperCtx.getImageData(0, 0, helperCanvas.width, helperCanvas.height);
+    let data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i+1];
+      let b = data[i+2];
+      let a = data[i+3];
+
+      let color = palette.colorMap[getHex(r, g, b, a)];
+      if(color !== null && color !== undefined) {
+        data[i] = color.r;
+        data[i+1] = color.g;
+        data[i+2] = color.b;
+      }
+    }
+    helperCtx.putImageData(imageData, 0, 0);​
+  }
+
   if(options === "flash") {
-    
-    helperCanvas2.width = helperCanvas.width;
-    helperCanvas2.height = helperCanvas.height;
-
-    helperCtx2.drawImage(helperCanvas, 0, 0);
-    helperCtx2.globalCompositeOperation = "source-atop";
-    helperCtx2.fillStyle = "rgb(128,128,255)";
-    helperCtx2.fillRect(0, 0, helperCanvas.width, helperCanvas.height);  // apply the comp filter
-    helperCtx2.globalCompositeOperation = "source-over";  // restore default comp
-    
-    helperCanvas3.width = helperCanvas.width;
-    helperCanvas3.height = helperCanvas.height;
-
-    helperCtx3.drawImage(helperCanvas, 0, 0);
-    helperCtx3.globalCompositeOperation = "lighter";
-    helperCtx3.drawImage(helperCanvas2, 0, 0);
-    helperCtx3.globalCompositeOperation = "source-over";  // restore default comp
-    
-    if(flipX === 1) ctx.drawImage(helperCanvas3, Math.round(x), Math.round(y));
-    else ctx.drawImage(helperCanvas3, Math.ceil(x), Math.ceil(y));
-    
+    let imageData = helperCtx.getImageData(0, 0, helperCanvas.width, helperCanvas.height);
+    let data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i+1];
+      let b = data[i+2];
+      let a = data[i+3];
+      data[i] = clampMax(r + 64, 255);
+      data[i+1] = clampMax(g + 64, 255);
+      data[i+2] = clampMax(b + 128, 255);
+    }
+    helperCtx.putImageData(imageData, 0, 0);​
   }
-  else {
-    if(flipX === 1) ctx.drawImage(helperCanvas, Math.round(x), Math.round(y));
-    else ctx.drawImage(helperCanvas, Math.ceil(x), Math.ceil(y));
-  }
+
+  if(flipX === 1) ctx.drawImage(helperCanvas, Math.round(x), Math.round(y));
+  else ctx.drawImage(helperCanvas, Math.ceil(x), Math.ceil(y));
 
   ctx.globalAlpha = 1;
   helperCtx.restore();

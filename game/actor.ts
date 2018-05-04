@@ -3,6 +3,7 @@ import { Point } from "./point";
 import { Collider } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
+import { Palette } from "./color";
 
 //Anything that has: a position, rotation, name and sprite. Can also have an optional collider
 //This MUST have a sprite. There is too much maintenance effort to support a sprite-less actor class
@@ -24,6 +25,7 @@ export class Actor {
   collidedInFrame: Set<Collider>;
   triggeredInFrame: Set<Collider>;
   renderEffect: string;
+  palette: Palette;
 
   constructor(sprite: Sprite) {
     this.pos = new Point(0, 0);
@@ -127,7 +129,7 @@ export class Actor {
 
   render(x: number, y: number) {
     //console.log(this.pos.x + "," + this.pos.y);
-    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect);
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     this.renderEffect = "";
     if(game.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);

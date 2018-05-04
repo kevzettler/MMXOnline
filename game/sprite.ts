@@ -4,6 +4,7 @@ import { Point } from "./point";
 import { Rect } from "./rect";
 import { game } from "./game";
 import * as Helpers from "./helpers";
+import { Palette } from "./color";
 
 //Represents a single set of frames and their hitbox data
 export class Sprite {
@@ -115,7 +116,7 @@ export class Sprite {
     return new Point(x + offset.x * flipX, y + offset.y * flipY);
   }
 
-  draw(frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number) {
+  draw(frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette) {
     
     flipX = flipX || 1;
     flipY = flipY || 1;
@@ -124,7 +125,7 @@ export class Sprite {
     let rect = frame.rect;
     let offset = this.getAlignOffset(frameIndex, flipX, flipY);
 
-    Helpers.drawImage(game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha);
+    Helpers.drawImage(game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette);
 
   }
 }
