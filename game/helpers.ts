@@ -53,6 +53,13 @@ export function clamp01(num: number) {
   return num;
 }
 
+//Inclusive
+export function randomRange(start: number, end: number) {
+  end++;
+  let dist = end - start;
+  return Math.floor(Math.random() * dist) + start;
+}
+
 export function clampMax(num: number, max: number) {
   return num < max ? num : max;
 }

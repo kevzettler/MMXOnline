@@ -14,7 +14,6 @@ export class Player {
   buttonMapping: { [code: number]: string } = {};
   axesMapping: { [code: number]: string } = {};
   character: Character;
-  isAI: boolean;
   alliance: number;
   health: number;
   maxHealth: number;
@@ -23,7 +22,7 @@ export class Player {
 
   constructor(x: number, y: number, isAI: boolean, alliance: number) {
     this.alliance = alliance;
-    this.isAI = isAI;
+    
     if(!isAI && alliance === 0) {
       this.inputMapping[37] = "left";
       this.inputMapping[39] = "right";
@@ -49,6 +48,10 @@ export class Player {
     }
 
     this.character = new Character(this, x, y);
+    if(isAI) {
+      this.character.addAI();
+    }
+
     this.health = 32;
     this.maxHealth = this.health;
     this.weapons = [
@@ -81,6 +84,10 @@ export class Player {
       this.axesMapping[0] = "left|right";
       this.axesMapping[1] = "up|down";
     }
+  }
+
+  get isAI() {
+    return this.character && !!this.character.ai;
   }
 
   get weapon() {
@@ -129,6 +136,16 @@ export class Player {
     this.controllerInputPressed[key] = false;
   }
 
+  press(key: string) {
+    if(!this.input[key]) this.inputPressed[key] = true;
+    this.input[key] = true;
+  }
+
+  release(key: string) {
+    this.input[key] = false;
+    this.inputPressed[key] = false;
+  }
+
   onKeyDown(keycode: number) {
     if(this.isAI) return;
     let key = this.inputMapping[keycode];
@@ -152,6 +169,11 @@ export class Player {
 
   clearInputPressed() {
     this.inputPressed = {};
+    this.controllerInputPressed = {};
+  }
+
+  clearAiInput() {
+    this.input = {};
     this.controllerInputPressed = {};
   }
 

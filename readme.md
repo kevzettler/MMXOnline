@@ -1,7 +1,3 @@
--Snap to ground on move() function
-  -Characters y positions can be inconsistent on ground
--AI
-
 -All the weapons + weapon charge
 
 -Menu system
@@ -13,16 +9,11 @@
   -Collision callbacks with parent actor/gameobject available
 
 ========================
-Useful helpers
-========================
-Delete from array
-Find in array
-Cast to type
-
-========================
 Useful optimizations and fixes
 ========================
 -If pushing against wall don't play run animation
+-Characters y positions can be inconsistent on ground
+-Shoot offsets are bad for wall slide
 
 ========================
 Sprite editor useful features

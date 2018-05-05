@@ -37,7 +37,7 @@ export class Projectile extends Actor {
     if(character && character.player.alliance !== this.damager.owner.alliance) {
       
       let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
-      this.pos = pos.clone();
+      if(pos) this.pos = pos.clone();
 
       this.onHit(character);
     }

@@ -9,6 +9,7 @@ import { Projectile } from "./projectile";
 import * as Helpers from "./helpers";
 import { Weapon, Buster } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
+import { AI } from "./ai";
 
 export class Character extends Actor {
 
@@ -30,6 +31,7 @@ export class Character extends Actor {
   chargeLoopSound: Howl;
   chargeLoopSoundId: number;
   chargeEffect: ChargeEffect;
+  ai: AI;
   
   constructor(player: Player, x: number, y: number) {
     super(undefined);
@@ -63,6 +65,9 @@ export class Character extends Actor {
   }
 
   update() {
+    if(this.ai) {
+      this.ai.update();
+    }
     this.charState.update();
     super.update();
     if(this.isShooting) {
@@ -102,6 +107,10 @@ export class Character extends Actor {
 
       this.chargeEffect.update(this.pos, this.getChargeLevel());
     }
+  }
+
+  addAI() {
+    this.ai = new AI(this);
   }
 
   drawCharge() {
@@ -573,6 +582,7 @@ class Hurt extends CharState {
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
     this.character.vel.y = -100;
+    this.character.stopCharge();
   }
 
   update() {
@@ -600,6 +610,7 @@ class Die extends CharState {
     this.character.vel.x = 0;
     this.character.vel.y = 0;
     this.character.globalCollider = undefined;
+    this.character.stopCharge();
     new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"], 1);
   }
 

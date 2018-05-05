@@ -4,6 +4,7 @@ import { Collider, CollideData } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
 import { Palette } from "./color";
+import { Shape } from "./shape";
 
 //Anything that has: a position, rotation, name and sprite. Can also have an optional collider
 //This MUST have a sprite. There is too much maintenance effort to support a sprite-less actor class
@@ -83,7 +84,7 @@ export class Actor {
     }
     this.move(this.vel);
 
-    if(this.collider && !this.collider.isTrigger && this.useGravity) {
+    if(this.collider && !this.collider.isTrigger) {
       if(game.level.checkCollisionActor(this, 0, 1, false)) {
         this.grounded = true;
         this.vel.y = 0;
@@ -97,6 +98,42 @@ export class Actor {
   preUpdate() {
     this.collidedInFrame.clear();
   }
+
+  sweepTest(offset: Point) {
+    /*
+    let inc: Point = offset.clone();
+    let myPoints = this.collider.shape.points;
+    let otherPoints = this.collider.shape.clone(offset.x, offset.y).points;
+    let allPoints = myPoints.concat(otherPoints);
+
+    let points = [];
+    if(inc.x === 0) {
+      points.push();
+    }
+    let shape = new Shape(points);
+
+    let point1 = _.minBy(allPoints, (point) => { return point.y; });
+
+    while(true) {
+      let mid = inc.clone();
+      let end = inc.clone();
+      let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, false);
+      if(collideData) {
+        return true;
+      }
+      inc.multiply(0.5);
+
+    }
+    return false;
+    */
+    let inc: Point = offset.clone();
+    let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, false);
+    if(collideData) {
+      return true; 
+    }
+    return false;
+  }
+
 
   move(amount: Point) {
 
@@ -188,7 +225,19 @@ export class Actor {
       game.playSound(fadeSound);
     }
   }
+
+  withinX(other: Actor, amount: number) {
+    return Math.abs(this.pos.x - other.pos.x) <= amount;
+  }
   
+  withinY(other: Actor, amount: number) {
+    return Math.abs(this.pos.y - other.pos.y) <= amount;
+  }
+
+  isFacing(other: Actor) {
+    return ((this.pos.x < other.pos.x && this.xDir === 1) || (this.pos.x >= other.pos.x && this.xDir === -1));
+  }
+
 }
 
 export class Anim extends Actor {

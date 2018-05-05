@@ -91,6 +91,9 @@ export class Level {
 
     for(let player of this.localPlayers) {
       player.clearInputPressed();
+      if(player.isAI) {
+        player.clearAiInput();
+      }
     }
 
     this.frameCount++;
