@@ -23,7 +23,6 @@ export class Actor {
   name: string;
   globalCollider: Collider; //If no collider data found in sprite, fall back to this one
   collidedInFrame: Set<Collider>;
-  triggeredInFrame: Set<Collider>;
   renderEffect: string;
   palette: Palette;
 
@@ -41,7 +40,6 @@ export class Actor {
     this.grounded = false;
     game.level.addGameObject(this);
     this.collidedInFrame = new Set<Collider>();
-    this.triggeredInFrame = new Set<Collider>();
     this.renderEffect = "";
     this.changeSprite(sprite, true);
   }
@@ -85,8 +83,8 @@ export class Actor {
     }
     this.move(this.vel);
 
-    if(this.collider && !this.collider.isTrigger) {
-      if(game.level.checkCollisionActor(this, 0, 1)) {
+    if(this.collider && !this.collider.isTrigger && this.useGravity) {
+      if(game.level.checkCollisionActor(this, 0, 1, false)) {
         this.grounded = true;
         this.vel.y = 0;
       }
@@ -94,49 +92,47 @@ export class Actor {
         this.grounded = false;
       }
     }
-    else if(this.collider) {
-      let trigger = game.level.checkTriggerActor(this, 0, 0);
-      if(trigger) {
-        this.registerTrigger(trigger);
-      }
-    }
   }
 
   preUpdate() {
-    this.triggeredInFrame.clear();
     this.collidedInFrame.clear();
   }
 
   move(amount: Point) {
-    let inc: Point = amount.clone();
 
-    /*
-    let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, inc);
-
-    if(collideData) {
-      this.registerCollision(collideData.collider);
-      if(collideData.point) this.pos = collideData.point.add(inc.times(-1).normalize());
+    //No collider: just move
+    if(!this.collider) {
+      this.pos.inc(amount.times(game.deltaTime));
     }
-    else {
-      this.pos.inc(inc.multiply(game.deltaTime));
-    }
-    */
-    while(inc.magnitude > 0) {
-      let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
+    //Trigger collider: check collision on the spot and move
+    else if(this.collider && this.collider.isTrigger) {
+      let collideData = game.level.checkCollisionActor(this, amount.x * game.deltaTime, amount.y * game.deltaTime, true, amount);
       if(collideData) {
         this.registerCollision(collideData);
-        inc.multiply(0.5);
-        if(inc.magnitude < 0.5) {
-          inc.x = 0;
-          inc.y = 0;
-          break;
-        } 
       }
-      else {
-        break;
-      }
+      this.pos.inc(amount.times(game.deltaTime));
     }
-    this.pos.inc(inc.multiply(game.deltaTime));
+    //Regular collider: need to detect collision incrementally and stop moving past a collider if that's the case
+    else {
+      let inc: Point = amount.clone();
+
+      while(inc.magnitude > 0) {
+        let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, false);
+        if(collideData) {
+          this.registerCollision(collideData);
+          inc.multiply(0.5);
+          if(inc.magnitude < 0.5) {
+            inc.x = 0;
+            inc.y = 0;
+            break;
+          } 
+        }
+        else {
+          break;
+        }
+      }
+      this.pos.inc(inc.multiply(game.deltaTime));
+    }
   }
 
   render(x: number, y: number) {
@@ -156,17 +152,7 @@ export class Actor {
     }
   }
 
-  registerTrigger(other: CollideData) {
-    if(!this.triggeredInFrame.has(other.collider)) {
-      this.triggeredInFrame.add(other.collider);
-      this.onTrigger(other);
-    }
-  }
-
   onCollision(other: CollideData) {
-  }
-
-  onTrigger(other: CollideData) {
   }
 
   get collider(): Collider {

@@ -782,8 +782,6 @@ System.register("geometry", ["collider", "game", "helpers"], function (exports_7
                 };
                 Geometry.prototype.onCollision = function (other) {
                 };
-                Geometry.prototype.onTrigger = function (other) {
-                };
                 return Geometry;
             }());
             exports_7("Geometry", Geometry);
@@ -870,16 +868,16 @@ System.register("projectile", ["actor", "damager", "character", "game"], functio
                         this.destroySelf();
                     }
                 };
-                Projectile.prototype.onTrigger = function (other) {
+                Projectile.prototype.onCollision = function (other) {
                     var character = (other.collider.gameObject instanceof character_1.Character) ? other.collider.gameObject : undefined;
                     if (character && character.player.alliance !== this.damager.owner.alliance) {
-                        this.onHit(character);
+                        this.onHit(character, other.point);
                     }
                     var wall = other.collider.gameObject;
                     if (wall) {
                     }
                 };
-                Projectile.prototype.onHit = function (character) {
+                Projectile.prototype.onHit = function (character, hitPoint) {
                     character.renderEffect = "flash";
                     character.applyDamage(this.damager.damage);
                     if (!this.flinch) {
@@ -889,6 +887,7 @@ System.register("projectile", ["actor", "damager", "character", "game"], functio
                         game_2.game.playSound("hurt");
                         character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
                     }
+                    this.pos = hitPoint.clone();
                     this.destroySelf(this.fadeSprite, this.fadeSound);
                 };
                 return Projectile;
@@ -1391,11 +1390,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                             this.character.stopCharge();
                         }
                     }
-                    var lastLeftWallData = game_5.game.level.checkCollisionActor(this.character, -1, 0);
+                    var lastLeftWallData = game_5.game.level.checkCollisionActor(this.character, -1, 0, false);
                     this.lastLeftWall = lastLeftWallData ? lastLeftWallData.collider : undefined;
                     if (this.lastLeftWall && !this.lastLeftWall.isClimbable)
                         this.lastLeftWall = undefined;
-                    var lastRightWallData = game_5.game.level.checkCollisionActor(this.character, 1, 0);
+                    var lastRightWallData = game_5.game.level.checkCollisionActor(this.character, 1, 0, false);
                     this.lastRightWall = lastRightWallData ? lastRightWallData.collider : undefined;
                     if (this.lastRightWall && !this.lastRightWall.isClimbable)
                         this.lastRightWall = undefined;
@@ -1409,7 +1408,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (!this.player.isHeld("jump") && this.character.vel.y < 0) {
                         this.character.vel.y = 0;
                     }
-                    if (game_5.game.level.checkCollisionActor(this.character, 0, -1)) {
+                    if (game_5.game.level.checkCollisionActor(this.character, 0, -1, false)) {
                         this.character.vel.y = 0;
                     }
                     var move = new point_5.Point(0, 0);
@@ -1597,7 +1596,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.character.vel.y = 0;
                     if (this.stateTime > 0.15) {
                         var dirHeld = this.wallDir === -1 ? this.player.isHeld("left") : this.player.isHeld("right");
-                        if (!dirHeld || !game_5.game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
+                        if (!dirHeld || !game_5.game.level.checkCollisionActor(this.character, this.wallDir, 0, false)) {
                             this.player.character.changeState(new Fall());
                         }
                         this.character.move(new point_5.Point(0, 100));
@@ -2062,38 +2061,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.addEffect = function (effect) {
                     this.effects.push(effect);
                 };
-                Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, vel) {
-                    if (!actor.collider || actor.collider.isTrigger)
+                Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, useTriggers, vel) {
+                    if (!actor.collider || (!useTriggers && actor.collider.isTrigger))
                         return undefined;
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
                         if (go === actor)
                             continue;
-                        if (!go.collider || go.collider.isTrigger)
-                            continue;
-                        var actorShape = actor.collider.shape.clone(offsetX, offsetY);
-                        if (go.collider.shape.intersectsShape(actorShape)) {
-                            if (vel) {
-                                var intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
-                                return new collider_3.CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal : undefined);
-                            }
-                            else {
-                                return new collider_3.CollideData(go.collider, undefined, undefined);
-                            }
-                        }
-                    }
-                    return undefined;
-                };
-                Level.prototype.checkTriggerActor = function (actor, offsetX, offsetY, vel) {
-                    if (!actor.collider)
-                        return undefined;
-                    for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
-                        var go = _a[_i];
-                        if (go === actor)
-                            continue;
-                        if (!go.collider)
-                            continue;
-                        if (!go.collider.isTrigger && !actor.collider.isTrigger)
+                        if (!go.collider || (!useTriggers && go.collider.isTrigger))
                             continue;
                         var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                         if (go.collider.shape.intersectsShape(actorShape)) {
@@ -2367,8 +2342,6 @@ System.register("collider", ["shape"], function (exports_19, context_19) {
                 }
                 Collider.prototype.onCollision = function (other) {
                 };
-                Collider.prototype.onTrigger = function (other) {
-                };
                 Collider.prototype.clone = function (x, y, gameObject) {
                     var shape = this.shape.clone(x, y);
                     return new Collider(shape.points, this.isTrigger, gameObject);
@@ -2574,7 +2547,6 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
                     this.grounded = false;
                     game_9.game.level.addGameObject(this);
                     this.collidedInFrame = new Set();
-                    this.triggeredInFrame = new Set();
                     this.renderEffect = "";
                     this.changeSprite(sprite, true);
                 }
@@ -2615,8 +2587,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
                         }
                     }
                     this.move(this.vel);
-                    if (this.collider && !this.collider.isTrigger) {
-                        if (game_9.game.level.checkCollisionActor(this, 0, 1)) {
+                    if (this.collider && !this.collider.isTrigger && this.useGravity) {
+                        if (game_9.game.level.checkCollisionActor(this, 0, 1, false)) {
                             this.grounded = true;
                             this.vel.y = 0;
                         }
@@ -2624,35 +2596,40 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
                             this.grounded = false;
                         }
                     }
-                    else if (this.collider) {
-                        var trigger = game_9.game.level.checkTriggerActor(this, 0, 0);
-                        if (trigger) {
-                            this.registerTrigger(trigger);
-                        }
-                    }
                 };
                 Actor.prototype.preUpdate = function () {
-                    this.triggeredInFrame.clear();
                     this.collidedInFrame.clear();
                 };
                 Actor.prototype.move = function (amount) {
-                    var inc = amount.clone();
-                    while (inc.magnitude > 0) {
-                        var collideData = game_9.game.level.checkCollisionActor(this, inc.x * game_9.game.deltaTime, inc.y * game_9.game.deltaTime);
+                    if (!this.collider) {
+                        this.pos.inc(amount.times(game_9.game.deltaTime));
+                    }
+                    else if (this.collider && this.collider.isTrigger) {
+                        var collideData = game_9.game.level.checkCollisionActor(this, amount.x * game_9.game.deltaTime, amount.y * game_9.game.deltaTime, true, amount);
                         if (collideData) {
                             this.registerCollision(collideData);
-                            inc.multiply(0.5);
-                            if (inc.magnitude < 0.5) {
-                                inc.x = 0;
-                                inc.y = 0;
+                        }
+                        this.pos.inc(amount.times(game_9.game.deltaTime));
+                    }
+                    else {
+                        var inc = amount.clone();
+                        while (inc.magnitude > 0) {
+                            var collideData = game_9.game.level.checkCollisionActor(this, inc.x * game_9.game.deltaTime, inc.y * game_9.game.deltaTime, false);
+                            if (collideData) {
+                                this.registerCollision(collideData);
+                                inc.multiply(0.5);
+                                if (inc.magnitude < 0.5) {
+                                    inc.x = 0;
+                                    inc.y = 0;
+                                    break;
+                                }
+                            }
+                            else {
                                 break;
                             }
                         }
-                        else {
-                            break;
-                        }
+                        this.pos.inc(inc.multiply(game_9.game.deltaTime));
                     }
-                    this.pos.inc(inc.multiply(game_9.game.deltaTime));
                 };
                 Actor.prototype.render = function (x, y) {
                     this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
@@ -2668,15 +2645,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
                         this.onCollision(other);
                     }
                 };
-                Actor.prototype.registerTrigger = function (other) {
-                    if (!this.triggeredInFrame.has(other.collider)) {
-                        this.triggeredInFrame.add(other.collider);
-                        this.onTrigger(other);
-                    }
-                };
                 Actor.prototype.onCollision = function (other) {
-                };
-                Actor.prototype.onTrigger = function (other) {
                 };
                 Object.defineProperty(Actor.prototype, "collider", {
                     get: function () {

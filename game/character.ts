@@ -268,11 +268,11 @@ class CharState {
       }
     }
     
-    let lastLeftWallData = game.level.checkCollisionActor(this.character, -1, 0);
+    let lastLeftWallData = game.level.checkCollisionActor(this.character, -1, 0, false);
     this.lastLeftWall = lastLeftWallData ? lastLeftWallData.collider : undefined;
     if(this.lastLeftWall && !this.lastLeftWall.isClimbable) this.lastLeftWall = undefined;
 
-    let lastRightWallData = game.level.checkCollisionActor(this.character, 1, 0);
+    let lastRightWallData = game.level.checkCollisionActor(this.character, 1, 0, false);
     this.lastRightWall = lastRightWallData ? lastRightWallData.collider : undefined;
     if(this.lastRightWall && !this.lastRightWall.isClimbable) this.lastRightWall = undefined;
   }
@@ -288,7 +288,7 @@ class CharState {
       this.character.vel.y = 0;
     }
 
-    if(game.level.checkCollisionActor(this.character, 0, -1)) {
+    if(game.level.checkCollisionActor(this.character, 0, -1, false)) {
       this.character.vel.y = 0;
     }
 
@@ -502,7 +502,7 @@ class WallSlide extends CharState {
     if(this.stateTime > 0.15) {
       let dirHeld = this.wallDir === -1 ? this.player.isHeld("left") : this.player.isHeld("right");
 
-      if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
+      if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0, false)) {
         this.player.character.changeState(new Fall());
       }
       this.character.move(new Point(0, 100));

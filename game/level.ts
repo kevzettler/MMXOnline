@@ -204,33 +204,12 @@ export class Level {
   }
 
   //Checks for collisions and returns the first one collided.
-  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
+  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, useTriggers: boolean, vel?: Point): CollideData {
     
-    if(!actor.collider || actor.collider.isTrigger) return undefined;
+    if(!actor.collider || (!useTriggers && actor.collider.isTrigger)) return undefined;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
-      if(!go.collider || go.collider.isTrigger) continue;
-      let actorShape = actor.collider.shape.clone(offsetX, offsetY);
-      if(go.collider.shape.intersectsShape(actorShape)) {
-        if(vel) {
-          let intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
-          return new CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal: undefined);
-        }
-        else {
-          return new CollideData(go.collider, undefined, undefined);
-        }
-      }
-    }
-    return undefined;
-  }
-
-  checkTriggerActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
-    
-    if(!actor.collider) return undefined;
-    for(let go of this.gameObjects) {
-      if(go === actor) continue;
-      if(!go.collider) continue;
-      if(!go.collider.isTrigger && !actor.collider.isTrigger) continue;
+      if(!go.collider || (!useTriggers && go.collider.isTrigger)) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
         if(vel) {

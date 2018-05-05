@@ -29,9 +29,4 @@ export class Geometry {
     
   }
 
-  onTrigger(other: CollideData) {
-
-  }
-
-
 }

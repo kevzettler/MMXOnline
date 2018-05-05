@@ -6,5 +6,4 @@ export interface GameObject {
   render(x: number, y: number): void;
   collider: Collider;
   onCollision(other: CollideData): void;
-  onTrigger(other: CollideData): void;
 }
