@@ -35,7 +35,11 @@ export class Projectile extends Actor {
   onCollision(other: CollideData) {
     let character = (other.collider.gameObject instanceof Character) ? <Character> other.collider.gameObject : undefined;
     if(character && character.player.alliance !== this.damager.owner.alliance) {
-      this.onHit(character, other.point);
+      
+      let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
+      this.pos = pos.clone();
+
+      this.onHit(character);
     }
     let wall = <Wall> other.collider.gameObject;
     if(wall) {
@@ -43,7 +47,7 @@ export class Projectile extends Actor {
     }
   }
 
-  onHit(character: Character, hitPoint: Point) {
+  onHit(character: Character) {
     character.renderEffect = "flash";
     character.applyDamage(this.damager.damage);
     if(!this.flinch) {
@@ -53,7 +57,6 @@ export class Projectile extends Actor {
       game.playSound("hurt");
       character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
     }
-    this.pos = hitPoint.clone();
     this.destroySelf(this.fadeSprite, this.fadeSound);
   }
 

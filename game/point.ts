@@ -62,4 +62,7 @@ export class Point {
   clone() {
     return new Point(this.x, this.y);
   }
+  distanceTo(other: Point) {
+    return Math.sqrt(Math.pow(other.x - this.x, 2) + Math.pow(other.y - this.y, 2));
+  }
 }

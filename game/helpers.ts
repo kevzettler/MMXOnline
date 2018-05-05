@@ -229,22 +229,6 @@ export function drawPolygon(ctx: CanvasRenderingContext2D, shape: Shape, closed:
   ctx.globalAlpha = 1;
 }
 
-export function pointInPolygon(x: number, y: number, vertices: Point[]): boolean {
-  // ray-casting algorithm based on
-  // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-  let inside: boolean = false;
-  for (let i:number = 0, j:number = vertices.length - 1; i < vertices.length; j = i++) {
-      let xi:number = vertices[i].x, yi:number = vertices[i].y;
-      let xj:number = vertices[j].x, yj:number = vertices[j].y;
-
-      let intersect: boolean = ((yi > y) !== (yj > y))
-          && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-  }
-
-  return inside;
-}
-
 export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number, hAlign: string, vAlign: string, font: string) {
   color = color || "black";
   size = size || 14;

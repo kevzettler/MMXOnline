@@ -169,18 +169,48 @@ export class Shape {
     }
   }
 
-  //Given 2 shapes that intersect, and that this (the first shape) is going in dir vel, find the exact point of intersection on shape 2
-  //and also get the normal
-  getIntersectData(point: Point, dir: Point) {
-    let pointLine = new Line(point, point.add(dir.times(-1.5)));
+  containsPoint(point: Point): boolean {
+    let x = point.x;
+    let y = point.y;
+    let vertices = this.points;
+    // ray-casting algorithm based on
+    // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+    let inside: boolean = false;
+    for (let i:number = 0, j:number = vertices.length - 1; i < vertices.length; j = i++) {
+        let xi:number = vertices[i].x, yi:number = vertices[i].y;
+        let xj:number = vertices[j].x, yj:number = vertices[j].y;
+
+        let intersect: boolean = ((yi > y) !== (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+
+  getIntersectPoint(point: Point, dir: Point) {
+    if(this.containsPoint(point)) {
+      return point;
+    }
+    let intersections: Point[] = [];
+    let pointLine = new Line(point, point.add(dir));
     for(let line of this.getLines()) {
       let intersectPoint = line.getIntersectPoint(pointLine);
       if(intersectPoint) {
-        let normal = undefined;
-        return new IntersectData(intersectPoint, normal);
+        intersections.push(intersectPoint);
       }
     }
-    return undefined;
+    if(intersections.length === 0) return undefined;
+    
+    //@ts-ignore
+    return _.minBy(intersections, (intersectPoint) => {
+      return intersectPoint.distanceTo(point);
+    });
+
+  }
+
+  getClosestPointOnBounds(point: Point) {
+
   }
 
   clone(x: number, y: number) {

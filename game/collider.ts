@@ -5,14 +5,12 @@ import { game } from "./game";
 
 export class CollideData {
 
-  collider: Collider;
-  point: Point;
-  normal: Point;
+  collider: Collider; //The other thing that was collided with
+  vel: Point; //The velocity at which we collided with the other thing above
 
-  constructor(collider: Collider, point: Point, normal: Point) {
+  constructor(collider: Collider, vel: Point) {
     this.collider = collider;
-    this.point = point;
-    this.normal = normal;
+    this.vel = vel;
   }
 
 }

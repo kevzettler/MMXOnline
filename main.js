@@ -81,6 +81,9 @@ System.register("point", [], function (exports_1, context_1) {
                 Point.prototype.clone = function () {
                     return new Point(this.x, this.y);
                 };
+                Point.prototype.distanceTo = function (other) {
+                    return Math.sqrt(Math.pow(other.x - this.x, 2) + Math.pow(other.y - this.y, 2));
+                };
                 return Point;
             }());
             exports_1("Point", Point);
@@ -366,17 +369,41 @@ System.register("shape", ["point", "rect"], function (exports_4, context_4) {
                         return false;
                     }
                 };
-                Shape.prototype.getIntersectData = function (point, dir) {
-                    var pointLine = new Line(point, point.add(dir.times(-1.5)));
+                Shape.prototype.containsPoint = function (point) {
+                    var x = point.x;
+                    var y = point.y;
+                    var vertices = this.points;
+                    var inside = false;
+                    for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+                        var xi = vertices[i].x, yi = vertices[i].y;
+                        var xj = vertices[j].x, yj = vertices[j].y;
+                        var intersect = ((yi > y) !== (yj > y))
+                            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                        if (intersect)
+                            inside = !inside;
+                    }
+                    return inside;
+                };
+                Shape.prototype.getIntersectPoint = function (point, dir) {
+                    if (this.containsPoint(point)) {
+                        return point;
+                    }
+                    var intersections = [];
+                    var pointLine = new Line(point, point.add(dir));
                     for (var _i = 0, _a = this.getLines(); _i < _a.length; _i++) {
                         var line = _a[_i];
                         var intersectPoint = line.getIntersectPoint(pointLine);
                         if (intersectPoint) {
-                            var normal = undefined;
-                            return new IntersectData(intersectPoint, normal);
+                            intersections.push(intersectPoint);
                         }
                     }
-                    return undefined;
+                    if (intersections.length === 0)
+                        return undefined;
+                    return _.minBy(intersections, function (intersectPoint) {
+                        return intersectPoint.distanceTo(point);
+                    });
+                };
+                Shape.prototype.getClosestPointOnBounds = function (point) {
                 };
                 Shape.prototype.clone = function (x, y) {
                     var points = [];
@@ -650,19 +677,6 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
         ctx.globalAlpha = 1;
     }
     exports_6("drawPolygon", drawPolygon);
-    function pointInPolygon(x, y, vertices) {
-        var inside = false;
-        for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-            var xi = vertices[i].x, yi = vertices[i].y;
-            var xj = vertices[j].x, yj = vertices[j].y;
-            var intersect = ((yi > y) !== (yj > y))
-                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-            if (intersect)
-                inside = !inside;
-        }
-        return inside;
-    }
-    exports_6("pointInPolygon", pointInPolygon);
     function drawText(ctx, text, x, y, color, size, hAlign, vAlign, font) {
         color = color || "black";
         size = size || 14;
@@ -871,13 +885,15 @@ System.register("projectile", ["actor", "damager", "character", "game"], functio
                 Projectile.prototype.onCollision = function (other) {
                     var character = (other.collider.gameObject instanceof character_1.Character) ? other.collider.gameObject : undefined;
                     if (character && character.player.alliance !== this.damager.owner.alliance) {
-                        this.onHit(character, other.point);
+                        var pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
+                        this.pos = pos.clone();
+                        this.onHit(character);
                     }
                     var wall = other.collider.gameObject;
                     if (wall) {
                     }
                 };
-                Projectile.prototype.onHit = function (character, hitPoint) {
+                Projectile.prototype.onHit = function (character) {
                     character.renderEffect = "flash";
                     character.applyDamage(this.damager.damage);
                     if (!this.flinch) {
@@ -887,7 +903,6 @@ System.register("projectile", ["actor", "damager", "character", "game"], functio
                         game_2.game.playSound("hurt");
                         character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
                     }
-                    this.pos = hitPoint.clone();
                     this.destroySelf(this.fadeSprite, this.fadeSound);
                 };
                 return Projectile;
@@ -2072,13 +2087,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                         if (go.collider.shape.intersectsShape(actorShape)) {
-                            if (vel) {
-                                var intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
-                                return new collider_3.CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal : undefined);
-                            }
-                            else {
-                                return new collider_3.CollideData(go.collider, undefined, undefined);
-                            }
+                            return new collider_3.CollideData(go.collider, vel);
                         }
                     }
                     return undefined;
@@ -2326,10 +2335,9 @@ System.register("collider", ["shape"], function (exports_19, context_19) {
         ],
         execute: function () {
             CollideData = (function () {
-                function CollideData(collider, point, normal) {
+                function CollideData(collider, vel) {
                     this.collider = collider;
-                    this.point = point;
-                    this.normal = normal;
+                    this.vel = vel;
                 }
                 return CollideData;
             }());

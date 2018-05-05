@@ -212,13 +212,7 @@ export class Level {
       if(!go.collider || (!useTriggers && go.collider.isTrigger)) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        if(vel) {
-          let intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
-          return new CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal: undefined);
-        }
-        else {
-          return new CollideData(go.collider, undefined, undefined);
-        }
+        return new CollideData(go.collider, vel);
       }
     }
     return undefined;
