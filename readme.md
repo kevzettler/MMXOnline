@@ -1,5 +1,4 @@
 
--Player 2 colors
 -Player 2
 -AI
 

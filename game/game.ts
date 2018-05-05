@@ -60,6 +60,7 @@ class Game {
     if(this.isLoaded()) {
       //console.log("LOADED");
       window.clearInterval(this.interval);
+      this.sounds["_BossBattle"].play();
       this.loadLevel("sm_bossroom");
       this.gameLoop(0);
     }

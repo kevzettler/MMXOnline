@@ -59,6 +59,27 @@ export class Level {
   
   update() {
 
+    let gamepads = navigator.getGamepads();
+    for(let i = 0; i < gamepads.length; i++) {
+      if(i >= this.localPlayers.length) break;
+      let player = this.localPlayers[i];
+      let gamepad = gamepads[i];
+      if(!gamepad) continue;
+      player.setButtonMapping(gamepad.id);
+      for(let j = 0; j < gamepad.buttons.length; j++) {
+        if(gamepad.buttons[j].pressed) {
+          player.onButtonDown(j);
+        }
+        else {
+          player.onButtonUp(j);
+        }
+      }
+      for(let j = 0; j < gamepad.axes.length; j++) {
+        player.setAxes(j, gamepad.axes[j]);
+        //html+= "Stick "+(Math.ceil(i/2)+1)+": "+gp.axes[i]+","+gp.axes[i+1]+"<br/>";
+      }
+    }
+
     for(let go of this.gameObjects) {
       go.preUpdate();
       go.update();
@@ -66,7 +87,6 @@ export class Level {
     for(let effect of this.effects) {
       effect.update();
     }
-
     this.render();
 
     for(let player of this.localPlayers) {

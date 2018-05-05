@@ -1566,6 +1566,8 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
         execute: function () {
             Player = (function () {
                 function Player(x, y, isAI, alliance) {
+                    this.buttonMapping = {};
+                    this.axesMapping = {};
                     this.alliance = alliance;
                     this.isAI = isAI;
                     this.input = {};
@@ -1584,6 +1586,15 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
                     }
                     if (alliance === 1) {
                         this.inputMapping = {};
+                        this.inputMapping[100] = "left";
+                        this.inputMapping[102] = "right";
+                        this.inputMapping[104] = "up";
+                        this.inputMapping[101] = "down";
+                        this.inputMapping[13] = "dash";
+                        this.inputMapping[96] = "jump";
+                        this.inputMapping[97] = "shoot";
+                        this.inputMapping[103] = "weaponleft";
+                        this.inputMapping[105] = "weaponright";
                     }
                     this.character = new character_2.Character(this, x, y);
                     this.health = 32;
@@ -1594,6 +1605,21 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
                     ];
                     this.weaponIndex = 0;
                 }
+                Player.prototype.setButtonMapping = function (controllerName) {
+                    if (controllerName === "Xbox 360 Controller (XInput STANDARD GAMEPAD)") {
+                        this.buttonMapping[100] = "left";
+                        this.buttonMapping[102] = "right";
+                        this.buttonMapping[104] = "up";
+                        this.buttonMapping[101] = "down";
+                        this.buttonMapping[1] = "dash";
+                        this.buttonMapping[0] = "jump";
+                        this.buttonMapping[2] = "shoot";
+                        this.buttonMapping[7] = "weaponleft";
+                        this.buttonMapping[8] = "weaponright";
+                        this.axesMapping[0] = "left|right";
+                        this.axesMapping[1] = "up|down";
+                    }
+                };
                 Object.defineProperty(Player.prototype, "weapon", {
                     get: function () {
                         return this.weapons[this.weaponIndex];
@@ -1601,6 +1627,50 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
                     enumerable: true,
                     configurable: true
                 });
+                Player.prototype.setAxes = function (axes, value) {
+                    if (this.isAI)
+                        return;
+                    var key = this.axesMapping[axes];
+                    if (!key)
+                        return;
+                    var key1 = key.split("|")[1];
+                    var key2 = key.split("|")[0];
+                    if (value > 0.2) {
+                        if (!this.input[key1])
+                            this.inputPressed[key1] = true;
+                        this.input[key1] = true;
+                        this.inputPressed[key2] = false;
+                        this.input[key2] = false;
+                    }
+                    else if (value < -0.2) {
+                        if (!this.input[key2])
+                            this.inputPressed[key2] = true;
+                        this.input[key2] = true;
+                        this.inputPressed[key1] = false;
+                        this.input[key1] = false;
+                    }
+                    else {
+                        this.inputPressed[key1] = false;
+                        this.input[key1] = false;
+                        this.inputPressed[key2] = false;
+                        this.input[key2] = false;
+                    }
+                };
+                Player.prototype.onButtonDown = function (button) {
+                    if (this.isAI)
+                        return;
+                    var key = this.buttonMapping[button];
+                    if (!this.input[key])
+                        this.inputPressed[key] = true;
+                    this.input[key] = true;
+                };
+                Player.prototype.onButtonUp = function (button) {
+                    if (this.isAI)
+                        return;
+                    var key = this.buttonMapping[button];
+                    this.input[key] = false;
+                    this.inputPressed[key] = false;
+                };
                 Player.prototype.onKeyDown = function (keycode) {
                     if (this.isAI)
                         return;
@@ -1695,6 +1765,27 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                     this.twoFrameCycle = 0;
                 }
                 Level.prototype.update = function () {
+                    var gamepads = navigator.getGamepads();
+                    for (var i = 0; i < gamepads.length; i++) {
+                        if (i >= this.localPlayers.length)
+                            break;
+                        var player = this.localPlayers[i];
+                        var gamepad = gamepads[i];
+                        if (!gamepad)
+                            continue;
+                        player.setButtonMapping(gamepad.id);
+                        for (var j = 0; j < gamepad.buttons.length; j++) {
+                            if (gamepad.buttons[j].pressed) {
+                                player.onButtonDown(j);
+                            }
+                            else {
+                                player.onButtonUp(j);
+                            }
+                        }
+                        for (var j = 0; j < gamepad.axes.length; j++) {
+                            player.setAxes(j, gamepad.axes[j]);
+                        }
+                    }
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
                         go.preUpdate();
@@ -1942,6 +2033,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                 Game.prototype.onLoad = function () {
                     if (this.isLoaded()) {
                         window.clearInterval(this.interval);
+                        this.sounds["_BossBattle"].play();
                         this.loadLevel("sm_bossroom");
                         this.gameLoop(0);
                     }
@@ -2452,7 +2544,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
         }
     };
 });
-var soundFiles = ["buster.wav", "buster2.wav", "buster3.wav", "buster4.wav", "charge_loop.wav", "charge_start.wav", "dash.wav", "die.wav", "explosion.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav", "torpedo.wav"];
+var soundFiles = ["buster.wav", "buster2.wav", "buster3.wav", "buster4.wav", "charge_loop.wav", "charge_start.wav", "dash.wav", "die.wav", "explosion.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav", "torpedo.wav", "_BossBattle.mp3"];
 System.register("vue", [], function (exports_23, context_23) {
     "use strict";
     var __moduleName = context_23 && context_23.id;
