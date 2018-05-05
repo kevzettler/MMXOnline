@@ -1,4 +1,4 @@
-import { Collider } from "./collider";
+import { Collider, CollideData } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
 
@@ -25,11 +25,11 @@ export class Geometry {
     }
   }
 
-  onCollision(other: Collider) {
+  onCollision(other: CollideData) {
     
   }
 
-  onTrigger(other: Collider) {
+  onTrigger(other: CollideData) {
 
   }
 

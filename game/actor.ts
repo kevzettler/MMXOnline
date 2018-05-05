@@ -1,6 +1,6 @@
 import { Sprite } from "./sprite";
 import { Point } from "./point";
-import { Collider } from "./collider";
+import { Collider, CollideData } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
 import { Palette } from "./color";
@@ -109,10 +109,22 @@ export class Actor {
 
   move(amount: Point) {
     let inc: Point = amount.clone();
+
+    /*
+    let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, inc);
+
+    if(collideData) {
+      this.registerCollision(collideData.collider);
+      if(collideData.point) this.pos = collideData.point.add(inc.times(-1).normalize());
+    }
+    else {
+      this.pos.inc(inc.multiply(game.deltaTime));
+    }
+    */
     while(inc.magnitude > 0) {
-      let collider = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
-      if(collider) {
-        this.registerCollision(collider);
+      let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
+      if(collideData) {
+        this.registerCollision(collideData);
         inc.multiply(0.5);
         if(inc.magnitude < 0.5) {
           inc.x = 0;
@@ -137,24 +149,24 @@ export class Actor {
     }
   }
 
-  registerCollision(other: Collider) {
-    if(!this.collidedInFrame.has(other)) {
-      this.collidedInFrame.add(other);
+  registerCollision(other: CollideData) {
+    if(!this.collidedInFrame.has(other.collider)) {
+      this.collidedInFrame.add(other.collider);
       this.onCollision(other);
     }
   }
 
-  registerTrigger(other: Collider) {
-    if(!this.triggeredInFrame.has(other)) {
-      this.triggeredInFrame.add(other);
+  registerTrigger(other: CollideData) {
+    if(!this.triggeredInFrame.has(other.collider)) {
+      this.triggeredInFrame.add(other.collider);
       this.onTrigger(other);
     }
   }
 
-  onCollision(other: Collider) {
+  onCollision(other: CollideData) {
   }
 
-  onTrigger(other: Collider) {
+  onTrigger(other: CollideData) {
   }
 
   get collider(): Collider {

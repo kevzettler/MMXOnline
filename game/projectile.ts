@@ -3,7 +3,7 @@ import { Damager } from "./damager";
 import { Player } from "./player";
 import { Point } from "./point";
 import { Sprite } from "./sprite";
-import { Collider } from "./collider";
+import { Collider, CollideData } from "./collider";
 import { Character } from "./character";
 import { Wall } from "./wall";
 import { game } from "./game";
@@ -32,12 +32,12 @@ export class Projectile extends Actor {
     }
   }
 
-  onTrigger(other: Collider) {
-    let character = (other.gameObject instanceof Character) ? <Character> other.gameObject : undefined;
+  onTrigger(other: CollideData) {
+    let character = (other.collider.gameObject instanceof Character) ? <Character> other.collider.gameObject : undefined;
     if(character && character.player.alliance !== this.damager.owner.alliance) {
       this.onHit(character);
     }
-    let wall = <Wall> other.gameObject;
+    let wall = <Wall> other.collider.gameObject;
     if(wall) {
       //Destroy projectile
     }

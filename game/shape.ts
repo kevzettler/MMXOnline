@@ -29,6 +29,92 @@ class Line {
       return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
     }
   }
+
+  get x1() { return this.point1.x; }
+  get y1() { return this.point1.y; }
+  get x2() { return this.point2.x; }
+  get y2() { return this.point2.y; }
+
+  getIntersectPoint(other: Line): Point {
+
+    if(!this.intersectsLine(other)) return undefined;
+
+    let x11 = this.x1;
+    let x21 = this.x2;
+    let y11 = this.y1;
+    let y21 = this.y2;
+    
+    let x12 = other.x1;
+    let x22 = other.x2;
+    let y12 = other.y1;
+    let y22 = other.y2;
+
+    var slope1, slope2, yint1, yint2, intx, inty;
+    if (x11 == x21 && y11 == y21) {
+      return new Point(x11, y11);
+    }
+    if (x12 == x22 && y12 == y22) {
+      return new Point(x12, y22);
+    }
+    
+    if (x11 == x21 && y12 == y22) {
+      return new Point(x11, y12);
+    }
+    if (x12 == x22 && y11 == y21) {
+      return new Point(x12, y11);
+    }
+
+    slope1 = this.slope;
+    slope2 = other.slope;
+    if (slope1 === slope2) return undefined;
+
+    yint1 = this.yInt;
+    yint2 = other.yInt;
+    if (yint1 === yint2) return isNaN(yint1) ? undefined : new Point(0, yint1);
+
+    if (isNaN(slope1)) {
+      if(isNaN(slope2) || isNaN(yint2)) throw "NaN!";
+      return new Point(y21, slope2 * y21 + yint2);
+    }
+    if (isNaN(slope2)) {
+      if(isNaN(slope1) || isNaN(yint1)) throw "NaN!";
+      return new Point(y11, slope1 * y11 + yint1);
+    }
+    intx = (slope1 * x11 + yint1 - yint2)/ slope2;
+    if(isNaN(intx) || isNaN(yint1)) throw "NaN!";
+    return new Point(intx, slope1 * intx + yint1);
+  }
+
+  get slope() {
+    if (this.x1 == this.x2) return NaN;
+    return (this.y1 - this.y2) / (this.x1 - this.x2);
+  }
+  
+  get yInt() {
+    if (this.x1 === this.x2) return this.y1 === 0 ? 0 : NaN;
+    if (this.y1 === this.y2) return this.y1;
+    return this.y1 - this.slope * this.x1;
+  }
+
+  get xInt() {
+    var slope;
+    if (this.y1 === this.y2) return this.x1 == 0 ? 0 : NaN;
+    if (this.x1 === this.x2) return this.x1;
+    return (-1 * ((slope = this.slope * this.x1 - this.y1)) / this.slope);
+  }
+
+}
+
+export class IntersectData {
+
+  intersectPoint: Point;
+  normal: Point;
+
+  constructor(intersectPoint: Point, normal: Point) {
+    this.intersectPoint = intersectPoint;
+    this.normal = normal;
+  }
+
 }
 
 export class Shape {
@@ -81,6 +167,20 @@ export class Shape {
       }
       return false;
     }
+  }
+
+  //Given 2 shapes that intersect, and that this (the first shape) is going in dir vel, find the exact point of intersection on shape 2
+  //and also get the normal
+  getIntersectData(point: Point, dir: Point) {
+    let pointLine = new Line(point, point.add(dir.times(-1.5)));
+    for(let line of this.getLines()) {
+      let intersectPoint = line.getIntersectPoint(pointLine);
+      if(intersectPoint) {
+        let normal = undefined;
+        return new IntersectData(intersectPoint, normal);
+      }
+    }
+    return undefined;
   }
 
   clone(x: number, y: number) {

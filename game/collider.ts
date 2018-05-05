@@ -3,10 +3,25 @@ import { GameObject } from "./gameObject";
 import { Shape } from "./shape";
 import { game } from "./game";
 
+export class CollideData {
+
+  collider: Collider;
+  point: Point;
+  normal: Point;
+
+  constructor(collider: Collider, point: Point, normal: Point) {
+    this.collider = collider;
+    this.point = point;
+    this.normal = normal;
+  }
+
+}
+
 export class Collider {
 
   shape: Shape;
   isTrigger: boolean;
+  isClimbable: boolean;
   gameObject: GameObject;
 
   constructor(points: Point[], isTrigger: boolean, gameObject: GameObject) {
@@ -15,11 +30,11 @@ export class Collider {
     this.gameObject = gameObject;
   }
 
-  onCollision(other: Collider) {
+  onCollision(other: CollideData) {
     
   }
 
-  onTrigger(other: Collider) {
+  onTrigger(other: CollideData) {
 
   }
 

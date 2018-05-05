@@ -1,12 +1,9 @@
-
--Player 2
--AI
-
 -Snap to ground on move() function
   -Characters y positions can be inconsistent on ground
+-AI
 
+-All the weapons + weapon charge
 
--All the weapons
 -Menu system
 -More levles/background+foreground system
 

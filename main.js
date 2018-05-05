@@ -38,6 +38,16 @@ System.register("point", [], function (exports_1, context_1) {
                     var point = new Point(this.x + x, this.y + y);
                     return point;
                 };
+                Point.prototype.normalize = function () {
+                    if (this.x === 0 && this.y === 0)
+                        return new Point(0, 0);
+                    var mag = this.magnitude;
+                    var point = new Point(this.x / this.magnitude, this.y / this.magnitude);
+                    if (isNaN(point.x) || isNaN(point.y)) {
+                        throw "NAN!";
+                    }
+                    return point;
+                };
                 Point.prototype.add = function (other) {
                     var point = new Point(this.x + other.x, this.y + other.y);
                     return point;
@@ -46,6 +56,10 @@ System.register("point", [], function (exports_1, context_1) {
                     this.x += other.x;
                     this.y += other.y;
                 };
+                Point.prototype.times = function (num) {
+                    var point = new Point(this.x * num, this.y * num);
+                    return point;
+                };
                 Point.prototype.multiply = function (num) {
                     this.x *= num;
                     this.y *= num;
@@ -53,7 +67,13 @@ System.register("point", [], function (exports_1, context_1) {
                 };
                 Object.defineProperty(Point.prototype, "magnitude", {
                     get: function () {
-                        return Math.sqrt(this.x * this.x + this.y * this.y);
+                        var root = this.x * this.x + this.y * this.y;
+                        if (root < 0)
+                            root = 0;
+                        var result = Math.sqrt(root);
+                        if (isNaN(result))
+                            throw "NAN!";
+                        return result;
                     },
                     enumerable: true,
                     configurable: true
@@ -154,7 +174,7 @@ System.register("rect", ["point"], function (exports_3, context_3) {
 System.register("shape", ["point", "rect"], function (exports_4, context_4) {
     "use strict";
     var __moduleName = context_4 && context_4.id;
-    var point_2, rect_1, Line, Shape;
+    var point_2, rect_1, Line, IntersectData, Shape;
     return {
         setters: [
             function (point_2_1) {
@@ -190,8 +210,115 @@ System.register("shape", ["point", "rect"], function (exports_4, context_4) {
                         return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
                     }
                 };
+                Object.defineProperty(Line.prototype, "x1", {
+                    get: function () { return this.point1.x; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "y1", {
+                    get: function () { return this.point1.y; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "x2", {
+                    get: function () { return this.point2.x; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "y2", {
+                    get: function () { return this.point2.y; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Line.prototype.getIntersectPoint = function (other) {
+                    if (!this.intersectsLine(other))
+                        return undefined;
+                    var x11 = this.x1;
+                    var x21 = this.x2;
+                    var y11 = this.y1;
+                    var y21 = this.y2;
+                    var x12 = other.x1;
+                    var x22 = other.x2;
+                    var y12 = other.y1;
+                    var y22 = other.y2;
+                    var slope1, slope2, yint1, yint2, intx, inty;
+                    if (x11 == x21 && y11 == y21) {
+                        return new point_2.Point(x11, y11);
+                    }
+                    if (x12 == x22 && y12 == y22) {
+                        return new point_2.Point(x12, y22);
+                    }
+                    if (x11 == x21 && y12 == y22) {
+                        return new point_2.Point(x11, y12);
+                    }
+                    if (x12 == x22 && y11 == y21) {
+                        return new point_2.Point(x12, y11);
+                    }
+                    slope1 = this.slope;
+                    slope2 = other.slope;
+                    if (slope1 === slope2)
+                        return undefined;
+                    yint1 = this.yInt;
+                    yint2 = other.yInt;
+                    if (yint1 === yint2)
+                        return isNaN(yint1) ? undefined : new point_2.Point(0, yint1);
+                    if (isNaN(slope1)) {
+                        if (isNaN(slope2) || isNaN(yint2))
+                            throw "NaN!";
+                        return new point_2.Point(y21, slope2 * y21 + yint2);
+                    }
+                    if (isNaN(slope2)) {
+                        if (isNaN(slope1) || isNaN(yint1))
+                            throw "NaN!";
+                        return new point_2.Point(y11, slope1 * y11 + yint1);
+                    }
+                    intx = (slope1 * x11 + yint1 - yint2) / slope2;
+                    if (isNaN(intx) || isNaN(yint1))
+                        throw "NaN!";
+                    return new point_2.Point(intx, slope1 * intx + yint1);
+                };
+                Object.defineProperty(Line.prototype, "slope", {
+                    get: function () {
+                        if (this.x1 == this.x2)
+                            return NaN;
+                        return (this.y1 - this.y2) / (this.x1 - this.x2);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "yInt", {
+                    get: function () {
+                        if (this.x1 === this.x2)
+                            return this.y1 === 0 ? 0 : NaN;
+                        if (this.y1 === this.y2)
+                            return this.y1;
+                        return this.y1 - this.slope * this.x1;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "xInt", {
+                    get: function () {
+                        var slope;
+                        if (this.y1 === this.y2)
+                            return this.x1 == 0 ? 0 : NaN;
+                        if (this.x1 === this.x2)
+                            return this.x1;
+                        return (-1 * ((slope = this.slope * this.x1 - this.y1)) / this.slope);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 return Line;
             }());
+            IntersectData = (function () {
+                function IntersectData(intersectPoint, normal) {
+                    this.intersectPoint = intersectPoint;
+                    this.normal = normal;
+                }
+                return IntersectData;
+            }());
+            exports_4("IntersectData", IntersectData);
             Shape = (function () {
                 function Shape(points) {
                     this.points = points;
@@ -238,6 +365,18 @@ System.register("shape", ["point", "rect"], function (exports_4, context_4) {
                         }
                         return false;
                     }
+                };
+                Shape.prototype.getIntersectData = function (point, dir) {
+                    var pointLine = new Line(point, point.add(dir.times(-1.5)));
+                    for (var _i = 0, _a = this.getLines(); _i < _a.length; _i++) {
+                        var line = _a[_i];
+                        var intersectPoint = line.getIntersectPoint(pointLine);
+                        if (intersectPoint) {
+                            var normal = undefined;
+                            return new IntersectData(intersectPoint, normal);
+                        }
+                    }
+                    return undefined;
                 };
                 Shape.prototype.clone = function (x, y) {
                     var points = [];
@@ -665,7 +804,9 @@ System.register("wall", ["geometry"], function (exports_8, context_8) {
             Wall = (function (_super) {
                 __extends(Wall, _super);
                 function Wall() {
-                    return _super.call(this) || this;
+                    var _this = _super.call(this) || this;
+                    _this.collider.isClimbable = true;
+                    return _this;
                 }
                 return Wall;
             }(geometry_1.Geometry));
@@ -730,11 +871,11 @@ System.register("projectile", ["actor", "damager", "character", "game"], functio
                     }
                 };
                 Projectile.prototype.onTrigger = function (other) {
-                    var character = (other.gameObject instanceof character_1.Character) ? other.gameObject : undefined;
+                    var character = (other.collider.gameObject instanceof character_1.Character) ? other.collider.gameObject : undefined;
                     if (character && character.player.alliance !== this.damager.owner.alliance) {
                         this.onHit(character);
                     }
-                    var wall = other.gameObject;
+                    var wall = other.collider.gameObject;
                     if (wall) {
                     }
                 };
@@ -1250,8 +1391,14 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                             this.character.stopCharge();
                         }
                     }
-                    this.lastLeftWall = game_5.game.level.checkCollisionActor(this.character, -1, 0);
-                    this.lastRightWall = game_5.game.level.checkCollisionActor(this.character, 1, 0);
+                    var lastLeftWallData = game_5.game.level.checkCollisionActor(this.character, -1, 0);
+                    this.lastLeftWall = lastLeftWallData ? lastLeftWallData.collider : undefined;
+                    if (this.lastLeftWall && !this.lastLeftWall.isClimbable)
+                        this.lastLeftWall = undefined;
+                    var lastRightWallData = game_5.game.level.checkCollisionActor(this.character, 1, 0);
+                    this.lastRightWall = lastRightWallData ? lastRightWallData.collider : undefined;
+                    if (this.lastRightWall && !this.lastRightWall.isClimbable)
+                        this.lastRightWall = undefined;
                 };
                 CharState.prototype.airCode = function () {
                     if (this.character.grounded) {
@@ -1531,6 +1678,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 Die.prototype.onEnter = function (oldState) {
                     _super.prototype.onEnter.call(this, oldState);
                     this.character.useGravity = false;
+                    this.character.vel.x = 0;
+                    this.character.vel.y = 0;
                     this.character.globalCollider = undefined;
                     new actor_2.Anim(this.character.pos.addxy(0, -12), game_5.game.sprites["die_sparks"], 1);
                 };
@@ -1713,10 +1862,10 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
         }
     };
 });
-System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], function (exports_15, context_15) {
+System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "collider"], function (exports_15, context_15) {
     "use strict";
     var __moduleName = context_15 && context_15.id;
-    var wall_1, point_6, game_7, Helpers, actor_3, rect_3, Level;
+    var wall_1, point_6, game_7, Helpers, actor_3, rect_3, collider_3, Level;
     return {
         setters: [
             function (wall_1_1) {
@@ -1736,6 +1885,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
             },
             function (rect_3_1) {
                 rect_3 = rect_3_1;
+            },
+            function (collider_3_1) {
+                collider_3 = collider_3_1;
             }
         ],
         execute: function () {
@@ -1910,7 +2062,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                 Level.prototype.addEffect = function (effect) {
                     this.effects.push(effect);
                 };
-                Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY) {
+                Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, vel) {
                     if (!actor.collider || actor.collider.isTrigger)
                         return undefined;
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
@@ -1921,12 +2073,18 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                             continue;
                         var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                         if (go.collider.shape.intersectsShape(actorShape)) {
-                            return go.collider;
+                            if (vel) {
+                                var intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
+                                return new collider_3.CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal : undefined);
+                            }
+                            else {
+                                return new collider_3.CollideData(go.collider, undefined, undefined);
+                            }
                         }
                     }
                     return undefined;
                 };
-                Level.prototype.checkTriggerActor = function (actor, offsetX, offsetY) {
+                Level.prototype.checkTriggerActor = function (actor, offsetX, offsetY, vel) {
                     if (!actor.collider)
                         return undefined;
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
@@ -1939,7 +2097,13 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect"], 
                             continue;
                         var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                         if (go.collider.shape.intersectsShape(actorShape)) {
-                            return go.collider;
+                            if (vel) {
+                                var intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
+                                return new collider_3.CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal : undefined);
+                            }
+                            else {
+                                return new collider_3.CollideData(go.collider, undefined, undefined);
+                            }
                         }
                     }
                     return undefined;
@@ -2036,12 +2200,25 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         });
                         this.sounds[soundFile.split(".")[0]] = sound;
                     }
+                    var music = new Howl({
+                        src: ["assets/music/BossBattle.mp3"],
+                        sprite: {
+                            musicStart: [0, 1.5 * 1000],
+                            musicLoop: [1.5 * 1000, 29.664 * 1000 - 1.5 * 1000]
+                        },
+                        onload: function () {
+                        }
+                    });
+                    music.play("musicStart");
+                    music.on("end", function () {
+                        console.log("Loop");
+                        music.play("musicLoop");
+                    });
                     this.interval = window.setInterval(function () { return _this.onLoad(); }, 1);
                 };
                 Game.prototype.onLoad = function () {
                     if (this.isLoaded()) {
                         window.clearInterval(this.interval);
-                        this.sounds["_BossBattle"].play();
                         this.loadLevel("sm_bossroom");
                         this.gameLoop(0);
                     }
@@ -2165,7 +2342,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
 System.register("collider", ["shape"], function (exports_19, context_19) {
     "use strict";
     var __moduleName = context_19 && context_19.id;
-    var shape_1, Collider;
+    var shape_1, CollideData, Collider;
     return {
         setters: [
             function (shape_1_1) {
@@ -2173,6 +2350,15 @@ System.register("collider", ["shape"], function (exports_19, context_19) {
             }
         ],
         execute: function () {
+            CollideData = (function () {
+                function CollideData(collider, point, normal) {
+                    this.collider = collider;
+                    this.point = point;
+                    this.normal = normal;
+                }
+                return CollideData;
+            }());
+            exports_19("CollideData", CollideData);
             Collider = (function () {
                 function Collider(points, isTrigger, gameObject) {
                     this.shape = new shape_1.Shape(points);
@@ -2222,11 +2408,11 @@ System.register("frame", [], function (exports_20, context_20) {
 System.register("sprite", ["collider", "frame", "point", "rect", "game", "helpers"], function (exports_21, context_21) {
     "use strict";
     var __moduleName = context_21 && context_21.id;
-    var collider_3, frame_1, point_7, rect_4, game_8, Helpers, Sprite;
+    var collider_4, frame_1, point_7, rect_4, game_8, Helpers, Sprite;
     return {
         setters: [
-            function (collider_3_1) {
-                collider_3 = collider_3_1;
+            function (collider_4_1) {
+                collider_4 = collider_4_1;
             },
             function (frame_1_1) {
                 frame_1 = frame_1_1;
@@ -2260,7 +2446,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     game_8.game.getSpritesheet(spriteJson.spritesheetPath);
                     for (var _i = 0, _a = spriteJson.hitboxes; _i < _a.length; _i++) {
                         var hitboxJson = _a[_i];
-                        var hitbox = new collider_3.Collider([
+                        var hitbox = new collider_4.Collider([
                             new point_7.Point(hitboxJson.offset.x, hitboxJson.offset.y),
                             new point_7.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
                             new point_7.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
@@ -2452,9 +2638,9 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
                 Actor.prototype.move = function (amount) {
                     var inc = amount.clone();
                     while (inc.magnitude > 0) {
-                        var collider = game_9.game.level.checkCollisionActor(this, inc.x * game_9.game.deltaTime, inc.y * game_9.game.deltaTime);
-                        if (collider) {
-                            this.registerCollision(collider);
+                        var collideData = game_9.game.level.checkCollisionActor(this, inc.x * game_9.game.deltaTime, inc.y * game_9.game.deltaTime);
+                        if (collideData) {
+                            this.registerCollision(collideData);
                             inc.multiply(0.5);
                             if (inc.magnitude < 0.5) {
                                 inc.x = 0;
@@ -2477,14 +2663,14 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
                     }
                 };
                 Actor.prototype.registerCollision = function (other) {
-                    if (!this.collidedInFrame.has(other)) {
-                        this.collidedInFrame.add(other);
+                    if (!this.collidedInFrame.has(other.collider)) {
+                        this.collidedInFrame.add(other.collider);
                         this.onCollision(other);
                     }
                 };
                 Actor.prototype.registerTrigger = function (other) {
-                    if (!this.triggeredInFrame.has(other)) {
-                        this.triggeredInFrame.add(other);
+                    if (!this.triggeredInFrame.has(other.collider)) {
+                        this.triggeredInFrame.add(other.collider);
                         this.onTrigger(other);
                     }
                 };
@@ -2552,7 +2738,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_22, con
         }
     };
 });
-var soundFiles = ["buster.wav", "buster2.wav", "buster3.wav", "buster4.wav", "charge_loop.wav", "charge_start.wav", "dash.wav", "die.wav", "explosion.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav", "torpedo.wav", "_BossBattle.mp3"];
+var soundFiles = ["buster.wav", "buster2.wav", "buster3.wav", "buster4.wav", "charge_loop.wav", "charge_start.wav", "dash.wav", "die.wav", "explosion.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav", "torpedo.wav"];
 System.register("vue", [], function (exports_23, context_23) {
     "use strict";
     var __moduleName = context_23 && context_23.id;

@@ -268,9 +268,13 @@ class CharState {
       }
     }
     
-    this.lastLeftWall = game.level.checkCollisionActor(this.character, -1, 0);
-    this.lastRightWall = game.level.checkCollisionActor(this.character, 1, 0);
-    
+    let lastLeftWallData = game.level.checkCollisionActor(this.character, -1, 0);
+    this.lastLeftWall = lastLeftWallData ? lastLeftWallData.collider : undefined;
+    if(this.lastLeftWall && !this.lastLeftWall.isClimbable) this.lastLeftWall = undefined;
+
+    let lastRightWallData = game.level.checkCollisionActor(this.character, 1, 0);
+    this.lastRightWall = lastRightWallData ? lastRightWallData.collider : undefined;
+    if(this.lastRightWall && !this.lastRightWall.isClimbable) this.lastRightWall = undefined;
   }
 
   airCode() {
@@ -593,6 +597,8 @@ class Die extends CharState {
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
     this.character.useGravity = false;
+    this.character.vel.x = 0;
+    this.character.vel.y = 0;
     this.character.globalCollider = undefined;
     new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"], 1);
   }

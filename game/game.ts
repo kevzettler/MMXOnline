@@ -53,6 +53,22 @@ class Game {
       });
       this.sounds[soundFile.split(".")[0]] = sound;
     }
+
+    let music = new Howl({
+      src: ["assets/music/BossBattle.mp3"],
+      sprite: {
+        musicStart: [0, 1.5 * 1000],
+        musicLoop: [1.5 * 1000, 29.664 * 1000 - 1.5 * 1000]
+      },
+      onload: () => {
+      }
+    });
+    music.play("musicStart")
+    music.on("end", function() {
+      console.log("Loop");
+      music.play("musicLoop");
+    })
+
     this.interval = window.setInterval(() => this.onLoad(), 1);
   }
 
@@ -60,7 +76,7 @@ class Game {
     if(this.isLoaded()) {
       //console.log("LOADED");
       window.clearInterval(this.interval);
-      this.sounds["_BossBattle"].play();
+      
       this.loadLevel("sm_bossroom");
       this.gameLoop(0);
     }

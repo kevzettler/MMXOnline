@@ -6,7 +6,7 @@ import * as Helpers from "./helpers";
 import { Actor } from "./actor";
 import { Player } from "./player";
 import { Rect } from "./rect";
-import { Collider } from "./collider";
+import { Collider, CollideData } from "./collider";
 import { Effect } from "./effects";
 
 export class Level {
@@ -204,7 +204,7 @@ export class Level {
   }
 
   //Checks for collisions and returns the first one collided.
-  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number): Collider {
+  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
     
     if(!actor.collider || actor.collider.isTrigger) return undefined;
     for(let go of this.gameObjects) {
@@ -212,13 +212,19 @@ export class Level {
       if(!go.collider || go.collider.isTrigger) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        return go.collider;
+        if(vel) {
+          let intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
+          return new CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal: undefined);
+        }
+        else {
+          return new CollideData(go.collider, undefined, undefined);
+        }
       }
     }
     return undefined;
   }
 
-  checkTriggerActor(actor: Actor, offsetX: number, offsetY: number): Collider {
+  checkTriggerActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
     
     if(!actor.collider) return undefined;
     for(let go of this.gameObjects) {
@@ -227,7 +233,13 @@ export class Level {
       if(!go.collider.isTrigger && !actor.collider.isTrigger) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        return go.collider;
+        if(vel) {
+          let intersectData = go.collider.shape.getIntersectData(actor.pos.addxy(offsetX, offsetY), vel);
+          return new CollideData(go.collider, intersectData ? intersectData.intersectPoint : undefined, intersectData ? intersectData.normal: undefined);
+        }
+        else {
+          return new CollideData(go.collider, undefined, undefined);
+        }
       }
     }
     return undefined;
