@@ -71,10 +71,10 @@ export class Character extends Actor {
         this.stopShoot();
       }
     }
-    if(this.player.inputPressed["weaponleft"]) {
+    if(this.player.isPressed("weaponleft")) {
       this.player.weaponIndex = Helpers.decrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
     }
-    else if(this.player.inputPressed["weaponright"]) {
+    else if(this.player.isPressed("weaponright")) {
       this.player.weaponIndex = Helpers.incrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
     }
     if(this.isCharging()) {
@@ -254,10 +254,10 @@ class CharState {
     
     this.stateTime += game.deltaTime;
     if(this.canShoot) {
-      if(this.player.inputPressed["shoot"] && this.player.weapon.ammo > 0) {
+      if(this.player.isPressed("shoot") && this.player.weapon.ammo > 0) {
         this.character.shoot();
       }
-      if(this.player.input["shoot"]) {
+      if(this.player.isHeld("shoot")) {
         this.character.chargeTime += game.deltaTime;
       }
       else {
@@ -280,7 +280,7 @@ class CharState {
       return;
     }
 
-    if(!this.player.input["jump"] && this.character.vel.y < 0) {
+    if(!this.player.isHeld("jump") && this.character.vel.y < 0) {
       this.character.vel.y = 0;
     }
 
@@ -293,13 +293,13 @@ class CharState {
     //Cast from base to derived
     let wallKick = (this instanceof WallKick) ? <WallKick> <any> this : null;
 
-    if(this.player.input["left"]) {
+    if(this.player.isHeld("left")) {
       if(!wallKick || wallKick.kickSpeed <= 0) {
         move.x = -this.character.runSpeed * this.character.getDashSpeed();
         this.character.xDir = -1;
       }
     }
-    else if(this.player.input["right"]) {
+    else if(this.player.isHeld("right")) {
       if(!wallKick || wallKick.kickSpeed >= 0) {
         move.x = this.character.runSpeed * this.character.getDashSpeed();
         this.character.xDir = 1;
@@ -312,13 +312,13 @@ class CharState {
 
     //This logic can be abit confusing, but we are trying to mirror the actual Mega man X wall climb physics
     //In the actual game, X will not initiate a climb if you directly hugging a wall, jump and push in its direction UNTIL you start falling OR you move away and jump into it
-    if(this.player.inputPressed["left"] || (this.player.input["left"] && (this.character.vel.y > 0 || !this.lastLeftWall))) {
+    if(this.player.isPressed("left") || (this.player.isHeld("left") && (this.character.vel.y > 0 || !this.lastLeftWall))) {
       if(this.lastLeftWall) {
         this.player.character.changeState(new WallSlide(-1));
         return;
       }
     }
-    else if(this.player.inputPressed["right"] || (this.player.input["right"] && (this.character.vel.y > 0 || !this.lastRightWall))) {
+    else if(this.player.isPressed("right") || (this.player.isHeld("right") && (this.character.vel.y > 0 || !this.lastRightWall))) {
       if(this.lastRightWall) {
         this.player.character.changeState(new WallSlide(1));
         return;
@@ -332,7 +332,7 @@ class CharState {
       this.character.changeState(new Fall());
       return;
     }
-    else if(this.player.inputPressed["jump"]) {
+    else if(this.player.isPressed("jump")) {
       this.character.vel.y = -this.character.jumpPower;
       this.character.changeState(new Jump());
       return;
@@ -349,11 +349,11 @@ class Idle extends CharState {
 
   update() {
     super.update();
-    if(this.player.input["left"] || this.player.input["right"]) {
+    if(this.player.isHeld("left") || this.player.isHeld("right")) {
       this.character.changeState(new Run());
     }
     this.groundCode();
-    if(this.player.inputPressed["dash"]) {
+    if(this.player.isPressed("dash")) {
       this.character.changeState(new Dash());
     }
   }
@@ -369,11 +369,11 @@ class Run extends CharState {
   update() {
     super.update();
     let move = new Point(0, 0);
-    if(this.player.input["left"]) {
+    if(this.player.isHeld("left")) {
       this.character.xDir = -1;
       move.x = -this.character.runSpeed;
     }
-    else if(this.player.input["right"]) {
+    else if(this.player.isHeld("right")) {
       this.character.xDir = 1;
       move.x = this.character.runSpeed;
     }
@@ -384,7 +384,7 @@ class Run extends CharState {
       this.character.changeState(new Idle());
     }
     this.groundCode();
-    if(this.player.inputPressed["dash"]) {
+    if(this.player.isPressed("dash")) {
       this.character.changeState(new Dash());
     }
   }
@@ -448,7 +448,7 @@ class Dash extends CharState {
   update() {
     super.update();
     this.groundCode();
-    if(!this.player.input["dash"]) {
+    if(!this.player.isHeld("dash")) {
       this.character.changeState(new Idle());
       return;
     }
@@ -484,8 +484,8 @@ class WallSlide extends CharState {
       this.character.changeState(new Idle());
       return;
     }
-    if(this.player.inputPressed["jump"]) {
-      if(this.player.input["dash"]) {
+    if(this.player.isPressed("jump")) {
+      if(this.player.isHeld("dash")) {
         this.character.isDashing = true;
       }
       this.character.vel.y = -this.character.jumpPower;
@@ -496,7 +496,7 @@ class WallSlide extends CharState {
     this.character.vel.y = 0;
 
     if(this.stateTime > 0.15) {
-      let dirHeld = this.wallDir === -1 ? this.player.input["left"] : this.player.input["right"];
+      let dirHeld = this.wallDir === -1 ? this.player.isHeld("left") : this.player.isHeld("right");
 
       if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
         this.player.character.changeState(new Fall());

@@ -4,9 +4,13 @@ import { game } from "./game";
 
 export class Player {
   
-  input: { [name: string]: boolean; };
-  inputPressed: { [name: string]: boolean };
-  inputMapping: { [code: number]: string }; //Map game keycodes (i.e. "jump", "shoot" to js keycodes)
+  input: { [name: string]: boolean; } = {};
+  inputPressed: { [name: string]: boolean } = {};
+
+  controllerInput: { [name: string]: boolean; } = {};
+  controllerInputPressed: { [name: string]: boolean } = {};
+
+  inputMapping: { [code: number]: string } = {}; //Map game keycodes (i.e. "jump", "shoot" to js keycodes)
   buttonMapping: { [code: number]: string } = {};
   axesMapping: { [code: number]: string } = {};
   character: Character;
@@ -20,10 +24,7 @@ export class Player {
   constructor(x: number, y: number, isAI: boolean, alliance: number) {
     this.alliance = alliance;
     this.isAI = isAI;
-    this.input = {};
-    this.inputPressed = {};
-    if(!isAI) {
-      this.inputMapping = {};
+    if(!isAI && alliance === 0) {
       this.inputMapping[37] = "left";
       this.inputMapping[39] = "right";
       this.inputMapping[38] = "up";
@@ -35,8 +36,7 @@ export class Player {
       this.inputMapping[83] = "weaponright";
     }
 
-    if(alliance === 1) {
-      this.inputMapping = {};
+    if(!isAI && alliance === 1) {
       this.inputMapping[100] = "left";
       this.inputMapping[102] = "right";
       this.inputMapping[104] = "up";
@@ -56,6 +56,14 @@ export class Player {
       new Torpedo()
     ];
     this.weaponIndex = 0;
+  }
+
+  isPressed(keyName: string) {
+    return this.inputPressed[keyName] || this.controllerInputPressed[keyName];
+  }
+
+  isHeld(keyName: string) {
+    return this.input[keyName] || this.controllerInput[keyName];
   }
 
   setButtonMapping(controllerName: string) {
@@ -87,22 +95,22 @@ export class Player {
     let key2 = key.split("|")[0];
 
     if(value > 0.2) {
-      if(!this.input[key1]) this.inputPressed[key1] = true;
-      this.input[key1] = true;
-      this.inputPressed[key2] = false;
-      this.input[key2] = false;
+      if(!this.controllerInput[key1]) this.controllerInputPressed[key1] = true;
+      this.controllerInput[key1] = true;
+      this.controllerInputPressed[key2] = false;
+      this.controllerInput[key2] = false;
     }
     else if(value < -0.2) {
-      if(!this.input[key2]) this.inputPressed[key2] = true;
-      this.input[key2] = true;
-      this.inputPressed[key1] = false;
-      this.input[key1] = false;
+      if(!this.controllerInput[key2]) this.controllerInputPressed[key2] = true;
+      this.controllerInput[key2] = true;
+      this.controllerInputPressed[key1] = false;
+      this.controllerInput[key1] = false;
     }
     else {
-      this.inputPressed[key1] = false;
-      this.input[key1] = false;
-      this.inputPressed[key2] = false;
-      this.input[key2] = false;
+      this.controllerInputPressed[key1] = false;
+      this.controllerInput[key1] = false;
+      this.controllerInputPressed[key2] = false;
+      this.controllerInput[key2] = false;
     }
 
   }
@@ -110,15 +118,15 @@ export class Player {
   onButtonDown(button: number) {
     if(this.isAI) return;
     let key = this.buttonMapping[button];
-    if(!this.input[key]) this.inputPressed[key] = true;
-    this.input[key] = true;
+    if(!this.controllerInput[key]) this.controllerInputPressed[key] = true;
+    this.controllerInput[key] = true;
   }
 
   onButtonUp(button: number) {
     if(this.isAI) return;
     let key = this.buttonMapping[button];
-    this.input[key] = false;
-    this.inputPressed[key] = false;
+    this.controllerInput[key] = false;
+    this.controllerInputPressed[key] = false;
   }
 
   onKeyDown(keycode: number) {
@@ -144,6 +152,7 @@ export class Player {
 
   clearInputPressed() {
     this.inputPressed = {};
+    this.controllerInputPressed = {};
   }
 
   destroyCharacter() {

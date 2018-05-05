@@ -1072,10 +1072,10 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                             this.stopShoot();
                         }
                     }
-                    if (this.player.inputPressed["weaponleft"]) {
+                    if (this.player.isPressed("weaponleft")) {
                         this.player.weaponIndex = Helpers.decrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
                     }
-                    else if (this.player.inputPressed["weaponright"]) {
+                    else if (this.player.isPressed("weaponright")) {
                         this.player.weaponIndex = Helpers.incrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
                     }
                     if (this.isCharging()) {
@@ -1237,10 +1237,10 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 CharState.prototype.update = function () {
                     this.stateTime += game_5.game.deltaTime;
                     if (this.canShoot) {
-                        if (this.player.inputPressed["shoot"] && this.player.weapon.ammo > 0) {
+                        if (this.player.isPressed("shoot") && this.player.weapon.ammo > 0) {
                             this.character.shoot();
                         }
-                        if (this.player.input["shoot"]) {
+                        if (this.player.isHeld("shoot")) {
                             this.character.chargeTime += game_5.game.deltaTime;
                         }
                         else {
@@ -1259,7 +1259,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         this.character.changeState(new Idle());
                         return;
                     }
-                    if (!this.player.input["jump"] && this.character.vel.y < 0) {
+                    if (!this.player.isHeld("jump") && this.character.vel.y < 0) {
                         this.character.vel.y = 0;
                     }
                     if (game_5.game.level.checkCollisionActor(this.character, 0, -1)) {
@@ -1267,13 +1267,13 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     }
                     var move = new point_5.Point(0, 0);
                     var wallKick = (this instanceof WallKick) ? this : null;
-                    if (this.player.input["left"]) {
+                    if (this.player.isHeld("left")) {
                         if (!wallKick || wallKick.kickSpeed <= 0) {
                             move.x = -this.character.runSpeed * this.character.getDashSpeed();
                             this.character.xDir = -1;
                         }
                     }
-                    else if (this.player.input["right"]) {
+                    else if (this.player.isHeld("right")) {
                         if (!wallKick || wallKick.kickSpeed >= 0) {
                             move.x = this.character.runSpeed * this.character.getDashSpeed();
                             this.character.xDir = 1;
@@ -1282,13 +1282,13 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (move.magnitude > 0) {
                         this.character.move(move);
                     }
-                    if (this.player.inputPressed["left"] || (this.player.input["left"] && (this.character.vel.y > 0 || !this.lastLeftWall))) {
+                    if (this.player.isPressed("left") || (this.player.isHeld("left") && (this.character.vel.y > 0 || !this.lastLeftWall))) {
                         if (this.lastLeftWall) {
                             this.player.character.changeState(new WallSlide(-1));
                             return;
                         }
                     }
-                    else if (this.player.inputPressed["right"] || (this.player.input["right"] && (this.character.vel.y > 0 || !this.lastRightWall))) {
+                    else if (this.player.isPressed("right") || (this.player.isHeld("right") && (this.character.vel.y > 0 || !this.lastRightWall))) {
                         if (this.lastRightWall) {
                             this.player.character.changeState(new WallSlide(1));
                             return;
@@ -1300,7 +1300,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         this.character.changeState(new Fall());
                         return;
                     }
-                    else if (this.player.inputPressed["jump"]) {
+                    else if (this.player.isPressed("jump")) {
                         this.character.vel.y = -this.character.jumpPower;
                         this.character.changeState(new Jump());
                         return;
@@ -1315,11 +1315,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 }
                 Idle.prototype.update = function () {
                     _super.prototype.update.call(this);
-                    if (this.player.input["left"] || this.player.input["right"]) {
+                    if (this.player.isHeld("left") || this.player.isHeld("right")) {
                         this.character.changeState(new Run());
                     }
                     this.groundCode();
-                    if (this.player.inputPressed["dash"]) {
+                    if (this.player.isPressed("dash")) {
                         this.character.changeState(new Dash());
                     }
                 };
@@ -1333,11 +1333,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 Run.prototype.update = function () {
                     _super.prototype.update.call(this);
                     var move = new point_5.Point(0, 0);
-                    if (this.player.input["left"]) {
+                    if (this.player.isHeld("left")) {
                         this.character.xDir = -1;
                         move.x = -this.character.runSpeed;
                     }
-                    else if (this.player.input["right"]) {
+                    else if (this.player.isHeld("right")) {
                         this.character.xDir = 1;
                         move.x = this.character.runSpeed;
                     }
@@ -1348,7 +1348,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         this.character.changeState(new Idle());
                     }
                     this.groundCode();
-                    if (this.player.inputPressed["dash"]) {
+                    if (this.player.isPressed("dash")) {
                         this.character.changeState(new Dash());
                     }
                 };
@@ -1404,7 +1404,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 Dash.prototype.update = function () {
                     _super.prototype.update.call(this);
                     this.groundCode();
-                    if (!this.player.input["dash"]) {
+                    if (!this.player.isHeld("dash")) {
                         this.character.changeState(new Idle());
                         return;
                     }
@@ -1438,8 +1438,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         this.character.changeState(new Idle());
                         return;
                     }
-                    if (this.player.inputPressed["jump"]) {
-                        if (this.player.input["dash"]) {
+                    if (this.player.isPressed("jump")) {
+                        if (this.player.isHeld("dash")) {
                             this.character.isDashing = true;
                         }
                         this.character.vel.y = -this.character.jumpPower;
@@ -1449,7 +1449,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.character.useGravity = false;
                     this.character.vel.y = 0;
                     if (this.stateTime > 0.15) {
-                        var dirHeld = this.wallDir === -1 ? this.player.input["left"] : this.player.input["right"];
+                        var dirHeld = this.wallDir === -1 ? this.player.isHeld("left") : this.player.isHeld("right");
                         if (!dirHeld || !game_5.game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
                             this.player.character.changeState(new Fall());
                         }
@@ -1566,14 +1566,16 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
         execute: function () {
             Player = (function () {
                 function Player(x, y, isAI, alliance) {
+                    this.input = {};
+                    this.inputPressed = {};
+                    this.controllerInput = {};
+                    this.controllerInputPressed = {};
+                    this.inputMapping = {};
                     this.buttonMapping = {};
                     this.axesMapping = {};
                     this.alliance = alliance;
                     this.isAI = isAI;
-                    this.input = {};
-                    this.inputPressed = {};
-                    if (!isAI) {
-                        this.inputMapping = {};
+                    if (!isAI && alliance === 0) {
                         this.inputMapping[37] = "left";
                         this.inputMapping[39] = "right";
                         this.inputMapping[38] = "up";
@@ -1584,8 +1586,7 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
                         this.inputMapping[65] = "weaponleft";
                         this.inputMapping[83] = "weaponright";
                     }
-                    if (alliance === 1) {
-                        this.inputMapping = {};
+                    if (!isAI && alliance === 1) {
                         this.inputMapping[100] = "left";
                         this.inputMapping[102] = "right";
                         this.inputMapping[104] = "up";
@@ -1605,6 +1606,12 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
                     ];
                     this.weaponIndex = 0;
                 }
+                Player.prototype.isPressed = function (keyName) {
+                    return this.inputPressed[keyName] || this.controllerInputPressed[keyName];
+                };
+                Player.prototype.isHeld = function (keyName) {
+                    return this.input[keyName] || this.controllerInput[keyName];
+                };
                 Player.prototype.setButtonMapping = function (controllerName) {
                     if (controllerName === "Xbox 360 Controller (XInput STANDARD GAMEPAD)") {
                         this.buttonMapping[100] = "left";
@@ -1636,40 +1643,40 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
                     var key1 = key.split("|")[1];
                     var key2 = key.split("|")[0];
                     if (value > 0.2) {
-                        if (!this.input[key1])
-                            this.inputPressed[key1] = true;
-                        this.input[key1] = true;
-                        this.inputPressed[key2] = false;
-                        this.input[key2] = false;
+                        if (!this.controllerInput[key1])
+                            this.controllerInputPressed[key1] = true;
+                        this.controllerInput[key1] = true;
+                        this.controllerInputPressed[key2] = false;
+                        this.controllerInput[key2] = false;
                     }
                     else if (value < -0.2) {
-                        if (!this.input[key2])
-                            this.inputPressed[key2] = true;
-                        this.input[key2] = true;
-                        this.inputPressed[key1] = false;
-                        this.input[key1] = false;
+                        if (!this.controllerInput[key2])
+                            this.controllerInputPressed[key2] = true;
+                        this.controllerInput[key2] = true;
+                        this.controllerInputPressed[key1] = false;
+                        this.controllerInput[key1] = false;
                     }
                     else {
-                        this.inputPressed[key1] = false;
-                        this.input[key1] = false;
-                        this.inputPressed[key2] = false;
-                        this.input[key2] = false;
+                        this.controllerInputPressed[key1] = false;
+                        this.controllerInput[key1] = false;
+                        this.controllerInputPressed[key2] = false;
+                        this.controllerInput[key2] = false;
                     }
                 };
                 Player.prototype.onButtonDown = function (button) {
                     if (this.isAI)
                         return;
                     var key = this.buttonMapping[button];
-                    if (!this.input[key])
-                        this.inputPressed[key] = true;
-                    this.input[key] = true;
+                    if (!this.controllerInput[key])
+                        this.controllerInputPressed[key] = true;
+                    this.controllerInput[key] = true;
                 };
                 Player.prototype.onButtonUp = function (button) {
                     if (this.isAI)
                         return;
                     var key = this.buttonMapping[button];
-                    this.input[key] = false;
-                    this.inputPressed[key] = false;
+                    this.controllerInput[key] = false;
+                    this.controllerInputPressed[key] = false;
                 };
                 Player.prototype.onKeyDown = function (keycode) {
                     if (this.isAI)
@@ -1694,6 +1701,7 @@ System.register("player", ["character", "weapon", "game"], function (exports_14,
                 };
                 Player.prototype.clearInputPressed = function () {
                     this.inputPressed = {};
+                    this.controllerInputPressed = {};
                 };
                 Player.prototype.destroyCharacter = function () {
                     this.character.destroySelf();
