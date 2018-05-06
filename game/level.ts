@@ -225,24 +225,40 @@ export class Level {
   }
 
   //Checks for collisions and returns the first one collided.
-  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, useTriggers: boolean, vel?: Point): CollideData {
+  checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
     
     if(actor instanceof RollingShieldProj) {
       var a = 0;
     }
 
-    if(!actor.collider || (!useTriggers && actor.collider.isTrigger)) return undefined;
+    if(!actor.collider || actor.collider.isTrigger) return undefined;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
-      if(!go.collider || (!useTriggers && go.collider.isTrigger)) continue;
+      if(!go.collider || go.collider.isTrigger) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
         let isTrigger = this.shouldTrigger(actor, go);
-        if(!useTriggers && isTrigger) continue;
+        if(isTrigger) continue;
         return new CollideData(go.collider, vel, isTrigger);
       }
     }
     return undefined;
+  }
+
+  getTriggerList(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData[] {
+    let triggers: CollideData[] = [];
+    if(!actor.collider) return triggers;
+    for(let go of this.gameObjects) {
+      if(go === actor) continue;
+      if(!go.collider) continue;
+      let actorShape = actor.collider.shape.clone(offsetX, offsetY);
+      if(go.collider.shape.intersectsShape(actorShape)) {
+        let isTrigger = this.shouldTrigger(actor, go);
+        if(!isTrigger) continue;
+        triggers.push(new CollideData(go.collider, vel, isTrigger));
+      }
+    }
+    return triggers;
   }
 
   getClosestTarget(pos: Point, alliance: number) {

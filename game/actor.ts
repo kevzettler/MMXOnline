@@ -94,7 +94,7 @@ export class Actor {
     this.move(this.vel);
 
     if(this.collider && !this.collider.isTrigger) {
-      let collideData = game.level.checkCollisionActor(this, 0, 1, false);
+      let collideData = game.level.checkCollisionActor(this, 0, 1);
       if(collideData) {
         this.grounded = true;
         this.vel.y = 0;
@@ -103,6 +103,13 @@ export class Actor {
         this.grounded = false;
       }
     }
+
+    //Process trigger events. Must loop thru all collisions in this case.
+    let triggerList = game.level.getTriggerList(this, 0, 0);
+    for(let trigger of triggerList) {
+      this.registerCollision(trigger);
+    }
+
   }
 
   preUpdate() {
@@ -137,7 +144,7 @@ export class Actor {
     return false;
     */
     let inc: Point = offset.clone();
-    let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, false);
+    let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
     if(collideData) {
       return true; 
     }
@@ -151,22 +158,20 @@ export class Actor {
     if(!this.collider) {
       this.pos.inc(amount.times(game.deltaTime));
     }
-    /*
-    //Trigger collider: check collision on the spot and move
-    else if(this.collider && this.collider.isTrigger) {
-      let collideData = game.level.checkCollisionActor(this, amount.x * game.deltaTime, amount.y * game.deltaTime, true, amount);
-      if(collideData) {
-        this.registerCollision(collideData);
-      }
-      this.pos.inc(amount.times(game.deltaTime));
-    }
-    */
     //Regular collider: need to detect collision incrementally and stop moving past a collider if that's the case
     else {
+
+      //Already were colliding in first place: make the move as normal
+      if(game.level.checkCollisionActor(this, 0, 0)) {
+        //console.log("ALREADY COLLIDING")
+        this.pos.inc(amount.times(game.deltaTime));
+        return;
+      }
+
       let inc: Point = amount.clone();
 
       while(inc.magnitude > 0) {
-        let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, true);
+        let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
         if(collideData && !collideData.isTrigger) {
           this.registerCollision(collideData);
           inc.multiply(0.5);
@@ -177,9 +182,6 @@ export class Actor {
           } 
         }
         else {
-          if(collideData && collideData.isTrigger) {
-            this.registerCollision(collideData);
-          }
           break;
         }
       }

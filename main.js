@@ -1058,13 +1058,19 @@ System.register("projectile", ["actor", "damager", "point", "character", "game",
                     _this.fadeSound = "explosion";
                     _this.useGravity = true;
                     _this.collider.wallOnly = true;
+                    if (game_2.game.level.checkCollisionActor(_this, 0, 0)) {
+                        _this.xDir *= -1;
+                        _this.vel.x *= -1;
+                    }
                     return _this;
                 }
                 RollingShieldProj.prototype.update = function () {
-                    var collideData = game_2.game.level.checkCollisionActor(this, this.xDir, -1, false);
-                    if (collideData) {
-                        this.vel.x *= -1;
-                        this.xDir *= -1;
+                    if (!game_2.game.level.checkCollisionActor(this, 0, 0)) {
+                        var collideData = game_2.game.level.checkCollisionActor(this, this.xDir, -1);
+                        if (collideData) {
+                            this.vel.x *= -1;
+                            this.xDir *= -1;
+                        }
                     }
                     _super.prototype.update.call(this);
                     if (this.time > 1.5) {
@@ -2668,27 +2674,47 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     return false;
                 };
-                Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, useTriggers, vel) {
+                Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, vel) {
                     if (actor instanceof projectile_3.RollingShieldProj) {
                         var a = 0;
                     }
-                    if (!actor.collider || (!useTriggers && actor.collider.isTrigger))
+                    if (!actor.collider || actor.collider.isTrigger)
                         return undefined;
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
                         if (go === actor)
                             continue;
-                        if (!go.collider || (!useTriggers && go.collider.isTrigger))
+                        if (!go.collider || go.collider.isTrigger)
                             continue;
                         var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                         if (go.collider.shape.intersectsShape(actorShape)) {
                             var isTrigger = this.shouldTrigger(actor, go);
-                            if (!useTriggers && isTrigger)
+                            if (isTrigger)
                                 continue;
                             return new collider_3.CollideData(go.collider, vel, isTrigger);
                         }
                     }
                     return undefined;
+                };
+                Level.prototype.getTriggerList = function (actor, offsetX, offsetY, vel) {
+                    var triggers = [];
+                    if (!actor.collider)
+                        return triggers;
+                    for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
+                        var go = _a[_i];
+                        if (go === actor)
+                            continue;
+                        if (!go.collider)
+                            continue;
+                        var actorShape = actor.collider.shape.clone(offsetX, offsetY);
+                        if (go.collider.shape.intersectsShape(actorShape)) {
+                            var isTrigger = this.shouldTrigger(actor, go);
+                            if (!isTrigger)
+                                continue;
+                            triggers.push(new collider_3.CollideData(go.collider, vel, isTrigger));
+                        }
+                    }
+                    return triggers;
                 };
                 Level.prototype.getClosestTarget = function (pos, alliance) {
                     var players = _.filter(this.players, function (player) {
@@ -3257,7 +3283,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                     }
                     this.move(this.vel);
                     if (this.collider && !this.collider.isTrigger) {
-                        var collideData = game_10.game.level.checkCollisionActor(this, 0, 1, false);
+                        var collideData = game_10.game.level.checkCollisionActor(this, 0, 1);
                         if (collideData) {
                             this.grounded = true;
                             this.vel.y = 0;
@@ -3266,13 +3292,18 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                             this.grounded = false;
                         }
                     }
+                    var triggerList = game_10.game.level.getTriggerList(this, 0, 0);
+                    for (var _i = 0, triggerList_1 = triggerList; _i < triggerList_1.length; _i++) {
+                        var trigger = triggerList_1[_i];
+                        this.registerCollision(trigger);
+                    }
                 };
                 Actor.prototype.preUpdate = function () {
                     this.collidedInFrame.clear();
                 };
                 Actor.prototype.sweepTest = function (offset) {
                     var inc = offset.clone();
-                    var collideData = game_10.game.level.checkCollisionActor(this, inc.x * game_10.game.deltaTime, inc.y * game_10.game.deltaTime, false);
+                    var collideData = game_10.game.level.checkCollisionActor(this, inc.x * game_10.game.deltaTime, inc.y * game_10.game.deltaTime);
                     if (collideData) {
                         return true;
                     }
@@ -3283,9 +3314,13 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                         this.pos.inc(amount.times(game_10.game.deltaTime));
                     }
                     else {
+                        if (game_10.game.level.checkCollisionActor(this, 0, 0)) {
+                            this.pos.inc(amount.times(game_10.game.deltaTime));
+                            return;
+                        }
                         var inc = amount.clone();
                         while (inc.magnitude > 0) {
-                            var collideData = game_10.game.level.checkCollisionActor(this, inc.x * game_10.game.deltaTime, inc.y * game_10.game.deltaTime, true);
+                            var collideData = game_10.game.level.checkCollisionActor(this, inc.x * game_10.game.deltaTime, inc.y * game_10.game.deltaTime);
                             if (collideData && !collideData.isTrigger) {
                                 this.registerCollision(collideData);
                                 inc.multiply(0.5);
@@ -3296,9 +3331,6 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                                 }
                             }
                             else {
-                                if (collideData && collideData.isTrigger) {
-                                    this.registerCollision(collideData);
-                                }
                                 break;
                             }
                         }

@@ -183,13 +183,19 @@ export class RollingShieldProj extends Projectile {
     this.fadeSound = "explosion";
     this.useGravity = true;
     this.collider.wallOnly = true;
+    if(game.level.checkCollisionActor(this, 0, 0)) {
+      this.xDir *= -1;
+      this.vel.x *= -1;
+    }
   }
 
   update() {
-    let collideData = game.level.checkCollisionActor(this, this.xDir, -1, false);
-    if(collideData) {
-      this.vel.x *= -1;
-      this.xDir *= -1;
+    if(!game.level.checkCollisionActor(this, 0, 0)) {
+      let collideData = game.level.checkCollisionActor(this, this.xDir, -1);
+      if(collideData) {
+        this.vel.x *= -1;
+        this.xDir *= -1;
+      }
     }
     super.update();
     if(this.time > 1.5) {
