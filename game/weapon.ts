@@ -34,7 +34,7 @@ export class Buster extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["buster", "buster2", "buster3", "buster3"];
+    this.shootSounds = ["buster", "buster2", "buster3", "buster4"];
     this.index = 0;
   }
 
@@ -87,7 +87,7 @@ export class RollingShield extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["rollingshield", "rollingshield", "rollingshield", "rollingshield"];
+    this.shootSounds = ["rollingShield", "rollingShield", "rollingShield", "rollingShield"];
     this.index = 3;
     this.speed = 150;
     this.rateOfFire = 0.75;

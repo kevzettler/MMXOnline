@@ -8,6 +8,8 @@ import { Player } from "./player";
 import { Rect } from "./rect";
 import { Collider, CollideData } from "./collider";
 import { Effect } from "./effects";
+import { RollingShieldProj } from "./projectile";
+import { Character } from "./character";
 
 export class Level {
 
@@ -39,11 +41,11 @@ export class Level {
     this.gameObjects = [];
     for(var instance of levelJson.instances) {
       if(instance.className === "ShapeInstance") {
-        let wall: Wall = new Wall();
+        let points: Point[] = [];
         for(var point of instance.points) {
-          wall.collider.shape.points.push(new Point(point.x, point.y));
+          points.push(new Point(point.x, point.y));
         }
-        this.gameObjects.push(wall);
+        this.gameObjects.push(new Wall(points));
       }
       else {
         let actor: Actor = new Actor(game.sprites[instance.spriteName]);
@@ -145,7 +147,7 @@ export class Level {
     
     let baseY = game.canvas.height/this.zoomScale/2;
     baseY += 25;
-    game.sprites["hud_health_base"].draw(0, baseX, baseY);
+    game.sprites["hud_health_base"].draw(0, baseX, baseY, 1, 1, "", 1, player.palette);
     baseY -= 16;
     for(let i = 0; i < player.health; i++) {
       game.sprites["hud_health_full"].draw(0, baseX, baseY);
@@ -206,16 +208,36 @@ export class Level {
     this.effects.push(effect);
   }
 
+  //Should actor collide with gameobject?
+  shouldCollide(actor: Actor, gameObject: GameObject) {
+
+    if(actor instanceof RollingShieldProj || gameObject instanceof RollingShieldProj) {
+      var a = 0;
+    }
+
+    if(actor.collider.wallOnly && !(gameObject instanceof Wall)) return false;
+    if(gameObject instanceof Actor) {
+      if(gameObject.collider.wallOnly) return false;
+    }
+    return true;
+  }
+
   //Checks for collisions and returns the first one collided.
   checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, useTriggers: boolean, vel?: Point): CollideData {
     
+    if(actor instanceof Character) {
+      var a = 0;
+    }
+
     if(!actor.collider || (!useTriggers && actor.collider.isTrigger)) return undefined;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
       if(!go.collider || (!useTriggers && go.collider.isTrigger)) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        return new CollideData(go.collider, vel);
+        if(useTriggers || this.shouldCollide(actor, go)) {
+          return new CollideData(go.collider, vel);
+        }
       }
     }
     return undefined;

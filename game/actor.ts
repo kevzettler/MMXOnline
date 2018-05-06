@@ -246,12 +246,14 @@ export class Actor {
       if(this.globalCollider) {
         let rect = this.globalCollider.shape.getRect();
         let offset = this.sprite.getAlignOffsetHelper(rect, new Point(0,0), this.xDir, this.yDir);
-        return this.globalCollider.clone(this.pos.x + offset.x, this.pos.y + offset.y, this);
+        this.globalCollider.changePos(this.pos.x + offset.x, this.pos.y + offset.y);
+        return this.globalCollider;
       }
       return undefined;
     }
     let offset = this.sprite.getAlignOffset(0, this.xDir, this.yDir);
-    return this.sprite.hitboxes[0].clone(this.pos.x + offset.x, this.pos.y + offset.y, this);
+    this.sprite.hitboxes[0].changePos(this.pos.x + offset.x, this.pos.y + offset.y);
+    return this.sprite.hitboxes[0];
   }
 
   hasCollisionBox() {

@@ -1,14 +1,15 @@
 import { Collider, CollideData } from "./collider";
 import { game } from "./game";
 import * as Helpers from "./helpers";
+import { Point } from "./point";
 
 //Umbrella class for walls, nav meshes, ladders, etc.
 export class Geometry {
 
   collider: Collider;
 
-  constructor() {
-    this.collider = new Collider([], false, this);
+  constructor(points: Point[]) {
+    this.collider = new Collider(points, false, this);
   }
 
   preUpdate() {

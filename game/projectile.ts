@@ -182,6 +182,7 @@ export class RollingShieldProj extends Projectile {
     this.fadeSprite = game.sprites["explosion"];
     this.fadeSound = "explosion";
     this.useGravity = true;
+    this.collider.wallOnly = true;
   }
 
 }

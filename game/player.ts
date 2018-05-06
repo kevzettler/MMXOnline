@@ -1,6 +1,7 @@
 import { Character } from "./character";
 import { Weapon, Buster, Torpedo, Sting, RollingShield, ShotgunIce, FireWave, Tornado, Boomerang } from "./weapon";
 import { game } from "./game";
+import { Palette } from "./color";
 
 export class Player {
   
@@ -19,6 +20,7 @@ export class Player {
   maxHealth: number;
   weapons: Weapon[];
   weaponIndex: number;
+  palette: Palette;
 
   constructor(x: number, y: number, isAI: boolean, alliance: number) {
     this.alliance = alliance;
@@ -84,8 +86,8 @@ export class Player {
       this.buttonMapping[1] = "dash";
       this.buttonMapping[0] = "jump";
       this.buttonMapping[2] = "shoot";
-      this.buttonMapping[7] = "weaponleft";
-      this.buttonMapping[8] = "weaponright";
+      this.buttonMapping[4] = "weaponleft";
+      this.buttonMapping[5] = "weaponright";
 
       this.axesMapping[0] = "left|right";
       this.axesMapping[1] = "up|down";
@@ -161,6 +163,11 @@ export class Player {
     if(keycode === 49) {
       for(let player of game.level.localPlayers) {
         player.health = 1;
+      }
+    }
+    if(keycode === 50) {
+      if(!game.level.localPlayers[1].isAI) {
+        game.level.localPlayers[1].character.addAI();
       }
     }
 
