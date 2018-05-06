@@ -130,13 +130,12 @@ class Game {
     this.level.localPlayers.push(player1);
     this.level.mainPlayer = player1;
 
-    /*
     let cpu1: Player = new Player(200, 100, false, 1);
     cpu1.character.palette = this.palettes["red"];
     cpu1.palette = cpu1.character.palette;
     this.level.players.push(cpu1);
     this.level.localPlayers.push(cpu1);
-    */
+    
    
     document.onkeydown = (e) => {
       for(let player of this.level.localPlayers) {

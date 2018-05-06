@@ -903,6 +903,7 @@ System.register("projectile", ["actor", "damager", "point", "character", "game",
                 __extends(Projectile, _super);
                 function Projectile(pos, vel, damage, player, sprite) {
                     var _this = _super.call(this, sprite) || this;
+                    _this.time = 0;
                     _this.vel = vel;
                     _this.speed = _this.vel.magnitude;
                     _this.pos = pos;
@@ -914,6 +915,7 @@ System.register("projectile", ["actor", "damager", "point", "character", "game",
                 }
                 Projectile.prototype.update = function () {
                     _super.prototype.update.call(this);
+                    this.time += game_2.game.deltaTime;
                     var leeway = 500;
                     if (this.pos.x > game_2.game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game_2.game.level.height + leeway || this.pos.y < -leeway) {
                         this.destroySelf();
@@ -1014,7 +1016,6 @@ System.register("projectile", ["actor", "damager", "point", "character", "game",
                 function StingProj(pos, vel, player, type) {
                     var _this = _super.call(this, pos, vel, 1, player, undefined) || this;
                     _this.type = 0;
-                    _this.time = 0;
                     _this.origVel = vel.clone();
                     if (type === 0) {
                         _this.sprite = game_2.game.sprites["sting_start"];
@@ -1034,7 +1035,6 @@ System.register("projectile", ["actor", "damager", "point", "character", "game",
                 }
                 StingProj.prototype.update = function () {
                     _super.prototype.update.call(this);
-                    this.time += game_2.game.deltaTime;
                     if (this.type === 0 && this.time > 0.05) {
                         this.vel.x = 0;
                     }
@@ -1060,6 +1060,17 @@ System.register("projectile", ["actor", "damager", "point", "character", "game",
                     _this.collider.wallOnly = true;
                     return _this;
                 }
+                RollingShieldProj.prototype.update = function () {
+                    var collideData = game_2.game.level.checkCollisionActor(this, this.xDir, -1, false);
+                    if (collideData) {
+                        this.vel.x *= -1;
+                        this.xDir *= -1;
+                    }
+                    _super.prototype.update.call(this);
+                    if (this.time > 1.5) {
+                        this.destroySelf(this.fadeSprite, this.fadeSound);
+                    }
+                };
                 return RollingShieldProj;
             }(Projectile));
             exports_10("RollingShieldProj", RollingShieldProj);
@@ -2437,10 +2448,10 @@ System.register("player", ["character", "weapon", "game"], function (exports_15,
         }
     };
 });
-System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "collider", "projectile", "character"], function (exports_16, context_16) {
+System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "collider", "projectile"], function (exports_16, context_16) {
     "use strict";
     var __moduleName = context_16 && context_16.id;
-    var wall_1, point_9, game_8, Helpers, actor_3, rect_3, collider_3, projectile_3, character_3, Level;
+    var wall_1, point_9, game_8, Helpers, actor_3, rect_3, collider_3, projectile_3, Level;
     return {
         setters: [
             function (wall_1_1) {
@@ -2466,9 +2477,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
             },
             function (projectile_3_1) {
                 projectile_3 = projectile_3_1;
-            },
-            function (character_3_1) {
-                character_3 = character_3_1;
             }
         ],
         execute: function () {
@@ -2646,20 +2654,22 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.addEffect = function (effect) {
                     this.effects.push(effect);
                 };
-                Level.prototype.shouldCollide = function (actor, gameObject) {
+                Level.prototype.shouldTrigger = function (actor, gameObject) {
                     if (actor instanceof projectile_3.RollingShieldProj || gameObject instanceof projectile_3.RollingShieldProj) {
                         var a = 0;
                     }
+                    if (actor.collider.isTrigger || gameObject.collider.isTrigger)
+                        return true;
                     if (actor.collider.wallOnly && !(gameObject instanceof wall_1.Wall))
-                        return false;
+                        return true;
                     if (gameObject instanceof actor_3.Actor) {
                         if (gameObject.collider.wallOnly)
-                            return false;
+                            return true;
                     }
-                    return true;
+                    return false;
                 };
                 Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, useTriggers, vel) {
-                    if (actor instanceof character_3.Character) {
+                    if (actor instanceof projectile_3.RollingShieldProj) {
                         var a = 0;
                     }
                     if (!actor.collider || (!useTriggers && actor.collider.isTrigger))
@@ -2672,9 +2682,10 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                         if (go.collider.shape.intersectsShape(actorShape)) {
-                            if (useTriggers || this.shouldCollide(actor, go)) {
-                                return new collider_3.CollideData(go.collider, vel);
-                            }
+                            var isTrigger = this.shouldTrigger(actor, go);
+                            if (!useTriggers && isTrigger)
+                                continue;
+                            return new collider_3.CollideData(go.collider, vel, isTrigger);
                         }
                     }
                     return undefined;
@@ -2842,6 +2853,11 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.level.players.push(player1);
                     this.level.localPlayers.push(player1);
                     this.level.mainPlayer = player1;
+                    var cpu1 = new player_1.Player(200, 100, false, 1);
+                    cpu1.character.palette = this.palettes["red"];
+                    cpu1.palette = cpu1.character.palette;
+                    this.level.players.push(cpu1);
+                    this.level.localPlayers.push(cpu1);
                     document.onkeydown = function (e) {
                         for (var _i = 0, _a = _this.level.localPlayers; _i < _a.length; _i++) {
                             var player = _a[_i];
@@ -2981,9 +2997,10 @@ System.register("collider", ["point", "shape"], function (exports_20, context_20
             }());
             exports_20("Collider", Collider);
             CollideData = (function () {
-                function CollideData(collider, vel) {
+                function CollideData(collider, vel, isTrigger) {
                     this.collider = collider;
                     this.vel = vel;
+                    this.isTrigger = isTrigger;
                 }
                 return CollideData;
             }());
@@ -3240,7 +3257,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                     }
                     this.move(this.vel);
                     if (this.collider && !this.collider.isTrigger) {
-                        if (game_10.game.level.checkCollisionActor(this, 0, 1, false)) {
+                        var collideData = game_10.game.level.checkCollisionActor(this, 0, 1, false);
+                        if (collideData) {
                             this.grounded = true;
                             this.vel.y = 0;
                         }
@@ -3264,18 +3282,11 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                     if (!this.collider) {
                         this.pos.inc(amount.times(game_10.game.deltaTime));
                     }
-                    else if (this.collider && this.collider.isTrigger) {
-                        var collideData = game_10.game.level.checkCollisionActor(this, amount.x * game_10.game.deltaTime, amount.y * game_10.game.deltaTime, true, amount);
-                        if (collideData) {
-                            this.registerCollision(collideData);
-                        }
-                        this.pos.inc(amount.times(game_10.game.deltaTime));
-                    }
                     else {
                         var inc = amount.clone();
                         while (inc.magnitude > 0) {
-                            var collideData = game_10.game.level.checkCollisionActor(this, inc.x * game_10.game.deltaTime, inc.y * game_10.game.deltaTime, false);
-                            if (collideData) {
+                            var collideData = game_10.game.level.checkCollisionActor(this, inc.x * game_10.game.deltaTime, inc.y * game_10.game.deltaTime, true);
+                            if (collideData && !collideData.isTrigger) {
                                 this.registerCollision(collideData);
                                 inc.multiply(0.5);
                                 if (inc.magnitude < 0.5) {
@@ -3285,6 +3296,9 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                                 }
                             }
                             else {
+                                if (collideData && collideData.isTrigger) {
+                                    this.registerCollision(collideData);
+                                }
                                 break;
                             }
                         }

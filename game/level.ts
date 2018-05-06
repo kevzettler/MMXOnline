@@ -209,23 +209,25 @@ export class Level {
   }
 
   //Should actor collide with gameobject?
-  shouldCollide(actor: Actor, gameObject: GameObject) {
+  shouldTrigger(actor: Actor, gameObject: GameObject) {
 
     if(actor instanceof RollingShieldProj || gameObject instanceof RollingShieldProj) {
       var a = 0;
     }
 
-    if(actor.collider.wallOnly && !(gameObject instanceof Wall)) return false;
+    if(actor.collider.isTrigger || gameObject.collider.isTrigger) return true;
+
+    if(actor.collider.wallOnly && !(gameObject instanceof Wall)) return true;
     if(gameObject instanceof Actor) {
-      if(gameObject.collider.wallOnly) return false;
+      if(gameObject.collider.wallOnly) return true;
     }
-    return true;
+    return false;
   }
 
   //Checks for collisions and returns the first one collided.
   checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, useTriggers: boolean, vel?: Point): CollideData {
     
-    if(actor instanceof Character) {
+    if(actor instanceof RollingShieldProj) {
       var a = 0;
     }
 
@@ -235,9 +237,9 @@ export class Level {
       if(!go.collider || (!useTriggers && go.collider.isTrigger)) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        if(useTriggers || this.shouldCollide(actor, go)) {
-          return new CollideData(go.collider, vel);
-        }
+        let isTrigger = this.shouldTrigger(actor, go);
+        if(!useTriggers && isTrigger) continue;
+        return new CollideData(go.collider, vel, isTrigger);
       }
     }
     return undefined;

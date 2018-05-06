@@ -45,10 +45,12 @@ export class CollideData {
 
   collider: Collider; //The other thing that was collided with
   vel: Point; //The velocity at which we collided with the other thing above
+  isTrigger: boolean;
 
-  constructor(collider: Collider, vel: Point) {
+  constructor(collider: Collider, vel: Point, isTrigger: boolean) {
     this.collider = collider;
     this.vel = vel;
+    this.isTrigger = isTrigger;
   }
 
 }

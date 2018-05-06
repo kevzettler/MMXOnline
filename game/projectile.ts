@@ -16,6 +16,7 @@ export class Projectile extends Actor {
   fadeSprite: Sprite;
   fadeSound: string;
   speed: number;
+  time: number = 0;
 
   constructor(pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
     super(sprite);
@@ -30,6 +31,7 @@ export class Projectile extends Actor {
 
   update() {
     super.update();
+    this.time += game.deltaTime;
     let leeway = 500;
     if(this.pos.x > game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game.level.height + leeway || this.pos.y < -leeway) {
       this.destroySelf();
@@ -136,7 +138,6 @@ export class TorpedoProj extends Projectile {
 export class StingProj extends Projectile {
 
   type: number = 0; //0 = initial proj, 1 = horiz, 2 = up, 3 = down
-  time: number = 0;
   origVel: Point;
   constructor(pos: Point, vel: Point, player: Player, type: number) {
     super(pos, vel, 1, player, undefined);
@@ -159,7 +160,6 @@ export class StingProj extends Projectile {
 
   update() {
     super.update();
-    this.time += game.deltaTime;
     if(this.type === 0 && this.time > 0.05) {
       this.vel.x = 0;
     }
@@ -183,6 +183,18 @@ export class RollingShieldProj extends Projectile {
     this.fadeSound = "explosion";
     this.useGravity = true;
     this.collider.wallOnly = true;
+  }
+
+  update() {
+    let collideData = game.level.checkCollisionActor(this, this.xDir, -1, false);
+    if(collideData) {
+      this.vel.x *= -1;
+      this.xDir *= -1;
+    }
+    super.update();
+    if(this.time > 1.5) {
+      this.destroySelf(this.fadeSprite, this.fadeSound);
+    }
   }
 
 }
