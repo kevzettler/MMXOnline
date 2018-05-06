@@ -1,5 +1,5 @@
 import { Character } from "./character";
-import { Weapon, Buster, Torpedo } from "./weapon";
+import { Weapon, Buster, Torpedo, Sting, RollingShield, ShotgunIce, FireWave, Tornado, Boomerang } from "./weapon";
 import { game } from "./game";
 
 export class Player {
@@ -56,7 +56,13 @@ export class Player {
     this.maxHealth = this.health;
     this.weapons = [
       new Buster(),
-      new Torpedo()
+      new Torpedo(),
+      new Sting(),
+      new RollingShield(),
+      new FireWave(),
+      new Tornado(),
+      new Boomerang(),
+      new ShotgunIce()
     ];
     this.weaponIndex = 0;
   }

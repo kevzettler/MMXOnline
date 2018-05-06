@@ -1,1 +1,1 @@
-let soundFiles = ["buster.wav","buster2.wav","buster3.wav","buster4.wav","charge_loop.wav","charge_start.wav","dash.wav","die.wav","explosion.wav","hit.wav","hurt.wav","jump.wav","land.wav","torpedo.wav"];
+let soundFiles = ["buster.wav","buster2.wav","buster3.wav","buster4.wav","charge_loop.wav","charge_start.wav","csting.wav","dash.wav","die.wav","explosion.wav","hit.wav","hurt.wav","jump.wav","land.wav","torpedo.wav"];

@@ -151,10 +151,9 @@ export class Character extends Actor {
       this.isShooting = true;
       this.shootTime = 0;
       this.changeSprite(this.charState.shootSprite, false);
-      let vel = new Point(350 * this.xDir, 0);
-      if(this.charState instanceof WallSlide) vel.x *= -1;
-
-      this.player.weapon.shoot(this.getShootPos(), vel, this.player, this.getChargeLevel());
+      let xDir = this.xDir;
+      if(this.charState instanceof WallSlide) xDir *= -1;
+      this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
     }
   }
 

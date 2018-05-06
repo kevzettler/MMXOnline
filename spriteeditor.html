@@ -7,12 +7,14 @@
 <body>
 
 <div id="sprite-list-container">
-  <h1>Sprites</h1>
   <div id="app1">
-    <div class="sprite-item" v-for="sprite in sprites" v-on:click="changeSprite(sprite)"
-      v-bind:class="{ selected: sprite === selectedSprite }">{{ sprite.name }}</div>
-    <br>
+    <h1>Sprites</h1>
     <button v-on:click="addSprite()">New sprite</button>
+    <div class="sprite-list-scroll">
+      <div class="sprite-item" v-for="sprite in sprites" v-on:click="changeSprite(sprite)"
+        v-bind:class="{ selected: sprite === selectedSprite }">{{ sprite.name }}</div>
+    </div>
+    <br>
   </div>
 </div>
 

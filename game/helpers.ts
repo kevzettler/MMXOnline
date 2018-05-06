@@ -84,10 +84,25 @@ export function cos(degrees: number) {
   return Math.cos(rads);
 }
 
+export function atan(value: number) {
+  return Math.atan(value) * 180 / Math.PI;
+}
+
 export function moveTo(num: number, dest: number, inc: number) {
   inc *= Math.sign(dest - num);
   num += inc;
   return num;
+}
+
+export function lerp(num: number, dest: number, timeScale: number) {
+  num = num + (dest - num)*timeScale;
+  return num;
+}
+
+export function to360(angle: number) {
+  if(angle < 0) angle += 360;
+  if(angle > 360) angle -= 360;
+  return angle;
 }
 
 export function getHex(r: number, g: number, b: number, a: number) {
@@ -119,7 +134,7 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   helperCtx.save();
   flipX = flipX || 1;
   flipY = flipY || 1;
-  helperCtx.scale(flipX, 1);
+  helperCtx.scale(flipX, flipY);
 
   helperCtx.clearRect(0, 0, helperCanvas.width, helperCanvas.height);
   helperCtx.drawImage(

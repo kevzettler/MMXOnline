@@ -105,7 +105,7 @@ class Game {
     this.level = this.levels[name];
 
     let player1: Player = new Player(60, 100, false, 0);
-    let cpu1: Player = new Player(200, 100, true, 1);
+    let cpu1: Player = new Player(200, 100, false, 1);
     cpu1.character.palette = this.palettes["red"];
     this.level.players.push(player1);
     this.level.players.push(cpu1);

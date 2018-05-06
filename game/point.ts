@@ -65,4 +65,10 @@ export class Point {
   distanceTo(other: Point) {
     return Math.sqrt(Math.pow(other.x - this.x, 2) + Math.pow(other.y - this.y, 2));
   }
+  subtract(other: Point) {
+    return new Point(this.x - other.x, this.y - other.y);
+  }
+  directionTo(other: Point) {
+    return new Point(other.x - this.x, other.y - this.y);
+  }
 }

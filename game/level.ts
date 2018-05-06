@@ -221,4 +221,16 @@ export class Level {
     return undefined;
   }
 
+  getClosestTarget(pos: Point, alliance: number) {
+    //@ts-ignore
+    let players = _.filter(this.players, (player) => { 
+      return player.character && player.alliance !== alliance; 
+    });
+    //@ts-ignore
+    let closestPlayer = _.minBy(players, (player) => {
+      return player.character.pos.distanceTo(pos);
+    });
+    return closestPlayer ? closestPlayer.character : undefined;
+  }
+
 }

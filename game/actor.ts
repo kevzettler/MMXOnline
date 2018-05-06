@@ -18,7 +18,7 @@ export class Actor {
   yDir: number;
   pos: Point; //Current location
   vel: Point;
-  angle: number;
+  _angle: number;
   useGravity: boolean;
   grounded: boolean;
   name: string;
@@ -30,7 +30,6 @@ export class Actor {
   constructor(sprite: Sprite) {
     this.pos = new Point(0, 0);
     this.vel = new Point(0, 0);
-    this.angle = 0;
     this.useGravity = true;
     this.frameIndex = 0;
     this.frameSpeed = 1;
@@ -60,6 +59,16 @@ export class Actor {
     }
   }
 
+  get angle() {
+    return this._angle;
+  }
+
+  set angle(value: number) {
+    this._angle = value;
+    if(this._angle < 0) this._angle += 360;
+    if(this._angle > 360) this._angle -= 360;
+  }
+
   get currentFrame() {
     return this.sprite.frames[this.frameIndex];
   }
@@ -75,7 +84,7 @@ export class Actor {
         if(this.frameIndex >= this.sprite.frames.length) this.frameIndex = 0;
       }
     }
-    
+
     if(this.useGravity && !this.grounded) {
       this.vel.y += game.level.gravity * game.deltaTime;
       if(this.vel.y > 1000) {
@@ -174,7 +183,47 @@ export class Actor {
 
   render(x: number, y: number) {
     //console.log(this.pos.x + "," + this.pos.y);
-    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+    
+    if(this.angle === undefined) {
+      this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+    }
+    else {
+
+      let angle = this.angle;
+      let xDir = 1;
+      let yDir = 1;
+      let frameIndex = 0;
+      let normAngle = 0;
+      if(angle < 90) {
+        xDir = 1;
+        yDir = -1;
+        normAngle = angle;
+      }
+      if(angle >= 90 && angle < 180) {
+        xDir = -1;
+        yDir = -1;
+        normAngle = 180 - angle;
+      }
+      else if(angle >= 180 && angle < 270) {
+        xDir = -1;
+        yDir = 1;
+        normAngle = angle - 180;
+      }
+      else if(angle >= 270 && angle < 360) {
+        xDir = 1;
+        yDir = 1;
+        normAngle = 360 - angle;
+      }
+
+      if(normAngle < 18) frameIndex = 0;
+      else if(normAngle >= 18 && normAngle < 36) frameIndex = 1;
+      else if(normAngle >= 36 && normAngle < 54) frameIndex = 2;
+      else if(normAngle >= 54 && normAngle < 72) frameIndex = 3;
+      else if(normAngle >= 72 && normAngle < 90) frameIndex = 4;
+
+      this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
+    }
+    
     this.renderEffect = "";
     if(game.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
@@ -236,6 +285,19 @@ export class Actor {
 
   isFacing(other: Actor) {
     return ((this.pos.x < other.pos.x && this.xDir === 1) || (this.pos.x >= other.pos.x && this.xDir === -1));
+  }
+
+  get centerPos() {
+    if(!this.globalCollider) return this.pos;
+    let rect = this.globalCollider.shape.getRect();
+    if(!rect) return this.pos;
+
+    if(this.sprite.alignment.includes("bot")) {
+      let pos = this.pos.addxy(0, -rect.h / 2);
+      return pos;
+    }
+
+    return this.pos;
   }
 
 }
