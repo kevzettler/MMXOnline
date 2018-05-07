@@ -32,7 +32,7 @@ export class Character extends Actor {
   chargeLoopSoundId: number;
   chargeEffect: ChargeEffect;
   ai: AI;
-  fireWaveHitCooldown: number = 0;
+  projectileCooldown: { [name: string]: number } = {};  //Player id + projectile name
   
   constructor(player: Player, x: number, y: number) {
     super(undefined);
@@ -66,9 +66,14 @@ export class Character extends Actor {
   }
 
   update() {
-    if(this.fireWaveHitCooldown > 0) {
-      this.fireWaveHitCooldown = Helpers.clampMin(this.fireWaveHitCooldown - game.deltaTime, 0);
+
+    for(let projName in this.projectileCooldown) {
+      let cooldown = this.projectileCooldown[projName];
+      if(cooldown) {
+        this.projectileCooldown[projName] = Helpers.clampMin(cooldown - game.deltaTime, 0);
+      }
     }
+    
     if(this.ai) {
       this.ai.update();
     }

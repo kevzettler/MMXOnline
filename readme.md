@@ -3,9 +3,10 @@
 -Spazzy rapid fire animation
 -sting left shoot offset is wrong
 -rolling shield + other explosions played at wrong locations sometimes
+-Fire wave adds an extra ammo bar
+-rolling shield too slow
 
--All the weapons + weapon charge
-
+-All the special weapon charges
 -Menu system
 -More levles/background+foreground system
 

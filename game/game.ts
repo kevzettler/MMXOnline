@@ -27,6 +27,7 @@ class Game {
 
   startTime: number = 0;
   deltaTime: number = 0;
+  time: number = 0;
   interval: number = 0;
 
   soundSheet: Howl;
@@ -211,6 +212,7 @@ class Game {
   //Main game loop
   gameLoop(currentTime: number) {
     this.deltaTime = (currentTime - this.startTime) /1000;
+    this.time += this.deltaTime;
     if(this.deltaTime > 1/30) this.deltaTime = 1/30;
     this.level.update();
     this.startTime = currentTime;

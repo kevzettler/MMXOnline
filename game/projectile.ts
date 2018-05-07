@@ -20,7 +20,6 @@ export class Projectile extends Actor {
   fadeSound: string;
   speed: number;
   time: number = 0;
-  charToHitCooldown: { [playerId: number]: number } = { };
   hitCooldown: number = 0;
 
   constructor(pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
@@ -37,14 +36,6 @@ export class Projectile extends Actor {
   update() {
     super.update();
 
-    for(let playerId in this.charToHitCooldown) {
-      this.charToHitCooldown[playerId] -= game.deltaTime;
-      if(this.charToHitCooldown[playerId] < 0) {
-        this.charToHitCooldown[playerId] = 0;
-      }
-
-    }
-
     this.time += game.deltaTime;
     let leeway = 500;
     if(this.pos.x > game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game.level.height + leeway || this.pos.y < -leeway) {
@@ -60,22 +51,20 @@ export class Projectile extends Actor {
       let character = other.collider.gameObject;
       if(character instanceof Character) {
 
-        if(this instanceof FireWaveProj) {
-          if(character.fireWaveHitCooldown > 0) return;
-          character.fireWaveHitCooldown = 0.2;
-        } 
+        let key: string = this.constructor.toString() + this.damager.owner.id.toString();
+        if(character.projectileCooldown[key]) {
+          return;
+        }
+        character.projectileCooldown[key] = this.hitCooldown;
 
-        if(!this.charToHitCooldown[character.player.id]) {
-          this.charToHitCooldown[character.player.id] = this.hitCooldown;
-          character.renderEffect = "flash";
-          character.applyDamage(this.damager.damage);
-          if(!this.flinch) {
-            game.playSound("hit");
-          }
-          else {
-            game.playSound("hurt");
-            character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
-          }
+        character.renderEffect = "flash";
+        character.applyDamage(this.damager.damage);
+        if(!this.flinch) {
+          game.playSound("hit");
+        }
+        else {
+          game.playSound("hurt");
+          character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
         }
         this.onHitChar(character);
       }
@@ -121,6 +110,33 @@ export class Buster3Proj extends Projectile {
     super(pos, vel, 3, player, game.sprites["buster3"]);
     this.fadeSprite = game.sprites["buster3_fade"];
     this.flinch = true;
+  }
+
+}
+
+export class Buster4Proj extends Projectile {
+
+  type: number = 0;
+  num: number = 0;
+  offsetTime: number = 0;
+  initY: number = 0;
+  
+  constructor(pos: Point, vel: Point, player: Player, type: number, num: number, offsetTime: number) {
+    super(pos, vel, 4, player, game.sprites["buster4"]);
+    this.fadeSprite = game.sprites["buster4_fade"];
+    this.flinch = true;
+    this.type = type;
+    //this.vel.x = 0;
+    this.initY = this.pos.y;
+    this.offsetTime = offsetTime;
+    this.num = num;
+    this.hitCooldown = 1;
+  }
+
+  update() {
+    super.update();
+    this.frameIndex = this.type;
+    this.pos.y = this.initY + Math.sin(game.time*18 - this.num * 0.5 + this.offsetTime * 2.09) * 15;
   }
 
 }
@@ -391,7 +407,7 @@ export class BoomerangProj extends Projectile {
   onCollision(other: CollideData) {
     super.onCollision(other);
     let character = other.collider.gameObject;
-    if(character instanceof Character && character.player === this.damager.owner) {
+    if(this.time > 0.22 && character instanceof Character && character.player === this.damager.owner) {
       this.destroySelf();
       character.player.weapon.ammo++;
     }

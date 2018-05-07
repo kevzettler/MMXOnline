@@ -1,9 +1,10 @@
-import { Projectile, BusterProj, TorpedoProj, Buster2Proj, Buster3Proj, StingProj, RollingShieldProj, ElectricSparkProj, ShotgunIceProj, BoomerangProj, TornadoProj, FireWaveProj } from "./projectile";
+import { Projectile, BusterProj, TorpedoProj, Buster2Proj, Buster3Proj, StingProj, RollingShieldProj, ElectricSparkProj, ShotgunIceProj, BoomerangProj, TornadoProj, FireWaveProj, Buster4Proj } from "./projectile";
 import { game } from "./game";
 import { Player } from "./player";
 import { Point } from "./point";
 import * as Helpers from "./helpers";
 import { Sprite } from "./sprite";
+import { Anim } from "./actor";
 
 export class Weapon {
   
@@ -31,9 +32,28 @@ export class Weapon {
     }
   }
 
+  createBuster4Line(x: number, y: number, xDir: number, player: Player, offsetTime: number) {
+    let buster4Speed = 350;
+    new Buster4Proj(new Point(x + xDir, y), new Point(xDir * buster4Speed, 0), player, 3, 4, offsetTime);
+    new Buster4Proj(new Point(x + xDir*8, y), new Point(xDir * buster4Speed, 0), player, 2, 3, offsetTime);
+    new Buster4Proj(new Point(x + xDir*18, y), new Point(xDir * buster4Speed, 0), player, 2, 2, offsetTime);
+    new Buster4Proj(new Point(x + xDir*32, y), new Point(xDir * buster4Speed, 0), player, 1, 1, offsetTime);
+    new Buster4Proj(new Point(x + xDir*46, y), new Point(xDir * buster4Speed, 0), player, 0, 0, offsetTime);
+  }
+
   shoot(pos: Point, xDir: number, player: Player, chargeLevel: number) {
     let proj = this.getProjectile(pos, xDir, player, chargeLevel);
     
+    if(this instanceof Buster && chargeLevel === 3) {
+      new Anim(pos.clone(), game.sprites["buster4_muzzle_flash"], xDir);
+      //Create the buster effect
+      let xOff = -50*xDir;
+      this.createBuster4Line(pos.x + xOff, pos.y, xDir, player, 0);
+      this.createBuster4Line(pos.x + xOff + 15*xDir, pos.y, xDir, player, 1);
+      this.createBuster4Line(pos.x + xOff + 30*xDir, pos.y, xDir, player, 2);
+      
+    }
+
     if(this.soundTime === 0) {
       game.playSound(this.shootSounds[chargeLevel]);
       if(this instanceof FireWave) {
@@ -66,8 +86,7 @@ export class Buster extends Weapon {
     if(chargeLevel === 0) return new BusterProj(pos, vel, player);
     else if(chargeLevel === 1) return new Buster2Proj(pos, vel, player);
     else if(chargeLevel === 2) return new Buster3Proj(pos, vel, player);
-    else if(chargeLevel === 3) return new Buster3Proj(pos, vel, player);
-    //else if(chargeLevel === 4) return new Buster4Proj(pos, vel, player);
+    else if(chargeLevel === 3) return undefined;
   }
   
 }

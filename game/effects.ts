@@ -11,40 +11,39 @@ export class ChargeEffect {
 
   constructor() {
     this.points = [];
-    let radius = 16;
+    let radius = 24;
+
+    let angle = 0;
+    let point1 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+    let point2 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+    let point3 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+    let point4 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+    let point5 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+    let point6 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+    let point7 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+    let point8 = new Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius); angle += 45;
+
     this.origPoints = [
-      new Point(-radius, -radius),
-      new Point(-radius, radius),
-      new Point(radius, -radius),
-      new Point(radius, radius),
-      new Point(0, radius * 1.41),
-      new Point(radius * 1.41, 0),
-      new Point(0, -radius * 1.41),
-      new Point(-radius * 1.41, 0),
+      point1, point2, point3, point4, point5, point6, point7, point8
     ];
     //@ts-ignore
     this.points = _.cloneDeep(this.origPoints);
-    this.pointTimes = [0,0,0,0,0,0,0,0];
+    this.pointTimes = [0,3,0,1.5,-1.5,-3,-1.5,-1.5];
   }
 
   update(centerPos: Point, chargeLevel: number) {
-    let reset = false;
     for(let i = 0; i < this.points.length; i++) {
       let point = this.points[i];
-      point.x = Helpers.moveTo(point.x, 0, game.deltaTime * 50);
-      point.y = Helpers.moveTo(point.y, 0, game.deltaTime * 50);
-      let chargePart = game.sprites["charge_part_" + String(chargeLevel)];
-      this.pointTimes[i]+=game.deltaTime * 20;
-      if(this.pointTimes[i] > 3) {
-        //this.points.splice(i, 1);
-        //this.pointTimes.splice(i, 1);
-        this.pointTimes[i] = 0;
-        reset = true;
+      if(this.pointTimes[i] > 0) {
+        point.x = Helpers.moveTo(point.x, 0, game.deltaTime * 70);
+        point.y = Helpers.moveTo(point.y, 0, game.deltaTime * 70);
       }
-    }
-    if(reset) {
-      //@ts-ignore
-      this.points = _.cloneDeep(this.origPoints);
+      let chargePart = game.sprites["charge_part_" + String(chargeLevel)];
+      this.pointTimes[i]+=game.deltaTime*20;
+      if(this.pointTimes[i] > 3) {
+        this.pointTimes[i] = -3;
+        this.points[i] = this.origPoints[i].clone();
+      }
     }
 
   }
@@ -53,10 +52,10 @@ export class ChargeEffect {
 
     for(let i = 0; i < this.points.length; i++) {
       let point = this.points[i];
-      point.x = Helpers.moveTo(point.x, 0, game.deltaTime * 50);
-      point.y = Helpers.moveTo(point.y, 0, game.deltaTime * 50);
       let chargePart = game.sprites["charge_part_" + String(chargeLevel)];
-      chargePart.draw(Math.round(this.pointTimes[i]), centerPos.x + point.x - game.level.camX, centerPos.y + point.y - game.level.camY);
+      if(this.pointTimes[i] > 0) {
+        chargePart.draw(Math.round(this.pointTimes[i]), centerPos.x + point.x - game.level.camX, centerPos.y + point.y - game.level.camY);
+      }
     }
 
   }
