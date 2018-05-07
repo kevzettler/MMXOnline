@@ -1,7 +1,9 @@
 import { Character } from "./character";
-import { Weapon, Buster, Torpedo, Sting, RollingShield, ShotgunIce, FireWave, Tornado, Boomerang } from "./weapon";
+import { Weapon, Buster, Torpedo, Sting, RollingShield, ShotgunIce, FireWave, Tornado, Boomerang, ElectricSpark } from "./weapon";
 import { game } from "./game";
 import { Palette } from "./color";
+import { ElectricSparkProj } from "./projectile";
+import * as Helpers from "./helpers";
 
 export class Player {
   
@@ -21,10 +23,12 @@ export class Player {
   weapons: Weapon[];
   weaponIndex: number;
   palette: Palette;
+  id: number;
 
   constructor(x: number, y: number, isAI: boolean, alliance: number) {
     this.alliance = alliance;
-    
+    this.id = Helpers.getAutoIncId();
+
     if(!isAI && alliance === 0) {
       this.inputMapping[37] = "left";
       this.inputMapping[39] = "right";
@@ -63,6 +67,7 @@ export class Player {
       new RollingShield(),
       new FireWave(),
       new Tornado(),
+      new ElectricSpark(),
       new Boomerang(),
       new ShotgunIce()
     ];

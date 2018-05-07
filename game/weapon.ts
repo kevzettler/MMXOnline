@@ -2,6 +2,8 @@ import { Projectile, BusterProj, TorpedoProj, Buster2Proj, Buster3Proj, StingPro
 import { game } from "./game";
 import { Player } from "./player";
 import { Point } from "./point";
+import * as Helpers from "./helpers";
+import { Sprite } from "./sprite";
 
 export class Weapon {
   
@@ -11,6 +13,7 @@ export class Weapon {
   index: number;
   rateOfFire: number;
   speed: number = 350;
+  soundTime: number = 0;
 
   constructor() {
     this.ammo = 32;
@@ -22,10 +25,30 @@ export class Weapon {
     return undefined;
   }
 
+  update() {
+    if(this.soundTime > 0) {
+      this.soundTime = Helpers.clampMin(this.soundTime - game.deltaTime, 0);
+    }
+  }
+
   shoot(pos: Point, xDir: number, player: Player, chargeLevel: number) {
     let proj = this.getProjectile(pos, xDir, player, chargeLevel);
-    game.playSound(this.shootSounds[chargeLevel]);
-    if(!(this instanceof Buster)) this.ammo--;
+    
+    if(this.soundTime === 0) {
+      game.playSound(this.shootSounds[chargeLevel]);
+      if(this instanceof FireWave) {
+        this.soundTime = 0.25;
+      }
+    }
+    
+    if(!(this instanceof Buster)) {
+      if(this instanceof FireWave) {
+        this.ammo -= game.deltaTime * 10;
+      }
+      else {
+        this.ammo--;
+      }
+    }
   }
 
 }
@@ -106,12 +129,13 @@ export class FireWave extends Weapon {
     super();
     this.shootSounds = ["fireWave", "fireWave", "fireWave", "fireWave"];
     this.index = 4;
-    this.speed = 150;
-    this.rateOfFire = 0.75;
+    this.speed = 400;
+    this.rateOfFire = 0.05;
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number): Projectile {
     let vel = new Point(xDir * this.speed, 0);
+    vel.inc(player.character.vel.times(-0.5));
     return new FireWaveProj(pos, vel, player);
   }
 
@@ -123,15 +147,15 @@ export class Tornado extends Weapon {
     super();
     this.shootSounds = ["tornado", "tornado", "tornado", "tornado"];
     this.index = 5;
-    this.speed = 150;
-    this.rateOfFire = 0.75;
+    this.speed = 400;
+    this.rateOfFire = 1.5;
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number): Projectile {
     let vel = new Point(xDir * this.speed, 0);
     return new TornadoProj(pos, vel, player);
   }
-
+ 
 }
 
 export class ElectricSpark extends Weapon {
@@ -141,12 +165,12 @@ export class ElectricSpark extends Weapon {
     this.shootSounds = ["electricSpark", "electricSpark", "electricSpark", "electricSpark"];
     this.index = 6;
     this.speed = 150;
-    this.rateOfFire = 0.75;
+    this.rateOfFire = 0.5;
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number): Projectile {
     let vel = new Point(xDir * this.speed, 0);
-    return new ElectricSparkProj(pos, vel, player);
+    return new ElectricSparkProj(pos, vel, player, 0);
   }
 
 }
@@ -157,8 +181,8 @@ export class Boomerang extends Weapon {
     super();
     this.shootSounds = ["boomerang", "boomerang", "boomerang", "boomerang"];
     this.index = 7;
-    this.speed = 150;
-    this.rateOfFire = 0.75;
+    this.speed = 250;
+    this.rateOfFire = 0.5;
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number): Projectile {
@@ -172,15 +196,15 @@ export class ShotgunIce extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["shotgunIce", "shotgunIce", "shotgunIce", "shotgunIce"];
+    this.shootSounds = ["buster", "buster", "buster", "buster"];
     this.index = 8;
-    this.speed = 250;
+    this.speed = 400;
     this.rateOfFire = 0.75;
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number): Projectile {
     let vel = new Point(xDir * this.speed, 0);
-    return new ShotgunIceProj(pos, vel, player);
+    return new ShotgunIceProj(pos, vel, player, 0);
   }
 
 }

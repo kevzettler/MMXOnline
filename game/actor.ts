@@ -196,40 +196,7 @@ export class Actor {
       this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     }
     else {
-
-      let angle = this.angle;
-      let xDir = 1;
-      let yDir = 1;
-      let frameIndex = 0;
-      let normAngle = 0;
-      if(angle < 90) {
-        xDir = 1;
-        yDir = -1;
-        normAngle = angle;
-      }
-      if(angle >= 90 && angle < 180) {
-        xDir = -1;
-        yDir = -1;
-        normAngle = 180 - angle;
-      }
-      else if(angle >= 180 && angle < 270) {
-        xDir = -1;
-        yDir = 1;
-        normAngle = angle - 180;
-      }
-      else if(angle >= 270 && angle < 360) {
-        xDir = 1;
-        yDir = 1;
-        normAngle = 360 - angle;
-      }
-
-      if(normAngle < 18) frameIndex = 0;
-      else if(normAngle >= 18 && normAngle < 36) frameIndex = 1;
-      else if(normAngle >= 36 && normAngle < 54) frameIndex = 2;
-      else if(normAngle >= 54 && normAngle < 72) frameIndex = 3;
-      else if(normAngle >= 72 && normAngle < 90) frameIndex = 4;
-
-      this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
+      this.renderFromAngle(x, y);
     }
     
     this.renderEffect = "";
@@ -237,6 +204,10 @@ export class Actor {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
     }
+  }
+
+  renderFromAngle(x: number, y: number) {
+    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
   }
 
   registerCollision(other: CollideData) {

@@ -109,6 +109,12 @@ export function getHex(r: number, g: number, b: number, a: number) {
   return "#" + r.toString(16) + g.toString(16) + b.toString(16) + a.toString(16);
 }
 
+let autoInc = 0;
+export function getAutoIncId() {
+  autoInc++;
+  return autoInc;
+}
+
 let helperCanvas = document.createElement("canvas");
 let helperCtx = helperCanvas.getContext("2d");
 

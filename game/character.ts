@@ -7,7 +7,7 @@ import { Collider } from "./collider";
 import { Rect } from "./rect";
 import { Projectile } from "./projectile";
 import * as Helpers from "./helpers";
-import { Weapon, Buster } from "./weapon";
+import { Weapon, Buster, FireWave } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
 import { AI } from "./ai";
 
@@ -32,6 +32,7 @@ export class Character extends Actor {
   chargeLoopSoundId: number;
   chargeEffect: ChargeEffect;
   ai: AI;
+  fireWaveHitCooldown: number = 0;
   
   constructor(player: Player, x: number, y: number) {
     super(undefined);
@@ -65,6 +66,9 @@ export class Character extends Actor {
   }
 
   update() {
+    if(this.fireWaveHitCooldown > 0) {
+      this.fireWaveHitCooldown = Helpers.clampMin(this.fireWaveHitCooldown - game.deltaTime, 0);
+    }
     if(this.ai) {
       this.ai.update();
     }
@@ -261,8 +265,14 @@ class CharState {
   update() {
     
     this.stateTime += game.deltaTime;
+    this.player.weapon.update();
     if(this.canShoot) {
-      if(this.player.isPressed("shoot") && this.player.weapon.ammo > 0) {
+      if(this.player.weapon.ammo > 0 && 
+        (
+          this.player.isPressed("shoot") ||  
+          (this.player.isHeld("shoot") && this.player.weapon instanceof FireWave)
+        )
+      ) {
         this.character.shoot();
       }
       if(this.player.isHeld("shoot")) {
@@ -276,11 +286,11 @@ class CharState {
       }
     }
     
-    let lastLeftWallData = game.level.checkCollisionActor(this.character, -1, 0, false);
+    let lastLeftWallData = game.level.checkCollisionActor(this.character, -1, 0);
     this.lastLeftWall = lastLeftWallData ? lastLeftWallData.collider : undefined;
     if(this.lastLeftWall && !this.lastLeftWall.isClimbable) this.lastLeftWall = undefined;
 
-    let lastRightWallData = game.level.checkCollisionActor(this.character, 1, 0, false);
+    let lastRightWallData = game.level.checkCollisionActor(this.character, 1, 0);
     this.lastRightWall = lastRightWallData ? lastRightWallData.collider : undefined;
     if(this.lastRightWall && !this.lastRightWall.isClimbable) this.lastRightWall = undefined;
   }
@@ -296,7 +306,7 @@ class CharState {
       this.character.vel.y = 0;
     }
 
-    if(game.level.checkCollisionActor(this.character, 0, -1, false)) {
+    if(game.level.checkCollisionActor(this.character, 0, -1)) {
       this.character.vel.y = 0;
     }
 
@@ -510,7 +520,7 @@ class WallSlide extends CharState {
     if(this.stateTime > 0.15) {
       let dirHeld = this.wallDir === -1 ? this.player.isHeld("left") : this.player.isHeld("right");
 
-      if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0, false)) {
+      if(!dirHeld || !game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
         this.player.character.changeState(new Fall());
       }
       this.character.move(new Point(0, 100));

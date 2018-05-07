@@ -83,35 +83,33 @@ export class Sprite {
     let halfH = h * 0.5;
 
     let x; let y;
-    let cX = 0;
-    let cY = 0;
 
     if(this.alignment === "topleft") {
-      x = cX; y = cY;
+      x = 0; y = 0;
     }
     else if(this.alignment === "topmid") {
-      x = cX - halfW; y = cY;
+      x = -halfW; y = 0;
     }
     else if(this.alignment === "topright") {
-      x = cX - w; y = cY;
+      x = -w; y = 0;
     }
     else if(this.alignment === "midleft") {
-      x = cX; y = cY - halfH;
+      x = flipX === -1 ? -w : 0; y = -halfH;
     }
     else if(this.alignment === "center") {
-      x = cX - halfW; y = cY - halfH;
+      x = -halfW; y = -halfH;
     }
     else if(this.alignment === "midright") {
-      x = cX - w; y = cY - halfH;
+      x = flipX === -1 ? 0 : -w; y = -halfH;
     }
     else if(this.alignment === "botleft") {
-      x = cX; y = cY - h;
+      x = 0; y = -h;
     }
     else if(this.alignment === "botmid") {
-      x = cX - halfW; y = cY - h;
+      x = -halfW; y = -h;
     }
     else if(this.alignment === "botright") {
-      x = cX - w; y = cY - h;
+      x = -w; y = -h;
     }
     return new Point(x + offset.x * flipX, y + offset.y * flipY);
   }

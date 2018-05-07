@@ -1,3 +1,9 @@
+-Shotgun ice meatshot when hit
+-Spazzy homing things
+-Spazzy rapid fire animation
+-sting left shoot offset is wrong
+-rolling shield + other explosions played at wrong locations sometimes
+
 -All the weapons + weapon charge
 
 -Menu system

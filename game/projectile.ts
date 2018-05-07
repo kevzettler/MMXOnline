@@ -8,6 +8,9 @@ import { Character } from "./character";
 import { Wall } from "./wall";
 import { game } from "./game";
 import * as Helpers from "./helpers";
+import { LoDashImplicitNumberArrayWrapper } from "../node_modules/@types/lodash/index";
+import { GameObject } from "./gameObject";
+import { Rect } from "./rect";
 
 export class Projectile extends Actor {
 
@@ -17,6 +20,8 @@ export class Projectile extends Actor {
   fadeSound: string;
   speed: number;
   time: number = 0;
+  charToHitCooldown: { [playerId: number]: number } = { };
+  hitCooldown: number = 0;
 
   constructor(pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
     super(sprite);
@@ -31,6 +36,15 @@ export class Projectile extends Actor {
 
   update() {
     super.update();
+
+    for(let playerId in this.charToHitCooldown) {
+      this.charToHitCooldown[playerId] -= game.deltaTime;
+      if(this.charToHitCooldown[playerId] < 0) {
+        this.charToHitCooldown[playerId] = 0;
+      }
+
+    }
+
     this.time += game.deltaTime;
     let leeway = 500;
     if(this.pos.x > game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game.level.height + leeway || this.pos.y < -leeway) {
@@ -39,34 +53,45 @@ export class Projectile extends Actor {
   }
 
   onCollision(other: CollideData) {
-    let character = (other.collider.gameObject instanceof Character) ? <Character> other.collider.gameObject : undefined;
-    if(character && character.player.alliance !== this.damager.owner.alliance) {
-      
+    let character = other.collider.gameObject;
+    if(character instanceof Character && character.player.alliance !== this.damager.owner.alliance) {
       let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
       if(pos) this.pos = pos.clone();
+      let character = other.collider.gameObject;
+      if(character instanceof Character) {
 
-      this.onHit(character);
+        if(this instanceof FireWaveProj) {
+          if(character.fireWaveHitCooldown > 0) return;
+          character.fireWaveHitCooldown = 0.2;
+        } 
+
+        if(!this.charToHitCooldown[character.player.id]) {
+          this.charToHitCooldown[character.player.id] = this.hitCooldown;
+          character.renderEffect = "flash";
+          character.applyDamage(this.damager.damage);
+          if(!this.flinch) {
+            game.playSound("hit");
+          }
+          else {
+            game.playSound("hurt");
+            character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
+          }
+        }
+        this.onHitChar(character);
+      }
     }
-    let wall = <Wall> other.collider.gameObject;
-    if(wall) {
-      //Destroy projectile
+    let wall = other.collider.gameObject;
+    if(wall instanceof Wall) {
       this.onHitWall(wall);
     }
   }
 
-  onHitWall(wall: Wall) { }
-
-  onHit(character: Character) {
-    character.renderEffect = "flash";
-    character.applyDamage(this.damager.damage);
-    if(!this.flinch) {
-      game.playSound("hit");
-    }
-    else {
-      game.playSound("hurt");
-      character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
-    }
+  onHitChar(character: Character) {
     this.destroySelf(this.fadeSprite, this.fadeSound);
+  }
+
+  onHitWall(wall: Wall) {
+
   }
 
 }
@@ -131,6 +156,43 @@ export class TorpedoProj extends Projectile {
       new Anim(this.pos, game.sprites["torpedo_smoke"], 1);
     }
     
+  }
+
+  renderFromAngle(x: number, y: number) {
+    
+    let angle = this.angle;
+    let xDir = 1;
+    let yDir = 1;
+    let frameIndex = 0;
+    let normAngle = 0;
+    if(angle < 90) {
+      xDir = 1;
+      yDir = -1;
+      normAngle = angle;
+    }
+    if(angle >= 90 && angle < 180) {
+      xDir = -1;
+      yDir = -1;
+      normAngle = 180 - angle;
+    }
+    else if(angle >= 180 && angle < 270) {
+      xDir = -1;
+      yDir = 1;
+      normAngle = angle - 180;
+    }
+    else if(angle >= 270 && angle < 360) {
+      xDir = 1;
+      yDir = 1;
+      normAngle = 360 - angle;
+    }
+
+    if(normAngle < 18) frameIndex = 0;
+    else if(normAngle >= 18 && normAngle < 36) frameIndex = 1;
+    else if(normAngle >= 36 && normAngle < 54) frameIndex = 2;
+    else if(normAngle >= 54 && normAngle < 72) frameIndex = 3;
+    else if(normAngle >= 72 && normAngle < 90) frameIndex = 4;
+
+    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
   }
   
 }
@@ -210,65 +272,203 @@ export class FireWaveProj extends Projectile {
  
   constructor(pos: Point, vel: Point, player: Player) {
     super(pos, vel, 1, player, game.sprites["fire_wave"]);
-    //this.fadeSprite = game.sprites["electric_spark_fade"];
+    this.fadeSprite = game.sprites["fire_wave_fade"];
+    this.hitCooldown = 0.3;
     //this.fadeSound = "explosion";
   }
 
-  onCollision(other: CollideData) {
-    
+  update() {
+    super.update();
+    if(this.time > 0.1) {
+      this.destroySelf(this.fadeSprite);
+    }
   }
 
 }
 
 export class TornadoProj extends Projectile {
  
+  spriteStart: Sprite;
+  spriteMid: Sprite;
+  spriteEnd: Sprite;
+  length: number = 1;
   constructor(pos: Point, vel: Point, player: Player) {
-    super(pos, vel, 1, player, game.sprites["storm_tornado"]);
+    super(pos, vel, 1, player, game.sprites["tornado_mid"]);
     //this.fadeSprite = game.sprites["electric_spark_fade"];
     //this.fadeSound = "explosion";
+    this.spriteStart = game.sprites["tornado_start"];
+    this.spriteMid = game.sprites["tornado_mid"];
+    this.spriteEnd = game.sprites["tornado_end"];
+    this.vel.x = 0;
+    this.hitCooldown = 0.3;
+    //this.globalCollider = new Collider([], true, this);
+  }
+  
+  render(x: number, y: number) {
+    
+    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+    let i = 0;
+    let spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
+    for(i; i < this.length; i++) {
+      this.spriteMid.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+    }
+    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+
+    this.renderEffect = "";
+    if(game.showHitboxes && this.collider) {
+      Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+      //Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
+    }
   }
 
-  onCollision(other: CollideData) {
+  update() {
+    super.update();
+
+    let topX = 0;
+    let topY = 0;
     
+    let spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
+    let spriteEndLen = this.spriteEnd.frames[this.frameIndex].rect.w;
+
+    let botX = (this.length*spriteMidLen) + spriteEndLen;
+    let botY = this.spriteStart.frames[0].rect.h * 2;
+
+    let rect = new Rect(topX, topY, botX, botY);
+    this.globalCollider = new Collider(rect.getPoints(), true, this);
+
+    if(this.time > 0.2) {
+      if(this.length < 6) {
+        this.length++;
+      }
+      else {
+        this.vel.x = this.speed * this.xDir;
+      }
+      this.time = 0;
+    }
+  }
+
+  onHitChar(character: Character) {
+    character.move(new Point(this.speed * 0.9 * this.xDir, 0));
   }
 
 }
 
 export class ElectricSparkProj extends Projectile {
  
-  constructor(pos: Point, vel: Point, player: Player) {
+  type: number = 0;
+  constructor(pos: Point, vel: Point, player: Player, type: number) {
     super(pos, vel, 1, player, game.sprites["electric_spark"]);
     this.fadeSprite = game.sprites["electric_spark_fade"];
     //this.fadeSound = "explosion";
+    this.type = type;
   }
 
-  onCollision(other: CollideData) {
-    
+  onHitWall(wall: Wall) {
+    if(this.type === 0) {
+      this.destroySelf(this.fadeSprite);
+      new ElectricSparkProj(this.pos.clone(), new Point(0, this.speed * 3), this.damager.owner, 1);
+      new ElectricSparkProj(this.pos.clone(), new Point(0, -this.speed * 3), this.damager.owner, 1);
+    }
   }
 
 }
 
 export class BoomerangProj extends Projectile {
  
+  angleDist: number = 0;
+  turnDir: number = 1;
   constructor(pos: Point, vel: Point, player: Player) {
     super(pos, vel, 1, player, game.sprites["boomerang"]);
     //this.fadeSprite = game.sprites["electric_spark_fade"];
     //this.fadeSound = "explosion";
+    this.angle = 0;
+    if(Math.sign(vel.x) === -1) this.angle = -180;
+    if(!player.character.grounded) {
+      this.turnDir = -1;
+    }
   }
 
   onCollision(other: CollideData) {
+    super.onCollision(other);
+    let character = other.collider.gameObject;
+    if(character instanceof Character && character.player === this.damager.owner) {
+      this.destroySelf();
+      character.player.weapon.ammo++;
+    }
+  }
 
+  renderFromAngle(x: number, y: number) {
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+  }
+
+  update() {
+    super.update();
+    if(this.time > 0.22) {
+      if(this.angleDist < 270) {
+        let angInc = (-this.xDir * this.turnDir) * game.deltaTime * 300;
+        this.angle += angInc;
+        this.angleDist += Math.abs(angInc);
+        this.vel.x = Helpers.cos(this.angle) * this.speed;
+        this.vel.y = Helpers.sin(this.angle) * this.speed;
+      }
+      else {
+        let dTo = this.pos.directionTo(this.damager.owner.character.centerPos).normalize();
+        var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
+        destAngle = Helpers.to360(destAngle);
+        this.angle = Helpers.lerp(this.angle, destAngle, game.deltaTime * 10);
+        this.vel.x = Helpers.cos(this.angle) * this.speed;
+        this.vel.y = Helpers.sin(this.angle) * this.speed;
+      }
+    }
   }
 
 }
 
 export class ShotgunIceProj extends Projectile {
  
-  constructor(pos: Point, vel: Point, player: Player) {
+  type: number = 0;
+  sparkleTime: number = 0;
+  constructor(pos: Point, vel: Point, player: Player, type: number) {
     super(pos, vel, 1, player, game.sprites["shotgun_ice"]);
+    
+    if(type === 1) {
+      this.changeSprite(game.sprites["shotgun_ice_piece"], true);
+    }
+
     this.fadeSprite = game.sprites["buster1_fade"];
+    this.type = type;
     //this.fadeSound = "explosion";
   }
 
+  update() {
+    super.update();
+    
+    this.sparkleTime += game.deltaTime;
+    if(this.sparkleTime > 0.05) {
+      this.sparkleTime = 0;
+      new Anim(this.pos, game.sprites["shotgun_ice_sparkles"], 1);
+    }
+    
+  }
+
+  onHit(other: GameObject) {
+    if(this.type === 0) {
+      this.destroySelf();
+      new ShotgunIceProj(this.pos.clone(), new Point(-this.vel.x, -this.speed), this.damager.owner, 1);
+      new ShotgunIceProj(this.pos.clone(), new Point(-this.vel.x, -this.speed*0.5), this.damager.owner, 1);
+      new ShotgunIceProj(this.pos.clone(), new Point(-this.vel.x, 0 * 3), this.damager.owner, 1);
+      new ShotgunIceProj(this.pos.clone(), new Point(-this.vel.x, this.speed*0.5), this.damager.owner, 1);
+      new ShotgunIceProj(this.pos.clone(), new Point(-this.vel.x, this.speed), this.damager.owner, 1);
+    }
+  }
+
+  onHitWall(wall: Wall) {
+    this.onHit(wall);
+  }
+
+  onHitChar(character: Character) {
+    //this.onHit(character);
+    super.onHitChar(character);
+  }
 
 }
