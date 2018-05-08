@@ -47,24 +47,24 @@ export class Projectile extends Actor {
     let character = other.collider.gameObject;
     if(character instanceof Character && character.player.alliance !== this.damager.owner.alliance) {
       let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
-      if(pos) this.pos = pos.clone();
+      //if(pos) this.pos = pos.clone();
       let character = other.collider.gameObject;
       if(character instanceof Character) {
 
         let key: string = this.constructor.toString() + this.damager.owner.id.toString();
-        if(character.projectileCooldown[key]) {
-          return;
-        }
-        character.projectileCooldown[key] = this.hitCooldown;
+        if(!character.projectileCooldown[key]) {
+          character.projectileCooldown[key] = this.hitCooldown;
 
-        character.renderEffect = "flash";
-        character.applyDamage(this.damager.damage);
-        if(!this.flinch) {
-          game.playSound("hit");
-        }
-        else {
-          game.playSound("hurt");
-          character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
+          character.renderEffect = "hit";
+          character.renderEffectTime = 0.1;
+          character.applyDamage(this.damager.damage);
+          if(!this.flinch) {
+            game.playSound("hit");
+          }
+          else {
+            game.playSound("hurt");
+            character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
+          }
         }
         this.onHitChar(character);
       }
@@ -88,7 +88,7 @@ export class Projectile extends Actor {
 export class BusterProj extends Projectile {
 
   constructor(pos: Point, vel: Point, player: Player) {
-    super(pos, vel, 1, player, game.sprites["buster1"]);
+    super(pos, vel, 0.5, player, game.sprites["buster1"]);
     this.fadeSprite = game.sprites["buster1_fade"];
   }
 
@@ -163,7 +163,7 @@ export class TorpedoProj extends Projectile {
       var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
 
       destAngle = Helpers.to360(destAngle);
-      this.angle = Helpers.lerp(this.angle, destAngle, game.deltaTime * 10);
+      this.angle = Helpers.lerpAngle(this.angle, destAngle, game.deltaTime * 10);
     }
 
     this.smokeTime += game.deltaTime;
@@ -243,9 +243,9 @@ export class StingProj extends Projectile {
     }
     if(this.type === 0) {
       if(this.isAnimOver()) {
-        new StingProj(this.pos.addxy(15, 0), this.origVel, this.damager.owner, 1);
-        new StingProj(this.pos.addxy(15, -8), this.origVel.addxy(0, -150), this.damager.owner, 2);
-        new StingProj(this.pos.addxy(15, 8), this.origVel.addxy(0, 150), this.damager.owner, 3);
+        new StingProj(this.pos.addxy(15*this.xDir, 0), this.origVel, this.damager.owner, 1);
+        new StingProj(this.pos.addxy(15*this.xDir, -8), this.origVel.addxy(0, -150), this.damager.owner, 2);
+        new StingProj(this.pos.addxy(15*this.xDir, 8), this.origVel.addxy(0, 150), this.damager.owner, 3);
         this.destroySelf();
       }
     }
@@ -420,7 +420,7 @@ export class BoomerangProj extends Projectile {
   update() {
     super.update();
     if(this.time > 0.22) {
-      if(this.angleDist < 270) {
+      if(this.angleDist < 180) {
         let angInc = (-this.xDir * this.turnDir) * game.deltaTime * 300;
         this.angle += angInc;
         this.angleDist += Math.abs(angInc);
@@ -431,7 +431,7 @@ export class BoomerangProj extends Projectile {
         let dTo = this.pos.directionTo(this.damager.owner.character.centerPos).normalize();
         var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
         destAngle = Helpers.to360(destAngle);
-        this.angle = Helpers.lerp(this.angle, destAngle, game.deltaTime * 10);
+        this.angle = Helpers.lerpAngle(this.angle, destAngle, game.deltaTime * 10);
         this.vel.x = Helpers.cos(this.angle) * this.speed;
         this.vel.y = Helpers.sin(this.angle) * this.speed;
       }

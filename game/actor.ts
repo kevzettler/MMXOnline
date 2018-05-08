@@ -26,6 +26,7 @@ export class Actor {
   collidedInFrame: Set<Collider>;
   renderEffect: string;
   palette: Palette;
+  renderEffectTime: number = 0;
 
   constructor(sprite: Sprite) {
     this.pos = new Point(0, 0);
@@ -75,6 +76,11 @@ export class Actor {
 
   update() {
     
+    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game.deltaTime);
+    if(this.renderEffectTime <= 0) {
+      this.renderEffect = "";
+    }
+
     this.frameTime += game.deltaTime * this.frameSpeed;
     if(this.frameTime >= this.currentFrame.duration) {
       let onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
@@ -199,7 +205,6 @@ export class Actor {
       this.renderFromAngle(x, y);
     }
     
-    this.renderEffect = "";
     if(game.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");

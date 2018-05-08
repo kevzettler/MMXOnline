@@ -131,7 +131,7 @@ export class RollingShield extends Weapon {
     super();
     this.shootSounds = ["rollingShield", "rollingShield", "rollingShield", "rollingShield"];
     this.index = 3;
-    this.speed = 150;
+    this.speed = 200;
     this.rateOfFire = 0.75;
   }
 

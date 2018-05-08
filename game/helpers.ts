@@ -68,6 +68,10 @@ export function clampMin(num: number, min: number) {
   return num > min ? num : min;
 }
 
+export function clampMin0(num: number) {
+  return clampMin(num, 0);
+}
+
 export function clamp(num: number, min: number, max: number) {
   if(num < min) return min;
   if(num > max) return max;
@@ -97,6 +101,16 @@ export function moveTo(num: number, dest: number, inc: number) {
 export function lerp(num: number, dest: number, timeScale: number) {
   num = num + (dest - num)*timeScale;
   return num;
+}
+
+//Expects angle and destAngle to be > 0 and < 360
+export function lerpAngle(angle: number, destAngle: number, timeScale: number) {
+  let dir = 1;
+  if(Math.abs(destAngle - angle) > 180) {
+    dir = -1;
+  }
+  angle = angle + dir*(destAngle - angle) * timeScale;
+  return to360(angle);
 }
 
 export function to360(angle: number) {
@@ -184,6 +198,20 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
       let a = data[i+3];
       data[i] = clampMax(r + 64, 255);
       data[i+1] = clampMax(g + 64, 255);
+      data[i+2] = clampMax(b + 128, 255);
+    }
+    helperCtx.putImageData(imageData, 0, 0);​
+  }
+  else if(options === "hit") {
+    let imageData = helperCtx.getImageData(0, 0, helperCanvas.width, helperCanvas.height);
+    let data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i+1];
+      let b = data[i+2];
+      let a = data[i+3];
+      data[i] = clampMax(r + 128, 255);
+      data[i+1] = clampMax(g + 128, 255);
       data[i+2] = clampMax(b + 128, 255);
     }
     helperCtx.putImageData(imageData, 0, 0);​

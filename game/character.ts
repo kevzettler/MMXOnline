@@ -16,9 +16,8 @@ export class Character extends Actor {
   charState: CharState;
   player: Player;
   runSpeed: number;
-  isShooting: boolean;
   isDashing: boolean;
-  shootTime: number;
+  shootTime: number = 0;
   jumpPower: number;
   changedStateInFrame: boolean;
   chargeTime: number;
@@ -31,6 +30,7 @@ export class Character extends Actor {
   chargeLoopSound: Howl;
   chargeLoopSoundId: number;
   chargeEffect: ChargeEffect;
+  shootAnimTime: number = 0;
   ai: AI;
   projectileCooldown: { [name: string]: number } = {};  //Player id + projectile name
   
@@ -39,7 +39,6 @@ export class Character extends Actor {
     this.pos.x = x;
     this.pos.y = y;
     this.player = player;
-    this.isShooting = false;
     this.isDashing = false;
 
     let rect = new Rect(0, 0, 18, 34);
@@ -73,16 +72,49 @@ export class Character extends Actor {
         this.projectileCooldown[projName] = Helpers.clampMin(cooldown - game.deltaTime, 0);
       }
     }
+    if(this.shootAnimTime > 0) {
+      this.shootAnimTime -= game.deltaTime;
+      if(this.shootAnimTime <= 0) {
+        this.shootAnimTime = 0;
+        this.changeSprite(this.charState.sprite, false);
+      }
+    }
     
     if(this.ai) {
       this.ai.update();
     }
     this.charState.update();
     super.update();
-    if(this.isShooting) {
-      this.shootTime += game.deltaTime;
-      if(this.shootTime >= this.player.weapon.rateOfFire) {
-        this.stopShoot();
+
+    this.player.weapon.update();
+    if(this.charState.canShoot) {
+      if(this.player.weapon.ammo > 0 && this.shootTime === 0 &&
+        (
+          this.player.isPressed("shoot") ||  
+          (this.player.isHeld("shoot") && this.player.weapon instanceof FireWave)
+        )
+      ) {
+        this.shoot();
+      }
+      if(this.player.isHeld("shoot")) {
+        this.chargeTime += game.deltaTime;
+      }
+      else {
+        if(this.isCharging()) {
+          this.shoot();
+          this.stopCharge();
+        }
+      }
+    }
+    if(this.shootTime > 0) {
+      this.shootTime -= game.deltaTime;
+      if(this.shootTime <= 0) {
+        if(this.player.isHeld("shoot") && this.player.weapon instanceof FireWave) {
+          this.shootTime = 0;
+        }
+        else {
+          this.shootTime = 0;
+        }
       }
     }
     if(this.player.isPressed("weaponleft")) {
@@ -142,7 +174,7 @@ export class Character extends Actor {
 
   stopCharge() {
     this.chargeTime = 0;
-    this.renderEffect = "";
+    //this.renderEffect = "";
     this.chargeFlashTime = 0;
     if(this.chargeSoundId) {
       this.chargeSound.stop(this.chargeSoundId);
@@ -156,14 +188,20 @@ export class Character extends Actor {
   }
 
   shoot() {
-    if(!this.isShooting) {
-      this.isShooting = true;
-      this.shootTime = 0;
+    if(this.shootTime > 0) return;
+    this.shootTime = this.player.weapon.rateOfFire;
+    if(this.shootAnimTime === 0) {
       this.changeSprite(this.charState.shootSprite, false);
-      let xDir = this.xDir;
-      if(this.charState instanceof WallSlide) xDir *= -1;
-      this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
     }
+    else if(this.charState instanceof Idle) {
+      this.frameIndex = 0;
+      this.frameTime = 0;
+    }
+    this.shootAnimTime = 0.3;
+    let xDir = this.xDir;
+    if(this.charState instanceof WallSlide) xDir *= -1;
+    this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
+    
   }
 
   getChargeLevel() {
@@ -181,20 +219,12 @@ export class Character extends Actor {
     }
   }
 
-  stopShoot() {
-    if(this.isShooting) {
-      this.isShooting = false;
-      this.shootTime = 0;
-      this.changeSprite(this.charState.sprite, false);
-    }
-  }
-
   changeState(newState: CharState) {
     if(this.charState && newState && this.charState.constructor === newState.constructor) return;
     if(this.changedStateInFrame) return;
     this.changedStateInFrame = true;
     newState.character = this;
-    if(!this.isShooting || !newState.canShoot) {
+    if(this.shootAnimTime === 0 || !newState.canShoot) {
       this.changeSprite(newState.sprite, true);
     }
     else { 
@@ -206,7 +236,8 @@ export class Character extends Actor {
     newState.onEnter(oldState);
     
     if(!newState.canShoot) {
-      this.stopShoot();
+      this.shootTime = 0;
+      this.shootAnimTime = 0;
     }
   }
   
@@ -270,26 +301,6 @@ class CharState {
   update() {
     
     this.stateTime += game.deltaTime;
-    this.player.weapon.update();
-    if(this.canShoot) {
-      if(this.player.weapon.ammo > 0 && 
-        (
-          this.player.isPressed("shoot") ||  
-          (this.player.isHeld("shoot") && this.player.weapon instanceof FireWave)
-        )
-      ) {
-        this.character.shoot();
-      }
-      if(this.player.isHeld("shoot")) {
-        this.character.chargeTime += game.deltaTime;
-      }
-      else {
-        if(this.character.isCharging()) {
-          this.character.shoot();
-        }
-        this.character.stopCharge();
-      }
-    }
     
     let lastLeftWallData = game.level.checkCollisionActor(this.character, -1, 0);
     this.lastLeftWall = lastLeftWallData ? lastLeftWallData.collider : undefined;

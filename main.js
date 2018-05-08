@@ -560,6 +560,10 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
         return num > min ? num : min;
     }
     exports_6("clampMin", clampMin);
+    function clampMin0(num) {
+        return clampMin(num, 0);
+    }
+    exports_6("clampMin0", clampMin0);
     function clamp(num, min, max) {
         if (num < min)
             return min;
@@ -593,6 +597,15 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
         return num;
     }
     exports_6("lerp", lerp);
+    function lerpAngle(angle, destAngle, timeScale) {
+        var dir = 1;
+        if (Math.abs(destAngle - angle) > 180) {
+            dir = -1;
+        }
+        angle = angle + dir * (destAngle - angle) * timeScale;
+        return to360(angle);
+    }
+    exports_6("lerpAngle", lerpAngle);
     function to360(angle) {
         if (angle < 0)
             angle += 360;
@@ -651,6 +664,20 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
                 var a = data[i + 3];
                 data[i] = clampMax(r + 64, 255);
                 data[i + 1] = clampMax(g + 64, 255);
+                data[i + 2] = clampMax(b + 128, 255);
+            }
+            helperCtx.putImageData(imageData, 0, 0);
+        }
+        else if (options === "hit") {
+            var imageData = helperCtx.getImageData(0, 0, helperCanvas.width, helperCanvas.height);
+            var data = imageData.data;
+            for (var i = 0; i < data.length; i += 4) {
+                var r = data[i];
+                var g = data[i + 1];
+                var b = data[i + 2];
+                var a = data[i + 3];
+                data[i] = clampMax(r + 128, 255);
+                data[i + 1] = clampMax(g + 128, 255);
                 data[i + 2] = clampMax(b + 128, 255);
             }
             helperCtx.putImageData(imageData, 0, 0);
@@ -941,23 +968,21 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     var character = other.collider.gameObject;
                     if (character instanceof character_1.Character && character.player.alliance !== this.damager.owner.alliance) {
                         var pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
-                        if (pos)
-                            this.pos = pos.clone();
                         var character_2 = other.collider.gameObject;
                         if (character_2 instanceof character_1.Character) {
                             var key = this.constructor.toString() + this.damager.owner.id.toString();
-                            if (character_2.projectileCooldown[key]) {
-                                return;
-                            }
-                            character_2.projectileCooldown[key] = this.hitCooldown;
-                            character_2.renderEffect = "flash";
-                            character_2.applyDamage(this.damager.damage);
-                            if (!this.flinch) {
-                                game_2.game.playSound("hit");
-                            }
-                            else {
-                                game_2.game.playSound("hurt");
-                                character_2.setHurt(this.pos.x > character_2.pos.x ? -1 : 1);
+                            if (!character_2.projectileCooldown[key]) {
+                                character_2.projectileCooldown[key] = this.hitCooldown;
+                                character_2.renderEffect = "hit";
+                                character_2.renderEffectTime = 0.1;
+                                character_2.applyDamage(this.damager.damage);
+                                if (!this.flinch) {
+                                    game_2.game.playSound("hit");
+                                }
+                                else {
+                                    game_2.game.playSound("hurt");
+                                    character_2.setHurt(this.pos.x > character_2.pos.x ? -1 : 1);
+                                }
                             }
                             this.onHitChar(character_2);
                         }
@@ -978,7 +1003,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
             BusterProj = (function (_super) {
                 __extends(BusterProj, _super);
                 function BusterProj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["buster1"]) || this;
+                    var _this = _super.call(this, pos, vel, 0.5, player, game_2.game.sprites["buster1"]) || this;
                     _this.fadeSprite = game_2.game.sprites["buster1_fade"];
                     return _this;
                 }
@@ -1050,7 +1075,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                         var dTo = this.pos.directionTo(this.target.centerPos).normalize();
                         var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
                         destAngle = Helpers.to360(destAngle);
-                        this.angle = Helpers.lerp(this.angle, destAngle, game_2.game.deltaTime * 10);
+                        this.angle = Helpers.lerpAngle(this.angle, destAngle, game_2.game.deltaTime * 10);
                     }
                     this.smokeTime += game_2.game.deltaTime;
                     if (this.smokeTime > 0.2) {
@@ -1128,9 +1153,9 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     }
                     if (this.type === 0) {
                         if (this.isAnimOver()) {
-                            new StingProj(this.pos.addxy(15, 0), this.origVel, this.damager.owner, 1);
-                            new StingProj(this.pos.addxy(15, -8), this.origVel.addxy(0, -150), this.damager.owner, 2);
-                            new StingProj(this.pos.addxy(15, 8), this.origVel.addxy(0, 150), this.damager.owner, 3);
+                            new StingProj(this.pos.addxy(15 * this.xDir, 0), this.origVel, this.damager.owner, 1);
+                            new StingProj(this.pos.addxy(15 * this.xDir, -8), this.origVel.addxy(0, -150), this.damager.owner, 2);
+                            new StingProj(this.pos.addxy(15 * this.xDir, 8), this.origVel.addxy(0, 150), this.damager.owner, 3);
                             this.destroySelf();
                         }
                     }
@@ -1283,7 +1308,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 BoomerangProj.prototype.update = function () {
                     _super.prototype.update.call(this);
                     if (this.time > 0.22) {
-                        if (this.angleDist < 270) {
+                        if (this.angleDist < 180) {
                             var angInc = (-this.xDir * this.turnDir) * game_2.game.deltaTime * 300;
                             this.angle += angInc;
                             this.angleDist += Math.abs(angInc);
@@ -1294,7 +1319,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                             var dTo = this.pos.directionTo(this.damager.owner.character.centerPos).normalize();
                             var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
                             destAngle = Helpers.to360(destAngle);
-                            this.angle = Helpers.lerp(this.angle, destAngle, game_2.game.deltaTime * 10);
+                            this.angle = Helpers.lerpAngle(this.angle, destAngle, game_2.game.deltaTime * 10);
                             this.vel.x = Helpers.cos(this.angle) * this.speed;
                             this.vel.y = Helpers.sin(this.angle) * this.speed;
                         }
@@ -1482,7 +1507,7 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     var _this = _super.call(this) || this;
                     _this.shootSounds = ["rollingShield", "rollingShield", "rollingShield", "rollingShield"];
                     _this.index = 3;
-                    _this.speed = 150;
+                    _this.speed = 200;
                     _this.rateOfFire = 0.75;
                     return _this;
                 }
@@ -1992,11 +2017,12 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 __extends(Character, _super);
                 function Character(player, x, y) {
                     var _this = _super.call(this, undefined) || this;
+                    _this.shootTime = 0;
+                    _this.shootAnimTime = 0;
                     _this.projectileCooldown = {};
                     _this.pos.x = x;
                     _this.pos.y = y;
                     _this.player = player;
-                    _this.isShooting = false;
                     _this.isDashing = false;
                     var rect = new rect_3.Rect(0, 0, 18, 34);
                     _this.globalCollider = new collider_3.Collider(rect.getPoints(), false, _this);
@@ -2024,15 +2050,44 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                             this.projectileCooldown[projName] = Helpers.clampMin(cooldown - game_6.game.deltaTime, 0);
                         }
                     }
+                    if (this.shootAnimTime > 0) {
+                        this.shootAnimTime -= game_6.game.deltaTime;
+                        if (this.shootAnimTime <= 0) {
+                            this.shootAnimTime = 0;
+                            this.changeSprite(this.charState.sprite, false);
+                        }
+                    }
                     if (this.ai) {
                         this.ai.update();
                     }
                     this.charState.update();
                     _super.prototype.update.call(this);
-                    if (this.isShooting) {
-                        this.shootTime += game_6.game.deltaTime;
-                        if (this.shootTime >= this.player.weapon.rateOfFire) {
-                            this.stopShoot();
+                    this.player.weapon.update();
+                    if (this.charState.canShoot) {
+                        if (this.player.weapon.ammo > 0 && this.shootTime === 0 &&
+                            (this.player.isPressed("shoot") ||
+                                (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_1.FireWave))) {
+                            this.shoot();
+                        }
+                        if (this.player.isHeld("shoot")) {
+                            this.chargeTime += game_6.game.deltaTime;
+                        }
+                        else {
+                            if (this.isCharging()) {
+                                this.shoot();
+                                this.stopCharge();
+                            }
+                        }
+                    }
+                    if (this.shootTime > 0) {
+                        this.shootTime -= game_6.game.deltaTime;
+                        if (this.shootTime <= 0) {
+                            if (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_1.FireWave) {
+                                this.shootTime = 0;
+                            }
+                            else {
+                                this.shootTime = 0;
+                            }
                         }
                     }
                     if (this.player.isPressed("weaponleft")) {
@@ -2086,7 +2141,6 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 };
                 Character.prototype.stopCharge = function () {
                     this.chargeTime = 0;
-                    this.renderEffect = "";
                     this.chargeFlashTime = 0;
                     if (this.chargeSoundId) {
                         this.chargeSound.stop(this.chargeSoundId);
@@ -2099,15 +2153,21 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.chargeEffect = undefined;
                 };
                 Character.prototype.shoot = function () {
-                    if (!this.isShooting) {
-                        this.isShooting = true;
-                        this.shootTime = 0;
+                    if (this.shootTime > 0)
+                        return;
+                    this.shootTime = this.player.weapon.rateOfFire;
+                    if (this.shootAnimTime === 0) {
                         this.changeSprite(this.charState.shootSprite, false);
-                        var xDir = this.xDir;
-                        if (this.charState instanceof WallSlide)
-                            xDir *= -1;
-                        this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
                     }
+                    else if (this.charState instanceof Idle) {
+                        this.frameIndex = 0;
+                        this.frameTime = 0;
+                    }
+                    this.shootAnimTime = 0.3;
+                    var xDir = this.xDir;
+                    if (this.charState instanceof WallSlide)
+                        xDir *= -1;
+                    this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
                 };
                 Character.prototype.getChargeLevel = function () {
                     if (this.chargeTime < this.charge1Time) {
@@ -2123,13 +2183,6 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         return 3;
                     }
                 };
-                Character.prototype.stopShoot = function () {
-                    if (this.isShooting) {
-                        this.isShooting = false;
-                        this.shootTime = 0;
-                        this.changeSprite(this.charState.sprite, false);
-                    }
-                };
                 Character.prototype.changeState = function (newState) {
                     if (this.charState && newState && this.charState.constructor === newState.constructor)
                         return;
@@ -2137,7 +2190,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         return;
                     this.changedStateInFrame = true;
                     newState.character = this;
-                    if (!this.isShooting || !newState.canShoot) {
+                    if (this.shootAnimTime === 0 || !newState.canShoot) {
                         this.changeSprite(newState.sprite, true);
                     }
                     else {
@@ -2149,7 +2202,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.charState = newState;
                     newState.onEnter(oldState);
                     if (!newState.canShoot) {
-                        this.stopShoot();
+                        this.shootTime = 0;
+                        this.shootAnimTime = 0;
                     }
                 };
                 Character.prototype.render = function (x, y) {
@@ -2202,23 +2256,6 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 };
                 CharState.prototype.update = function () {
                     this.stateTime += game_6.game.deltaTime;
-                    this.player.weapon.update();
-                    if (this.canShoot) {
-                        if (this.player.weapon.ammo > 0 &&
-                            (this.player.isPressed("shoot") ||
-                                (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_1.FireWave))) {
-                            this.character.shoot();
-                        }
-                        if (this.player.isHeld("shoot")) {
-                            this.character.chargeTime += game_6.game.deltaTime;
-                        }
-                        else {
-                            if (this.character.isCharging()) {
-                                this.character.shoot();
-                            }
-                            this.character.stopCharge();
-                        }
-                    }
                     var lastLeftWallData = game_6.game.level.checkCollisionActor(this.character, -1, 0);
                     this.lastLeftWall = lastLeftWallData ? lastLeftWallData.collider : undefined;
                     if (this.lastLeftWall && !this.lastLeftWall.isClimbable)
@@ -2876,11 +2913,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     baseY += 25;
                     game_8.game.sprites["hud_health_base"].draw(0, baseX, baseY, 1, 1, "", 1, player.palette);
                     baseY -= 16;
-                    for (var i = 0; i < player.health; i++) {
+                    for (var i = 0; i < Math.round(player.health); i++) {
                         game_8.game.sprites["hud_health_full"].draw(0, baseX, baseY);
                         baseY -= 2;
                     }
-                    for (var i = 0; i < player.maxHealth - player.health; i++) {
+                    for (var i = 0; i < player.maxHealth - Math.round(player.health); i++) {
                         game_8.game.sprites["hud_health_empty"].draw(0, baseX, baseY);
                         baseY -= 2;
                     }
@@ -2893,11 +2930,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         baseY += 25;
                         game_8.game.sprites["hud_weapon_base"].draw(player.weapon.index - 1, baseX, baseY);
                         baseY -= 16;
-                        for (var i = 0; i < player.weapon.ammo; i++) {
+                        for (var i = 0; i < Math.round(player.weapon.ammo); i++) {
                             game_8.game.sprites["hud_weapon_full"].draw(player.weapon.index - 1, baseX, baseY);
                             baseY -= 2;
                         }
-                        for (var i = 0; i < player.weapon.maxAmmo - player.weapon.ammo; i++) {
+                        for (var i = 0; i < player.weapon.maxAmmo - Math.round(player.weapon.ammo); i++) {
                             game_8.game.sprites["hud_health_empty"].draw(0, baseX, baseY);
                             baseY -= 2;
                         }
@@ -3492,6 +3529,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
         execute: function () {
             Actor = (function () {
                 function Actor(sprite) {
+                    this.renderEffectTime = 0;
                     this.pos = new point_12.Point(0, 0);
                     this.vel = new point_12.Point(0, 0);
                     this.useGravity = true;
@@ -3541,6 +3579,10 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                     configurable: true
                 });
                 Actor.prototype.update = function () {
+                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_10.game.deltaTime);
+                    if (this.renderEffectTime <= 0) {
+                        this.renderEffect = "";
+                    }
                     this.frameTime += game_10.game.deltaTime * this.frameSpeed;
                     if (this.frameTime >= this.currentFrame.duration) {
                         var onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
@@ -3620,7 +3662,6 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                     else {
                         this.renderFromAngle(x, y);
                     }
-                    this.renderEffect = "";
                     if (game_10.game.showHitboxes && this.collider) {
                         Helpers.drawPolygon(game_10.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                         Helpers.drawCircle(game_10.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");

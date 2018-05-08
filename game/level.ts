@@ -149,11 +149,11 @@ export class Level {
     baseY += 25;
     game.sprites["hud_health_base"].draw(0, baseX, baseY, 1, 1, "", 1, player.palette);
     baseY -= 16;
-    for(let i = 0; i < player.health; i++) {
+    for(let i = 0; i < Math.round(player.health); i++) {
       game.sprites["hud_health_full"].draw(0, baseX, baseY);
       baseY -= 2;
     }
-    for(let i = 0; i < player.maxHealth - player.health; i++) {
+    for(let i = 0; i < player.maxHealth - Math.round(player.health); i++) {
       game.sprites["hud_health_empty"].draw(0, baseX, baseY);
       baseY -= 2;
     }
@@ -168,11 +168,11 @@ export class Level {
       baseY += 25;
       game.sprites["hud_weapon_base"].draw(player.weapon.index - 1, baseX, baseY);
       baseY -= 16;
-      for(let i = 0; i < player.weapon.ammo; i++) {
+      for(let i = 0; i < Math.round(player.weapon.ammo); i++) {
         game.sprites["hud_weapon_full"].draw(player.weapon.index - 1, baseX, baseY);
         baseY -= 2;
       }
-      for(let i = 0; i < player.weapon.maxAmmo - player.weapon.ammo; i++) {
+      for(let i = 0; i < player.weapon.maxAmmo - Math.round(player.weapon.ammo); i++) {
         game.sprites["hud_health_empty"].draw(0, baseX, baseY);
         baseY -= 2;
       }

@@ -1,10 +1,6 @@
--Shotgun ice meatshot when hit
--Spazzy homing things
--Spazzy rapid fire animation
--sting left shoot offset is wrong
--rolling shield + other explosions played at wrong locations sometimes
--Fire wave adds an extra ammo bar
--rolling shield too slow
+-getIntersectPoint is not working sometimes
+  -See onCollision in projectile.ts
+-
 
 -All the special weapon charges
 -Menu system
@@ -18,6 +14,7 @@
 ========================
 Useful optimizations and fixes
 ========================
+-Shotgun ice meatshot when hit
 -If pushing against wall don't play run animation
 -Characters y positions can be inconsistent on ground
 -Shoot offsets are bad for wall slide
