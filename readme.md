@@ -14,6 +14,7 @@
 ========================
 Useful optimizations and fixes
 ========================
+-Homing torpedo better behavior
 -Shotgun ice meatshot when hit
 -If pushing against wall don't play run animation
 -Characters y positions can be inconsistent on ground

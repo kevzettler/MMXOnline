@@ -33,6 +33,7 @@ export class Character extends Actor {
   shootAnimTime: number = 0;
   ai: AI;
   projectileCooldown: { [name: string]: number } = {};  //Player id + projectile name
+  invulnFrames: number = 0;
   
   constructor(player: Player, x: number, y: number) {
     super(undefined);
@@ -79,6 +80,19 @@ export class Character extends Actor {
         this.changeSprite(this.charState.sprite, false);
       }
     }
+    if(this.invulnFrames > 0) {
+      this.invulnFrames = Helpers.clampMin0(this.invulnFrames - game.deltaTime);
+      if(game.level.twoFrameCycle > 0) {
+        this.renderEffect = "hit";
+      }
+      else {
+        this.renderEffect = "";
+      }
+      
+      if(this.invulnFrames <= 0) {
+        this.renderEffect = "";
+      } 
+    }
     
     if(this.ai) {
       this.ai.update();
@@ -88,7 +102,7 @@ export class Character extends Actor {
 
     this.player.weapon.update();
     if(this.charState.canShoot) {
-      if(this.player.weapon.ammo > 0 && this.shootTime === 0 &&
+      if(this.shootTime === 0 &&
         (
           this.player.isPressed("shoot") ||  
           (this.player.isHeld("shoot") && this.player.weapon instanceof FireWave)
@@ -96,7 +110,7 @@ export class Character extends Actor {
       ) {
         this.shoot();
       }
-      if(this.player.isHeld("shoot")) {
+      if(this.player.isHeld("shoot") && this.player.weapon.ammo > 0) {
         this.chargeTime += game.deltaTime;
       }
       else {
@@ -189,6 +203,7 @@ export class Character extends Actor {
 
   shoot() {
     if(this.shootTime > 0) return;
+    if(this.player.weapon.ammo <= 0) return;
     this.shootTime = this.player.weapon.rateOfFire;
     if(this.shootAnimTime === 0) {
       this.changeSprite(this.charState.shootSprite, false);
@@ -201,6 +216,7 @@ export class Character extends Actor {
     let xDir = this.xDir;
     if(this.charState instanceof WallSlide) xDir *= -1;
     this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
+    this.chargeTime = 0;
     
   }
 

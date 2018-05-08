@@ -971,18 +971,36 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                         var character_2 = other.collider.gameObject;
                         if (character_2 instanceof character_1.Character) {
                             var key = this.constructor.toString() + this.damager.owner.id.toString();
-                            if (!character_2.projectileCooldown[key]) {
+                            if (!character_2.projectileCooldown[key] && !character_2.invulnFrames) {
                                 character_2.projectileCooldown[key] = this.hitCooldown;
                                 character_2.renderEffect = "hit";
                                 character_2.renderEffectTime = 0.1;
                                 character_2.applyDamage(this.damager.damage);
-                                if (!this.flinch) {
-                                    game_2.game.playSound("hit");
-                                }
-                                else {
-                                    game_2.game.playSound("hurt");
+                                if (this.flinch || game_2.game.alwaysFlinch) {
+                                    if (game_2.game.invulnFrames) {
+                                        game_2.game.playSound("weakness");
+                                    }
+                                    else {
+                                        game_2.game.playSound("hurt");
+                                    }
                                     character_2.setHurt(this.pos.x > character_2.pos.x ? -1 : 1);
                                 }
+                                else {
+                                    if (game_2.game.invulnFrames) {
+                                        game_2.game.playSound("weakness");
+                                    }
+                                    else {
+                                        game_2.game.playSound("hit");
+                                    }
+                                }
+                                if (game_2.game.invulnFrames) {
+                                    character_2.invulnFrames = 1;
+                                    character_2.renderEffectTime = 1;
+                                }
+                            }
+                            else if (character_2.invulnFrames && !character_2.projectileCooldown[key] &&
+                                !(this instanceof TornadoProj) && !(this instanceof FireWaveProj)) {
+                                game_2.game.playSound("hit");
                             }
                             this.onHitChar(character_2);
                         }
@@ -2020,6 +2038,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _this.shootTime = 0;
                     _this.shootAnimTime = 0;
                     _this.projectileCooldown = {};
+                    _this.invulnFrames = 0;
                     _this.pos.x = x;
                     _this.pos.y = y;
                     _this.player = player;
@@ -2057,6 +2076,18 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                             this.changeSprite(this.charState.sprite, false);
                         }
                     }
+                    if (this.invulnFrames > 0) {
+                        this.invulnFrames = Helpers.clampMin0(this.invulnFrames - game_6.game.deltaTime);
+                        if (game_6.game.level.twoFrameCycle > 0) {
+                            this.renderEffect = "hit";
+                        }
+                        else {
+                            this.renderEffect = "";
+                        }
+                        if (this.invulnFrames <= 0) {
+                            this.renderEffect = "";
+                        }
+                    }
                     if (this.ai) {
                         this.ai.update();
                     }
@@ -2064,12 +2095,12 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _super.prototype.update.call(this);
                     this.player.weapon.update();
                     if (this.charState.canShoot) {
-                        if (this.player.weapon.ammo > 0 && this.shootTime === 0 &&
+                        if (this.shootTime === 0 &&
                             (this.player.isPressed("shoot") ||
                                 (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_1.FireWave))) {
                             this.shoot();
                         }
-                        if (this.player.isHeld("shoot")) {
+                        if (this.player.isHeld("shoot") && this.player.weapon.ammo > 0) {
                             this.chargeTime += game_6.game.deltaTime;
                         }
                         else {
@@ -2155,6 +2186,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 Character.prototype.shoot = function () {
                     if (this.shootTime > 0)
                         return;
+                    if (this.player.weapon.ammo <= 0)
+                        return;
                     this.shootTime = this.player.weapon.rateOfFire;
                     if (this.shootAnimTime === 0) {
                         this.changeSprite(this.charState.shootSprite, false);
@@ -2168,6 +2201,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (this.charState instanceof WallSlide)
                         xDir *= -1;
                     this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
+                    this.chargeTime = 0;
                 };
                 Character.prototype.getChargeLevel = function () {
                     if (this.chargeTime < this.charge1Time) {
@@ -3106,6 +3140,8 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.isServer = false;
                     this.isClient = true;
                     this.showHitboxes = false;
+                    this.alwaysFlinch = false;
+                    this.invulnFrames = false;
                     this.startTime = 0;
                     this.deltaTime = 0;
                     this.time = 0;
@@ -3177,11 +3213,19 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     var app1 = new Vue({
                         el: '#app',
                         data: {
-                            showHitboxes: false
+                            showHitboxes: false,
+                            alwaysFlinch: false,
+                            invulnFrames: false,
                         },
                         methods: {
                             onHitboxCheckChange: function () {
                                 game.showHitboxes = this.showHitboxes;
+                            },
+                            onAlwaysFlinchChange: function () {
+                                game.alwaysFlinch = this.alwaysFlinch;
+                            },
+                            onInvulnFramesChange: function () {
+                                game.invulnFrames = this.invulnFrames;
                             }
                         }
                     });
@@ -3765,7 +3809,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
         }
     };
 });
-var soundFiles = ["charge_loop.wav", "charge_start.wav", "csting.wav", "dash.wav", "die.wav", "explosion.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav", "torpedo.wav"];
+var soundFiles = ["charge_loop.wav", "charge_start.wav", "csting.wav", "dash.wav", "die.wav", "explosion.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav", "torpedo.wav", "weakness.wav"];
 System.register("vue", [], function (exports_24, context_24) {
     "use strict";
     var __moduleName = context_24 && context_24.id;

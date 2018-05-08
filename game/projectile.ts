@@ -52,19 +52,38 @@ export class Projectile extends Actor {
       if(character instanceof Character) {
 
         let key: string = this.constructor.toString() + this.damager.owner.id.toString();
-        if(!character.projectileCooldown[key]) {
+        
+        if(!character.projectileCooldown[key] && !character.invulnFrames) {
           character.projectileCooldown[key] = this.hitCooldown;
 
           character.renderEffect = "hit";
           character.renderEffectTime = 0.1;
           character.applyDamage(this.damager.damage);
-          if(!this.flinch) {
-            game.playSound("hit");
-          }
-          else {
-            game.playSound("hurt");
+          if(this.flinch || game.alwaysFlinch) {
+            if(game.invulnFrames) {
+              game.playSound("weakness");
+            }
+            else {
+              game.playSound("hurt");
+            }
             character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
           }
+          else {
+            if(game.invulnFrames) {
+              game.playSound("weakness");
+            }
+            else {
+              game.playSound("hit");
+            }
+          }
+          if(game.invulnFrames) {
+            character.invulnFrames = 1;
+            character.renderEffectTime = 1;
+          }
+        }
+        else if(character.invulnFrames && !character.projectileCooldown[key] && 
+          !(this instanceof TornadoProj) && !(this instanceof FireWaveProj)) {
+          game.playSound("hit");
         }
         this.onHitChar(character);
       }

@@ -21,6 +21,8 @@ class Game {
   isClient: boolean = true;
 
   showHitboxes: boolean = false;
+  alwaysFlinch: boolean = false;
+  invulnFrames: boolean = false;
 
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -112,11 +114,19 @@ class Game {
     var app1 = new Vue({
       el: '#app',
       data: {
-        showHitboxes: false
+        showHitboxes: false,
+        alwaysFlinch: false,
+        invulnFrames: false,
       },
       methods: {
         onHitboxCheckChange() {
           game.showHitboxes = this.showHitboxes;
+        },
+        onAlwaysFlinchChange() {
+          game.alwaysFlinch = this.alwaysFlinch;
+        },
+        onInvulnFramesChange() {
+          game.invulnFrames = this.invulnFrames;
         }
       }
     });
