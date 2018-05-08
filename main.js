@@ -623,6 +623,12 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
         return autoInc;
     }
     exports_6("getAutoIncId", getAutoIncId);
+    function noCanvasSmoothing(c) {
+        c.webkitImageSmoothingEnabled = false;
+        c.mozImageSmoothingEnabled = false;
+        c.imageSmoothingEnabled = false;
+    }
+    exports_6("noCanvasSmoothing", noCanvasSmoothing);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette) {
         if (!sW) {
             ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
@@ -819,10 +825,13 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
             autoInc = 0;
             helperCanvas = document.createElement("canvas");
             helperCtx = helperCanvas.getContext("2d");
+            noCanvasSmoothing(helperCtx);
             helperCanvas2 = document.createElement("canvas");
             helperCtx2 = helperCanvas2.getContext("2d");
+            noCanvasSmoothing(helperCtx2);
             helperCanvas3 = document.createElement("canvas");
             helperCtx3 = helperCanvas3.getContext("2d");
+            noCanvasSmoothing(helperCtx3);
         }
     };
 });
@@ -852,7 +861,7 @@ System.register("geometry", ["collider", "game", "helpers"], function (exports_7
                 Geometry.prototype.update = function () {
                 };
                 Geometry.prototype.render = function (x, y) {
-                    if (game_1.game.showHitboxes) {
+                    if (game_1.game.options.showHitboxes) {
                         Helpers.drawPolygon(game_1.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
                 };
@@ -976,8 +985,8 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                                 character_2.renderEffect = "hit";
                                 character_2.renderEffectTime = 0.1;
                                 character_2.applyDamage(this.damager.damage);
-                                if (this.flinch || game_2.game.alwaysFlinch) {
-                                    if (game_2.game.invulnFrames) {
+                                if (this.flinch || game_2.game.options.alwaysFlinch) {
+                                    if (game_2.game.options.invulnFrames) {
                                         game_2.game.playSound("weakness");
                                     }
                                     else {
@@ -986,14 +995,14 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                                     character_2.setHurt(this.pos.x > character_2.pos.x ? -1 : 1);
                                 }
                                 else {
-                                    if (game_2.game.invulnFrames) {
+                                    if (game_2.game.options.invulnFrames) {
                                         game_2.game.playSound("weakness");
                                     }
                                     else {
                                         game_2.game.playSound("hit");
                                     }
                                 }
-                                if (game_2.game.invulnFrames) {
+                                if (game_2.game.options.invulnFrames) {
                                     character_2.invulnFrames = 1;
                                     character_2.renderEffectTime = 1;
                                 }
@@ -1249,7 +1258,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     }
                     this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     this.renderEffect = "";
-                    if (game_2.game.showHitboxes && this.collider) {
+                    if (game_2.game.options.showHitboxes && this.collider) {
                         Helpers.drawPolygon(game_2.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
                 };
@@ -2911,8 +2920,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.twoFrameCycle = -2;
                 };
                 Level.prototype.render = function () {
-                    game_8.game.canvas.width = Math.min(game_8.game.canvas.width, this.background.width * this.zoomScale);
-                    game_8.game.canvas.height = Math.min(game_8.game.canvas.height, this.background.height * this.zoomScale);
+                    game_8.game.canvas.width = Math.min(game_8.game.canvas.width, Math.round(this.background.width * this.zoomScale));
+                    game_8.game.canvas.height = Math.min(game_8.game.canvas.height, Math.round(this.background.height * this.zoomScale));
+                    if (!game_8.game.options.antiAlias) {
+                        Helpers.noCanvasSmoothing(game_8.game.ctx);
+                    }
                     if (this.mainPlayer.character) {
                         this.computeCamPos(this.mainPlayer.character);
                     }
@@ -3102,10 +3114,10 @@ System.register("levels", [], function (exports_18, context_18) {
         }
     };
 });
-System.register("game", ["sprite", "level", "sprites", "levels", "player", "color"], function (exports_19, context_19) {
+System.register("game", ["sprite", "level", "sprites", "levels", "player", "color", "helpers"], function (exports_19, context_19) {
     "use strict";
     var __moduleName = context_19 && context_19.id;
-    var sprite_1, level_1, sprites_1, levels_1, player_1, color_1, Game, game;
+    var sprite_1, level_1, sprites_1, levels_1, player_1, color_1, Helpers, Options, Game, game;
     return {
         setters: [
             function (sprite_1_1) {
@@ -3125,9 +3137,21 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
             },
             function (color_1_1) {
                 color_1 = color_1_1;
+            },
+            function (Helpers_9) {
+                Helpers = Helpers_9;
             }
         ],
         execute: function () {
+            Options = (function () {
+                function Options() {
+                    this.showHitboxes = false;
+                    this.alwaysFlinch = false;
+                    this.invulnFrames = false;
+                    this.antiAlias = false;
+                }
+                return Options;
+            }());
             Game = (function () {
                 function Game() {
                     this.sprites = {};
@@ -3139,9 +3163,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.palettes = {};
                     this.isServer = false;
                     this.isClient = true;
-                    this.showHitboxes = false;
-                    this.alwaysFlinch = false;
-                    this.invulnFrames = false;
+                    this.options = new Options();
                     this.startTime = 0;
                     this.deltaTime = 0;
                     this.time = 0;
@@ -3149,9 +3171,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.soundSheetLoaded = false;
                     this.canvas = $("#canvas")[0];
                     this.ctx = this.canvas.getContext("2d");
-                    this.ctx.webkitImageSmoothingEnabled = false;
-                    this.ctx.mozImageSmoothingEnabled = false;
-                    this.ctx.imageSmoothingEnabled = false;
+                    Helpers.noCanvasSmoothing(this.ctx);
                 }
                 Game.prototype.start = function () {
                     var _this = this;
@@ -3210,23 +3230,11 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     }
                 };
                 Game.prototype.startVue = function () {
+                    var options = this.options;
                     var app1 = new Vue({
                         el: '#app',
                         data: {
-                            showHitboxes: false,
-                            alwaysFlinch: false,
-                            invulnFrames: false,
-                        },
-                        methods: {
-                            onHitboxCheckChange: function () {
-                                game.showHitboxes = this.showHitboxes;
-                            },
-                            onAlwaysFlinchChange: function () {
-                                game.alwaysFlinch = this.alwaysFlinch;
-                            },
-                            onInvulnFramesChange: function () {
-                                game.invulnFrames = this.invulnFrames;
-                            }
+                            options: options
                         }
                     });
                 };
@@ -3440,8 +3448,8 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
             function (game_9_1) {
                 game_9 = game_9_1;
             },
-            function (Helpers_9) {
-                Helpers = Helpers_9;
+            function (Helpers_10) {
+                Helpers = Helpers_10;
             }
         ],
         execute: function () {
@@ -3566,8 +3574,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
             function (game_10_1) {
                 game_10 = game_10_1;
             },
-            function (Helpers_10) {
-                Helpers = Helpers_10;
+            function (Helpers_11) {
+                Helpers = Helpers_11;
             }
         ],
         execute: function () {
@@ -3706,7 +3714,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_23, con
                     else {
                         this.renderFromAngle(x, y);
                     }
-                    if (game_10.game.showHitboxes && this.collider) {
+                    if (game_10.game.options.showHitboxes && this.collider) {
                         Helpers.drawPolygon(game_10.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                         Helpers.drawCircle(game_10.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
                     }

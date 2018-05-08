@@ -59,8 +59,8 @@ export class Projectile extends Actor {
           character.renderEffect = "hit";
           character.renderEffectTime = 0.1;
           character.applyDamage(this.damager.damage);
-          if(this.flinch || game.alwaysFlinch) {
-            if(game.invulnFrames) {
+          if(this.flinch || game.options.alwaysFlinch) {
+            if(game.options.invulnFrames) {
               game.playSound("weakness");
             }
             else {
@@ -69,14 +69,14 @@ export class Projectile extends Actor {
             character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
           }
           else {
-            if(game.invulnFrames) {
+            if(game.options.invulnFrames) {
               game.playSound("weakness");
             }
             else {
               game.playSound("hit");
             }
           }
-          if(game.invulnFrames) {
+          if(game.options.invulnFrames) {
             character.invulnFrames = 1;
             character.renderEffectTime = 1;
           }
@@ -350,7 +350,7 @@ export class TornadoProj extends Projectile {
     this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
 
     this.renderEffect = "";
-    if(game.showHitboxes && this.collider) {
+    if(game.options.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       //Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
     }

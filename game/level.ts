@@ -107,8 +107,12 @@ export class Level {
 
   render() {
     
-    game.canvas.width = Math.min(game.canvas.width, this.background.width * this.zoomScale);
-    game.canvas.height = Math.min(game.canvas.height, this.background.height * this.zoomScale);
+    game.canvas.width = Math.min(game.canvas.width, Math.round(this.background.width * this.zoomScale));
+    game.canvas.height = Math.min(game.canvas.height, Math.round(this.background.height * this.zoomScale));
+    
+    if(!game.options.antiAlias) {
+      Helpers.noCanvasSmoothing(game.ctx);
+    }
 
     if(this.mainPlayer.character) {
       this.computeCamPos(this.mainPlayer.character);

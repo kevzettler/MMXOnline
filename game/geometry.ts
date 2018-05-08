@@ -21,7 +21,7 @@ export class Geometry {
   }
 
   render(x: number, y: number) {
-    if(game.showHitboxes) {
+    if(game.options.showHitboxes) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
     }
   }

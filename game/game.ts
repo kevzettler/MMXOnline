@@ -4,6 +4,15 @@ import { spriteJsons } from "./sprites";
 import { levelJsons } from "./levels";
 import { Player } from "./player";
 import { Palette } from "./color";
+import * as Helpers from "./helpers";
+
+class Options {
+  showHitboxes: boolean = false;
+  alwaysFlinch: boolean = false;
+  invulnFrames: boolean = false;
+  antiAlias: boolean = false;
+  constructor() { }
+}
 
 class Game {
 
@@ -20,9 +29,7 @@ class Game {
   isServer: boolean = false;
   isClient: boolean = true;
 
-  showHitboxes: boolean = false;
-  alwaysFlinch: boolean = false;
-  invulnFrames: boolean = false;
+  options: Options = new Options();
 
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -39,9 +46,7 @@ class Game {
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.ctx = this.canvas.getContext("2d");
 
-    this.ctx.webkitImageSmoothingEnabled = false;
-    this.ctx.mozImageSmoothingEnabled = false;
-    this.ctx.imageSmoothingEnabled = false; /// future
+    Helpers.noCanvasSmoothing(this.ctx);
   }
 
   start() {
@@ -110,24 +115,14 @@ class Game {
   }
 
   startVue() {
+
+    let options = this.options;
+
     // @ts-ignore
     var app1 = new Vue({
       el: '#app',
       data: {
-        showHitboxes: false,
-        alwaysFlinch: false,
-        invulnFrames: false,
-      },
-      methods: {
-        onHitboxCheckChange() {
-          game.showHitboxes = this.showHitboxes;
-        },
-        onAlwaysFlinchChange() {
-          game.alwaysFlinch = this.alwaysFlinch;
-        },
-        onInvulnFramesChange() {
-          game.invulnFrames = this.invulnFrames;
-        }
+        options: options
       }
     });
   }

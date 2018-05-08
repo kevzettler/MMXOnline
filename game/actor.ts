@@ -205,7 +205,7 @@ export class Actor {
       this.renderFromAngle(x, y);
     }
     
-    if(game.showHitboxes && this.collider) {
+    if(game.options.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
     }

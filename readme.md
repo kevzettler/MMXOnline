@@ -1,6 +1,6 @@
 -getIntersectPoint is not working sometimes
   -See onCollision in projectile.ts
--
+-Shoot 3 bullets only
 
 -All the special weapon charges
 -Menu system

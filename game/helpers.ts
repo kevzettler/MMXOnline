@@ -129,14 +129,23 @@ export function getAutoIncId() {
   return autoInc;
 }
 
+export function noCanvasSmoothing(c: CanvasRenderingContext2D) {
+  c.webkitImageSmoothingEnabled = false;
+  c.mozImageSmoothingEnabled = false;
+  c.imageSmoothingEnabled = false; /// future
+}
+
 let helperCanvas = document.createElement("canvas");
 let helperCtx = helperCanvas.getContext("2d");
+noCanvasSmoothing(helperCtx);
 
 let helperCanvas2 = document.createElement("canvas");
 let helperCtx2 = helperCanvas2.getContext("2d");
+noCanvasSmoothing(helperCtx2);
 
 let helperCanvas3 = document.createElement("canvas");
 let helperCtx3 = helperCanvas3.getContext("2d");
+noCanvasSmoothing(helperCtx3);
 
 export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, 
   x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette): void {

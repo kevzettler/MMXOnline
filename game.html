@@ -9,9 +9,10 @@
 <canvas id="canvas" width="1200" height="800"></canvas>
 
 <div id="app">
-  <input type="checkbox" v-model="showHitboxes" @change="onHitboxCheckChange()">Show hitboxes? <br>
-  <input type="checkbox" v-model="alwaysFlinch" @change="onAlwaysFlinchChange()">Always flinch? <br>
-  <input type="checkbox" v-model="invulnFrames" @change="onInvulnFramesChange()">Invuln frames? <br>
+  <input type="checkbox" v-model="options.showHitboxes">Show hitboxes? <br>
+  <input type="checkbox" v-model="options.alwaysFlinch">Always flinch? <br>
+  <input type="checkbox" v-model="options.invulnFrames">Invuln frames? <br>
+  <input type="checkbox" v-model="options.antiAlias">Anti Alias? <br>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
