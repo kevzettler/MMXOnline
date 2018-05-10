@@ -9,13 +9,13 @@ export class Collider {
   isTrigger: boolean;
   wallOnly: boolean = false;
   isClimbable: boolean = true;
-  gameObject: GameObject;
+  //gameObject: GameObject;
   offset: Point = new Point(0, 0);
 
-  constructor(points: Point[], isTrigger: boolean, gameObject: GameObject) {
+  constructor(points: Point[], isTrigger: boolean) {
     this._shape = new Shape(points);
     this.isTrigger = isTrigger;
-    this.gameObject = gameObject;
+    //this.gameObject = gameObject;
   }
 
   get shape() {
@@ -46,11 +46,13 @@ export class CollideData {
   collider: Collider; //The other thing that was collided with
   vel: Point; //The velocity at which we collided with the other thing above
   isTrigger: boolean;
+  gameObject: GameObject; //Gameobject of collider
 
-  constructor(collider: Collider, vel: Point, isTrigger: boolean) {
+  constructor(collider: Collider, vel: Point, isTrigger: boolean, gameObject: GameObject) {
     this.collider = collider;
     this.vel = vel;
     this.isTrigger = isTrigger;
+    this.gameObject = gameObject;
   }
 
 }

@@ -9,7 +9,7 @@ export class Geometry {
   collider: Collider;
 
   constructor(points: Point[]) {
-    this.collider = new Collider(points, false, this);
+    this.collider = new Collider(points, false);
   }
 
   preUpdate() {

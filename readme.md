@@ -1,6 +1,9 @@
+-reset game after select button pressed
+-character heights vary on ground
+-Rolling shield on ceiling
+
 -getIntersectPoint is not working sometimes
   -See onCollision in projectile.ts
--Shoot 3 bullets only
 
 -All the special weapon charges
 -Menu system

@@ -39,6 +39,7 @@ export class Player {
       this.inputMapping[67] = "shoot";
       this.inputMapping[65] = "weaponleft";
       this.inputMapping[83] = "weaponright";
+      this.inputMapping[27] = "reset";
     }
 
     if(!isAI && alliance === 1) {
@@ -140,6 +141,11 @@ export class Player {
     let key = this.buttonMapping[button];
     if(!this.controllerInput[key]) this.controllerInputPressed[key] = true;
     this.controllerInput[key] = true;
+    if(key === "reset") {
+      game.restartLevel("sm_bossroom");
+      console.log("RESET");
+      return;
+    }
   }
 
   onButtonUp(button: number) {
@@ -174,6 +180,11 @@ export class Player {
       if(!game.level.localPlayers[1].isAI) {
         game.level.localPlayers[1].character.addAI();
       }
+    }
+    if(key === "reset") {
+      game.restartLevel("sm_bossroom");
+      console.log("RESET");
+      return;
     }
 
   }

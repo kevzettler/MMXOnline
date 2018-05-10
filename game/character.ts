@@ -43,7 +43,7 @@ export class Character extends Actor {
     this.isDashing = false;
 
     let rect = new Rect(0, 0, 18, 34);
-    this.globalCollider = new Collider(rect.getPoints(), false, this);
+    this.globalCollider = new Collider(rect.getPoints(), false);
     this.changeState(new Idle());
     
     this.jumpPower = 350;
@@ -51,8 +51,8 @@ export class Character extends Actor {
 
     this.chargeTime = 0;
     this.charge1Time = 0.75;
-    this.charge2Time = 1.5;
-    this.charge3Time = 2.25;
+    this.charge2Time = 1.75;
+    this.charge3Time = 3;
 
     this.chargeFlashTime = 0;
     this.chargeSound = game.sounds["charge_start"];
@@ -102,7 +102,7 @@ export class Character extends Actor {
 
     this.player.weapon.update();
     if(this.charState.canShoot) {
-      if(this.shootTime === 0 &&
+      if(this.player.weapon.canShoot(this.player) && this.shootTime === 0 &&
         (
           this.player.isPressed("shoot") ||  
           (this.player.isHeld("shoot") && this.player.weapon instanceof FireWave)

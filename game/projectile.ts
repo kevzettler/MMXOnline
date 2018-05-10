@@ -11,6 +11,7 @@ import * as Helpers from "./helpers";
 import { LoDashImplicitNumberArrayWrapper } from "../node_modules/@types/lodash/index";
 import { GameObject } from "./gameObject";
 import { Rect } from "./rect";
+import { FireWave, Tornado, Torpedo, ShotgunIce, RollingShield, ElectricSpark, Sting, Boomerang } from "./weapon";
 
 export class Projectile extends Actor {
 
@@ -44,11 +45,20 @@ export class Projectile extends Actor {
   }
 
   onCollision(other: CollideData) {
-    let character = other.collider.gameObject;
+
+    if(this instanceof TorpedoProj && other.gameObject instanceof Projectile && this.damager.owner !== other.gameObject.damager.owner) {
+      this.destroySelf(this.fadeSprite, this.fadeSound);
+      if(!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof FireWaveProj)) {
+        other.gameObject.destroySelf(other.gameObject.fadeSprite, other.gameObject.fadeSound);
+      }
+      return;
+    }
+
+    let character = other.gameObject;
     if(character instanceof Character && character.player.alliance !== this.damager.owner.alliance) {
       let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
       //if(pos) this.pos = pos.clone();
-      let character = other.collider.gameObject;
+      let character = other.gameObject;
       if(character instanceof Character) {
 
         let key: string = this.constructor.toString() + this.damager.owner.id.toString();
@@ -58,8 +68,20 @@ export class Projectile extends Actor {
 
           character.renderEffect = "hit";
           character.renderEffectTime = 0.1;
-          character.applyDamage(this.damager.damage);
-          if(this.flinch || game.options.alwaysFlinch) {
+          
+          let weakness = false;
+          if(this instanceof TorpedoProj && character.player.weapon instanceof Boomerang) weakness = true;
+          if(this instanceof StingProj && character.player.weapon instanceof Tornado) weakness = true;
+          if(this instanceof RollingShieldProj && character.player.weapon instanceof Torpedo) weakness = true;
+          if(this instanceof FireWaveProj && character.player.weapon instanceof ShotgunIce) weakness = true;
+          if(this instanceof TornadoProj && character.player.weapon instanceof FireWave) weakness = true;
+          if(this instanceof BoomerangProj && character.player.weapon instanceof Sting) weakness = true;
+          if(this instanceof ElectricSparkProj && character.player.weapon instanceof RollingShield) weakness = true;
+          if(this instanceof ShotgunIceProj && character.player.weapon instanceof ElectricSpark) weakness = true;
+          
+          character.applyDamage(this.damager.damage * (weakness ? 2 : 1));
+
+          if(this.flinch || game.options.alwaysFlinch || weakness) {
             if(game.options.invulnFrames) {
               game.playSound("weakness");
             }
@@ -88,7 +110,7 @@ export class Projectile extends Actor {
         this.onHitChar(character);
       }
     }
-    let wall = other.collider.gameObject;
+    let wall = other.gameObject;
     if(wall instanceof Wall) {
       this.onHitWall(wall);
     }
@@ -168,21 +190,35 @@ export class TorpedoProj extends Projectile {
     super(pos, vel, 1, player, game.sprites["torpedo"]);
     this.fadeSprite = game.sprites["explosion"];
     this.fadeSound = "explosion";
-    this.target = game.level.getClosestTarget(this.pos, this.damager.owner.alliance);
     this.angle = this.xDir === -1 ? 180 : 0;
+    this.vel.x = this.vel.x * 0.25;
   }
 
   update() {
     super.update();
     
     if(this.target) {
-      this.vel = new Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.speed);
-      let dTo = this.pos.directionTo(this.target.centerPos).normalize();
-      
-      var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
+      if(this.time < 7.5) {
+        this.vel = this.vel.add(new Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.speed * 0.25));
+        if(this.vel.magnitude > this.speed) {
+          this.vel = this.vel.normalize().times(this.speed);
+        }
+        let dTo = this.pos.directionTo(this.target.centerPos).normalize();
+        
+        var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
 
-      destAngle = Helpers.to360(destAngle);
-      this.angle = Helpers.lerpAngle(this.angle, destAngle, game.deltaTime * 10);
+        destAngle = Helpers.to360(destAngle);
+        this.angle = Helpers.lerpAngle(this.angle, destAngle, game.deltaTime * 3);
+      }
+      else {
+        
+      }
+    }
+    else if(this.time >= 0.15) {
+      this.target = game.level.getClosestTarget(this.pos, this.damager.owner.alliance);
+    }
+    else if(this.time < 0.15) {
+      this.vel.x += this.xDir * game.deltaTime * 300;
     }
 
     this.smokeTime += game.deltaTime;
@@ -319,6 +355,9 @@ export class FireWaveProj extends Projectile {
     }
   }
 
+  onHitChar(character: Character) {
+  }
+
 }
 
 export class TornadoProj extends Projectile {
@@ -369,7 +408,7 @@ export class TornadoProj extends Projectile {
     let botY = this.spriteStart.frames[0].rect.h * 2;
 
     let rect = new Rect(topX, topY, botX, botY);
-    this.globalCollider = new Collider(rect.getPoints(), true, this);
+    this.globalCollider = new Collider(rect.getPoints(), true);
 
     if(this.time > 0.2) {
       if(this.length < 6) {
@@ -425,10 +464,12 @@ export class BoomerangProj extends Projectile {
 
   onCollision(other: CollideData) {
     super.onCollision(other);
-    let character = other.collider.gameObject;
+    let character = other.gameObject;
     if(this.time > 0.22 && character instanceof Character && character.player === this.damager.owner) {
       this.destroySelf();
-      character.player.weapon.ammo++;
+      if(character.player.weapon instanceof Boomerang) {
+        character.player.weapon.ammo++;
+      }
     }
   }
 
@@ -446,13 +487,16 @@ export class BoomerangProj extends Projectile {
         this.vel.x = Helpers.cos(this.angle) * this.speed;
         this.vel.y = Helpers.sin(this.angle) * this.speed;
       }
-      else {
+      else if(this.damager.owner.character) {
         let dTo = this.pos.directionTo(this.damager.owner.character.centerPos).normalize();
         var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
         destAngle = Helpers.to360(destAngle);
         this.angle = Helpers.lerpAngle(this.angle, destAngle, game.deltaTime * 10);
         this.vel.x = Helpers.cos(this.angle) * this.speed;
         this.vel.y = Helpers.sin(this.angle) * this.speed;
+      }
+      else {
+        this.destroySelf();
       }
     }
   }

@@ -854,7 +854,7 @@ System.register("geometry", ["collider", "game", "helpers"], function (exports_7
         execute: function () {
             Geometry = (function () {
                 function Geometry(points) {
-                    this.collider = new collider_1.Collider(points, false, this);
+                    this.collider = new collider_1.Collider(points, false);
                 }
                 Geometry.prototype.preUpdate = function () {
                 };
@@ -915,20 +915,259 @@ System.register("damager", [], function (exports_9, context_9) {
         }
     };
 });
-System.register("projectile", ["actor", "damager", "point", "collider", "character", "wall", "game", "helpers", "rect"], function (exports_10, context_10) {
+System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], function (exports_10, context_10) {
     "use strict";
     var __moduleName = context_10 && context_10.id;
-    var actor_1, damager_1, point_4, collider_2, character_1, wall_1, game_2, Helpers, rect_2, Projectile, BusterProj, Buster2Proj, Buster3Proj, Buster4Proj, TorpedoProj, StingProj, RollingShieldProj, FireWaveProj, TornadoProj, ElectricSparkProj, BoomerangProj, ShotgunIceProj;
+    var projectile_1, game_2, point_4, Helpers, actor_1, Weapon, Buster, Torpedo, Sting, RollingShield, FireWave, Tornado, ElectricSpark, Boomerang, ShotgunIce;
     return {
         setters: [
+            function (projectile_1_1) {
+                projectile_1 = projectile_1_1;
+            },
+            function (game_2_1) {
+                game_2 = game_2_1;
+            },
+            function (point_4_1) {
+                point_4 = point_4_1;
+            },
+            function (Helpers_2) {
+                Helpers = Helpers_2;
+            },
             function (actor_1_1) {
                 actor_1 = actor_1_1;
+            }
+        ],
+        execute: function () {
+            Weapon = (function () {
+                function Weapon() {
+                    this.speed = 350;
+                    this.soundTime = 0;
+                    this.ammo = 32;
+                    this.maxAmmo = 32;
+                    this.rateOfFire = 0.15;
+                }
+                Weapon.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    return undefined;
+                };
+                Weapon.prototype.update = function () {
+                    if (this.soundTime > 0) {
+                        this.soundTime = Helpers.clampMin(this.soundTime - game_2.game.deltaTime, 0);
+                    }
+                };
+                Weapon.prototype.createBuster4Line = function (x, y, xDir, player, offsetTime) {
+                    var buster4Speed = 350;
+                    new projectile_1.Buster4Proj(new point_4.Point(x + xDir, y), new point_4.Point(xDir * buster4Speed, 0), player, 3, 4, offsetTime);
+                    new projectile_1.Buster4Proj(new point_4.Point(x + xDir * 8, y), new point_4.Point(xDir * buster4Speed, 0), player, 2, 3, offsetTime);
+                    new projectile_1.Buster4Proj(new point_4.Point(x + xDir * 18, y), new point_4.Point(xDir * buster4Speed, 0), player, 2, 2, offsetTime);
+                    new projectile_1.Buster4Proj(new point_4.Point(x + xDir * 32, y), new point_4.Point(xDir * buster4Speed, 0), player, 1, 1, offsetTime);
+                    new projectile_1.Buster4Proj(new point_4.Point(x + xDir * 46, y), new point_4.Point(xDir * buster4Speed, 0), player, 0, 0, offsetTime);
+                };
+                Weapon.prototype.canShoot = function (player) {
+                    return true;
+                };
+                Weapon.prototype.shoot = function (pos, xDir, player, chargeLevel) {
+                    var proj = this.getProjectile(pos, xDir, player, chargeLevel);
+                    if (this instanceof Buster && chargeLevel === 3) {
+                        new actor_1.Anim(pos.clone(), game_2.game.sprites["buster4_muzzle_flash"], xDir);
+                        var xOff = -50 * xDir;
+                        this.createBuster4Line(pos.x + xOff, pos.y, xDir, player, 0);
+                        this.createBuster4Line(pos.x + xOff + 15 * xDir, pos.y, xDir, player, 1);
+                        this.createBuster4Line(pos.x + xOff + 30 * xDir, pos.y, xDir, player, 2);
+                    }
+                    if (this.soundTime === 0) {
+                        game_2.game.playSound(this.shootSounds[chargeLevel]);
+                        if (this instanceof FireWave) {
+                            this.soundTime = 0.25;
+                        }
+                    }
+                    if (!(this instanceof Buster)) {
+                        if (this instanceof FireWave) {
+                            this.ammo -= game_2.game.deltaTime * 10;
+                        }
+                        else {
+                            this.ammo--;
+                        }
+                    }
+                };
+                return Weapon;
+            }());
+            exports_10("Weapon", Weapon);
+            Buster = (function (_super) {
+                __extends(Buster, _super);
+                function Buster() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["buster", "buster2", "buster3", "buster4"];
+                    _this.index = 0;
+                    return _this;
+                }
+                Buster.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    if (chargeLevel === 0)
+                        return new projectile_1.BusterProj(pos, vel, player);
+                    else if (chargeLevel === 1)
+                        return new projectile_1.Buster2Proj(pos, vel, player);
+                    else if (chargeLevel === 2)
+                        return new projectile_1.Buster3Proj(pos, vel, player);
+                    else if (chargeLevel === 3)
+                        return undefined;
+                };
+                return Buster;
+            }(Weapon));
+            exports_10("Buster", Buster);
+            Torpedo = (function (_super) {
+                __extends(Torpedo, _super);
+                function Torpedo() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["torpedo", "torpedo", "torpedo", "torpedo"];
+                    _this.index = 1;
+                    _this.speed = 150;
+                    _this.rateOfFire = 0.5;
+                    return _this;
+                }
+                Torpedo.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    return new projectile_1.TorpedoProj(pos, vel, player);
+                };
+                return Torpedo;
+            }(Weapon));
+            exports_10("Torpedo", Torpedo);
+            Sting = (function (_super) {
+                __extends(Sting, _super);
+                function Sting() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["csting", "csting", "csting", "csting"];
+                    _this.index = 2;
+                    _this.speed = 300;
+                    _this.rateOfFire = 0.75;
+                    return _this;
+                }
+                Sting.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    return new projectile_1.StingProj(pos, vel, player, 0);
+                };
+                return Sting;
+            }(Weapon));
+            exports_10("Sting", Sting);
+            RollingShield = (function (_super) {
+                __extends(RollingShield, _super);
+                function RollingShield() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["rollingShield", "rollingShield", "rollingShield", "rollingShield"];
+                    _this.index = 3;
+                    _this.speed = 200;
+                    _this.rateOfFire = 0.75;
+                    return _this;
+                }
+                RollingShield.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    return new projectile_1.RollingShieldProj(pos, vel, player);
+                };
+                return RollingShield;
+            }(Weapon));
+            exports_10("RollingShield", RollingShield);
+            FireWave = (function (_super) {
+                __extends(FireWave, _super);
+                function FireWave() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["fireWave", "fireWave", "fireWave", "fireWave"];
+                    _this.index = 4;
+                    _this.speed = 400;
+                    _this.rateOfFire = 0.05;
+                    return _this;
+                }
+                FireWave.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    vel.inc(player.character.vel.times(-0.5));
+                    return new projectile_1.FireWaveProj(pos, vel, player);
+                };
+                return FireWave;
+            }(Weapon));
+            exports_10("FireWave", FireWave);
+            Tornado = (function (_super) {
+                __extends(Tornado, _super);
+                function Tornado() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["tornado", "tornado", "tornado", "tornado"];
+                    _this.index = 5;
+                    _this.speed = 400;
+                    _this.rateOfFire = 1.5;
+                    return _this;
+                }
+                Tornado.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    return new projectile_1.TornadoProj(pos, vel, player);
+                };
+                return Tornado;
+            }(Weapon));
+            exports_10("Tornado", Tornado);
+            ElectricSpark = (function (_super) {
+                __extends(ElectricSpark, _super);
+                function ElectricSpark() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["electricSpark", "electricSpark", "electricSpark", "electricSpark"];
+                    _this.index = 6;
+                    _this.speed = 150;
+                    _this.rateOfFire = 0.5;
+                    return _this;
+                }
+                ElectricSpark.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    return new projectile_1.ElectricSparkProj(pos, vel, player, 0);
+                };
+                return ElectricSpark;
+            }(Weapon));
+            exports_10("ElectricSpark", ElectricSpark);
+            Boomerang = (function (_super) {
+                __extends(Boomerang, _super);
+                function Boomerang() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["boomerang", "boomerang", "boomerang", "boomerang"];
+                    _this.index = 7;
+                    _this.speed = 250;
+                    _this.rateOfFire = 0.5;
+                    return _this;
+                }
+                Boomerang.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    return new projectile_1.BoomerangProj(pos, vel, player);
+                };
+                return Boomerang;
+            }(Weapon));
+            exports_10("Boomerang", Boomerang);
+            ShotgunIce = (function (_super) {
+                __extends(ShotgunIce, _super);
+                function ShotgunIce() {
+                    var _this = _super.call(this) || this;
+                    _this.shootSounds = ["buster", "buster", "buster", "buster"];
+                    _this.index = 8;
+                    _this.speed = 400;
+                    _this.rateOfFire = 0.75;
+                    return _this;
+                }
+                ShotgunIce.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
+                    var vel = new point_4.Point(xDir * this.speed, 0);
+                    return new projectile_1.ShotgunIceProj(pos, vel, player, 0);
+                };
+                return ShotgunIce;
+            }(Weapon));
+            exports_10("ShotgunIce", ShotgunIce);
+        }
+    };
+});
+System.register("projectile", ["actor", "damager", "point", "collider", "character", "wall", "game", "helpers", "rect", "weapon"], function (exports_11, context_11) {
+    "use strict";
+    var __moduleName = context_11 && context_11.id;
+    var actor_2, damager_1, point_5, collider_2, character_1, wall_1, game_3, Helpers, rect_2, weapon_1, Projectile, BusterProj, Buster2Proj, Buster3Proj, Buster4Proj, TorpedoProj, StingProj, RollingShieldProj, FireWaveProj, TornadoProj, ElectricSparkProj, BoomerangProj, ShotgunIceProj;
+    return {
+        setters: [
+            function (actor_2_1) {
+                actor_2 = actor_2_1;
             },
             function (damager_1_1) {
                 damager_1 = damager_1_1;
             },
-            function (point_4_1) {
-                point_4 = point_4_1;
+            function (point_5_1) {
+                point_5 = point_5_1;
             },
             function (collider_2_1) {
                 collider_2 = collider_2_1;
@@ -939,14 +1178,17 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
             function (wall_1_1) {
                 wall_1 = wall_1_1;
             },
-            function (game_2_1) {
-                game_2 = game_2_1;
+            function (game_3_1) {
+                game_3 = game_3_1;
             },
-            function (Helpers_2) {
-                Helpers = Helpers_2;
+            function (Helpers_3) {
+                Helpers = Helpers_3;
             },
             function (rect_2_1) {
                 rect_2 = rect_2_1;
+            },
+            function (weapon_1_1) {
+                weapon_1 = weapon_1_1;
             }
         ],
         execute: function () {
@@ -967,54 +1209,78 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 }
                 Projectile.prototype.update = function () {
                     _super.prototype.update.call(this);
-                    this.time += game_2.game.deltaTime;
+                    this.time += game_3.game.deltaTime;
                     var leeway = 500;
-                    if (this.pos.x > game_2.game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game_2.game.level.height + leeway || this.pos.y < -leeway) {
+                    if (this.pos.x > game_3.game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game_3.game.level.height + leeway || this.pos.y < -leeway) {
                         this.destroySelf();
                     }
                 };
                 Projectile.prototype.onCollision = function (other) {
-                    var character = other.collider.gameObject;
+                    if (this instanceof TorpedoProj && other.gameObject instanceof Projectile && this.damager.owner !== other.gameObject.damager.owner) {
+                        this.destroySelf(this.fadeSprite, this.fadeSound);
+                        if (!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof FireWaveProj)) {
+                            other.gameObject.destroySelf(other.gameObject.fadeSprite, other.gameObject.fadeSound);
+                        }
+                        return;
+                    }
+                    var character = other.gameObject;
                     if (character instanceof character_1.Character && character.player.alliance !== this.damager.owner.alliance) {
                         var pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
-                        var character_2 = other.collider.gameObject;
+                        var character_2 = other.gameObject;
                         if (character_2 instanceof character_1.Character) {
                             var key = this.constructor.toString() + this.damager.owner.id.toString();
                             if (!character_2.projectileCooldown[key] && !character_2.invulnFrames) {
                                 character_2.projectileCooldown[key] = this.hitCooldown;
                                 character_2.renderEffect = "hit";
                                 character_2.renderEffectTime = 0.1;
-                                character_2.applyDamage(this.damager.damage);
-                                if (this.flinch || game_2.game.options.alwaysFlinch) {
-                                    if (game_2.game.options.invulnFrames) {
-                                        game_2.game.playSound("weakness");
+                                var weakness = false;
+                                if (this instanceof TorpedoProj && character_2.player.weapon instanceof weapon_1.Boomerang)
+                                    weakness = true;
+                                if (this instanceof StingProj && character_2.player.weapon instanceof weapon_1.Tornado)
+                                    weakness = true;
+                                if (this instanceof RollingShieldProj && character_2.player.weapon instanceof weapon_1.Torpedo)
+                                    weakness = true;
+                                if (this instanceof FireWaveProj && character_2.player.weapon instanceof weapon_1.ShotgunIce)
+                                    weakness = true;
+                                if (this instanceof TornadoProj && character_2.player.weapon instanceof weapon_1.FireWave)
+                                    weakness = true;
+                                if (this instanceof BoomerangProj && character_2.player.weapon instanceof weapon_1.Sting)
+                                    weakness = true;
+                                if (this instanceof ElectricSparkProj && character_2.player.weapon instanceof weapon_1.RollingShield)
+                                    weakness = true;
+                                if (this instanceof ShotgunIceProj && character_2.player.weapon instanceof weapon_1.ElectricSpark)
+                                    weakness = true;
+                                character_2.applyDamage(this.damager.damage * (weakness ? 2 : 1));
+                                if (this.flinch || game_3.game.options.alwaysFlinch || weakness) {
+                                    if (game_3.game.options.invulnFrames) {
+                                        game_3.game.playSound("weakness");
                                     }
                                     else {
-                                        game_2.game.playSound("hurt");
+                                        game_3.game.playSound("hurt");
                                     }
                                     character_2.setHurt(this.pos.x > character_2.pos.x ? -1 : 1);
                                 }
                                 else {
-                                    if (game_2.game.options.invulnFrames) {
-                                        game_2.game.playSound("weakness");
+                                    if (game_3.game.options.invulnFrames) {
+                                        game_3.game.playSound("weakness");
                                     }
                                     else {
-                                        game_2.game.playSound("hit");
+                                        game_3.game.playSound("hit");
                                     }
                                 }
-                                if (game_2.game.options.invulnFrames) {
+                                if (game_3.game.options.invulnFrames) {
                                     character_2.invulnFrames = 1;
                                     character_2.renderEffectTime = 1;
                                 }
                             }
                             else if (character_2.invulnFrames && !character_2.projectileCooldown[key] &&
                                 !(this instanceof TornadoProj) && !(this instanceof FireWaveProj)) {
-                                game_2.game.playSound("hit");
+                                game_3.game.playSound("hit");
                             }
                             this.onHitChar(character_2);
                         }
                     }
-                    var wall = other.collider.gameObject;
+                    var wall = other.gameObject;
                     if (wall instanceof wall_1.Wall) {
                         this.onHitWall(wall);
                     }
@@ -1025,49 +1291,49 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 Projectile.prototype.onHitWall = function (wall) {
                 };
                 return Projectile;
-            }(actor_1.Actor));
-            exports_10("Projectile", Projectile);
+            }(actor_2.Actor));
+            exports_11("Projectile", Projectile);
             BusterProj = (function (_super) {
                 __extends(BusterProj, _super);
                 function BusterProj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 0.5, player, game_2.game.sprites["buster1"]) || this;
-                    _this.fadeSprite = game_2.game.sprites["buster1_fade"];
+                    var _this = _super.call(this, pos, vel, 0.5, player, game_3.game.sprites["buster1"]) || this;
+                    _this.fadeSprite = game_3.game.sprites["buster1_fade"];
                     return _this;
                 }
                 return BusterProj;
             }(Projectile));
-            exports_10("BusterProj", BusterProj);
+            exports_11("BusterProj", BusterProj);
             Buster2Proj = (function (_super) {
                 __extends(Buster2Proj, _super);
                 function Buster2Proj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 2, player, game_2.game.sprites["buster2"]) || this;
-                    _this.fadeSprite = game_2.game.sprites["buster2_fade"];
+                    var _this = _super.call(this, pos, vel, 2, player, game_3.game.sprites["buster2"]) || this;
+                    _this.fadeSprite = game_3.game.sprites["buster2_fade"];
                     _this.flinch = true;
                     return _this;
                 }
                 return Buster2Proj;
             }(Projectile));
-            exports_10("Buster2Proj", Buster2Proj);
+            exports_11("Buster2Proj", Buster2Proj);
             Buster3Proj = (function (_super) {
                 __extends(Buster3Proj, _super);
                 function Buster3Proj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 3, player, game_2.game.sprites["buster3"]) || this;
-                    _this.fadeSprite = game_2.game.sprites["buster3_fade"];
+                    var _this = _super.call(this, pos, vel, 3, player, game_3.game.sprites["buster3"]) || this;
+                    _this.fadeSprite = game_3.game.sprites["buster3_fade"];
                     _this.flinch = true;
                     return _this;
                 }
                 return Buster3Proj;
             }(Projectile));
-            exports_10("Buster3Proj", Buster3Proj);
+            exports_11("Buster3Proj", Buster3Proj);
             Buster4Proj = (function (_super) {
                 __extends(Buster4Proj, _super);
                 function Buster4Proj(pos, vel, player, type, num, offsetTime) {
-                    var _this = _super.call(this, pos, vel, 4, player, game_2.game.sprites["buster4"]) || this;
+                    var _this = _super.call(this, pos, vel, 4, player, game_3.game.sprites["buster4"]) || this;
                     _this.type = 0;
                     _this.num = 0;
                     _this.offsetTime = 0;
                     _this.initY = 0;
-                    _this.fadeSprite = game_2.game.sprites["buster4_fade"];
+                    _this.fadeSprite = game_3.game.sprites["buster4_fade"];
                     _this.flinch = true;
                     _this.type = type;
                     _this.initY = _this.pos.y;
@@ -1079,35 +1345,48 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 Buster4Proj.prototype.update = function () {
                     _super.prototype.update.call(this);
                     this.frameIndex = this.type;
-                    this.pos.y = this.initY + Math.sin(game_2.game.time * 18 - this.num * 0.5 + this.offsetTime * 2.09) * 15;
+                    this.pos.y = this.initY + Math.sin(game_3.game.time * 18 - this.num * 0.5 + this.offsetTime * 2.09) * 15;
                 };
                 return Buster4Proj;
             }(Projectile));
-            exports_10("Buster4Proj", Buster4Proj);
+            exports_11("Buster4Proj", Buster4Proj);
             TorpedoProj = (function (_super) {
                 __extends(TorpedoProj, _super);
                 function TorpedoProj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["torpedo"]) || this;
+                    var _this = _super.call(this, pos, vel, 1, player, game_3.game.sprites["torpedo"]) || this;
                     _this.smokeTime = 0;
-                    _this.fadeSprite = game_2.game.sprites["explosion"];
+                    _this.fadeSprite = game_3.game.sprites["explosion"];
                     _this.fadeSound = "explosion";
-                    _this.target = game_2.game.level.getClosestTarget(_this.pos, _this.damager.owner.alliance);
                     _this.angle = _this.xDir === -1 ? 180 : 0;
+                    _this.vel.x = _this.vel.x * 0.25;
                     return _this;
                 }
                 TorpedoProj.prototype.update = function () {
                     _super.prototype.update.call(this);
                     if (this.target) {
-                        this.vel = new point_4.Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.speed);
-                        var dTo = this.pos.directionTo(this.target.centerPos).normalize();
-                        var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
-                        destAngle = Helpers.to360(destAngle);
-                        this.angle = Helpers.lerpAngle(this.angle, destAngle, game_2.game.deltaTime * 10);
+                        if (this.time < 7.5) {
+                            this.vel = this.vel.add(new point_5.Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.speed * 0.25));
+                            if (this.vel.magnitude > this.speed) {
+                                this.vel = this.vel.normalize().times(this.speed);
+                            }
+                            var dTo = this.pos.directionTo(this.target.centerPos).normalize();
+                            var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
+                            destAngle = Helpers.to360(destAngle);
+                            this.angle = Helpers.lerpAngle(this.angle, destAngle, game_3.game.deltaTime * 3);
+                        }
+                        else {
+                        }
                     }
-                    this.smokeTime += game_2.game.deltaTime;
+                    else if (this.time >= 0.15) {
+                        this.target = game_3.game.level.getClosestTarget(this.pos, this.damager.owner.alliance);
+                    }
+                    else if (this.time < 0.15) {
+                        this.vel.x += this.xDir * game_3.game.deltaTime * 300;
+                    }
+                    this.smokeTime += game_3.game.deltaTime;
                     if (this.smokeTime > 0.2) {
                         this.smokeTime = 0;
-                        new actor_1.Anim(this.pos, game_2.game.sprites["torpedo_smoke"], 1);
+                        new actor_2.Anim(this.pos, game_3.game.sprites["torpedo_smoke"], 1);
                     }
                 };
                 TorpedoProj.prototype.renderFromAngle = function (x, y) {
@@ -1150,7 +1429,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return TorpedoProj;
             }(Projectile));
-            exports_10("TorpedoProj", TorpedoProj);
+            exports_11("TorpedoProj", TorpedoProj);
             StingProj = (function (_super) {
                 __extends(StingProj, _super);
                 function StingProj(pos, vel, player, type) {
@@ -1158,18 +1437,18 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     _this.type = 0;
                     _this.origVel = vel.clone();
                     if (type === 0) {
-                        _this.sprite = game_2.game.sprites["sting_start"];
+                        _this.sprite = game_3.game.sprites["sting_start"];
                     }
                     else if (type === 1) {
-                        _this.sprite = game_2.game.sprites["sting_flat"];
+                        _this.sprite = game_3.game.sprites["sting_flat"];
                     }
                     else if (type === 2 || type === 3) {
-                        _this.sprite = game_2.game.sprites["sting_up"];
+                        _this.sprite = game_3.game.sprites["sting_up"];
                         if (type === 3) {
                             _this.yDir = -1;
                         }
                     }
-                    _this.fadeSprite = game_2.game.sprites["buster1_fade"];
+                    _this.fadeSprite = game_3.game.sprites["buster1_fade"];
                     _this.type = type;
                     return _this;
                 }
@@ -1189,24 +1468,24 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return StingProj;
             }(Projectile));
-            exports_10("StingProj", StingProj);
+            exports_11("StingProj", StingProj);
             RollingShieldProj = (function (_super) {
                 __extends(RollingShieldProj, _super);
                 function RollingShieldProj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["rolling_shield"]) || this;
-                    _this.fadeSprite = game_2.game.sprites["explosion"];
+                    var _this = _super.call(this, pos, vel, 1, player, game_3.game.sprites["rolling_shield"]) || this;
+                    _this.fadeSprite = game_3.game.sprites["explosion"];
                     _this.fadeSound = "explosion";
                     _this.useGravity = true;
                     _this.collider.wallOnly = true;
-                    if (game_2.game.level.checkCollisionActor(_this, 0, 0)) {
+                    if (game_3.game.level.checkCollisionActor(_this, 0, 0)) {
                         _this.xDir *= -1;
                         _this.vel.x *= -1;
                     }
                     return _this;
                 }
                 RollingShieldProj.prototype.update = function () {
-                    if (!game_2.game.level.checkCollisionActor(this, 0, 0)) {
-                        var collideData = game_2.game.level.checkCollisionActor(this, this.xDir, -1);
+                    if (!game_3.game.level.checkCollisionActor(this, 0, 0)) {
+                        var collideData = game_3.game.level.checkCollisionActor(this, this.xDir, -1);
                         if (collideData) {
                             this.vel.x *= -1;
                             this.xDir *= -1;
@@ -1219,12 +1498,12 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return RollingShieldProj;
             }(Projectile));
-            exports_10("RollingShieldProj", RollingShieldProj);
+            exports_11("RollingShieldProj", RollingShieldProj);
             FireWaveProj = (function (_super) {
                 __extends(FireWaveProj, _super);
                 function FireWaveProj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["fire_wave"]) || this;
-                    _this.fadeSprite = game_2.game.sprites["fire_wave_fade"];
+                    var _this = _super.call(this, pos, vel, 1, player, game_3.game.sprites["fire_wave"]) || this;
+                    _this.fadeSprite = game_3.game.sprites["fire_wave_fade"];
                     _this.hitCooldown = 0.3;
                     return _this;
                 }
@@ -1234,17 +1513,19 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                         this.destroySelf(this.fadeSprite);
                     }
                 };
+                FireWaveProj.prototype.onHitChar = function (character) {
+                };
                 return FireWaveProj;
             }(Projectile));
-            exports_10("FireWaveProj", FireWaveProj);
+            exports_11("FireWaveProj", FireWaveProj);
             TornadoProj = (function (_super) {
                 __extends(TornadoProj, _super);
                 function TornadoProj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["tornado_mid"]) || this;
+                    var _this = _super.call(this, pos, vel, 1, player, game_3.game.sprites["tornado_mid"]) || this;
                     _this.length = 1;
-                    _this.spriteStart = game_2.game.sprites["tornado_start"];
-                    _this.spriteMid = game_2.game.sprites["tornado_mid"];
-                    _this.spriteEnd = game_2.game.sprites["tornado_end"];
+                    _this.spriteStart = game_3.game.sprites["tornado_start"];
+                    _this.spriteMid = game_3.game.sprites["tornado_mid"];
+                    _this.spriteEnd = game_3.game.sprites["tornado_end"];
                     _this.vel.x = 0;
                     _this.hitCooldown = 0.3;
                     return _this;
@@ -1258,8 +1539,8 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     }
                     this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     this.renderEffect = "";
-                    if (game_2.game.options.showHitboxes && this.collider) {
-                        Helpers.drawPolygon(game_2.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                    if (game_3.game.options.showHitboxes && this.collider) {
+                        Helpers.drawPolygon(game_3.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
                 };
                 TornadoProj.prototype.update = function () {
@@ -1271,7 +1552,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     var botX = (this.length * spriteMidLen) + spriteEndLen;
                     var botY = this.spriteStart.frames[0].rect.h * 2;
                     var rect = new rect_2.Rect(topX, topY, botX, botY);
-                    this.globalCollider = new collider_2.Collider(rect.getPoints(), true, this);
+                    this.globalCollider = new collider_2.Collider(rect.getPoints(), true);
                     if (this.time > 0.2) {
                         if (this.length < 6) {
                             this.length++;
@@ -1283,34 +1564,34 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     }
                 };
                 TornadoProj.prototype.onHitChar = function (character) {
-                    character.move(new point_4.Point(this.speed * 0.9 * this.xDir, 0));
+                    character.move(new point_5.Point(this.speed * 0.9 * this.xDir, 0));
                 };
                 return TornadoProj;
             }(Projectile));
-            exports_10("TornadoProj", TornadoProj);
+            exports_11("TornadoProj", TornadoProj);
             ElectricSparkProj = (function (_super) {
                 __extends(ElectricSparkProj, _super);
                 function ElectricSparkProj(pos, vel, player, type) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["electric_spark"]) || this;
+                    var _this = _super.call(this, pos, vel, 1, player, game_3.game.sprites["electric_spark"]) || this;
                     _this.type = 0;
-                    _this.fadeSprite = game_2.game.sprites["electric_spark_fade"];
+                    _this.fadeSprite = game_3.game.sprites["electric_spark_fade"];
                     _this.type = type;
                     return _this;
                 }
                 ElectricSparkProj.prototype.onHitWall = function (wall) {
                     if (this.type === 0) {
                         this.destroySelf(this.fadeSprite);
-                        new ElectricSparkProj(this.pos.clone(), new point_4.Point(0, this.speed * 3), this.damager.owner, 1);
-                        new ElectricSparkProj(this.pos.clone(), new point_4.Point(0, -this.speed * 3), this.damager.owner, 1);
+                        new ElectricSparkProj(this.pos.clone(), new point_5.Point(0, this.speed * 3), this.damager.owner, 1);
+                        new ElectricSparkProj(this.pos.clone(), new point_5.Point(0, -this.speed * 3), this.damager.owner, 1);
                     }
                 };
                 return ElectricSparkProj;
             }(Projectile));
-            exports_10("ElectricSparkProj", ElectricSparkProj);
+            exports_11("ElectricSparkProj", ElectricSparkProj);
             BoomerangProj = (function (_super) {
                 __extends(BoomerangProj, _super);
                 function BoomerangProj(pos, vel, player) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["boomerang"]) || this;
+                    var _this = _super.call(this, pos, vel, 1, player, game_3.game.sprites["boomerang"]) || this;
                     _this.angleDist = 0;
                     _this.turnDir = 1;
                     _this.angle = 0;
@@ -1323,10 +1604,12 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 }
                 BoomerangProj.prototype.onCollision = function (other) {
                     _super.prototype.onCollision.call(this, other);
-                    var character = other.collider.gameObject;
+                    var character = other.gameObject;
                     if (this.time > 0.22 && character instanceof character_1.Character && character.player === this.damager.owner) {
                         this.destroySelf();
-                        character.player.weapon.ammo++;
+                        if (character.player.weapon instanceof weapon_1.Boomerang) {
+                            character.player.weapon.ammo++;
+                        }
                     }
                 };
                 BoomerangProj.prototype.renderFromAngle = function (x, y) {
@@ -1336,54 +1619,57 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     _super.prototype.update.call(this);
                     if (this.time > 0.22) {
                         if (this.angleDist < 180) {
-                            var angInc = (-this.xDir * this.turnDir) * game_2.game.deltaTime * 300;
+                            var angInc = (-this.xDir * this.turnDir) * game_3.game.deltaTime * 300;
                             this.angle += angInc;
                             this.angleDist += Math.abs(angInc);
                             this.vel.x = Helpers.cos(this.angle) * this.speed;
                             this.vel.y = Helpers.sin(this.angle) * this.speed;
                         }
-                        else {
+                        else if (this.damager.owner.character) {
                             var dTo = this.pos.directionTo(this.damager.owner.character.centerPos).normalize();
                             var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
                             destAngle = Helpers.to360(destAngle);
-                            this.angle = Helpers.lerpAngle(this.angle, destAngle, game_2.game.deltaTime * 10);
+                            this.angle = Helpers.lerpAngle(this.angle, destAngle, game_3.game.deltaTime * 10);
                             this.vel.x = Helpers.cos(this.angle) * this.speed;
                             this.vel.y = Helpers.sin(this.angle) * this.speed;
+                        }
+                        else {
+                            this.destroySelf();
                         }
                     }
                 };
                 return BoomerangProj;
             }(Projectile));
-            exports_10("BoomerangProj", BoomerangProj);
+            exports_11("BoomerangProj", BoomerangProj);
             ShotgunIceProj = (function (_super) {
                 __extends(ShotgunIceProj, _super);
                 function ShotgunIceProj(pos, vel, player, type) {
-                    var _this = _super.call(this, pos, vel, 1, player, game_2.game.sprites["shotgun_ice"]) || this;
+                    var _this = _super.call(this, pos, vel, 1, player, game_3.game.sprites["shotgun_ice"]) || this;
                     _this.type = 0;
                     _this.sparkleTime = 0;
                     if (type === 1) {
-                        _this.changeSprite(game_2.game.sprites["shotgun_ice_piece"], true);
+                        _this.changeSprite(game_3.game.sprites["shotgun_ice_piece"], true);
                     }
-                    _this.fadeSprite = game_2.game.sprites["buster1_fade"];
+                    _this.fadeSprite = game_3.game.sprites["buster1_fade"];
                     _this.type = type;
                     return _this;
                 }
                 ShotgunIceProj.prototype.update = function () {
                     _super.prototype.update.call(this);
-                    this.sparkleTime += game_2.game.deltaTime;
+                    this.sparkleTime += game_3.game.deltaTime;
                     if (this.sparkleTime > 0.05) {
                         this.sparkleTime = 0;
-                        new actor_1.Anim(this.pos, game_2.game.sprites["shotgun_ice_sparkles"], 1);
+                        new actor_2.Anim(this.pos, game_3.game.sprites["shotgun_ice_sparkles"], 1);
                     }
                 };
                 ShotgunIceProj.prototype.onHit = function (other) {
                     if (this.type === 0) {
                         this.destroySelf();
-                        new ShotgunIceProj(this.pos.clone(), new point_4.Point(-this.vel.x, -this.speed), this.damager.owner, 1);
-                        new ShotgunIceProj(this.pos.clone(), new point_4.Point(-this.vel.x, -this.speed * 0.5), this.damager.owner, 1);
-                        new ShotgunIceProj(this.pos.clone(), new point_4.Point(-this.vel.x, 0 * 3), this.damager.owner, 1);
-                        new ShotgunIceProj(this.pos.clone(), new point_4.Point(-this.vel.x, this.speed * 0.5), this.damager.owner, 1);
-                        new ShotgunIceProj(this.pos.clone(), new point_4.Point(-this.vel.x, this.speed), this.damager.owner, 1);
+                        new ShotgunIceProj(this.pos.clone(), new point_5.Point(-this.vel.x, -this.speed), this.damager.owner, 1);
+                        new ShotgunIceProj(this.pos.clone(), new point_5.Point(-this.vel.x, -this.speed * 0.5), this.damager.owner, 1);
+                        new ShotgunIceProj(this.pos.clone(), new point_5.Point(-this.vel.x, 0 * 3), this.damager.owner, 1);
+                        new ShotgunIceProj(this.pos.clone(), new point_5.Point(-this.vel.x, this.speed * 0.5), this.damager.owner, 1);
+                        new ShotgunIceProj(this.pos.clone(), new point_5.Point(-this.vel.x, this.speed), this.damager.owner, 1);
                     }
                 };
                 ShotgunIceProj.prototype.onHitWall = function (wall) {
@@ -1394,243 +1680,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return ShotgunIceProj;
             }(Projectile));
-            exports_10("ShotgunIceProj", ShotgunIceProj);
-        }
-    };
-});
-System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], function (exports_11, context_11) {
-    "use strict";
-    var __moduleName = context_11 && context_11.id;
-    var projectile_1, game_3, point_5, Helpers, actor_2, Weapon, Buster, Torpedo, Sting, RollingShield, FireWave, Tornado, ElectricSpark, Boomerang, ShotgunIce;
-    return {
-        setters: [
-            function (projectile_1_1) {
-                projectile_1 = projectile_1_1;
-            },
-            function (game_3_1) {
-                game_3 = game_3_1;
-            },
-            function (point_5_1) {
-                point_5 = point_5_1;
-            },
-            function (Helpers_3) {
-                Helpers = Helpers_3;
-            },
-            function (actor_2_1) {
-                actor_2 = actor_2_1;
-            }
-        ],
-        execute: function () {
-            Weapon = (function () {
-                function Weapon() {
-                    this.speed = 350;
-                    this.soundTime = 0;
-                    this.ammo = 32;
-                    this.maxAmmo = 32;
-                    this.rateOfFire = 0.15;
-                }
-                Weapon.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    return undefined;
-                };
-                Weapon.prototype.update = function () {
-                    if (this.soundTime > 0) {
-                        this.soundTime = Helpers.clampMin(this.soundTime - game_3.game.deltaTime, 0);
-                    }
-                };
-                Weapon.prototype.createBuster4Line = function (x, y, xDir, player, offsetTime) {
-                    var buster4Speed = 350;
-                    new projectile_1.Buster4Proj(new point_5.Point(x + xDir, y), new point_5.Point(xDir * buster4Speed, 0), player, 3, 4, offsetTime);
-                    new projectile_1.Buster4Proj(new point_5.Point(x + xDir * 8, y), new point_5.Point(xDir * buster4Speed, 0), player, 2, 3, offsetTime);
-                    new projectile_1.Buster4Proj(new point_5.Point(x + xDir * 18, y), new point_5.Point(xDir * buster4Speed, 0), player, 2, 2, offsetTime);
-                    new projectile_1.Buster4Proj(new point_5.Point(x + xDir * 32, y), new point_5.Point(xDir * buster4Speed, 0), player, 1, 1, offsetTime);
-                    new projectile_1.Buster4Proj(new point_5.Point(x + xDir * 46, y), new point_5.Point(xDir * buster4Speed, 0), player, 0, 0, offsetTime);
-                };
-                Weapon.prototype.shoot = function (pos, xDir, player, chargeLevel) {
-                    var proj = this.getProjectile(pos, xDir, player, chargeLevel);
-                    if (this instanceof Buster && chargeLevel === 3) {
-                        new actor_2.Anim(pos.clone(), game_3.game.sprites["buster4_muzzle_flash"], xDir);
-                        var xOff = -50 * xDir;
-                        this.createBuster4Line(pos.x + xOff, pos.y, xDir, player, 0);
-                        this.createBuster4Line(pos.x + xOff + 15 * xDir, pos.y, xDir, player, 1);
-                        this.createBuster4Line(pos.x + xOff + 30 * xDir, pos.y, xDir, player, 2);
-                    }
-                    if (this.soundTime === 0) {
-                        game_3.game.playSound(this.shootSounds[chargeLevel]);
-                        if (this instanceof FireWave) {
-                            this.soundTime = 0.25;
-                        }
-                    }
-                    if (!(this instanceof Buster)) {
-                        if (this instanceof FireWave) {
-                            this.ammo -= game_3.game.deltaTime * 10;
-                        }
-                        else {
-                            this.ammo--;
-                        }
-                    }
-                };
-                return Weapon;
-            }());
-            exports_11("Weapon", Weapon);
-            Buster = (function (_super) {
-                __extends(Buster, _super);
-                function Buster() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["buster", "buster2", "buster3", "buster4"];
-                    _this.index = 0;
-                    return _this;
-                }
-                Buster.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    if (chargeLevel === 0)
-                        return new projectile_1.BusterProj(pos, vel, player);
-                    else if (chargeLevel === 1)
-                        return new projectile_1.Buster2Proj(pos, vel, player);
-                    else if (chargeLevel === 2)
-                        return new projectile_1.Buster3Proj(pos, vel, player);
-                    else if (chargeLevel === 3)
-                        return undefined;
-                };
-                return Buster;
-            }(Weapon));
-            exports_11("Buster", Buster);
-            Torpedo = (function (_super) {
-                __extends(Torpedo, _super);
-                function Torpedo() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["torpedo", "torpedo", "torpedo", "torpedo"];
-                    _this.index = 1;
-                    _this.speed = 150;
-                    _this.rateOfFire = 0.5;
-                    return _this;
-                }
-                Torpedo.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    return new projectile_1.TorpedoProj(pos, vel, player);
-                };
-                return Torpedo;
-            }(Weapon));
-            exports_11("Torpedo", Torpedo);
-            Sting = (function (_super) {
-                __extends(Sting, _super);
-                function Sting() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["csting", "csting", "csting", "csting"];
-                    _this.index = 2;
-                    _this.speed = 300;
-                    _this.rateOfFire = 0.75;
-                    return _this;
-                }
-                Sting.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    return new projectile_1.StingProj(pos, vel, player, 0);
-                };
-                return Sting;
-            }(Weapon));
-            exports_11("Sting", Sting);
-            RollingShield = (function (_super) {
-                __extends(RollingShield, _super);
-                function RollingShield() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["rollingShield", "rollingShield", "rollingShield", "rollingShield"];
-                    _this.index = 3;
-                    _this.speed = 200;
-                    _this.rateOfFire = 0.75;
-                    return _this;
-                }
-                RollingShield.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    return new projectile_1.RollingShieldProj(pos, vel, player);
-                };
-                return RollingShield;
-            }(Weapon));
-            exports_11("RollingShield", RollingShield);
-            FireWave = (function (_super) {
-                __extends(FireWave, _super);
-                function FireWave() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["fireWave", "fireWave", "fireWave", "fireWave"];
-                    _this.index = 4;
-                    _this.speed = 400;
-                    _this.rateOfFire = 0.05;
-                    return _this;
-                }
-                FireWave.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    vel.inc(player.character.vel.times(-0.5));
-                    return new projectile_1.FireWaveProj(pos, vel, player);
-                };
-                return FireWave;
-            }(Weapon));
-            exports_11("FireWave", FireWave);
-            Tornado = (function (_super) {
-                __extends(Tornado, _super);
-                function Tornado() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["tornado", "tornado", "tornado", "tornado"];
-                    _this.index = 5;
-                    _this.speed = 400;
-                    _this.rateOfFire = 1.5;
-                    return _this;
-                }
-                Tornado.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    return new projectile_1.TornadoProj(pos, vel, player);
-                };
-                return Tornado;
-            }(Weapon));
-            exports_11("Tornado", Tornado);
-            ElectricSpark = (function (_super) {
-                __extends(ElectricSpark, _super);
-                function ElectricSpark() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["electricSpark", "electricSpark", "electricSpark", "electricSpark"];
-                    _this.index = 6;
-                    _this.speed = 150;
-                    _this.rateOfFire = 0.5;
-                    return _this;
-                }
-                ElectricSpark.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    return new projectile_1.ElectricSparkProj(pos, vel, player, 0);
-                };
-                return ElectricSpark;
-            }(Weapon));
-            exports_11("ElectricSpark", ElectricSpark);
-            Boomerang = (function (_super) {
-                __extends(Boomerang, _super);
-                function Boomerang() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["boomerang", "boomerang", "boomerang", "boomerang"];
-                    _this.index = 7;
-                    _this.speed = 250;
-                    _this.rateOfFire = 0.5;
-                    return _this;
-                }
-                Boomerang.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    return new projectile_1.BoomerangProj(pos, vel, player);
-                };
-                return Boomerang;
-            }(Weapon));
-            exports_11("Boomerang", Boomerang);
-            ShotgunIce = (function (_super) {
-                __extends(ShotgunIce, _super);
-                function ShotgunIce() {
-                    var _this = _super.call(this) || this;
-                    _this.shootSounds = ["buster", "buster", "buster", "buster"];
-                    _this.index = 8;
-                    _this.speed = 400;
-                    _this.rateOfFire = 0.75;
-                    return _this;
-                }
-                ShotgunIce.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_5.Point(xDir * this.speed, 0);
-                    return new projectile_1.ShotgunIceProj(pos, vel, player, 0);
-                };
-                return ShotgunIce;
-            }(Weapon));
-            exports_11("ShotgunIce", ShotgunIce);
+            exports_11("ShotgunIceProj", ShotgunIceProj);
         }
     };
 });
@@ -2008,7 +2058,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
 System.register("character", ["actor", "game", "point", "collider", "rect", "helpers", "weapon", "effects", "ai"], function (exports_14, context_14) {
     "use strict";
     var __moduleName = context_14 && context_14.id;
-    var actor_3, game_6, point_8, collider_3, rect_3, Helpers, weapon_1, effects_1, ai_1, Character, CharState, Idle, Run, Jump, Fall, Dash, WallSlide, WallKick, Hurt, Die;
+    var actor_3, game_6, point_8, collider_3, rect_3, Helpers, weapon_2, effects_1, ai_1, Character, CharState, Idle, Run, Jump, Fall, Dash, WallSlide, WallKick, Hurt, Die;
     return {
         setters: [
             function (actor_3_1) {
@@ -2029,8 +2079,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
             function (Helpers_6) {
                 Helpers = Helpers_6;
             },
-            function (weapon_1_1) {
-                weapon_1 = weapon_1_1;
+            function (weapon_2_1) {
+                weapon_2 = weapon_2_1;
             },
             function (effects_1_1) {
                 effects_1 = effects_1_1;
@@ -2053,14 +2103,14 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _this.player = player;
                     _this.isDashing = false;
                     var rect = new rect_3.Rect(0, 0, 18, 34);
-                    _this.globalCollider = new collider_3.Collider(rect.getPoints(), false, _this);
+                    _this.globalCollider = new collider_3.Collider(rect.getPoints(), false);
                     _this.changeState(new Idle());
                     _this.jumpPower = 350;
                     _this.runSpeed = 100;
                     _this.chargeTime = 0;
                     _this.charge1Time = 0.75;
-                    _this.charge2Time = 1.5;
-                    _this.charge3Time = 2.25;
+                    _this.charge2Time = 1.75;
+                    _this.charge3Time = 3;
                     _this.chargeFlashTime = 0;
                     _this.chargeSound = game_6.game.sounds["charge_start"];
                     _this.chargeLoopSound = game_6.game.sounds["charge_loop"];
@@ -2104,9 +2154,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _super.prototype.update.call(this);
                     this.player.weapon.update();
                     if (this.charState.canShoot) {
-                        if (this.shootTime === 0 &&
+                        if (this.player.weapon.canShoot(this.player) && this.shootTime === 0 &&
                             (this.player.isPressed("shoot") ||
-                                (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_1.FireWave))) {
+                                (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_2.FireWave))) {
                             this.shoot();
                         }
                         if (this.player.isHeld("shoot") && this.player.weapon.ammo > 0) {
@@ -2122,7 +2172,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (this.shootTime > 0) {
                         this.shootTime -= game_6.game.deltaTime;
                         if (this.shootTime <= 0) {
-                            if (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_1.FireWave) {
+                            if (this.player.isHeld("shoot") && this.player.weapon instanceof weapon_2.FireWave) {
                                 this.shootTime = 0;
                             }
                             else {
@@ -2609,14 +2659,14 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
 System.register("player", ["character", "weapon", "game", "helpers"], function (exports_15, context_15) {
     "use strict";
     var __moduleName = context_15 && context_15.id;
-    var character_3, weapon_2, game_7, Helpers, Player;
+    var character_3, weapon_3, game_7, Helpers, Player;
     return {
         setters: [
             function (character_3_1) {
                 character_3 = character_3_1;
             },
-            function (weapon_2_1) {
-                weapon_2 = weapon_2_1;
+            function (weapon_3_1) {
+                weapon_3 = weapon_3_1;
             },
             function (game_7_1) {
                 game_7 = game_7_1;
@@ -2647,6 +2697,7 @@ System.register("player", ["character", "weapon", "game", "helpers"], function (
                         this.inputMapping[67] = "shoot";
                         this.inputMapping[65] = "weaponleft";
                         this.inputMapping[83] = "weaponright";
+                        this.inputMapping[27] = "reset";
                     }
                     if (!isAI && alliance === 1) {
                         this.inputMapping[100] = "left";
@@ -2666,15 +2717,15 @@ System.register("player", ["character", "weapon", "game", "helpers"], function (
                     this.health = 32;
                     this.maxHealth = this.health;
                     this.weapons = [
-                        new weapon_2.Buster(),
-                        new weapon_2.Torpedo(),
-                        new weapon_2.Sting(),
-                        new weapon_2.RollingShield(),
-                        new weapon_2.FireWave(),
-                        new weapon_2.Tornado(),
-                        new weapon_2.ElectricSpark(),
-                        new weapon_2.Boomerang(),
-                        new weapon_2.ShotgunIce()
+                        new weapon_3.Buster(),
+                        new weapon_3.Torpedo(),
+                        new weapon_3.Sting(),
+                        new weapon_3.RollingShield(),
+                        new weapon_3.FireWave(),
+                        new weapon_3.Tornado(),
+                        new weapon_3.ElectricSpark(),
+                        new weapon_3.Boomerang(),
+                        new weapon_3.ShotgunIce()
                     ];
                     this.weaponIndex = 0;
                 }
@@ -2749,6 +2800,11 @@ System.register("player", ["character", "weapon", "game", "helpers"], function (
                     if (!this.controllerInput[key])
                         this.controllerInputPressed[key] = true;
                     this.controllerInput[key] = true;
+                    if (key === "reset") {
+                        game_7.game.restartLevel("sm_bossroom");
+                        console.log("RESET");
+                        return;
+                    }
                 };
                 Player.prototype.onButtonUp = function (button) {
                     if (this.isAI)
@@ -2783,6 +2839,11 @@ System.register("player", ["character", "weapon", "game", "helpers"], function (
                         if (!game_7.game.level.localPlayers[1].isAI) {
                             game_7.game.level.localPlayers[1].character.addAI();
                         }
+                    }
+                    if (key === "reset") {
+                        game_7.game.restartLevel("sm_bossroom");
+                        console.log("RESET");
+                        return;
                     }
                 };
                 Player.prototype.onKeyUp = function (keycode) {
@@ -2845,10 +2906,10 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
             Level = (function () {
                 function Level(levelJson) {
                     this.effects = [];
-                    this.zoomScale = 3;
+                    this.zoomScale = 4;
                     this.camX = 0;
                     this.camY = 0;
-                    this.fixedCam = false;
+                    this.fixedCam = true;
                     this.gravity = 900;
                     this.name = levelJson.name;
                     this.background = game_8.game.getBackground(levelJson.backgroundPath);
@@ -2920,8 +2981,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.twoFrameCycle = -2;
                 };
                 Level.prototype.render = function () {
-                    game_8.game.canvas.width = Math.min(game_8.game.canvas.width, Math.round(this.background.width * this.zoomScale));
-                    game_8.game.canvas.height = Math.min(game_8.game.canvas.height, Math.round(this.background.height * this.zoomScale));
+                    if (this.fixedCam) {
+                        game_8.game.canvas.width = Math.round(this.background.width * this.zoomScale);
+                        game_8.game.canvas.height = Math.round(this.background.height * this.zoomScale);
+                    }
+                    else {
+                        game_8.game.canvas.width = Math.min(game_8.game.canvas.width, Math.round(this.background.width * this.zoomScale));
+                        game_8.game.canvas.height = Math.min(game_8.game.canvas.height, Math.round(this.background.height * this.zoomScale));
+                    }
                     if (!game_8.game.options.antiAlias) {
                         Helpers.noCanvasSmoothing(game_8.game.ctx);
                     }
@@ -2959,11 +3026,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     baseY += 25;
                     game_8.game.sprites["hud_health_base"].draw(0, baseX, baseY, 1, 1, "", 1, player.palette);
                     baseY -= 16;
-                    for (var i = 0; i < Math.round(player.health); i++) {
+                    for (var i = 0; i < Math.ceil(player.health); i++) {
                         game_8.game.sprites["hud_health_full"].draw(0, baseX, baseY);
                         baseY -= 2;
                     }
-                    for (var i = 0; i < player.maxHealth - Math.round(player.health); i++) {
+                    for (var i = 0; i < player.maxHealth - Math.ceil(player.health); i++) {
                         game_8.game.sprites["hud_health_empty"].draw(0, baseX, baseY);
                         baseY -= 2;
                     }
@@ -2976,11 +3043,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         baseY += 25;
                         game_8.game.sprites["hud_weapon_base"].draw(player.weapon.index - 1, baseX, baseY);
                         baseY -= 16;
-                        for (var i = 0; i < Math.round(player.weapon.ammo); i++) {
+                        for (var i = 0; i < Math.ceil(player.weapon.ammo); i++) {
                             game_8.game.sprites["hud_weapon_full"].draw(player.weapon.index - 1, baseX, baseY);
                             baseY -= 2;
                         }
-                        for (var i = 0; i < player.weapon.maxAmmo - Math.round(player.weapon.ammo); i++) {
+                        for (var i = 0; i < player.weapon.maxAmmo - Math.ceil(player.weapon.ammo); i++) {
                             game_8.game.sprites["hud_health_empty"].draw(0, baseX, baseY);
                             baseY -= 2;
                         }
@@ -3050,7 +3117,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var isTrigger = this.shouldTrigger(actor, go);
                             if (isTrigger)
                                 continue;
-                            return new collider_4.CollideData(go.collider, vel, isTrigger);
+                            return new collider_4.CollideData(go.collider, vel, isTrigger, go);
                         }
                     }
                     return undefined;
@@ -3070,7 +3137,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var isTrigger = this.shouldTrigger(actor, go);
                             if (!isTrigger)
                                 continue;
-                            triggers.push(new collider_4.CollideData(go.collider, vel, isTrigger));
+                            triggers.push(new collider_4.CollideData(go.collider, vel, isTrigger, go));
                         }
                     }
                     return triggers;
@@ -3168,6 +3235,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.deltaTime = 0;
                     this.time = 0;
                     this.interval = 0;
+                    this.requestId = 0;
                     this.soundSheetLoaded = false;
                     this.canvas = $("#canvas")[0];
                     this.ctx = this.canvas.getContext("2d");
@@ -3175,6 +3243,9 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                 }
                 Game.prototype.start = function () {
                     var _this = this;
+                    window.onerror = function (error) {
+                        console.error(error);
+                    };
                     this.loadSprites();
                     this.loadLevels();
                     this.loadPalettes();
@@ -3214,6 +3285,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         onload: function () {
                         }
                     });
+                    music.play("musicStart");
                     music.on("end", function () {
                         console.log("Loop");
                         music.play("musicLoop");
@@ -3224,7 +3296,6 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     if (this.isLoaded()) {
                         window.clearInterval(this.interval);
                         this.loadLevel("sm_bossroom");
-                        this.gameLoop(0);
                     }
                     else {
                     }
@@ -3238,15 +3309,22 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         }
                     });
                 };
+                Game.prototype.restartLevel = function (name) {
+                    cancelAnimationFrame(this.requestId);
+                    this.loadLevel(name);
+                };
                 Game.prototype.loadLevel = function (name) {
                     var _this = this;
-                    this.level = this.levels[name];
-                    var player1 = new player_1.Player(60, 100, false, 0);
+                    var level = this.levels[name];
+                    this.level = _.cloneDeep(level);
+                    this.level.background = level.background;
+                    var player1 = new player_1.Player(50, 193, false, 0);
                     this.level.players.push(player1);
                     this.level.localPlayers.push(player1);
                     this.level.mainPlayer = player1;
-                    var cpu1 = new player_1.Player(200, 100, false, 1);
+                    var cpu1 = new player_1.Player(210, 193, false, 1);
                     cpu1.character.palette = this.palettes["red"];
+                    cpu1.character.xDir = -1;
                     cpu1.palette = cpu1.character.palette;
                     this.level.players.push(cpu1);
                     this.level.localPlayers.push(cpu1);
@@ -3262,6 +3340,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                             player.onKeyUp(e.keyCode);
                         }
                     };
+                    this.gameLoop(0);
                 };
                 Game.prototype.getSpritesheet = function (path) {
                     if (!this.spritesheets[path]) {
@@ -3326,7 +3405,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         this.deltaTime = 1 / 30;
                     this.level.update();
                     this.startTime = currentTime;
-                    window.requestAnimationFrame(function (currentTime) { return _this.gameLoop(currentTime); });
+                    this.requestId = window.requestAnimationFrame(function (currentTime) { return _this.gameLoop(currentTime); });
                 };
                 Object.defineProperty(Game.prototype, "fps", {
                     get: function () {
@@ -3365,13 +3444,12 @@ System.register("collider", ["point", "shape"], function (exports_20, context_20
         ],
         execute: function () {
             Collider = (function () {
-                function Collider(points, isTrigger, gameObject) {
+                function Collider(points, isTrigger) {
                     this.wallOnly = false;
                     this.isClimbable = true;
                     this.offset = new point_10.Point(0, 0);
                     this._shape = new shape_1.Shape(points);
                     this.isTrigger = isTrigger;
-                    this.gameObject = gameObject;
                 }
                 Object.defineProperty(Collider.prototype, "shape", {
                     get: function () {
@@ -3390,10 +3468,11 @@ System.register("collider", ["point", "shape"], function (exports_20, context_20
             }());
             exports_20("Collider", Collider);
             CollideData = (function () {
-                function CollideData(collider, vel, isTrigger) {
+                function CollideData(collider, vel, isTrigger, gameObject) {
                     this.collider = collider;
                     this.vel = vel;
                     this.isTrigger = isTrigger;
+                    this.gameObject = gameObject;
                 }
                 return CollideData;
             }());

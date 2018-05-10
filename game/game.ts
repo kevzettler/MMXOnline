@@ -39,6 +39,8 @@ class Game {
   time: number = 0;
   interval: number = 0;
 
+  requestId: number = 0;
+
   soundSheet: Howl;
   soundSheetLoaded: boolean = false;
 
@@ -50,6 +52,11 @@ class Game {
   }
 
   start() {
+
+    window.onerror = function(error) {
+      console.error(error);
+    }
+
     this.loadSprites();
     this.loadLevels();
     this.loadPalettes();
@@ -92,7 +99,7 @@ class Game {
       onload: () => {
       }
     });
-    //music.play("musicStart")
+    music.play("musicStart")
     music.on("end", function() {
       console.log("Loop");
       music.play("musicLoop");
@@ -107,7 +114,6 @@ class Game {
       window.clearInterval(this.interval);
       
       this.loadLevel("sm_bossroom");
-      this.gameLoop(0);
     }
     else {
       //console.log("LOADING...");
@@ -127,22 +133,29 @@ class Game {
     });
   }
 
+  restartLevel(name: string) {
+    cancelAnimationFrame(this.requestId);
+    this.loadLevel(name);
+  }
+
   loadLevel(name: string) {
 
-    this.level = this.levels[name];
+    let level = this.levels[name];
+    this.level = _.cloneDeep(level);
+    this.level.background = level.background;
 
-    let player1: Player = new Player(60, 100, false, 0);
+    let player1: Player = new Player(50, 193, false, 0);
     this.level.players.push(player1);
     this.level.localPlayers.push(player1);
     this.level.mainPlayer = player1;
 
-    let cpu1: Player = new Player(200, 100, false, 1);
+    let cpu1: Player = new Player(210, 193, false, 1);
     cpu1.character.palette = this.palettes["red"];
+    cpu1.character.xDir = -1;
     cpu1.palette = cpu1.character.palette;
     this.level.players.push(cpu1);
     this.level.localPlayers.push(cpu1);
     
-   
     document.onkeydown = (e) => {
       for(let player of this.level.localPlayers) {
         player.onKeyDown(e.keyCode);
@@ -154,6 +167,8 @@ class Game {
         player.onKeyUp(e.keyCode);
       }
     }
+
+    this.gameLoop(0);
   }
 
   getSpritesheet(path: string) {
@@ -221,7 +236,7 @@ class Game {
     if(this.deltaTime > 1/30) this.deltaTime = 1/30;
     this.level.update();
     this.startTime = currentTime;
-    window.requestAnimationFrame((currentTime) => this.gameLoop(currentTime));
+    this.requestId = window.requestAnimationFrame((currentTime) => this.gameLoop(currentTime));
   }
 
   get fps() {

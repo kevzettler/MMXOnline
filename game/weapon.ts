@@ -41,7 +41,21 @@ export class Weapon {
     new Buster4Proj(new Point(x + xDir*46, y), new Point(xDir * buster4Speed, 0), player, 0, 0, offsetTime);
   }
 
+  canShoot(player: Player) {
+    /*
+    let projCount = 0;
+    for(let go of game.level.gameObjects) {
+      if(go instanceof Projectile && go.damager.owner === player) {
+        projCount++;
+      }
+    }
+    if(projCount >= 3) return false;
+    */
+    return true;
+  }
+
   shoot(pos: Point, xDir: number, player: Player, chargeLevel: number) {
+    
     let proj = this.getProjectile(pos, xDir, player, chargeLevel);
     
     if(this instanceof Buster && chargeLevel === 3) {

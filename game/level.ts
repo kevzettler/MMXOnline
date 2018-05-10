@@ -29,10 +29,10 @@ export class Level {
   twoFrameCycle: number;
 
   constructor(levelJson: any) {
-    this.zoomScale = 3;
+    this.zoomScale = 4;
     this.camX = 0;
     this.camY = 0;
-    this.fixedCam = false;
+    this.fixedCam = true;
     this.gravity = 900;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
@@ -107,9 +107,18 @@ export class Level {
 
   render() {
     
-    game.canvas.width = Math.min(game.canvas.width, Math.round(this.background.width * this.zoomScale));
-    game.canvas.height = Math.min(game.canvas.height, Math.round(this.background.height * this.zoomScale));
+    //game.canvas.width = Math.min(game.canvas.width, Math.round(this.background.width * this.zoomScale));
+    //game.canvas.height = Math.min(game.canvas.height, Math.round(this.background.height * this.zoomScale));
     
+    if(this.fixedCam) {
+      game.canvas.width = Math.round(this.background.width * this.zoomScale);
+      game.canvas.height = Math.round(this.background.height * this.zoomScale);
+    }
+    else {
+      game.canvas.width = Math.min(game.canvas.width, Math.round(this.background.width * this.zoomScale));
+      game.canvas.height = Math.min(game.canvas.height, Math.round(this.background.height * this.zoomScale));
+    }
+
     if(!game.options.antiAlias) {
       Helpers.noCanvasSmoothing(game.ctx);
     }
@@ -153,11 +162,11 @@ export class Level {
     baseY += 25;
     game.sprites["hud_health_base"].draw(0, baseX, baseY, 1, 1, "", 1, player.palette);
     baseY -= 16;
-    for(let i = 0; i < Math.round(player.health); i++) {
+    for(let i = 0; i < Math.ceil(player.health); i++) {
       game.sprites["hud_health_full"].draw(0, baseX, baseY);
       baseY -= 2;
     }
-    for(let i = 0; i < player.maxHealth - Math.round(player.health); i++) {
+    for(let i = 0; i < player.maxHealth - Math.ceil(player.health); i++) {
       game.sprites["hud_health_empty"].draw(0, baseX, baseY);
       baseY -= 2;
     }
@@ -172,11 +181,11 @@ export class Level {
       baseY += 25;
       game.sprites["hud_weapon_base"].draw(player.weapon.index - 1, baseX, baseY);
       baseY -= 16;
-      for(let i = 0; i < Math.round(player.weapon.ammo); i++) {
+      for(let i = 0; i < Math.ceil(player.weapon.ammo); i++) {
         game.sprites["hud_weapon_full"].draw(player.weapon.index - 1, baseX, baseY);
         baseY -= 2;
       }
-      for(let i = 0; i < player.weapon.maxAmmo - Math.round(player.weapon.ammo); i++) {
+      for(let i = 0; i < player.weapon.maxAmmo - Math.ceil(player.weapon.ammo); i++) {
         game.sprites["hud_health_empty"].draw(0, baseX, baseY);
         baseY -= 2;
       }
@@ -243,7 +252,7 @@ export class Level {
       if(go.collider.shape.intersectsShape(actorShape)) {
         let isTrigger = this.shouldTrigger(actor, go);
         if(isTrigger) continue;
-        return new CollideData(go.collider, vel, isTrigger);
+        return new CollideData(go.collider, vel, isTrigger, go);
       }
     }
     return undefined;
@@ -259,7 +268,7 @@ export class Level {
       if(go.collider.shape.intersectsShape(actorShape)) {
         let isTrigger = this.shouldTrigger(actor, go);
         if(!isTrigger) continue;
-        triggers.push(new CollideData(go.collider, vel, isTrigger));
+        triggers.push(new CollideData(go.collider, vel, isTrigger, go));
       }
     }
     return triggers;
