@@ -3401,8 +3401,9 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     var _this = this;
                     this.deltaTime = (currentTime - this.startTime) / 1000;
                     this.time += this.deltaTime;
-                    if (this.deltaTime > 1 / 30)
+                    if (Math.abs(this.deltaTime) > 1 / 30)
                         this.deltaTime = 1 / 30;
+                    console.log(this.deltaTime);
                     this.level.update();
                     this.startTime = currentTime;
                     this.requestId = window.requestAnimationFrame(function (currentTime) { return _this.gameLoop(currentTime); });
@@ -3552,7 +3553,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                             new point_11.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
                             new point_11.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
                             new point_11.Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
-                        ], hitboxJson.isTrigger ? true : false, null);
+                        ], hitboxJson.isTrigger ? true : false);
                         this.hitboxes.push(hitbox);
                     }
                     for (var _b = 0, _c = spriteJson.frames; _b < _c.length; _b++) {

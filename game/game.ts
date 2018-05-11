@@ -141,6 +141,7 @@ class Game {
   loadLevel(name: string) {
 
     let level = this.levels[name];
+    ///@ts-ignore
     this.level = _.cloneDeep(level);
     this.level.background = level.background;
 
@@ -233,7 +234,8 @@ class Game {
   gameLoop(currentTime: number) {
     this.deltaTime = (currentTime - this.startTime) /1000;
     this.time += this.deltaTime;
-    if(this.deltaTime > 1/30) this.deltaTime = 1/30;
+    if(Math.abs(this.deltaTime) > 1/30) this.deltaTime = 1/30;
+    console.log(this.deltaTime);
     this.level.update();
     this.startTime = currentTime;
     this.requestId = window.requestAnimationFrame((currentTime) => this.gameLoop(currentTime));
