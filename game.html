@@ -11,10 +11,11 @@
   <canvas id="canvas" width="1200" height="800"></canvas>
 
   <div id="app">
-    <input type="checkbox" v-model="options.showHitboxes">Show hitboxes? <br>
-    <input type="checkbox" v-model="options.alwaysFlinch">Always flinch? <br>
-    <input type="checkbox" v-model="options.invulnFrames">Invuln frames? <br>
-    <input type="checkbox" v-model="options.antiAlias">Anti Alias? <br>
+    <input type="checkbox" v-model="options.showHitboxes" @change="onChange()">Show hitboxes? 
+    <input type="checkbox" v-model="options.playMusic" @change="onChange()">Play Music?<br>
+    <input type="checkbox" v-model="options.alwaysFlinch" @change="onChange()">Always flinch? <br>
+    <input type="checkbox" v-model="options.invulnFrames" @change="onChange()">Invuln frames? <br>
+    <input type="checkbox" v-model="options.antiAlias" @change="onChange()">Anti Alias? <br>
   </div>
 
 </div>

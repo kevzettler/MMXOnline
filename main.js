@@ -2104,6 +2104,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _this.isDashing = false;
                     var rect = new rect_3.Rect(0, 0, 18, 34);
                     _this.globalCollider = new collider_3.Collider(rect.getPoints(), false);
+                    _this.globalCollider.isClimbable = false;
                     _this.changeState(new Idle());
                     _this.jumpPower = 350;
                     _this.runSpeed = 100;
@@ -2320,6 +2321,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
             exports_14("Character", Character);
             CharState = (function () {
                 function CharState(sprite, shootSprite) {
+                    this.framesJumpNotHeld = 0;
                     this.sprite = sprite;
                     this.shootSprite = shootSprite;
                     this.stateTime = 0;
@@ -2365,7 +2367,14 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         return;
                     }
                     if (!this.player.isHeld("jump") && this.character.vel.y < 0) {
-                        this.character.vel.y = 0;
+                        this.framesJumpNotHeld++;
+                        if (this.framesJumpNotHeld > 3) {
+                            this.framesJumpNotHeld = 0;
+                            this.character.vel.y = 0;
+                        }
+                    }
+                    if (this.player.isHeld("jump")) {
+                        this.framesJumpNotHeld = 0;
                     }
                     if (game_6.game.level.checkCollisionActor(this.character, 0, -1)) {
                         this.character.vel.y = 0;
@@ -2749,6 +2758,16 @@ System.register("player", ["character", "weapon", "game", "helpers"], function (
                         this.axesMapping[0] = "left|right";
                         this.axesMapping[1] = "up|down";
                     }
+                    else if (controllerName === "USB GamePad (Vendor: 0e8f Product: 3013)") {
+                        this.buttonMapping[1] = "dash";
+                        this.buttonMapping[2] = "jump";
+                        this.buttonMapping[3] = "shoot";
+                        this.buttonMapping[6] = "weaponleft";
+                        this.buttonMapping[7] = "weaponright";
+                        this.buttonMapping[8] = "reset";
+                        this.axesMapping[0] = "left|right";
+                        this.axesMapping[1] = "up|down";
+                    }
                 };
                 Object.defineProperty(Player.prototype, "isAI", {
                     get: function () {
@@ -2802,7 +2821,6 @@ System.register("player", ["character", "weapon", "game", "helpers"], function (
                     this.controllerInput[key] = true;
                     if (key === "reset") {
                         game_7.game.restartLevel("sm_bossroom");
-                        console.log("RESET");
                         return;
                     }
                 };
@@ -2842,7 +2860,6 @@ System.register("player", ["character", "weapon", "game", "helpers"], function (
                     }
                     if (key === "reset") {
                         game_7.game.restartLevel("sm_bossroom");
-                        console.log("RESET");
                         return;
                     }
                 };
@@ -3216,6 +3233,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.alwaysFlinch = false;
                     this.invulnFrames = false;
                     this.antiAlias = false;
+                    this.playMusic = false;
                 }
                 return Options;
             }());
@@ -3230,13 +3248,13 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.palettes = {};
                     this.isServer = false;
                     this.isClient = true;
-                    this.options = new Options();
                     this.startTime = 0;
                     this.deltaTime = 0;
                     this.time = 0;
                     this.interval = 0;
                     this.requestId = 0;
                     this.soundSheetLoaded = false;
+                    this.restartLevelName = "";
                     this.canvas = $("#canvas")[0];
                     this.ctx = this.canvas.getContext("2d");
                     Helpers.noCanvasSmoothing(this.ctx);
@@ -3246,6 +3264,13 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     window.onerror = function (error) {
                         console.error(error);
                     };
+                    var optionString = localStorage.getItem("options");
+                    if (optionString) {
+                        this.options = JSON.parse(optionString);
+                    }
+                    else {
+                        this.options = new Options();
+                    }
                     this.loadSprites();
                     this.loadLevels();
                     this.loadPalettes();
@@ -3285,11 +3310,13 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         onload: function () {
                         }
                     });
-                    music.play("musicStart");
-                    music.on("end", function () {
-                        console.log("Loop");
-                        music.play("musicLoop");
-                    });
+                    if (this.options.playMusic) {
+                        music.play("musicStart");
+                        music.on("end", function () {
+                            console.log("Loop");
+                            music.play("musicLoop");
+                        });
+                    }
                     this.interval = window.setInterval(function () { return _this.onLoad(); }, 1);
                 };
                 Game.prototype.onLoad = function () {
@@ -3306,11 +3333,21 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         el: '#app',
                         data: {
                             options: options
+                        },
+                        methods: {
+                            onChange: function () {
+                                localStorage.setItem("options", JSON.stringify(this.options));
+                            }
                         }
                     });
                 };
                 Game.prototype.restartLevel = function (name) {
-                    cancelAnimationFrame(this.requestId);
+                    console.log("RESET");
+                    this.restartLevelName = name;
+                };
+                Game.prototype.doRestart = function () {
+                    var name = this.restartLevelName;
+                    this.restartLevelName = "";
                     this.loadLevel(name);
                 };
                 Game.prototype.loadLevel = function (name) {
@@ -3403,10 +3440,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.time += this.deltaTime;
                     if (Math.abs(this.deltaTime) > 1 / 30)
                         this.deltaTime = 1 / 30;
-                    console.log(this.deltaTime);
                     this.level.update();
                     this.startTime = currentTime;
-                    this.requestId = window.requestAnimationFrame(function (currentTime) { return _this.gameLoop(currentTime); });
+                    if (this.restartLevelName !== "") {
+                        this.doRestart();
+                    }
+                    else {
+                        this.requestId = window.requestAnimationFrame(function (currentTime) { return _this.gameLoop(currentTime); });
+                    }
                 };
                 Object.defineProperty(Game.prototype, "fps", {
                     get: function () {

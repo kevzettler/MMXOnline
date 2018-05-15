@@ -98,6 +98,17 @@ export class Player {
       this.axesMapping[0] = "left|right";
       this.axesMapping[1] = "up|down";
     }
+    else if(controllerName === "USB GamePad (Vendor: 0e8f Product: 3013)") {
+      this.buttonMapping[1] = "dash";
+      this.buttonMapping[2] = "jump";
+      this.buttonMapping[3] = "shoot";
+      this.buttonMapping[6] = "weaponleft";
+      this.buttonMapping[7] = "weaponright";
+      this.buttonMapping[8] = "reset";
+      
+      this.axesMapping[0] = "left|right";
+      this.axesMapping[1] = "up|down";
+    }
   }
 
   get isAI() {
@@ -143,7 +154,6 @@ export class Player {
     this.controllerInput[key] = true;
     if(key === "reset") {
       game.restartLevel("sm_bossroom");
-      console.log("RESET");
       return;
     }
   }
@@ -183,7 +193,6 @@ export class Player {
     }
     if(key === "reset") {
       game.restartLevel("sm_bossroom");
-      console.log("RESET");
       return;
     }
 

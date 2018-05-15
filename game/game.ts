@@ -11,6 +11,7 @@ class Options {
   alwaysFlinch: boolean = false;
   invulnFrames: boolean = false;
   antiAlias: boolean = false;
+  playMusic: boolean = false;
   constructor() { }
 }
 
@@ -29,7 +30,7 @@ class Game {
   isServer: boolean = false;
   isClient: boolean = true;
 
-  options: Options = new Options();
+  options: Options;
 
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -57,6 +58,14 @@ class Game {
       console.error(error);
     }
 
+    let optionString = localStorage.getItem("options");
+    if(optionString) {
+      this.options = JSON.parse(optionString);
+    }
+    else {
+      this.options = new Options();
+    }
+    
     this.loadSprites();
     this.loadLevels();
     this.loadPalettes();
@@ -99,11 +108,13 @@ class Game {
       onload: () => {
       }
     });
-    music.play("musicStart")
-    music.on("end", function() {
-      console.log("Loop");
-      music.play("musicLoop");
-    })
+    if(this.options.playMusic) {
+      music.play("musicStart");
+      music.on("end", function() {
+        console.log("Loop");
+        music.play("musicLoop");
+      });
+    }
 
     this.interval = window.setInterval(() => this.onLoad(), 1);
   }
@@ -129,12 +140,25 @@ class Game {
       el: '#app',
       data: {
         options: options
+      },
+      methods: {
+        onChange() {
+          localStorage.setItem("options", JSON.stringify(this.options));
+        }
       }
     });
   }
 
+  restartLevelName: string = "";
   restartLevel(name: string) {
-    cancelAnimationFrame(this.requestId);
+    console.log("RESET");
+    this.restartLevelName = name;
+  }
+
+  doRestart() {
+    //cancelAnimationFrame(this.requestId);
+    let name = this.restartLevelName;
+    this.restartLevelName = "";
     this.loadLevel(name);
   }
 
@@ -235,10 +259,14 @@ class Game {
     this.deltaTime = (currentTime - this.startTime) /1000;
     this.time += this.deltaTime;
     if(Math.abs(this.deltaTime) > 1/30) this.deltaTime = 1/30;
-    console.log(this.deltaTime);
     this.level.update();
     this.startTime = currentTime;
-    this.requestId = window.requestAnimationFrame((currentTime) => this.gameLoop(currentTime));
+    if(this.restartLevelName !== "") {
+      this.doRestart();
+    }
+    else {
+      this.requestId = window.requestAnimationFrame((currentTime) => this.gameLoop(currentTime));
+    }
   }
 
   get fps() {

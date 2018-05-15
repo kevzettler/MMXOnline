@@ -44,6 +44,8 @@ export class Character extends Actor {
 
     let rect = new Rect(0, 0, 18, 34);
     this.globalCollider = new Collider(rect.getPoints(), false);
+    this.globalCollider.isClimbable = false;
+    
     this.changeState(new Idle());
     
     this.jumpPower = 350;
@@ -288,6 +290,7 @@ class CharState {
   lastRightWall: Collider;
   stateTime: number;
   enterSound: string;
+  framesJumpNotHeld: number = 0;
 
   constructor(sprite: Sprite, shootSprite?: Sprite) {
     this.sprite = sprite;
@@ -335,7 +338,14 @@ class CharState {
     }
 
     if(!this.player.isHeld("jump") && this.character.vel.y < 0) {
-      this.character.vel.y = 0;
+      this.framesJumpNotHeld++;
+      if(this.framesJumpNotHeld > 3) {
+        this.framesJumpNotHeld = 0;
+        this.character.vel.y = 0;
+      }
+    }
+    if(this.player.isHeld("jump")) {
+      this.framesJumpNotHeld = 0;
     }
 
     if(game.level.checkCollisionActor(this.character, 0, -1)) {
