@@ -1,7 +1,18 @@
 var objects = [
   {
     "name": "Collision Shape",
-    "image": "collisionBox.png"
+    "isShape": true,
+    "color": "blue"
+  },
+  {
+    "name": "Ladder",
+    "isShape": true,
+    "color": "yellow"
+  },
+  {
+    "name": "No Scroll",
+    "isShape": true,
+    "color": "magenta"
   },
   {
     "name": "Spawn Point",

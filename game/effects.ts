@@ -54,7 +54,7 @@ export class ChargeEffect {
       let point = this.points[i];
       let chargePart = game.sprites["charge_part_" + String(chargeLevel)];
       if(this.pointTimes[i] > 0) {
-        chargePart.draw(Math.round(this.pointTimes[i]), centerPos.x + point.x - game.level.camX, centerPos.y + point.y - game.level.camY);
+        chargePart.draw(Math.round(this.pointTimes[i]), centerPos.x + point.x, centerPos.y + point.y);
       }
     }
 

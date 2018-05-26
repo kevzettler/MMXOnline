@@ -12,6 +12,7 @@ export class AI {
   shootTime: number = 0;
   dashTime: number = 0;
   jumpTime: number = 0;
+  weaponTime: number = 0;
 
   get player() {
     return this.character.player;
@@ -92,6 +93,15 @@ export class AI {
         if(this.jumpTime < 0) this.jumpTime = 0;
       }
     }
+    if(this.aiState.randomlyChangeWeapon) {
+      this.weaponTime += game.deltaTime;
+      if(this.weaponTime > 5) {
+        this.weaponTime = 0;
+        //this.player.weaponIndex = Helpers.randomRange(0, 8);
+        this.player.weaponIndex = this.player.weaponIndex - 1;
+        if(this.player.weaponIndex < 0) this.player.weaponIndex = 8;
+      }
+    }
 
     this.aiState.update();
   }
@@ -111,6 +121,7 @@ class AIState {
   randomlyChangeState: boolean = true;
   randomlyDash: boolean = true;
   randomlyJump: boolean = true;
+  randomlyChangeWeapon: boolean = true;
 
   get player() {
     return this.character.player;

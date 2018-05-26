@@ -1,5 +1,5 @@
 import { GameObject } from "./gameObject";
-import { Wall } from "./wall";
+import { Wall, Ladder } from "./wall";
 import { Point } from "./point";
 import { game } from "./game";
 import * as Helpers from "./helpers";
@@ -10,6 +10,8 @@ import { Collider, CollideData } from "./collider";
 import { Effect } from "./effects";
 import { RollingShieldProj } from "./projectile";
 import { Character } from "./character";
+import { SpawnPoint } from "./spawnPoint";
+import { NoScroll } from "./noScroll";
 
 export class Level {
 
@@ -17,6 +19,7 @@ export class Level {
   gameObjects: GameObject[];
   effects: Effect[] = [];
   background: HTMLImageElement;
+  parallax: HTMLImageElement;
   gravity: number;
   localPlayers: Player[];
   players: Player[];
@@ -27,28 +30,50 @@ export class Level {
   mainPlayer: Player;
   frameCount: number;
   twoFrameCycle: number;
+  levelMusic: string;
+  spawnPoints: SpawnPoint[] = [];
+  noScrolls: NoScroll[] = [];
+  musicLoopStart: number;
+  musicLoopEnd: number;
 
   constructor(levelJson: any) {
     this.zoomScale = 4;
+    this.gravity = 900;
     this.camX = 0;
     this.camY = 0;
-    this.fixedCam = true;
-    this.gravity = 900;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
     this.frameCount = 0;
 
     this.gameObjects = [];
     for(var instance of levelJson.instances) {
-      if(instance.className === "ShapeInstance") {
+      if(instance.objectName === "Collision Shape") {
         let points: Point[] = [];
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
         this.gameObjects.push(new Wall(points));
       }
+      else if(instance.objectName === "Ladder") {
+        let points: Point[] = [];
+        for(var point of instance.points) {
+          points.push(new Point(point.x, point.y));
+        }
+        this.gameObjects.push(new Ladder(points));
+      }
+      else if(instance.objectName === "No Scroll") {
+        let points: Point[] = [];
+        for(var point of instance.points) {
+          points.push(new Point(point.x, point.y));
+        }
+        let rect = new Rect(points[0].x, points[0].y, points[2].x, points[2].y);
+        this.noScrolls.push(new NoScroll(rect));
+      }
+      else if(instance.objectName === "Spawn Point") {
+        this.spawnPoints.push(new SpawnPoint(new Point(instance.pos.x, instance.pos.y)));
+      }
       else {
-        let actor: Actor = new Actor(game.sprites[instance.spriteName]);
+        let actor: Actor = new Actor(game.sprites[instance.spriteName], true);
         actor.pos = new Point(instance.pos.x, instance.pos.y);
         actor.name = instance.name;
         this.gameObjects.push(actor);
@@ -57,6 +82,26 @@ export class Level {
     this.localPlayers = [];
     this.players = [];
     this.twoFrameCycle = 0;
+
+    let parallax = "";
+
+    if(this.name === "sm_bossroom") {
+      this.fixedCam = true;
+      this.levelMusic = "BossBattle.mp3";
+      this.musicLoopStart = 1500;
+      this.musicLoopEnd = 29664;
+    }
+    else if(this.name === "powerplant") {
+      this.fixedCam = false;
+      this.levelMusic = "PowerPlant.mp3";
+      parallax = "powerplant_parallex.png";
+      this.musicLoopStart = 51040;
+      this.musicLoopEnd = 101116;
+    }
+
+    if(parallax) {
+      this.parallax = game.getBackground("assets/backgrounds/" + parallax);
+    }
   }
   
   update() {
@@ -129,6 +174,7 @@ export class Level {
     game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
     Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
+    if(this.parallax) Helpers.drawImage(game.ctx, this.parallax, -this.camX * 0.5, -this.camY * 0.5);
     Helpers.drawImage(game.ctx, this.background, -this.camX, -this.camY);
     
     for(let go of this.gameObjects) {
@@ -211,6 +257,28 @@ export class Level {
 
     if(this.camX > maxX) this.camX = maxX;
     if(this.camY > maxY) this.camY = maxY;
+
+    let camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+    for(let noScroll of this.noScrolls) {
+      if(noScroll.rect.overlaps(camRect)) {
+        let upDist = camRect.y2 - noScroll.rect.y1;
+        let downDist = noScroll.rect.y2 - camRect.y1;
+        let leftDist = camRect.x2 - noScroll.rect.x1;
+        let rightDist = noScroll.rect.x2 - camRect.x1;
+        if(Math.min(upDist, downDist, leftDist, rightDist) === upDist) {
+          this.camY -= upDist;
+        }
+        else if(Math.min(upDist, downDist, leftDist, rightDist) === downDist) {
+          this.camY += downDist;
+        }
+        else if(Math.min(upDist, downDist, leftDist, rightDist) === leftDist) {
+          this.camX -= leftDist;
+        }
+        else if(Math.min(upDist, downDist, leftDist, rightDist) === rightDist) {
+          this.camY += rightDist;
+        }
+      }
+    }
   }
   
   addGameObject(go: GameObject) {
@@ -222,10 +290,18 @@ export class Level {
   }
 
   //Should actor collide with gameobject?
-  shouldTrigger(actor: Actor, gameObject: GameObject) {
+  shouldTrigger(actor: Actor, gameObject: GameObject, offset: Point) {
 
     if(actor instanceof RollingShieldProj || gameObject instanceof RollingShieldProj) {
       var a = 0;
+    }
+
+    if(!actor.collider.isTrigger && gameObject instanceof Ladder) {
+      if(actor.pos.y < gameObject.collider.shape.getRect().y1 && offset.y > 0) {
+        if(actor instanceof Character && !actor.checkLadderDown) {
+          return false;
+        }
+      }
     }
 
     if(actor.collider.isTrigger || gameObject.collider.isTrigger) return true;
@@ -247,10 +323,10 @@ export class Level {
     if(!actor.collider || actor.collider.isTrigger) return undefined;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
-      if(!go.collider || go.collider.isTrigger) continue;
+      if(!go.collider) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        let isTrigger = this.shouldTrigger(actor, go);
+        let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
         if(isTrigger) continue;
         return new CollideData(go.collider, vel, isTrigger, go);
       }
@@ -258,15 +334,18 @@ export class Level {
     return undefined;
   }
 
-  getTriggerList(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData[] {
+  getTriggerList(actor: Actor, offsetX: number, offsetY: number, vel?: Point, className?: string): CollideData[] {
     let triggers: CollideData[] = [];
     if(!actor.collider) return triggers;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
       if(!go.collider) continue;
+      if(className && go.constructor.name !== className) {
+        continue;
+      }
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       if(go.collider.shape.intersectsShape(actorShape)) {
-        let isTrigger = this.shouldTrigger(actor, go);
+        let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
         if(!isTrigger) continue;
         triggers.push(new CollideData(go.collider, vel, isTrigger, go));
       }

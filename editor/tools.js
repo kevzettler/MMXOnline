@@ -71,7 +71,12 @@ class CreateInstanceTool extends Tool {
 
 	onMouseDown() {
     var sprite = _.find(data.sprites, (sprite) => { return sprite.name === data.selectedObject.spriteName; });
-    var instance = new Instance(data.selectedObject.name, mouseX, mouseY, sprite);
+    if(!sprite) {
+      var instance = new Instance(data.selectedObject.name, mouseX, mouseY, undefined, data.selectedObject.image);
+    }
+    else {
+      var instance = new Instance(data.selectedObject.name, mouseX, mouseY, sprite);
+    }
     data.selectedLevel.instances.push(instance);
     data.selectedObject = null;
     data.selectedInstances = [instance];
@@ -143,8 +148,9 @@ class DragSelectTool extends Tool {
 
 class CreateTool extends Tool {
 
-	constructor() {
-		super();
+	constructor(obj) {
+    super();
+    this.obj = obj;
 		this.cursor = "crosshair";
 	}
 
@@ -154,7 +160,7 @@ class CreateTool extends Tool {
     var v3 = new Point(mouseX+4,mouseY+4);
     var v4 = new Point(mouseX,mouseY+4);
     
-    var collisionBox = new ShapeInstance("Shape Instance", [v1, v2, v3, v4]);
+    var collisionBox = new ShapeInstance(this.obj, [v1, v2, v3, v4]);
     
     data.selectedLevel.instances.push(collisionBox);
     data.selectedInstances.push(collisionBox);

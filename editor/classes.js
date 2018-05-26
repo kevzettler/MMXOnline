@@ -243,30 +243,60 @@ class Color {
 }
 classes["Color"] = Color;
 
+let ICON_WIDTH = 20;
 class Instance {
-  constructor(name, x, y, sprite) {
+  constructor(name, x, y, sprite, nonSpriteImgSrc) {
     this.className = this.constructor.name;
     this.name = name || "Instance";
+    this.objectName = name;
     this.pos = new Point(x, y);
     if(sprite) {
       this.sprite = sprite;
       this.spriteName = sprite.name;
+    }
+    else if(nonSpriteImgSrc) {
+      this.nonSpriteImgEl = document.createElement("img");
+      this.nonSpriteImgEl.src = "editor/images/" + nonSpriteImgSrc;
     }
   }
   onDeserialize() {
     this.sprite = _.find(data.sprites, (sprite) => {
       return sprite.name === this.spriteName;
     });
-    if(this.sprite === null) {
-      throw "Sprite not found";
+    if(!this.sprite) {
+      //throw "Sprite not found";
+      var obj = _.find(objects, (object) => {
+        return object.name === this.objectName;
+      });
+      this.nonSpriteImgEl = document.createElement("img");
+      this.nonSpriteImgEl.src = "editor/images/" + obj.image;
     }
+    
   }
   draw(ctx) {
     if(this.sprite && this.sprite.spritesheet && this.sprite.spritesheet.imageEl) {
       this.sprite.draw(c1, this.sprite.frames[0], this.pos.x, this.pos.y);
     }
+    else if(this.nonSpriteImgEl) {
+      c1.drawImage(
+        this.nonSpriteImgEl,
+        Math.round(0), //source x
+        Math.round(0), //source y
+        Math.round(this.nonSpriteImgEl.width), //source width
+        Math.round(this.nonSpriteImgEl.height), //source height
+        Math.round(this.pos.x - ICON_WIDTH/2),  //dest x
+        Math.round(this.pos.y - ICON_WIDTH / 2),  //dest y
+        Math.round(ICON_WIDTH), //dest width
+        Math.round(ICON_WIDTH)  //dest height
+      );
+    }
   }
   getRect() {
+
+    if(!this.sprite) {
+      return createRect(this.pos.x - ICON_WIDTH/2, this.pos.y - ICON_WIDTH/2, this.pos.x + ICON_WIDTH/2, this.pos.y + ICON_WIDTH/2)
+    }
+
     var w = this.sprite.frames[0].rect.w;
     var h = this.sprite.frames[0].rect.h;
 
@@ -311,11 +341,20 @@ class Instance {
 classes["Instance"] = Instance;
 
 class ShapeInstance {
-  constructor(name, points) {
+  constructor(obj, points, color) {
+    if(!obj) return;
     this.className = this.constructor.name;
-    this.name = name || "Collision Shape Instance";
+    this.name = obj.name;
+    this.objectName = obj.name;
     this.className = this.constructor.name;
     this.points = points;
+    this.onDeserialize();
+  }
+
+  onDeserialize() {
+    this.obj = _.find(objects, (obj) => {
+      return obj.name === this.objectName; 
+    });
   }
 
   clearPointPercents() {
@@ -335,7 +374,7 @@ class ShapeInstance {
   }
 
   draw(ctx) {
-    drawPolygon(ctx, this.points, true, "blue", "", "", 0.5);
+    drawPolygon(ctx, this.points, true, this.obj.color, "", "", 0.5);
   }
   getRect() {
     var minX = _.minBy(this.points, (point) => { return point.x; }).x;
@@ -396,4 +435,3 @@ class ShapeInstance {
   }
 }
 classes["ShapeInstance"] = ShapeInstance;
-

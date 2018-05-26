@@ -10,6 +10,7 @@ import * as Helpers from "./helpers";
 import { Weapon, Buster, FireWave } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
 import { AI } from "./ai";
+import { Ladder } from "./wall";
 
 export class Character extends Actor {
 
@@ -34,7 +35,8 @@ export class Character extends Actor {
   ai: AI;
   projectileCooldown: { [name: string]: number } = {};  //Player id + projectile name
   invulnFrames: number = 0;
-  
+  checkLadderDown: boolean = false;
+
   constructor(player: Player, x: number, y: number) {
     super(undefined);
     this.pos.x = x;
@@ -214,6 +216,15 @@ export class Character extends Actor {
       this.frameIndex = 0;
       this.frameTime = 0;
     }
+    if(this.charState instanceof LadderClimb) {
+      if(this.player.isHeld("left")) {
+        this.xDir = -1;
+      }
+      else if(this.player.isHeld("right")) {
+        this.xDir = 1;
+      }
+    }
+    
     this.shootAnimTime = 0.3;
     let xDir = this.xDir;
     if(this.charState instanceof WallSlide) xDir *= -1;
@@ -347,6 +358,12 @@ class CharState {
     if(this.player.isHeld("jump")) {
       this.framesJumpNotHeld = 0;
     }
+    if(this.player.isHeld("up")) {
+      let ladders = game.level.getTriggerList(this.character, 0, 0, undefined, "Ladder");
+      if(ladders.length > 0) {
+        this.character.changeState(new LadderClimb(ladders[0].gameObject));
+      }
+    }
 
     if(game.level.checkCollisionActor(this.character, 0, -1)) {
       this.character.vel.y = 0;
@@ -400,6 +417,15 @@ class CharState {
       this.character.vel.y = -this.character.jumpPower;
       this.character.changeState(new Jump());
       return;
+    }
+    else if(this.player.isPressed("down")) {
+      this.character.checkLadderDown = true;
+      let ladders = game.level.getTriggerList(this.character, 0, 1, undefined, "Ladder");
+      if(ladders.length > 0) {
+        this.character.changeState(new LadderClimb(ladders[0].gameObject));
+        this.character.move(new Point(0, 500));
+      }
+      this.character.checkLadderDown = false;
     }
   }
 
@@ -616,6 +642,47 @@ class WallKick extends CharState {
 
   onExit(newState: CharState) {
     super.onExit(newState);
+  }
+
+}
+
+class LadderClimb extends CharState {
+
+  ladder: Ladder;
+  constructor(ladder: Ladder) {
+    super(game.sprites["mmx_ladder_climb"], game.sprites["mmx_ladder_shoot"]);
+    this.ladder = ladder;
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+    let rect = this.ladder.collider.shape.getRect();
+    this.character.pos.x = (rect.x1 + rect.x2)/2;
+    this.character.vel = new Point(0, 0);
+    this.character.useGravity = false;
+  }
+
+  onExit(newState: CharState) {
+    super.onExit(newState);
+    this.character.useGravity = true;
+  }
+
+  update() {
+    super.update();
+    if(this.player.isHeld("up")) {
+      this.character.move(new Point(0, -100));
+      this.character.frameSpeed = 1;
+    }
+    else if(this.player.isHeld("down")) {
+      this.character.move(new Point(0, 100));
+      this.character.frameSpeed = 1;
+    }
+    else {
+      this.character.frameSpeed = 0;
+    }
+    if(!this.ladder.collider.isCollidingWith(this.character.collider)) {
+      this.character.changeState(new Fall());
+    }
   }
 
 }

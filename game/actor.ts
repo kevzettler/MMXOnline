@@ -28,7 +28,7 @@ export class Actor {
   palette: Palette;
   renderEffectTime: number = 0;
 
-  constructor(sprite: Sprite) {
+  constructor(sprite: Sprite, dontAddToLevel?: boolean) {
     this.pos = new Point(0, 0);
     this.vel = new Point(0, 0);
     this.useGravity = true;
@@ -39,7 +39,9 @@ export class Actor {
     this.xDir = 1;
     this.yDir = 1;
     this.grounded = false;
-    game.level.addGameObject(this);
+    if(!dontAddToLevel) {
+      game.level.addGameObject(this);
+    }
     this.collidedInFrame = new Set<Collider>();
     this.renderEffect = "";
     this.changeSprite(sprite, true);

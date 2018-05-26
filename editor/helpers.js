@@ -367,6 +367,8 @@ function serializeES6(obj) {
       if(key === "spritesheet") continue;
       if(key === "background") continue;
       if(key === "sprite") continue;
+      if(key === "nonSpriteImgEl") continue;
+      if(key === "obj") continue;
       if(!obj.hasOwnProperty(key)) continue;
       retStr += '"' + key + '":' + serializeES6(obj[key]) + ",";
     }

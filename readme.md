@@ -1,11 +1,19 @@
--character heights vary on ground
--Rolling shield on ceiling
--getIntersectPoint is not working sometimes
-  -See onCollision in projectile.ts
+-Level editor: "Normalize" rectangle points
+-Level editor: resize/move hotkeys
+-Ladder: push left/right to jump off
+-Jerky parallax
+-Ladder: snapping to it is jerky
+-Ladder: better snap positions
+-Ladder: when climbing up, stop velocity
+-Camera pos screwed up with rightmost noscroll zone
 
--All the special weapon charges
 -Menu system
 -More levles/background+foreground system
+
+-character heights vary on ground
+-Rolling shield on ceiling
+
+-All the special weapon charges
 
 -Collision system
   -Ability for "soft collision"
@@ -25,7 +33,14 @@ Useful optimizations and fixes
 Sprite editor useful features
 ========================
 Rectangle select on the spritesheet canvas
-Optimize image graph read
-Auto-create hitbox based on bounds
-Remember selected frame index for different sprites
-"Ghost" mode: press "G" to enter "ghost mode". In ghost mode, the last drawn sprite will overlay as transparent on current draw sprite for sprite comparison
+
+========================
+DOCS
+========================
+Non-serializable code locations:
+helpers.js: Search for 
+  function serializeES6(obj) {
+levelEditor.js: Search for
+  saveLevel() {
+sprite path saving is automatic using the name. 
+onDeserialize() and onSerialize() of the classes that you are deserializing/serializing.

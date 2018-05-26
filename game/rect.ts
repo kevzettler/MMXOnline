@@ -44,4 +44,14 @@ export class Rect {
     ];
   }
 
+  overlaps(other: Rect) {
+    // If one rectangle is on left side of other
+    if (this.x1 > other.x2 || other.x1 > this.x2)
+      return false;
+    // If one rectangle is above other
+    if (this.y1 > other.y2 || other.y1 > this.y2)
+      return false;
+    return true;
+  }
+  
 }

@@ -88,8 +88,8 @@ var methods = {
   changeObject(newObj) {
     this.selectedInstances = [];
     this.selectedObject = newObj;
-    if(newObj.name === "Collision Shape") {
-      tool = new CreateTool();
+    if(newObj.isShape) {
+      tool = new CreateTool(newObj);
     }
     else {
       tool = new CreateInstanceTool();

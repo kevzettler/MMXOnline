@@ -57,7 +57,7 @@ export class Projectile extends Actor {
     let character = other.gameObject;
     if(character instanceof Character && character.player.alliance !== this.damager.owner.alliance) {
       let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
-      //if(pos) this.pos = pos.clone();
+      if(pos) this.pos = pos.clone();
       let character = other.gameObject;
       if(character instanceof Character) {
 

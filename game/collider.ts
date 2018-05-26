@@ -31,6 +31,10 @@ export class Collider {
     this.offset.y = y;
   }
 
+  isCollidingWith(other: Collider) {
+    return this.shape.intersectsShape(other.shape);
+  }
+
   /*
   clone(x: number, y: number, gameObject: GameObject) {
     let shape = this.shape.clone(x, y);

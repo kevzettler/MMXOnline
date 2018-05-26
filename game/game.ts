@@ -5,6 +5,7 @@ import { levelJsons } from "./levels";
 import { Player } from "./player";
 import { Palette } from "./color";
 import * as Helpers from "./helpers";
+import * as Tests from "./tests";
 
 class Options {
   showHitboxes: boolean = false;
@@ -99,23 +100,6 @@ class Game {
       }
     });
 
-    let music = new Howl({
-      src: ["assets/music/BossBattle.mp3"],
-      sprite: {
-        musicStart: [0, 1.5 * 1000],
-        musicLoop: [1.5 * 1000, 29.664 * 1000 - 1.5 * 1000]
-      },
-      onload: () => {
-      }
-    });
-    if(this.options.playMusic) {
-      music.play("musicStart");
-      music.on("end", function() {
-        console.log("Loop");
-        music.play("musicLoop");
-      });
-    }
-
     this.interval = window.setInterval(() => this.onLoad(), 1);
   }
 
@@ -124,7 +108,28 @@ class Game {
       //console.log("LOADED");
       window.clearInterval(this.interval);
       
-      this.loadLevel("sm_bossroom");
+      this.loadLevel("powerplant");
+
+      let music = new Howl({
+        src: ["assets/music/" + this.level.levelMusic],
+        sprite: {
+          musicStart: [0, this.level.musicLoopStart],
+          musicLoop: [this.level.musicLoopStart, this.level.musicLoopEnd - this.level.musicLoopStart]
+        },
+        onload: () => {
+        }
+      });
+      if(this.options.playMusic) {
+        window.setTimeout(
+          () => {
+            music.play("musicStart");
+            music.on("end", function() {
+              console.log("Loop");
+              music.play("musicLoop");
+            });
+          },
+          1000);
+      }
     }
     else {
       //console.log("LOADING...");
@@ -149,6 +154,10 @@ class Game {
     });
   }
 
+  test() {
+    Tests.runAllTests();
+  }
+
   restartLevelName: string = "";
   restartLevel(name: string) {
     console.log("RESET");
@@ -169,12 +178,14 @@ class Game {
     this.level = _.cloneDeep(level);
     this.level.background = level.background;
 
-    let player1: Player = new Player(50, 193, false, 0);
+    //50,193
+    //210,193
+    let player1: Player = new Player(this.level.spawnPoints[0].point.x, this.level.spawnPoints[0].point.y, false, 0);
     this.level.players.push(player1);
     this.level.localPlayers.push(player1);
     this.level.mainPlayer = player1;
 
-    let cpu1: Player = new Player(210, 193, false, 1);
+    let cpu1: Player = new Player(this.level.spawnPoints[1].point.x, this.level.spawnPoints[1].point.y, false, 1);
     cpu1.character.palette = this.palettes["red"];
     cpu1.character.xDir = -1;
     cpu1.palette = cpu1.character.palette;
