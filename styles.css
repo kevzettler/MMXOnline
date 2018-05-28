@@ -86,3 +86,8 @@
 .unselectable {
   cursor: default;
 }
+
+.properties {
+  display:inline-block;
+  vertical-align: top;
+}

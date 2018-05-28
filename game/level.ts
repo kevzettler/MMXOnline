@@ -12,6 +12,8 @@ import { RollingShieldProj } from "./projectile";
 import { Character } from "./character";
 import { SpawnPoint } from "./spawnPoint";
 import { NoScroll } from "./noScroll";
+import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
+import { Line } from "./shape";
 
 export class Level {
 
@@ -35,6 +37,9 @@ export class Level {
   noScrolls: NoScroll[] = [];
   musicLoopStart: number;
   musicLoopEnd: number;
+  debugString: string = "";
+  lerpCamTime: number = 0;
+  navMeshNodes: NavMeshNode[] = [];
 
   constructor(levelJson: any) {
     this.zoomScale = 4;
@@ -52,14 +57,14 @@ export class Level {
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        this.gameObjects.push(new Wall(points));
+        this.gameObjects.push(new Wall(instance.name, points));
       }
       else if(instance.objectName === "Ladder") {
         let points: Point[] = [];
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        this.gameObjects.push(new Ladder(points));
+        this.gameObjects.push(new Ladder(instance.name, points));
       }
       else if(instance.objectName === "No Scroll") {
         let points: Point[] = [];
@@ -72,6 +77,12 @@ export class Level {
       else if(instance.objectName === "Spawn Point") {
         this.spawnPoints.push(new SpawnPoint(new Point(instance.pos.x, instance.pos.y)));
       }
+      else if(instance.objectName === "Node") {
+        let name = instance.name;
+        let pos = new Point(instance.pos.x, instance.pos.y);
+        let node: NavMeshNode = new NavMeshNode(name, pos, instance.properties);
+        this.navMeshNodes.push(node);
+      }
       else {
         let actor: Actor = new Actor(game.sprites[instance.spriteName], true);
         actor.pos = new Point(instance.pos.x, instance.pos.y);
@@ -79,6 +90,12 @@ export class Level {
         this.gameObjects.push(actor);
       }
     }
+
+    for(let navMeshNode of this.navMeshNodes) {
+      navMeshNode.setNeighbors(this.navMeshNodes, this.gameObjects);
+    }
+    console.log(this.navMeshNodes);
+
     this.localPlayers = [];
     this.players = [];
     this.twoFrameCycle = 0;
@@ -186,7 +203,7 @@ export class Level {
     }
 
     this.drawHUD();
-    Helpers.drawText(game.ctx, "FPS: " + game.fps, 10, 10, "white", 8, "left", "top", "");
+    Helpers.drawText(game.ctx, this.debugString, 10, 10, "white", 8, "left", "top", "");
   }
 
   drawHUD() {
@@ -242,23 +259,27 @@ export class Level {
   get width() { return this.background.width; }
   get height() { return this.background.height; }
 
-  computeCamPos(actor: Actor) {
+  get halfScreenWidth() {
+    return (game.canvas.width / this.zoomScale) * 0.375;
+  }
+
+  computeCamPos(character: Character) {
     let scaledCanvasW = game.canvas.width / this.zoomScale;
     let scaledCanvasH = game.canvas.height / this.zoomScale;
     
-    this.camX = actor.pos.x - scaledCanvasW/2;
-    this.camY = actor.pos.y - scaledCanvasH/2;
+    let camX = character.getCamCenterPos().x - scaledCanvasW/2;
+    let camY = character.getCamCenterPos().y - scaledCanvasH/2;
 
-    if(this.camX < 0) this.camX = 0;
-    if(this.camY < 0) this.camY = 0;
+    if(camX < 0) camX = 0;
+    if(camY < 0) camY = 0;
 
     let maxX = this.background.width - scaledCanvasW;
     let maxY = this.background.height - scaledCanvasH;
 
-    if(this.camX > maxX) this.camX = maxX;
-    if(this.camY > maxY) this.camY = maxY;
+    if(camX > maxX) camX = maxX;
+    if(camY > maxY) camY = maxY;
 
-    let camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+    let camRect = new Rect(camX, camY, camX + scaledCanvasW, camY + scaledCanvasH);
     for(let noScroll of this.noScrolls) {
       if(noScroll.rect.overlaps(camRect)) {
         let upDist = camRect.y2 - noScroll.rect.y1;
@@ -266,19 +287,30 @@ export class Level {
         let leftDist = camRect.x2 - noScroll.rect.x1;
         let rightDist = noScroll.rect.x2 - camRect.x1;
         if(Math.min(upDist, downDist, leftDist, rightDist) === upDist) {
-          this.camY -= upDist;
+          camY -= upDist;
         }
         else if(Math.min(upDist, downDist, leftDist, rightDist) === downDist) {
-          this.camY += downDist;
+          camY += downDist;
         }
         else if(Math.min(upDist, downDist, leftDist, rightDist) === leftDist) {
-          this.camX -= leftDist;
+          camX -= leftDist;
         }
         else if(Math.min(upDist, downDist, leftDist, rightDist) === rightDist) {
-          this.camY += rightDist;
+          camX += rightDist;
         }
       }
     }
+
+    if(this.lerpCamTime > 0) {
+      this.camX = Helpers.lerpNoOver(this.camX, camX, game.deltaTime * 30);
+      this.camY = Helpers.lerpNoOver(this.camY, camY, game.deltaTime * 30);
+      this.lerpCamTime = Helpers.clampMin0(this.lerpCamTime - game.deltaTime);
+    }
+    else {
+      this.camX = camX;
+      this.camY = camY;
+    }
+    
   }
   
   addGameObject(go: GameObject) {
@@ -353,16 +385,66 @@ export class Level {
     return triggers;
   }
 
+  raycastAll(pos1: Point, pos2: Point, classNames: string[]) {
+    let hits: CollideData[] = [];
+    for(let go of this.gameObjects) {
+      if(!go.collider) continue;
+      let found = false;
+      for(let className of classNames) {
+        if(go.constructor.name === className) {
+          found = true;
+          break;
+        }
+      }
+      if(!found) continue;
+      if(go.collider.shape.intersectsLine(new Line(pos1, pos2))) {
+        hits.push(new CollideData(go.collider, undefined, true, go));
+      }
+    }
+    return hits;
+  }
+
   getClosestTarget(pos: Point, alliance: number) {
     //@ts-ignore
     let players = _.filter(this.players, (player) => { 
-      return player.character && player.alliance !== alliance; 
+      if(!player.character) return false;
+      if(player.alliance === alliance) return false;
+      if(!this.noWallsInBetween(pos, player.character.pos)) return false;
+      return true;
     });
     //@ts-ignore
     let closestPlayer = _.minBy(players, (player) => {
       return player.character.pos.distanceTo(pos);
     });
     return closestPlayer ? closestPlayer.character : undefined;
+  }
+
+  noWallsInBetween(pos1: Point, pos2: Point) {
+    let hits = this.raycastAll(pos1, pos2, ["Wall", "Ladder"]);
+    if(hits.length === 0) {
+      return true;
+    }
+    return false;
+  }
+
+  getClosestNodeInSight(pos: Point) {
+    let minNode: NavMeshNode;
+    let minDist = Infinity;
+    for(let node of this.navMeshNodes) {
+      if(this.noWallsInBetween(pos, node.pos)) {
+        let dist = pos.distanceTo(node.pos);
+        if(dist < minDist) {
+          minDist = dist;
+          minNode = node;
+        }
+      }
+    }
+    return minNode;
+  }
+
+  getRandomNode() {
+    //@ts-ignore
+    return _.sample(this.navMeshNodes);
   }
 
 }

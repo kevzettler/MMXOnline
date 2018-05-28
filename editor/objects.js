@@ -10,6 +10,10 @@ var objects = [
     "color": "yellow"
   },
   {
+    "name": "Node",
+    "image": "graph_node.png"
+  },
+  {
     "name": "No Scroll",
     "isShape": true,
     "color": "magenta"

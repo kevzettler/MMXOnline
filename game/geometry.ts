@@ -6,9 +6,11 @@ import { Point } from "./point";
 //Umbrella class for walls, nav meshes, ladders, etc.
 export class Geometry {
 
+  name: string;
   collider: Collider;
 
-  constructor(points: Point[]) {
+  constructor(name: string, points: Point[]) {
+    this.name = name;
     this.collider = new Collider(points, false);
   }
 

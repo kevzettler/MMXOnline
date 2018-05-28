@@ -3,6 +3,7 @@ import { game } from "./game";
 import { Projectile, BusterProj } from "./projectile";
 import { Point } from "./point";
 import * as Helpers from "./helpers";
+import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 
 export class AI {
 
@@ -29,14 +30,28 @@ export class AI {
       this.target = undefined;
     }
 
-    if(!this.target) {
-      this.target = game.level.players[0].character;
-    }
+    this.target = game.level.getClosestTarget(this.character.pos, this.player.alliance);
 
     if(!this.target) {
-      return;
+      if(this.aiState.constructor.name !== "FindPlayer") {
+        this.aiState = new FindPlayer(this.character);
+      }
+    }
+    else {
+      if(this.aiState.constructor.name === "FindPlayer") {
+        this.aiState = new AimAtPlayer(this.character);
+      }
     }
 
+    if(this.target) {
+      if(this.character.charState.constructor.name === "LadderClimb") {
+        this.player.press("jump");
+      }
+      let xDist = this.target.pos.x - this.character.pos.x;
+      if(Math.abs(xDist) > game.level.halfScreenWidth) {
+        this.aiState = new MoveTowardsTarget(this.character);
+      }
+    }
     if(this.aiState.facePlayer) {
       if(this.character.pos.x > this.target.pos.x) {
         this.character.xDir = -1;
@@ -74,7 +89,7 @@ export class AI {
       }
     }
     if(this.aiState.randomlyDash) {
-      if(Helpers.randomRange(0, 90) < 5) {
+      if(Helpers.randomRange(0, 150) < 5) {
         this.dashTime = Helpers.randomRange(0.2, 0.5);
       }
       if(this.dashTime > 0) {
@@ -84,7 +99,7 @@ export class AI {
       }
     }
     if(this.aiState.randomlyJump) {
-      if(Helpers.randomRange(0, 120) < 5) {
+      if(Helpers.randomRange(0, 150) < 5) {
         this.jumpTime = Helpers.randomRange(0.25, 0.75);
       }
       if(this.jumpTime > 0) {
@@ -114,14 +129,14 @@ export class AI {
 
 class AIState {
 
-  facePlayer: boolean = true;
+  facePlayer: boolean;
   character: Character;
-  shouldAttack: boolean = true;
-  shouldDodge: boolean = true;
-  randomlyChangeState: boolean = true;
-  randomlyDash: boolean = true;
-  randomlyJump: boolean = true;
-  randomlyChangeWeapon: boolean = true;
+  shouldAttack: boolean;
+  shouldDodge: boolean;
+  randomlyChangeState: boolean;
+  randomlyDash: boolean;
+  randomlyJump: boolean;
+  randomlyChangeWeapon: boolean;
 
   get player() {
     return this.character.player;
@@ -137,9 +152,120 @@ class AIState {
     this.character = character;
     this.shouldAttack = true;
     this.facePlayer = true;
+    this.shouldDodge = true;
+    this.randomlyChangeState = true;
+    this.randomlyDash = true;
+    this.randomlyJump = true;
+    this.randomlyChangeWeapon = true;
   }
 
   update() {
+
+  }
+
+}
+
+class MoveTowardsTarget extends AIState {
+  constructor(character: Character) {
+    super(character);
+    this.facePlayer = false;
+    this.shouldAttack = false;
+    this.shouldDodge = false;
+    this.randomlyChangeState = false;
+    this.randomlyDash = true;
+    this.randomlyJump = false;
+    this.randomlyChangeWeapon = false;
+  }
+
+  update() {
+    super.update();
+    if(this.character.pos.x - this.ai.target.pos.x > game.level.halfScreenWidth) {
+      this.player.press("left");
+    }
+    else if(this.character.pos.x - this.ai.target.pos.x < -game.level.halfScreenWidth) {
+      this.player.press("right");
+    }
+    else {
+      this.ai.changeState(new AimAtPlayer(this.character));
+    }
+  }
+
+}
+
+class FindPlayer extends AIState {
+  
+  destNode: NavMeshNode;
+  nextNode: NavMeshNode;
+  prevNode: NavMeshNode;
+  ladderDir: string;
+  constructor(character: Character) {
+    super(character);
+    this.facePlayer = false;
+    this.shouldAttack = false;
+    this.shouldDodge = false;
+    this.randomlyChangeState = false;
+    this.randomlyDash = true;
+    this.randomlyJump = false;
+    this.randomlyChangeWeapon = false;
+    
+    this.destNode = game.level.getRandomNode();
+    this.nextNode = game.level.getClosestNodeInSight(this.character.centerPos);
+    this.prevNode = undefined;
+
+  }
+
+  update() {
+    super.update();
+
+    if(!this.nextNode) {
+      this.ai.changeState(new FindPlayer(this.character));
+      return;
+    }
+
+    if(this.character.charState.constructor.name === "LadderClimb") {
+      this.player.press(this.ladderDir);
+      return;
+    }
+
+    if(this.character.pos.x - this.nextNode.pos.x > 5) {
+      this.player.press("left");
+    }
+    else if(this.character.pos.x - this.nextNode.pos.x < -5) {
+      this.player.press("right");
+    }
+    else {
+      if(Math.abs(this.character.pos.y - this.nextNode.pos.y) < 15) {
+        if(this.nextNode === this.destNode) {
+          this.ai.changeState(new FindPlayer(this.character));
+          return;
+        }
+        this.prevNode = this.nextNode;
+        this.nextNode = this.nextNode.getNextNode(this.destNode);
+      }
+      else {
+        if(!this.prevNode) {
+          return;
+        }
+        let neighbor: NavMeshNeighbor = this.prevNode.getNeighbor(this.nextNode);
+        if(neighbor.isJumpNode) {
+          this.player.press("jump");  
+          if(neighbor.ladder) {
+            this.ladderDir = "up";
+            this.player.press("up");
+          }
+        }
+        else if(neighbor.isDropNode) {
+          if(neighbor.ladder) {
+            this.ladderDir = "down";
+            this.player.press("down");
+          }
+        }
+        else if(neighbor.ladder) {
+          this.ladderDir = "up";
+          this.player.press("up");
+        }
+      }
+    }
 
   }
 
@@ -157,17 +283,20 @@ class MoveToPos extends AIState {
 
   update() {
     super.update();
+    let dir = 0;
     if(this.character.pos.x - this.dest.x > 5) {
+      dir = -1;
       this.player.press("left");
     }
     else if(this.character.pos.x - this.dest.x < -5) {
+      dir = 1;
       this.player.press("right");
     }
     else {
       this.ai.changeState(new AimAtPlayer(this.character));
     }
 
-    if(this.character.sweepTest(new Point(this.character.xDir * 50, 0))) {
+    if(this.character.sweepTest(new Point(dir * 5, 0))) {
       this.ai.changeState(new AimAtPlayer(this.character));
     }
 

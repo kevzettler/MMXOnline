@@ -142,6 +142,16 @@ export class Shape {
     return lines;
   }
 
+  intersectsLine(line: Line) {
+    let lines = this.getLines();
+    for(var myLine of lines) {
+      if(myLine.intersectsLine(line)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   intersectsShape(other: Shape): boolean {
     let rect1 = this.getRect();
     let rect2 = other.getRect();

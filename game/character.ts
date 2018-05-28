@@ -71,6 +71,10 @@ export class Character extends Actor {
 
   update() {
 
+    if(this.player.alliance === 0) {
+      game.level.debugString = "y: " + this.pos.y;
+    }
+
     for(let projName in this.projectileCooldown) {
       let cooldown = this.projectileCooldown[projName];
       if(cooldown) {
@@ -168,6 +172,14 @@ export class Character extends Actor {
     }
   }
 
+  getCenterPos() {
+    return this.pos.addxy(0, -18);
+  }
+
+  getCamCenterPos() {
+    return this.pos.addxy(0, -24);
+  }
+
   addAI() {
     this.ai = new AI(this);
   }
@@ -185,7 +197,13 @@ export class Character extends Actor {
   }
 
   getShootPos() {
-    let busterOffset = this.currentFrame.getBusterOffset().clone();
+    let busterOffsetPos = this.currentFrame.getBusterOffset();
+    if(!busterOffsetPos) {
+      console.log(this.frameIndex);
+      console.log(this.sprite.name);
+      throw "No buster offset!";
+    }
+    let busterOffset = busterOffsetPos.clone();
     busterOffset.x *= this.xDir;
     return this.pos.add(busterOffset);
   }
@@ -223,6 +241,11 @@ export class Character extends Actor {
       else if(this.player.isHeld("right")) {
         this.xDir = 1;
       }
+    }
+
+    //Sometimes transitions cause the shoot sprite not to be played immediately, so force it here
+    if(!this.currentFrame.getBusterOffset()) { 
+      this.changeSprite(this.charState.shootSprite, false);
     }
     
     this.shootAnimTime = 0.3;
@@ -273,7 +296,7 @@ export class Character extends Actor {
   render(x: number, y: number) {
     super.render(x, y);
     if(this.chargeEffect) {
-      this.chargeEffect.render(this.pos.add(new Point(x, y - 18)), this.getChargeLevel())
+      this.chargeEffect.render(this.getCenterPos().add(new Point(x, y)), this.getChargeLevel())
     }
   }
   
@@ -294,7 +317,9 @@ export class Character extends Actor {
 class CharState {
 
   sprite: Sprite;
+  defaultSprite: Sprite;
   shootSprite: Sprite;
+  transitionSprite: Sprite;
   busterOffset: Point;
   character: Character;
   lastLeftWall: Collider;
@@ -303,8 +328,10 @@ class CharState {
   enterSound: string;
   framesJumpNotHeld: number = 0;
 
-  constructor(sprite: Sprite, shootSprite?: Sprite) {
-    this.sprite = sprite;
+  constructor(sprite: Sprite, shootSprite?: Sprite, transitionSprite?: Sprite) {
+    this.sprite = transitionSprite || sprite;
+    this.transitionSprite = transitionSprite;
+    this.defaultSprite = sprite;
     this.shootSprite = shootSprite;
     this.stateTime = 0;
   }
@@ -328,8 +355,17 @@ class CharState {
     if(this.enterSound) game.playSound(this.enterSound);
   }
 
+  inTransition() {
+    return this.transitionSprite && this.sprite.name === this.transitionSprite.name;
+  }
+
   update() {
     
+    if(this.inTransition() && this.character.isAnimOver()) {
+      this.sprite = this.defaultSprite;
+      this.character.changeSprite(this.sprite, true);
+    }
+
     this.stateTime += game.deltaTime;
     
     let lastLeftWallData = game.level.checkCollisionActor(this.character, -1, 0);
@@ -344,7 +380,7 @@ class CharState {
   airCode() {
     if(this.character.grounded) {
       game.playSound("land");
-      this.character.changeState(new Idle());
+      this.character.changeState(new Idle(game.sprites["mmx_land"]));
       return;
     }
 
@@ -361,7 +397,10 @@ class CharState {
     if(this.player.isHeld("up")) {
       let ladders = game.level.getTriggerList(this.character, 0, 0, undefined, "Ladder");
       if(ladders.length > 0) {
-        this.character.changeState(new LadderClimb(ladders[0].gameObject));
+        let midX = ladders[0].collider.shape.getRect().midX;
+        if(Math.abs(this.character.pos.x - midX) < 12) {
+          this.character.changeState(new LadderClimb(ladders[0].gameObject));
+        }
       }
     }
 
@@ -423,7 +462,7 @@ class CharState {
       let ladders = game.level.getTriggerList(this.character, 0, 1, undefined, "Ladder");
       if(ladders.length > 0) {
         this.character.changeState(new LadderClimb(ladders[0].gameObject));
-        this.character.move(new Point(0, 500));
+        this.character.move(new Point(0, 30), false);
       }
       this.character.checkLadderDown = false;
     }
@@ -433,8 +472,8 @@ class CharState {
 
 class Idle extends CharState {
 
-  constructor() {
-    super(game.sprites["mmx_idle"], game.sprites["mmx_shoot"]);
+  constructor(transitionSprite?: Sprite) {
+    super(game.sprites["mmx_idle"], game.sprites["mmx_shoot"], transitionSprite);
   }
 
   update() {
@@ -650,7 +689,7 @@ class LadderClimb extends CharState {
 
   ladder: Ladder;
   constructor(ladder: Ladder) {
-    super(game.sprites["mmx_ladder_climb"], game.sprites["mmx_ladder_shoot"]);
+    super(game.sprites["mmx_ladder_climb"], game.sprites["mmx_ladder_shoot"], game.sprites["mmx_ladder_start"]);
     this.ladder = ladder;
   }
 
@@ -658,7 +697,62 @@ class LadderClimb extends CharState {
     super.onEnter(oldState);
     let rect = this.ladder.collider.shape.getRect();
     this.character.pos.x = (rect.x1 + rect.x2)/2;
+    game.level.lerpCamTime = 0.25;
     this.character.vel = new Point(0, 0);
+    this.character.useGravity = false;
+  }
+
+  onExit(newState: CharState) {
+    super.onExit(newState);
+    this.character.frameSpeed = 1;
+    this.character.useGravity = true;
+  }
+
+  update() {
+    super.update();
+
+    if(this.inTransition()) {
+      return;
+    }
+
+    this.character.frameSpeed = 0;
+    if(this.character.shootAnimTime === 0) {
+      if(this.player.isHeld("up")) {
+        this.character.move(new Point(0, -100));
+        this.character.frameSpeed = 1;
+      }
+      else if(this.player.isHeld("down")) {
+        this.character.move(new Point(0, 100));
+        this.character.frameSpeed = 1;
+      }
+    }
+
+    let ladderTop =  this.ladder.collider.shape.getRect().y1;
+    let yDist = this.character.collider.shape.getRect().y2 - ladderTop;
+    if(!this.ladder.collider.isCollidingWith(this.character.collider) || Math.abs(yDist) < 12) {
+      if(this.player.isHeld("up")) {
+        this.character.changeState(new LadderEnd(ladderTop - 1));
+      }
+      else {
+        this.character.changeState(new Fall());
+      }
+    }
+    else if(this.player.isPressed("jump")) {
+      this.character.changeState(new Fall());
+    }
+  }
+
+}
+
+class LadderEnd extends CharState {
+  targetY: number;
+  constructor(targetY: number) {
+    super(game.sprites["mmx_ladder_end"]);
+    this.targetY = targetY;
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
     this.character.useGravity = false;
   }
 
@@ -669,22 +763,12 @@ class LadderClimb extends CharState {
 
   update() {
     super.update();
-    if(this.player.isHeld("up")) {
-      this.character.move(new Point(0, -100));
-      this.character.frameSpeed = 1;
-    }
-    else if(this.player.isHeld("down")) {
-      this.character.move(new Point(0, 100));
-      this.character.frameSpeed = 1;
-    }
-    else {
-      this.character.frameSpeed = 0;
-    }
-    if(!this.ladder.collider.isCollidingWith(this.character.collider)) {
-      this.character.changeState(new Fall());
+    if(this.character.isAnimOver()) {
+      game.level.lerpCamTime = 0.25;
+      this.character.pos.y = this.targetY;
+      this.character.changeState(new Idle());
     }
   }
-
 }
 
 class Hurt extends CharState {

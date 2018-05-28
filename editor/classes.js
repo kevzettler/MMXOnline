@@ -248,6 +248,7 @@ class Instance {
   constructor(name, x, y, sprite, nonSpriteImgSrc) {
     this.className = this.constructor.name;
     this.name = name || "Instance";
+    this.name += String(getAutoIncId(name));
     this.objectName = name;
     this.pos = new Point(x, y);
     if(sprite) {
@@ -258,6 +259,23 @@ class Instance {
       this.nonSpriteImgEl = document.createElement("img");
       this.nonSpriteImgEl.src = "editor/images/" + nonSpriteImgSrc;
     }
+    if(!this.properties) {
+      this.properties = {};
+      if(this.objectName === "Node") {
+        this.properties = {
+          neighbors: [
+          ]
+        };
+      }
+    }
+  }
+  getPropertiesJson() {
+    return JSON.stringify(this.properties, null, 1);
+  }
+  setPropertiesJson(json) {    
+    console.log(this);
+    this.properties = JSON.parse(json);
+    redrawCanvas1();
   }
   onDeserialize() {
     this.sprite = _.find(data.sprites, (sprite) => {
@@ -271,7 +289,6 @@ class Instance {
       this.nonSpriteImgEl = document.createElement("img");
       this.nonSpriteImgEl.src = "editor/images/" + obj.image;
     }
-    
   }
   draw(ctx) {
     if(this.sprite && this.sprite.spritesheet && this.sprite.spritesheet.imageEl) {
@@ -290,6 +307,22 @@ class Instance {
         Math.round(ICON_WIDTH)  //dest height
       );
     }
+    if(this.objectName === "Node" && this.properties && this.properties.neighbors) {
+      for(var neighbor of this.properties.neighbors) {
+        var node = _.find(data.selectedLevel.instances, (instance) => {
+          return instance.name === neighbor.nodeName;
+        });
+        drawLine(c1, this.pos.x, this.pos.y, node.pos.x, node.pos.y, "green", 2);
+      }
+    }
+    if(data.showInstanceLabels) {
+      var num = (this.name.match(/\d+$/) || []).pop();
+      drawText(c1, num, this.pos.x, this.pos.y, "black", 12);
+    }
+  }
+  normalizePoints() {
+    this.pos.x = Math.round(this.pos.x);
+    this.pos.y = Math.round(this.pos.y);
   }
   getRect() {
 
@@ -349,12 +382,45 @@ class ShapeInstance {
     this.className = this.constructor.name;
     this.points = points;
     this.onDeserialize();
+    if(!this.properties) this.properties = {};
   }
-
+  getPropertiesJson() {
+    return JSON.stringify(this.properties, null, 1);
+  }
+  setPropertiesJson(json) {
+    this.properties = JSON.parse(json);
+    redrawCanvas1();
+  }
+  
   onDeserialize() {
     this.obj = _.find(objects, (obj) => {
       return obj.name === this.objectName; 
     });
+  }
+
+  normalizePoints() {
+    let minX = Infinity;
+    let minY = Infinity;
+    var minIndex = 0;
+    for(let i = 0; i < this.points.length; i++) {
+      this.points[i].x = Math.round(this.points[i].x);
+      this.points[i].y = Math.round(this.points[i].y);
+      if(this.points[i].x <= minX && this.points[i].y <= minY) {
+        minX = this.points[i].x;
+        minY = this.points[i].y;
+        minIndex = i;
+      }
+    }
+    var newPoints = [];
+    var counter = 0;
+    let i = minIndex; 
+    while(counter < this.points.length) {
+      newPoints.push(this.points[i]);
+      i++;
+      if(i >= this.points.length) i = 0;
+      counter++;
+    }
+    this.points = newPoints;
   }
 
   clearPointPercents() {
@@ -375,6 +441,11 @@ class ShapeInstance {
 
   draw(ctx) {
     drawPolygon(ctx, this.points, true, this.obj.color, "", "", 0.5);
+    if(data.showInstanceLabels && this.objectName === "Ladder") {
+      var num = (this.name.match(/\d+$/) || []).pop();
+      var rect = this.getRect();
+      drawText(c1, num, rect.x2, (rect.y1 + rect.y2)/2, "black", 14);
+    }
   }
   getRect() {
     var minX = _.minBy(this.points, (point) => { return point.x; }).x;

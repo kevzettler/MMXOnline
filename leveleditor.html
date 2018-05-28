@@ -45,13 +45,14 @@
       
       <button v-on:click="play()">{{ isPlaying ? "Stop" : "Play" }}</button>
       <button v-on:click="saveLevel()">Save</button>
-      
+      Show instance Labels<input type="checkbox" v-model="showInstanceLabels" />
       Zoom:<input type="number" style="width: 50px" v-model:number="displayZoom" @change="redraw()"> %
       <!--<input type="checkbox" v-model="hideGizmos" @change="redraw()"/>Hide gizmos-->
 
       <div id="instance-properties" v-if="selectedInstances.length > 0">
         <h3>Selected instance properties</h3>
-        Name<input type="text" v-model.number="selectedInstances[0].name" class="short-input" @change="redraw()" />
+        <div class="properties">Name <input type="text" v-model.number="selectedInstances[0].name" @change="redraw()" /></div>
+        <div class="properties"><span class="properties">Properties</span> <textarea rows="14" cols="50" v-on:change="changeProperties">{{ selectedInstances[0].getPropertiesJson() }}</textarea></div>
         <!--
         x<input type="text" v-model.number="selectedInstances[0].pos.x" class="short-input" @change="redraw()" />
         y<input type="text" v-model.number="selectedInstances[0].pos.y" class="short-input" @change="redraw()" />
@@ -66,7 +67,8 @@
 <div id="sprite-list-container">
   <div id="app4">
     <h1>Instances</h1>
-    <div v-if="selectedLevel">
+    <button v-if="selectedLevel" v-on:click="sortInstances()">Sort by name</button>
+    <div v-if="selectedLevel" class="sprite-list-scroll">
       <div class="sprite-item" v-for="instance in selectedLevel.instances" v-on:click="onInstanceClick(instance)"
         v-bind:class="{ selected: selectedInstances.indexOf(instance) !== -1 }">{{ instance.name }}</div>
       <br>

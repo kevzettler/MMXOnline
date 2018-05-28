@@ -55,9 +55,13 @@ export function clamp01(num: number) {
 
 //Inclusive
 export function randomRange(start: number, end: number) {
+  /*
   end++;
   let dist = end - start;
   return Math.floor(Math.random() * dist) + start;
+  */
+  //@ts-ignore
+  return _.random(start, end);
 }
 
 export function clampMax(num: number, max: number) {
@@ -100,6 +104,12 @@ export function moveTo(num: number, dest: number, inc: number) {
 
 export function lerp(num: number, dest: number, timeScale: number) {
   num = num + (dest - num)*timeScale;
+  return num;
+}
+
+export function lerpNoOver(num: number, dest: number, timeScale: number) {
+  num = num + (dest - num)*timeScale;
+  if(Math.abs(num - dest) < 1) num = dest;
   return num;
 }
 
@@ -151,14 +161,14 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette): void {
   
   if(!sW) {
-    ctx.drawImage(imgEl, Math.round(sX), Math.round(sY));
+    ctx.drawImage(imgEl, Math.floor(sX), Math.floor(sY));
     return;
   }
 
   ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;
 
-  helperCanvas.width = Math.round(sW);
-  helperCanvas.height = Math.round(sH);
+  helperCanvas.width = sW;
+  helperCanvas.height = sH;
   
   helperCtx.save();
   flipX = flipX || 1;
@@ -168,14 +178,14 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   helperCtx.clearRect(0, 0, helperCanvas.width, helperCanvas.height);
   helperCtx.drawImage(
     imgEl,
-    Math.round(sX), //source x
-    Math.round(sY), //source y
-    Math.round(sW), //source width
-    Math.round(sH), //source height
+    sX, //source x
+    sY, //source y
+    sW, //source width
+    sH, //source height
     0,  //dest x
     0, //dest y
-    flipX * Math.round(sW), //dest width
-    flipY * Math.round(sH)  //dest height
+    flipX * sW, //dest width
+    flipY * sH  //dest height
   );
 
   if(palette) {
@@ -226,9 +236,12 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
     helperCtx.putImageData(imageData, 0, 0);​
   }
 
-  if(flipX === 1) ctx.drawImage(helperCanvas, Math.round(x), Math.round(y));
-  else ctx.drawImage(helperCanvas, Math.ceil(x), Math.ceil(y));
-
+  if(flipX === 1) x = Math.ceil(x);
+  else if(flipX === -1) x = Math.floor(x);
+  if(flipY === 1) y = Math.ceil(y);
+  else if(flipY === -1) y = Math.floor(y);
+  ctx.drawImage(helperCanvas, x, y);
+  
   ctx.globalAlpha = 1;
   helperCtx.restore();
 }

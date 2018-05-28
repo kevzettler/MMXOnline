@@ -193,6 +193,11 @@ class ResizeTool extends Tool {
 	}
 
 	onMouseUp() {
+    //normalize points
+    for(let i = 0; i < data.selectedInstances.length; i++) {
+      data.selectedInstances[i].normalizePoints();
+    }
+    
 		switchTool(new SelectTool());
 	}
 
@@ -222,6 +227,9 @@ class MoveTool extends Tool {
 	}
 
 	onMouseUp() {
+    data.selectedInstances.forEach(function(selection) {
+			selection.normalizePoints();
+		});
 		switchTool(new SelectTool());
 	}
 
@@ -233,12 +241,28 @@ class SelectTool extends Tool {
 		super();
 	}
 
-	onKeyDown(key, oneFrame) { 
-    
+	onKeyDown(key, oneFrame) {
+    if(!bodyFocus()) {
+      return;
+    }
+
     if(key === "tab" && data.selectedInstances.length === 1 && data.selectedInstances[0].className === "ShapeInstance") {
       console.log("SWITCH");
       switchTool(new SelectVertexTool());
       return;
+    }
+
+    if(key === "c" && data.selectedInstances.length === 2) {
+      var node1 = data.selectedInstances[0];
+      var node2 = data.selectedInstances[1];
+      node1.properties.neighbors.push({
+        nodeName: node2.name,
+      });
+      node2.properties.neighbors.push({
+        nodeName: node1.name
+      });
+      resetVue();
+      redrawCanvas1();
     }
 
 		if(key === "escape") {
@@ -250,6 +274,73 @@ class SelectTool extends Tool {
         var instance = data.selectedInstances[i];
         _.pull(data.selectedLevel.instances, instance);
         _.pull(data.selectedInstances, instance);
+      }
+    }
+
+    if(!keysHeld['shift']) {
+      if(key === "a") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(-1, 0, "w-resize")
+        }
+      }
+      else if(key === "d") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(1, 0, "w-resize");
+        }
+      }
+      else if(key === "w") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(0, -1, "n-resize");
+        }
+      }
+      else if(key === "s") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(0, 1, "n-resize");
+        }
+      }
+    }
+    else {
+      //resizeDir can be: ["nw-resize", "n-resize", "ne-resize", "e-resize", "se-resize", "s-resize", "sw-resize", "w-resize"];
+      if(key === "a") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(-1, 0, "e-resize")
+        }
+      }
+      else if(key === "d") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(1, 0, "e-resize");
+        }
+      }
+      else if(key === "w") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(0, -1, "s-resize");
+        }
+      }
+      else if(key === "s") {
+        for(var selection of data.selectedInstances) {
+          selection.resize(0, 1, "s-resize");
+        }
+      }
+    }
+
+    if(key === "left") {
+      for(var selection of data.selectedInstances) {
+        selection.move(-1, 0);
+      }
+    }
+    else if(key === "right") {
+      for(var selection of data.selectedInstances) {
+        selection.move(1, 0);
+      }
+    }
+    else if(key === "up") {
+      for(var selection of data.selectedInstances) {
+        selection.move(0, -1);
+      }
+    }
+    else if(key === "down") {
+      for(var selection of data.selectedInstances) {
+        selection.move(0, 1);
       }
     }
 

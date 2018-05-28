@@ -11,7 +11,8 @@ var data = {
   isPlaying: false,
   zoom: 1,
   hideGizmos: false,
-  newLevelName: ""
+  newLevelName: "",
+  showInstanceLabels: true
 };
 
 var canvas1DefaultWidth = 700;
@@ -21,11 +22,20 @@ var canvas1 = $("#level-canvas")[0];
 var canvas1Wrapper = $("#level-canvas").parent()[0];
 var c1 = $("#level-canvas")[0].getContext("2d");
 
-c1.webkitImageSmoothingEnabled = false;
-c1.mozImageSmoothingEnabled = false;
-c1.imageSmoothingEnabled = false; /// future
-
 var methods = {
+  sortInstances() {
+    this.selectedLevel.instances.sort(function(a,b) {
+      var compare = a.name.localeCompare(b.name, "en", { numeric: true });
+      if(compare < 0) return -1;
+      if(compare > 0) return 1;
+      if(compare === 0) return 0;
+    });
+  },
+  changeProperties (e) {
+    if(this.selectedInstances.length === 1) {
+      this.selectedInstances[0].setPropertiesJson(e.target.value);
+    }
+  },
   onBackgroundChange(newBackground) {
     this.selectedBackground = newBackground;
 
@@ -67,6 +77,10 @@ var methods = {
     redrawCanvas1();
   },
   saveLevel() {
+
+    for(var instance of this.selectedLevel.instances) {
+      instance.normalizePoints();
+    }
 
     var savedBackground = this.selectedLevel.background;
     this.selectedLevel.background = savedBackground.path;
@@ -217,13 +231,13 @@ function getSelectionRect() {
 
 function redrawCanvas1() {
 
+  c1.webkitImageSmoothingEnabled = false;
+  c1.mozImageSmoothingEnabled = false;
+  c1.imageSmoothingEnabled = false; /// future
+  
   var zoomScale = data.zoom;
   
-  //c1.setTransform(zoomScale, 0, 0, zoomScale, -(zoomScale - 1) * canvas1.width/2, -(zoomScale - 1) * canvas1.height/2);
   c1.save();
-
-  canvas1.width = canvas1.savedWidth * zoomScale;
-  canvas1.height = canvas1.savedHeight * zoomScale;
 
   c1.clearRect(0, 0, canvas1.width, canvas1.height);
   drawRect(c1, createRect(0,0,canvas1.width,canvas1.height), "white", "", null);
@@ -241,9 +255,9 @@ function redrawCanvas1() {
     }
   }
 
-  c1.restore();
-
   if(tool) tool.draw();
+
+  c1.restore();
 
 }
 
@@ -365,7 +379,7 @@ document.onkeydown = function(e) {
     if(data.zoom > 5) data.zoom = 5;
   }
 
-  if(key === "space" || key === "tab" || key === "ctrl" || key === "alt") {
+  if(bodyFocus() && (key === "space" || key === "tab" || key === "ctrl" || key === "alt")) {
     e.preventDefault();
   }
 

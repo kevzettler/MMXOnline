@@ -1,6 +1,7 @@
 import { Collider, CollideData } from "./collider";
 
 export interface GameObject {
+  name: string;
   preUpdate(): void;
   update(): void;
   render(x: number, y: number): void;

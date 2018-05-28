@@ -14,6 +14,9 @@ export class Rect {
     this.botRightPoint = new Point(x2, y2);
   }
 
+  get midX(): number {
+    return (this.topLeftPoint.x + this.botRightPoint.x) * 0.5;
+  }
   get x1(): number {
     return this.topLeftPoint.x;
   }

@@ -55,9 +55,11 @@ class Game {
 
   start() {
 
+    /*
     window.onerror = function(error) {
       console.error(error);
     }
+    */
 
     let optionString = localStorage.getItem("options");
     if(optionString) {

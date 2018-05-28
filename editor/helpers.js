@@ -15,6 +15,14 @@ function inCircle(x, y, circleX,circleY,r) {
   return false;
 }
 
+var autoIncIds = {};
+function getAutoIncId(stringKey) {
+  if(!(stringKey in autoIncIds)) {
+    autoIncIds[stringKey] = 0;
+  }
+  autoIncIds[stringKey]++;
+  return autoIncIds[stringKey];
+}
 
 function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
   
@@ -41,7 +49,6 @@ function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY) {
   }
 
   ctx.restore();
-  //ctx.scale(1, 1);
 }
 
 function drawRect(ctx, rect, fillColor, strokeColor, strokeWidth, fillAlpha) {
@@ -251,10 +258,12 @@ function drawText(ctx, text, x, y, color, size, hAlign, vAlign, font) {
   vAlign = vAlign || "middle";  //Top,Bottom,Middle,Alphabetic,Hanging
   font = font || "Arial";
   ctx.font = size + "px " + font;
-  ctx.fillStyle = color;
+  ctx.fillStyle = "black";
+  ctx.strokeStyle = "white";
   ctx.textAlign = hAlign;
   ctx.textBaseline = vAlign;
   ctx.strokeText(text,x,y);
+  ctx.fillText(text,x,y);
 }
 
 function drawCircle(ctx, x, y, r, fillColor, lineColor, lineThickness) {
@@ -320,6 +329,10 @@ function inLine(mouseX, mouseY, x0, y0, x1, y1) {
   }
 }
 
+function bodyFocus() {
+  return document.activeElement === document.body;
+}
+
 function deserializeES6(obj) {
   
   if(Array.isArray(obj)) {
@@ -369,6 +382,7 @@ function serializeES6(obj) {
       if(key === "sprite") continue;
       if(key === "nonSpriteImgEl") continue;
       if(key === "obj") continue;
+      if(key === "propertiesJson") continue;
       if(!obj.hasOwnProperty(key)) continue;
       retStr += '"' + key + '":' + serializeES6(obj[key]) + ",";
     }

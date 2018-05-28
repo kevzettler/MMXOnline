@@ -1,11 +1,8 @@
--Level editor: "Normalize" rectangle points
--Level editor: resize/move hotkeys
--Ladder: push left/right to jump off
--Jerky parallax
--Ladder: snapping to it is jerky
--Ladder: better snap positions
--Ladder: when climbing up, stop velocity
--Camera pos screwed up with rightmost noscroll zone
+-AI Nav-mesh + navigation system
+-Rework HUD for scrolling maps
+-Add a score menu and killcam
+-Death/respawn system
+-Only play sounds if near screen
 
 -Menu system
 -More levles/background+foreground system
@@ -19,6 +16,8 @@
   -Ability for "soft collision"
   -Need matrix collision system / way for 2 non-triggers to avoid collision
   -Collision callbacks with parent actor/gameobject available
+
+-CollideData does not need both gameobjec tand gameobject.collider
 
 ========================
 Useful optimizations and fixes
@@ -44,3 +43,11 @@ levelEditor.js: Search for
   saveLevel() {
 sprite path saving is automatic using the name. 
 onDeserialize() and onSerialize() of the classes that you are deserializing/serializing.
+
+{
+  "nodeName": "",
+  "ladderName": "",
+  "isJumpNode": false,
+  "isDropNode": false,
+  "isLadderNode": false
+}

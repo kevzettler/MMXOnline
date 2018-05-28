@@ -5,6 +5,7 @@ import { game } from "./game";
 import * as Helpers from "./helpers";
 import { Palette } from "./color";
 import { Shape } from "./shape";
+import { Character } from "./character";
 
 //Anything that has: a position, rotation, name and sprite. Can also have an optional collider
 //This MUST have a sprite. There is too much maintenance effort to support a sprite-less actor class
@@ -152,7 +153,7 @@ export class Actor {
     return false;
     */
     let inc: Point = offset.clone();
-    let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
+    let collideData = game.level.checkCollisionActor(this, inc.x, inc.y);
     if(collideData) {
       return true; 
     }
@@ -160,11 +161,13 @@ export class Actor {
   }
 
 
-  move(amount: Point) {
+  move(amount: Point, useDeltaTime: boolean = true) {
+
+    let times = useDeltaTime ? game.deltaTime : 1;
 
     //No collider: just move
     if(!this.collider) {
-      this.pos.inc(amount.times(game.deltaTime));
+      this.pos.inc(amount.times(times));
     }
     //Regular collider: need to detect collision incrementally and stop moving past a collider if that's the case
     else {
@@ -172,14 +175,14 @@ export class Actor {
       //Already were colliding in first place: make the move as normal
       if(game.level.checkCollisionActor(this, 0, 0)) {
         //console.log("ALREADY COLLIDING")
-        this.pos.inc(amount.times(game.deltaTime));
+        this.pos.inc(amount.times(times));
         return;
       }
 
       let inc: Point = amount.clone();
 
       while(inc.magnitude > 0) {
-        let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime);
+        let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
         if(collideData && !collideData.isTrigger) {
           this.registerCollision(collideData);
           inc.multiply(0.5);
@@ -193,7 +196,7 @@ export class Actor {
           break;
         }
       }
-      this.pos.inc(inc.multiply(game.deltaTime));
+      this.pos.inc(inc.multiply(times));
     }
   }
 
