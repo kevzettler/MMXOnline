@@ -126,32 +126,6 @@ export class Actor {
   }
 
   sweepTest(offset: Point) {
-    /*
-    let inc: Point = offset.clone();
-    let myPoints = this.collider.shape.points;
-    let otherPoints = this.collider.shape.clone(offset.x, offset.y).points;
-    let allPoints = myPoints.concat(otherPoints);
-
-    let points = [];
-    if(inc.x === 0) {
-      points.push();
-    }
-    let shape = new Shape(points);
-
-    let point1 = _.minBy(allPoints, (point) => { return point.y; });
-
-    while(true) {
-      let mid = inc.clone();
-      let end = inc.clone();
-      let collideData = game.level.checkCollisionActor(this, inc.x * game.deltaTime, inc.y * game.deltaTime, false);
-      if(collideData) {
-        return true;
-      }
-      inc.multiply(0.5);
-
-    }
-    return false;
-    */
     let inc: Point = offset.clone();
     let collideData = game.level.checkCollisionActor(this, inc.x, inc.y);
     if(collideData) {
@@ -262,8 +236,15 @@ export class Actor {
       let anim = new Anim(this.pos, sprite, this.xDir);
     }
     if(fadeSound) {
-      game.playSound(fadeSound);
+      this.playSound(fadeSound);
     }
+  }
+
+  playSound(soundName: string) {
+    let dist = new Point(game.level.camCenterX, game.level.camCenterY).distanceTo(this.pos);
+    let volume = 1 - (dist / (game.level.screenWidth));
+    volume = Helpers.clampMin0(volume);
+    game.playSound(soundName, volume);
   }
 
   withinX(other: Actor, amount: number) {

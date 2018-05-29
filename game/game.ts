@@ -6,6 +6,7 @@ import { Player } from "./player";
 import { Palette } from "./color";
 import * as Helpers from "./helpers";
 import * as Tests from "./tests";
+import { Point } from "./point";
 
 class Options {
   showHitboxes: boolean = false;
@@ -27,6 +28,8 @@ class Game {
   sounds: { [path: string]: Howl } = {};
   soundLoadCount: number = 0;
   palettes: { [path: string]: Palette } = {};
+
+  music: Howl;
 
   isServer: boolean = false;
   isClient: boolean = true;
@@ -111,27 +114,6 @@ class Game {
       window.clearInterval(this.interval);
       
       this.loadLevel("powerplant");
-
-      let music = new Howl({
-        src: ["assets/music/" + this.level.levelMusic],
-        sprite: {
-          musicStart: [0, this.level.musicLoopStart],
-          musicLoop: [this.level.musicLoopStart, this.level.musicLoopEnd - this.level.musicLoopStart]
-        },
-        onload: () => {
-        }
-      });
-      if(this.options.playMusic) {
-        window.setTimeout(
-          () => {
-            music.play("musicStart");
-            music.on("end", function() {
-              console.log("Loop");
-              music.play("musicLoop");
-            });
-          },
-          1000);
-      }
     }
     else {
       //console.log("LOADING...");
@@ -180,31 +162,7 @@ class Game {
     this.level = _.cloneDeep(level);
     this.level.background = level.background;
 
-    //50,193
-    //210,193
-    let player1: Player = new Player(this.level.spawnPoints[0].point.x, this.level.spawnPoints[0].point.y, false, 0);
-    this.level.players.push(player1);
-    this.level.localPlayers.push(player1);
-    this.level.mainPlayer = player1;
-
-    let cpu1: Player = new Player(this.level.spawnPoints[1].point.x, this.level.spawnPoints[1].point.y, false, 1);
-    cpu1.character.palette = this.palettes["red"];
-    cpu1.character.xDir = -1;
-    cpu1.palette = cpu1.character.palette;
-    this.level.players.push(cpu1);
-    this.level.localPlayers.push(cpu1);
-    
-    document.onkeydown = (e) => {
-      for(let player of this.level.localPlayers) {
-        player.onKeyDown(e.keyCode);
-      }
-    }
-
-    document.onkeyup = (e) => {
-      for(let player of this.level.localPlayers) {
-        player.onKeyUp(e.keyCode);
-      }
-    }
+    this.level.startLevel();
 
     this.gameLoop(0);
   }
@@ -241,6 +199,14 @@ class Game {
 
   loadPalettes() {
     this.palettes["red"] = new Palette("assets/palettes/red.png");
+    this.palettes["boomerang"] = new Palette("assets/palettes/boomerang.png");
+    this.palettes["electric_spark"] = new Palette("assets/palettes/electric_spark.png");
+    this.palettes["fire_wave"] = new Palette("assets/palettes/fire_wave.png");
+    this.palettes["rolling_shield"] = new Palette("assets/palettes/rolling_shield.png");
+    this.palettes["shotgun_ice"] = new Palette("assets/palettes/shotgun_ice.png");
+    this.palettes["sting"] = new Palette("assets/palettes/sting.png");
+    this.palettes["tornado"] = new Palette("assets/palettes/tornado.png");
+    this.palettes["torpedo"] = new Palette("assets/palettes/torpedo.png");
   }
 
   isLoaded() {
@@ -286,15 +252,17 @@ class Game {
     return Math.round(1 / this.deltaTime);
   }
 
-  playSound(clip: string) {
+  playSound(clip: string, volume: number) {
     if(this.sounds[clip]) {
-      return this.sounds[clip].play();
+      let id = this.sounds[clip].play();
+      this.sounds[clip].volume(volume, id);
     }
     else {
-      return this.soundSheet.play(clip);
+      let id = this.soundSheet.play(clip);
+      this.soundSheet.volume(volume, id);
     }
   }
-
+  
 }
 
 let game: Game = new Game();

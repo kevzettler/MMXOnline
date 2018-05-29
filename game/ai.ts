@@ -112,9 +112,7 @@ export class AI {
       this.weaponTime += game.deltaTime;
       if(this.weaponTime > 5) {
         this.weaponTime = 0;
-        //this.player.weaponIndex = Helpers.randomRange(0, 8);
-        this.player.weaponIndex = this.player.weaponIndex - 1;
-        if(this.player.weaponIndex < 0) this.player.weaponIndex = 8;
+        this.character.changeWeapon(Helpers.randomRange(0, 8));
       }
     }
 
@@ -224,6 +222,12 @@ class FindPlayer extends AIState {
 
     if(this.character.charState.constructor.name === "LadderClimb") {
       this.player.press(this.ladderDir);
+      let dir = 1;
+      if(this.ladderDir === "up") dir = -1;
+      if(this.character.sweepTest(new Point(0, dir * 5))) {
+        this.player.press("jump");
+        this.ai.changeState(new FindPlayer(this.character));
+      }
       return;
     }
 

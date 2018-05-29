@@ -14,6 +14,7 @@ import { SpawnPoint } from "./spawnPoint";
 import { NoScroll } from "./noScroll";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 import { Line } from "./shape";
+import { KillFeedEntry } from "./killFeedEntry";
 
 export class Level {
 
@@ -40,6 +41,10 @@ export class Level {
   debugString: string = "";
   lerpCamTime: number = 0;
   navMeshNodes: NavMeshNode[] = [];
+  killFeed: KillFeedEntry[] = [];
+  isOver: boolean = false;
+  killsToWin: number = 20;
+  overTime: number = 0;
 
   constructor(levelJson: any) {
     this.zoomScale = 4;
@@ -120,8 +125,108 @@ export class Level {
       this.parallax = game.getBackground("assets/backgrounds/" + parallax);
     }
   }
+
+  startLevel() {
+    
+    let numCPUs = 5;
+
+    let health = 32;
+    if(!this.fixedCam) {
+      health = 16;
+    }
+
+    let player1: Player = new Player("Player 1", false, 0, health);
+    this.players.push(player1);
+    this.localPlayers.push(player1);
+    this.mainPlayer = player1;
+
+    for(var i = 0; i < numCPUs; i++) {
+      let cpu: Player = new Player("CPU" + String(i+1), false, i + 1, health, game.palettes["red"]);
+      this.players.push(cpu);
+      this.localPlayers.push(cpu);
+    }
+
+    document.onkeydown = (e) => {
+      for(let player of this.localPlayers) {
+        player.onKeyDown(e.keyCode);
+      }
+      if(e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
+        e.preventDefault();
+      }
+    }
+
+    document.onkeyup = (e) => {
+      for(let player of this.localPlayers) {
+        player.onKeyUp(e.keyCode);
+      }
+      if(e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
+        e.preventDefault();
+      }
+    }
+
+
+    let music = new Howl({
+      src: ["assets/music/" + this.levelMusic],
+      sprite: {
+        musicStart: [0, this.musicLoopStart],
+        musicLoop: [this.musicLoopStart, this.musicLoopEnd - this.musicLoopStart]
+      },
+      onload: () => {
+      }
+    });
+    
+    window.setTimeout(
+      () => {
+        music.play("musicStart");
+        music.on("end", function() {
+          console.log("Loop");
+          music.play("musicLoop");
+        });
+      },
+      1000);
+    game.music = music;
+  }
   
   update() {
+
+    if(!this.isOver) {
+      for(let player of this.players) {
+        if(player.kills >= this.killsToWin) {
+          this.isOver = true;
+          player.won = true;
+        }
+      }
+      if(this.isOver) {
+        game.music.stop();
+        if(this.mainPlayer && this.mainPlayer.won) {
+          game.music = new Howl({
+            src: ["assets/music/win.mp3"],
+          });
+          game.music.play();
+        }
+        else if(this.mainPlayer && !this.mainPlayer.won) {
+          game.music = new Howl({
+            src: ["assets/music/lose.mp3"],
+          });
+          game.music.play();
+        }
+      }
+    }
+    else {
+      this.overTime += game.deltaTime;
+      if(this.overTime > 10) {
+        game.restartLevel(this.name);
+      }
+    }
+
+    for(let i = this.killFeed.length - 1; i >= 0; i--) {
+      let killFeed = this.killFeed[i];
+      killFeed.time += game.deltaTime;
+      if(killFeed.time > 8) {
+        //@ts-ignore
+        _.remove(this.killFeed, killFeed);
+      }
+    }
 
     let gamepads = navigator.getGamepads();
     for(let i = 0; i < gamepads.length; i++) {
@@ -160,10 +265,27 @@ export class Level {
       }
     }
 
+    for(let player of this.players) {
+      player.update();
+    }
+
     this.frameCount++;
     
     this.twoFrameCycle++;
     if(this.twoFrameCycle > 2) this.twoFrameCycle = -2;
+
+    //Sort players by score
+    this.players.sort(function(a, b) {
+      if(a.kills > b.kills) return -1;
+      else if(a.kills === b.kills) {
+        if(a.deaths < b.deaths) return -1;
+        if(a.deaths === b.deaths) return 0;
+        if(a.deaths > b.deaths) return 1;
+      }
+      else {
+        return 1;
+      }
+    });
 
   }
 
@@ -203,15 +325,57 @@ export class Level {
     }
 
     this.drawHUD();
-    Helpers.drawText(game.ctx, this.debugString, 10, 10, "white", 8, "left", "top", "");
+    Helpers.drawText(game.ctx, this.debugString, 10, 10, "white", "black", 8, "left", "top", "");
   }
 
   drawHUD() {
     let player1 = this.localPlayers[0];
     this.drawPlayerHUD(player1, 1);
-    if(this.localPlayers.length > 1) {      
+    if(this.localPlayers.length > 1 && this.fixedCam) {      
       let player2 = this.localPlayers[1];
       this.drawPlayerHUD(player2, 2);
+    }
+    this.drawKillFeed();
+    
+    if(this.isOver) {
+      if(this.mainPlayer.won) {
+        Helpers.drawText(game.ctx, "You won!", this.screenWidth/2, this.screenHeight/2, "white", "black", 24, "center", "middle", "mmx_font");
+      }
+      else {
+        Helpers.drawText(game.ctx, "You lost!", this.screenWidth/2, this.screenHeight/2, "white", "black", 24, "center", "middle", "mmx_font");
+        //@ts-ignore
+        let winner = _.find(this.players, (player) => {
+          return player.won;
+        });
+        Helpers.drawText(game.ctx, winner.name + " wins", this.screenWidth/2, (this.screenHeight/2) + 30, "white", "black", 12, "center", "top", "mmx_font");
+      }
+    }
+
+    this.drawTopHUD();
+
+    this.drawWeaponSwitchHUD();
+
+    if(this.mainPlayer && this.mainPlayer.isHeld("scoreboard", false)) {
+      this.drawScoreboard();
+    }
+
+  }
+
+  drawWeaponSwitchHUD() {
+    let weaponSprite = game.sprites["hud_weapon_icon"];
+    let startX = 50;
+    let width = 20;
+    let iconW = 9;
+    let iconH = 9;
+    let startY = this.screenHeight - 15;
+    for(let i = 0; i < 9; i++) {
+      let x = startX + (i * width);
+      let y = startY;
+      if(this.mainPlayer.weaponIndex === i) {
+        Helpers.drawRect(game.ctx, new Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
+      }
+      weaponSprite.draw(i, x, y);
+      Helpers.drawText(game.ctx, String(i+1), x, y + 12, "black", "", 6, "", "", "mmx_font");
     }
   }
 
@@ -254,10 +418,79 @@ export class Level {
       }
       game.sprites["hud_health_top"].draw(0, baseX, baseY);
     }
+
+  }
+
+  addKillFeedEntry(killFeed: KillFeedEntry) {
+    this.killFeed.unshift(killFeed);
+    if(this.killFeed.length > 5) this.killFeed.pop();
+  }
+
+  drawTopHUD() {
+    let placeStr = "";
+    let place = this.players.indexOf(this.mainPlayer) + 1;
+    if(place === 1) placeStr = "1st";  
+    else if(place === 2) placeStr = "2nd";
+    else if(place === 3) placeStr = "3rd";
+    else placeStr = String(place) + "th";
+    Helpers.drawText(game.ctx, "Leader: " + String(this.currentWinner.kills), 5, 10, "black", "", 8, "left", "Top", "mmx_font");
+    Helpers.drawText(game.ctx, "Kills: " + String(this.mainPlayer.kills) + "(" + placeStr + ")", 5, 20, "black", "", 8, "left", "Top", "mmx_font");
+  }
+
+  get currentWinner() {
+    return this.players[0];
+  }
+
+  drawScoreboard() {
+    let padding = 10;
+    let fontSize = 8;
+    let col1x = padding + 10;
+    let col2x = this.screenWidth * 0.5;
+    let col3x = this.screenWidth * 0.75;
+    let lineY = padding + 35;
+    let labelY = lineY + 5;
+    let line2Y = labelY + 10;
+    let topPlayerY = line2Y + 5;
+    Helpers.drawRect(game.ctx, new Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
+    Helpers.drawText(game.ctx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
+    Helpers.drawText(game.ctx, "Map: " + this.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
+    Helpers.drawText(game.ctx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"), 
+    Helpers.drawLine(game.ctx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
+    Helpers.drawText(game.ctx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+    Helpers.drawText(game.ctx, "Kills", col2x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+    Helpers.drawText(game.ctx, "Deaths", col3x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+    Helpers.drawLine(game.ctx, padding + 10, line2Y, this.screenWidth - padding - 10, line2Y, "white", 1);
+    let rowH = 10;
+    for(let i = 0; i < this.players.length; i++) {
+      let player = this.players[i];
+      let color = (player === this.mainPlayer) ? "lightgreen" : "white";
+      Helpers.drawText(game.ctx, player.name, col1x, topPlayerY + (i)*rowH, color, "", fontSize, "left", "top", "mmx_font");
+      Helpers.drawText(game.ctx, String(player.kills), col2x, topPlayerY + (i)*rowH, color, "", fontSize, "left", "top", "mmx_font");
+      Helpers.drawText(game.ctx, String(player.deaths), col3x, topPlayerY + (i)*rowH, color, "", fontSize, "left", "top", "mmx_font");
+    }
+
+
+  }
+
+  drawKillFeed() {
+    let fromRight = this.screenWidth - 10;
+    let fromTop = 10;
+    let yDist = 8;
+    for(let i = 0; i < this.killFeed.length; i++) {
+      let killFeed = this.killFeed[i];
+      let msg = killFeed.killer.name + " killed " + killFeed.victim.name + " with " + killFeed.weapon.constructor.name;
+      Helpers.drawText(game.ctx, msg, fromRight, fromTop + (i*yDist), "black", "", 4, "right", "Top", "mmx_font");
+    }
   }
 
   get width() { return this.background.width; }
   get height() { return this.background.height; }
+
+  get screenWidth() { return game.canvas.width / this.zoomScale; }
+  get screenHeight() { return game.canvas.height / this.zoomScale; }
+
+  get camCenterX() { return this.camX + this.screenWidth/2; }
+  get camCenterY() { return this.camY + this.screenHeight/2; }
 
   get halfScreenWidth() {
     return (game.canvas.width / this.zoomScale) * 0.375;
@@ -366,6 +599,18 @@ export class Level {
     return undefined;
   }
 
+  getActorsInRadius(pos: Point, radius: number, classNames?: string[]) {
+    let actors: Actor[] = [];
+    for(let go of this.gameObjects) {
+      if(!(go instanceof Actor)) continue;
+      if(!this.isOfClass(go, classNames)) continue;
+      if(go.pos.distanceTo(pos) < radius) {
+        actors.push(go);
+      }
+    }
+    return actors;
+  }
+
   getTriggerList(actor: Actor, offsetX: number, offsetY: number, vel?: Point, className?: string): CollideData[] {
     let triggers: CollideData[] = [];
     if(!actor.collider) return triggers;
@@ -385,18 +630,23 @@ export class Level {
     return triggers;
   }
 
+  isOfClass(go: GameObject, classNames?: string[]) {
+    if(!classNames) return true;
+    let found = false;
+    for(let className of classNames) {
+      if(go.constructor.name === className) {
+        found = true;
+        break;
+      }
+    }
+    return found;
+  }
+
   raycastAll(pos1: Point, pos2: Point, classNames: string[]) {
     let hits: CollideData[] = [];
     for(let go of this.gameObjects) {
       if(!go.collider) continue;
-      let found = false;
-      for(let className of classNames) {
-        if(go.constructor.name === className) {
-          found = true;
-          break;
-        }
-      }
-      if(!found) continue;
+      if(!this.isOfClass(go, classNames)) continue;
       if(go.collider.shape.intersectsLine(new Line(pos1, pos2))) {
         hits.push(new CollideData(go.collider, undefined, true, go));
       }
@@ -420,7 +670,7 @@ export class Level {
   }
 
   noWallsInBetween(pos1: Point, pos2: Point) {
-    let hits = this.raycastAll(pos1, pos2, ["Wall", "Ladder"]);
+    let hits = this.raycastAll(pos1, pos2, ["Wall"]);
     if(hits.length === 0) {
       return true;
     }
@@ -445,6 +695,15 @@ export class Level {
   getRandomNode() {
     //@ts-ignore
     return _.sample(this.navMeshNodes);
+  }
+
+  getSpawnPoint() {
+    //@ts-ignore
+    let unoccupied = _.filter(this.spawnPoints, (spawnPoint) => {
+      return !spawnPoint.occupied();
+    });
+    //@ts-ignore
+    return _.sample(unoccupied);
   }
 
 }

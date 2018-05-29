@@ -7,10 +7,11 @@ import { Collider } from "./collider";
 import { Rect } from "./rect";
 import { Projectile } from "./projectile";
 import * as Helpers from "./helpers";
-import { Weapon, Buster, FireWave } from "./weapon";
+import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
 import { AI } from "./ai";
 import { Ladder } from "./wall";
+import { KillFeedEntry } from "./killFeedEntry";
 
 export class Character extends Actor {
 
@@ -72,7 +73,7 @@ export class Character extends Actor {
   update() {
 
     if(this.player.alliance === 0) {
-      game.level.debugString = "y: " + this.pos.y;
+      //game.level.debugString = "y: " + this.pos.y;
     }
 
     for(let projName in this.projectileCooldown) {
@@ -140,11 +141,21 @@ export class Character extends Actor {
       }
     }
     if(this.player.isPressed("weaponleft")) {
-      this.player.weaponIndex = Helpers.decrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
+      this.changeWeapon(Helpers.decrementRange(this.player.weaponIndex, 0, this.player.weapons.length));
     }
     else if(this.player.isPressed("weaponright")) {
-      this.player.weaponIndex = Helpers.incrementRange(this.player.weaponIndex, 0, this.player.weapons.length);
+      this.changeWeapon(Helpers.incrementRange(this.player.weaponIndex, 0, this.player.weapons.length));
     }
+    else if(this.player.isPressed("weapon1")) this.changeWeapon(0);
+    else if(this.player.isPressed("weapon2")) this.changeWeapon(1);
+    else if(this.player.isPressed("weapon3")) this.changeWeapon(2);
+    else if(this.player.isPressed("weapon4")) this.changeWeapon(3);
+    else if(this.player.isPressed("weapon5")) this.changeWeapon(4);
+    else if(this.player.isPressed("weapon6")) this.changeWeapon(5);
+    else if(this.player.isPressed("weapon7")) this.changeWeapon(6);
+    else if(this.player.isPressed("weapon8")) this.changeWeapon(7);
+    else if(this.player.isPressed("weapon9")) this.changeWeapon(8);
+    
     if(this.isCharging()) {
       let maxFlashTime = 0.1;
       if(!this.chargeSoundId && !this.chargeLoopSoundId) {
@@ -172,12 +183,32 @@ export class Character extends Actor {
     }
   }
 
+  changeWeapon(newWeaponIndex: number) {
+    if(this.charState.constructor.name === "Die") return;
+    this.player.weaponIndex = newWeaponIndex;
+    this.changePaletteWeapon(); 
+  }
+
+  changePaletteWeapon() {
+    if(!game.level.fixedCam) {
+      this.palette = this.player.weapon.palette;
+    }
+  }
+
   getCenterPos() {
     return this.pos.addxy(0, -18);
   }
 
   getCamCenterPos() {
     return this.pos.addxy(0, -24);
+  }
+
+  setFall() {
+    this.changeState(new Fall());
+  }
+
+  isClimbingLadder() {
+    return this.charState.constructor.name === "LadderClimb";
   }
 
   addAI() {
@@ -300,11 +331,14 @@ export class Character extends Actor {
     }
   }
   
-  applyDamage(damage: number) {
+  applyDamage(attacker: Player, weapon: Weapon, damage: number) {
     this.player.health -= damage;
     if(this.player.health <= 0) {
       this.player.health = 0;
       this.changeState(new Die());
+      attacker.kills++;
+      this.player.deaths++;
+      game.level.addKillFeedEntry(new KillFeedEntry(attacker, this.player, weapon));
     }
   }
 
@@ -352,7 +386,7 @@ class CharState {
   }
 
   onEnter(oldState: CharState) {
-    if(this.enterSound) game.playSound(this.enterSound);
+    if(this.enterSound) this.character.playSound(this.enterSound);
   }
 
   inTransition() {
@@ -379,7 +413,7 @@ class CharState {
 
   airCode() {
     if(this.character.grounded) {
-      game.playSound("land");
+      this.character.playSound("land");
       this.character.changeState(new Idle(game.sprites["mmx_land"]));
       return;
     }
@@ -484,6 +518,18 @@ class Idle extends CharState {
     this.groundCode();
     if(this.player.isPressed("dash")) {
       this.character.changeState(new Dash());
+    }
+    if(game.level.isOver) {
+      if(this.player.won) {
+        if(this.character.sprite.name !== "mmx_win") {
+          this.character.changeSprite(game.sprites["mmx_win"], true);
+        }
+      }
+      else {
+        if(this.character.sprite.name !== "mmx_kneel") {
+          this.character.changeSprite(game.sprites["mmx_kneel"], true);
+        }
+      }
     }
   }
 
@@ -697,7 +743,9 @@ class LadderClimb extends CharState {
     super.onEnter(oldState);
     let rect = this.ladder.collider.shape.getRect();
     this.character.pos.x = (rect.x1 + rect.x2)/2;
-    game.level.lerpCamTime = 0.25;
+    if(this.character.player === game.level.mainPlayer) {
+      game.level.lerpCamTime = 0.25;
+    }
     this.character.vel = new Point(0, 0);
     this.character.useGravity = false;
   }
@@ -764,7 +812,9 @@ class LadderEnd extends CharState {
   update() {
     super.update();
     if(this.character.isAnimOver()) {
-      game.level.lerpCamTime = 0.25;
+      if(this.character.player === game.level.mainPlayer) {
+        game.level.lerpCamTime = 0.25;
+      }
       this.character.pos.y = this.targetY;
       this.character.changeState(new Idle());
     }
@@ -819,7 +869,7 @@ class Die extends CharState {
   update() {
     super.update();
     if(this.stateTime > 0.75) {
-      game.playSound("die");
+      this.character.playSound("die");
       new DieEffect(this.character.pos);
       this.player.destroyCharacter();
     }

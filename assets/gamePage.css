@@ -8,3 +8,8 @@ body {
   margin-left: auto;
   margin-right: auto;
 }
+
+@font-face {
+  font-family: 'mmx_font';
+  src: url('fonts/Mega Man X.ttf');
+}

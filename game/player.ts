@@ -4,6 +4,7 @@ import { game } from "./game";
 import { Palette } from "./color";
 import { ElectricSparkProj } from "./projectile";
 import * as Helpers from "./helpers";
+import { cheat } from "./cheats";
 
 export class Player {
   
@@ -16,6 +17,7 @@ export class Player {
   inputMapping: { [code: number]: string } = {}; //Map game keycodes (i.e. "jump", "shoot" to js keycodes)
   buttonMapping: { [code: number]: string } = {};
   axesMapping: { [code: number]: string } = {};
+  name: string;
   character: Character;
   alliance: number;
   health: number;
@@ -24,10 +26,18 @@ export class Player {
   weaponIndex: number;
   palette: Palette;
   id: number;
+  isAI: boolean;
+  respawnTime: number = 0;
+  kills: number = 0;
+  deaths: number = 0;
+  won: boolean = false;
 
-  constructor(x: number, y: number, isAI: boolean, alliance: number) {
+  constructor(name: string, isAI: boolean, alliance: number, maxHealth: number, palette?: Palette) {
+    this.name = name;
     this.alliance = alliance;
     this.id = Helpers.getAutoIncId();
+    this.isAI = isAI;
+    this.palette = palette;
 
     if(!isAI && alliance === 0) {
       this.inputMapping[37] = "left";
@@ -40,6 +50,16 @@ export class Player {
       this.inputMapping[65] = "weaponleft";
       this.inputMapping[83] = "weaponright";
       this.inputMapping[27] = "reset";
+      this.inputMapping[9] = "scoreboard";
+      this.inputMapping[49] = "weapon1";  
+      this.inputMapping[50] = "weapon2";
+      this.inputMapping[51] = "weapon3";
+      this.inputMapping[52] = "weapon4";
+      this.inputMapping[53] = "weapon5";
+      this.inputMapping[54] = "weapon6";
+      this.inputMapping[55] = "weapon7";
+      this.inputMapping[56] = "weapon8";
+      this.inputMapping[57] = "weapon9";
     }
 
     if(!isAI && alliance === 1) {
@@ -54,13 +74,8 @@ export class Player {
       this.inputMapping[105] = "weaponright";
     }
 
-    this.character = new Character(this, x, y);
-    if(isAI) {
-      this.character.addAI();
-    }
-
-    this.health = 32;
-    this.maxHealth = this.health;
+    this.health = maxHealth;
+    this.maxHealth = maxHealth;
     this.weapons = [
       new Buster(),
       new Torpedo(),
@@ -75,11 +90,40 @@ export class Player {
     this.weaponIndex = 0;
   }
 
-  isPressed(keyName: string) {
+  update() {
+    if(this.respawnTime === 0 && !this.character) {
+      this.health = this.maxHealth;
+      for(let weapon of this.weapons) {
+        weapon.ammo = weapon.maxAmmo;
+      }
+      let spawnPoint = game.level.getSpawnPoint();
+      this.character = new Character(this, spawnPoint.pos.x, spawnPoint.pos.y);
+      if(this.isAI) {
+        this.character.addAI();
+      }
+      this.character.palette = this.palette;
+      this.character.changePaletteWeapon();
+      this.character.xDir = -1;
+    }
+    if(this.respawnTime > 0) {
+      this.respawnTime = Helpers.clampMin0(this.respawnTime - game.deltaTime);
+    }
+  }
+
+  get canControl() {
+    if(game.level.isOver) {
+      return false;
+    }
+    return true;
+  }
+
+  isPressed(keyName: string, checkIfCanControl: boolean = true) {
+    if(checkIfCanControl && !this.canControl) return false;
     return this.inputPressed[keyName] || this.controllerInputPressed[keyName];
   }
 
-  isHeld(keyName: string) {
+  isHeld(keyName: string, checkIfCanControl: boolean = true) {
+    if(checkIfCanControl && !this.canControl) return false;
     return this.input[keyName] || this.controllerInput[keyName];
   }
 
@@ -97,6 +141,8 @@ export class Player {
 
       this.axesMapping[0] = "left|right";
       this.axesMapping[1] = "up|down";
+
+      this.buttonMapping[8] = "scoreboard";
     }
     else if(controllerName === "USB GamePad (Vendor: 0e8f Product: 3013)") {
       this.buttonMapping[1] = "dash";
@@ -109,10 +155,6 @@ export class Player {
       this.axesMapping[0] = "left|right";
       this.axesMapping[1] = "up|down";
     }
-  }
-
-  get isAI() {
-    return this.character && !!this.character.ai;
   }
 
   get weapon() {
@@ -181,20 +223,7 @@ export class Player {
     if(!this.input[key]) this.inputPressed[key] = true;
     this.input[key] = true;
 
-    if(keycode === 49) {
-      for(let player of game.level.localPlayers) {
-        player.health = 1;
-      }
-    }
-    if(keycode === 50) {
-      if(!game.level.localPlayers[1].isAI) {
-        game.level.localPlayers[1].character.addAI();
-      }
-    }
-    if(key === "reset") {
-      game.restartLevel("sm_bossroom");
-      return;
-    }
+    cheat(key, keycode);
 
   }
 
@@ -216,6 +245,7 @@ export class Player {
   }
 
   destroyCharacter() {
+    this.respawnTime = 5;
     this.character.destroySelf();
     this.character = undefined;
   }

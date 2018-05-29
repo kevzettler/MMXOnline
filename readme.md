@@ -1,13 +1,18 @@
--AI Nav-mesh + navigation system
--Rework HUD for scrolling maps
--Add a score menu and killcam
--Death/respawn system
--Only play sounds if near screen
+-Press 1-9 to switch weapon
+-HUD: show weapon icon kills
 
+-Improve text: make it shiny like the MMX text and add drop shadow
+-Killcam: show yours highlighted
+-Still jerky walking animations
+-Play music => mute music
+
+-Refactor break
+
+-If die on lost don't respawn
+-Storm tornado glitches when pushing against wall (doesn't go forward)
+-AI should switch weapons that have no ammo
+-Walls stop weapons
 -Menu system
--More levles/background+foreground system
-
--character heights vary on ground
 -Rolling shield on ceiling
 
 -All the special weapon charges
@@ -18,6 +23,7 @@
   -Collision callbacks with parent actor/gameobject available
 
 -CollideData does not need both gameobjec tand gameobject.collider
+-Vue must be set for prod mode once deployed
 
 ========================
 Useful optimizations and fixes

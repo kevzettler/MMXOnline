@@ -307,17 +307,29 @@ export function drawPolygon(ctx: CanvasRenderingContext2D, shape: Shape, closed:
   ctx.globalAlpha = 1;
 }
 
-export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number, hAlign: string, vAlign: string, font: string) {
-  color = color || "black";
+export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, fillColor: string, outlineColor: string, size: number, hAlign: string, vAlign: string, font: string) {
+  ctx.save();
+  /*
+  ctx.scale(0.25, 0.25);
+  x *= 4;
+  y *= 4;
+  */
+  fillColor = fillColor || "black";
   size = size || 14;
   hAlign = hAlign || "center";  //start,end,left,center,right
   vAlign = vAlign || "middle";  //Top,Bottom,Middle,Alphabetic,Hanging
   font = font || "Arial";
   ctx.font = size + "px " + font;
-  ctx.fillStyle = color;
+  ctx.fillStyle = fillColor;
   ctx.textAlign = hAlign;
   ctx.textBaseline = vAlign;
-  ctx.strokeText(text,x,y);
+  ctx.fillText(text,x,y);
+  if(outlineColor) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = outlineColor;
+    ctx.strokeText(text,x,y);
+  }
+  ctx.restore();
 }
 
 export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fillColor?: string, lineColor?: string, lineThickness?: number) {
