@@ -37,6 +37,8 @@ export class Character extends Actor {
   projectileCooldown: { [name: string]: number } = {};  //Player id + projectile name
   invulnFrames: number = 0;
   checkLadderDown: boolean = false;
+  dashedInAir: boolean = false;
+  dead: boolean = false;
 
   constructor(player: Player, x: number, y: number) {
     super(undefined);
@@ -45,8 +47,7 @@ export class Character extends Actor {
     this.player = player;
     this.isDashing = false;
 
-    let rect = new Rect(0, 0, 18, 34);
-    this.globalCollider = new Collider(rect.getPoints(), false);
+    this.globalCollider = this.getStandingCollider();
     this.globalCollider.isClimbable = false;
     
     this.changeState(new Idle());
@@ -63,6 +64,16 @@ export class Character extends Actor {
     this.chargeSound = game.sounds["charge_start"];
     this.chargeLoopSound = game.sounds["charge_loop"];
     this.chargeLoopSound.loop(true);
+  }
+
+  getStandingCollider() {
+    let rect = new Rect(0, 0, 18, 34);
+    return new Collider(rect.getPoints(), false);
+  }
+
+  getDashingCollider() {
+    let rect = new Rect(0, 0, 18, 22);
+    return new Collider(rect.getPoints(), false);
   }
 
   preUpdate() {
@@ -236,6 +247,9 @@ export class Character extends Actor {
     }
     let busterOffset = busterOffsetPos.clone();
     busterOffset.x *= this.xDir;
+    if(this.player.weapon instanceof RollingShield && this.charState.constructor.name === "Dash") {
+      busterOffset.y -= 2;
+    }
     return this.pos.add(busterOffset);
   }
 
@@ -335,10 +349,13 @@ export class Character extends Actor {
     this.player.health -= damage;
     if(this.player.health <= 0) {
       this.player.health = 0;
-      this.changeState(new Die());
-      attacker.kills++;
-      this.player.deaths++;
-      game.level.addKillFeedEntry(new KillFeedEntry(attacker, this.player, weapon));
+      if(!this.dead) {
+        this.dead = true;
+        this.changeState(new Die());
+        attacker.kills++;
+        this.player.deaths++;
+        game.level.addKillFeedEntry(new KillFeedEntry(attacker, this.player, weapon));
+      }
     }
   }
 
@@ -415,7 +432,12 @@ class CharState {
     if(this.character.grounded) {
       this.character.playSound("land");
       this.character.changeState(new Idle(game.sprites["mmx_land"]));
+      this.character.dashedInAir = false;
       return;
+    }
+
+    if(this.player.isHeld("dash") && !this.character.isDashing && !this.character.dashedInAir) {
+      this.character.changeState(new AirDash());
     }
 
     if(!this.player.isHeld("jump") && this.character.vel.y < 0) {
@@ -617,7 +639,13 @@ class Dash extends CharState {
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
     this.character.isDashing = true;
+    this.character.globalCollider = this.character.getDashingCollider();
     new Anim(this.character.pos, game.sprites["dash_sparks"], this.character.xDir);
+  }
+
+  onExit(newState: CharState) {
+    super.onExit(newState);
+    this.character.globalCollider = this.character.getStandingCollider();
   }
 
   update() {
@@ -643,6 +671,53 @@ class Dash extends CharState {
 
 }
 
+class AirDash extends CharState {
+
+  dashTime: number = 0;
+
+  constructor() {
+    super(game.sprites["mmx_dash"], game.sprites["mmx_dash_shoot"]);
+    this.enterSound = "dash";
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+    this.character.isDashing = true;
+    this.character.useGravity = false;
+    this.character.vel = new Point(0, 0);
+    this.character.dashedInAir = true;
+    this.character.globalCollider = this.character.getDashingCollider();
+    new Anim(this.character.pos, game.sprites["dash_sparks"], this.character.xDir);
+  }
+
+  onExit(newState: CharState) { 
+    this.character.useGravity = true;
+    this.character.globalCollider = this.character.getStandingCollider();
+    super.onExit(newState);
+  }
+
+  update() {
+    super.update();
+    if(!this.player.isHeld("dash")) {
+      this.character.changeState(new Fall());
+      return;
+    }
+    this.dashTime += game.deltaTime;
+    if(this.dashTime > 0.5) {
+      this.character.changeState(new Fall());
+      return;
+    }
+    let move = new Point(0, 0);
+    move.x = this.character.runSpeed * this.character.getDashSpeed() * this.character.xDir;
+    this.character.move(move);
+    if(this.stateTime > 0.1) {
+      this.stateTime = 0;
+      new Anim(this.character.pos.addxy(0, -4), game.sprites["dust"], this.character.xDir);
+    }
+  }
+
+}
+
 class WallSlide extends CharState {
   
   wallDir: number;
@@ -651,6 +726,11 @@ class WallSlide extends CharState {
     super(game.sprites["mmx_wall_slide"], game.sprites["mmx_wall_slide_shoot"]);
     this.wallDir = wallDir;
     this.enterSound = "land";
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+    this.character.dashedInAir = false;
   }
 
   update() {
@@ -748,6 +828,7 @@ class LadderClimb extends CharState {
     }
     this.character.vel = new Point(0, 0);
     this.character.useGravity = false;
+    this.character.dashedInAir = false;
   }
 
   onExit(newState: CharState) {

@@ -48,12 +48,21 @@ export class Projectile extends Actor {
 
   onCollision(other: CollideData) {
 
+    //Destroy torpedo if it hits something else
     if(this instanceof TorpedoProj && other.gameObject instanceof Projectile && this.damager.owner !== other.gameObject.damager.owner) {
       this.destroySelf(this.fadeSprite, this.fadeSound);
-      if(!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof FireWaveProj)) {
+      if(!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof FireWaveProj) && !(other.gameObject instanceof Buster2Proj)
+        && !(other.gameObject instanceof Buster3Proj) && !(other.gameObject instanceof Buster4Proj) && !(other.gameObject instanceof RollingShieldProj)) {
         other.gameObject.destroySelf(other.gameObject.fadeSprite, other.gameObject.fadeSound);
       }
       return;
+    }
+
+    //If this is rolling shield, destroy the other projectile
+    if(this instanceof RollingShieldProj && other.gameObject instanceof Projectile && this.damager.owner !== other.gameObject.damager.owner) {
+      if(!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof RollingShieldProj) && !(other.gameObject instanceof ElectricSparkProj)) {
+        other.gameObject.destroySelf(other.gameObject.fadeSprite, other.gameObject.fadeSound);
+      }
     }
 
     let character = other.gameObject;
@@ -319,8 +328,9 @@ export class RollingShieldProj extends Projectile {
     this.useGravity = true;
     this.collider.wallOnly = true;
     if(game.level.checkCollisionActor(this, 0, 0)) {
-      this.xDir *= -1;
-      this.vel.x *= -1;
+      //this.xDir *= -1;
+      //this.vel.x *= -1;
+      this.time = 1.25;
     }
   }
 
@@ -331,6 +341,9 @@ export class RollingShieldProj extends Projectile {
         this.vel.x *= -1;
         this.xDir *= -1;
       }
+    }
+    else {
+      this.vel.x = 0;
     }
     super.update();
     if(this.time > 1.5) {

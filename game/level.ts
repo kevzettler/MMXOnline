@@ -150,7 +150,7 @@ export class Level {
       for(let player of this.localPlayers) {
         player.onKeyDown(e.keyCode);
       }
-      if(e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
+      if(e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
         e.preventDefault();
       }
     }
@@ -188,6 +188,8 @@ export class Level {
   }
   
   update() {
+
+    game.music.volume((game.options.playMusic ? 1 : 0));
 
     if(!this.isOver) {
       for(let player of this.players) {
@@ -339,15 +341,15 @@ export class Level {
     
     if(this.isOver) {
       if(this.mainPlayer.won) {
-        Helpers.drawText(game.ctx, "You won!", this.screenWidth/2, this.screenHeight/2, "white", "black", 24, "center", "middle", "mmx_font");
+        Helpers.drawTextMMX(game.ctx, "You won!", this.screenWidth/2, this.screenHeight/2, 24, "center", "middle");
       }
       else {
-        Helpers.drawText(game.ctx, "You lost!", this.screenWidth/2, this.screenHeight/2, "white", "black", 24, "center", "middle", "mmx_font");
+        Helpers.drawTextMMX(game.ctx, "You lost!", this.screenWidth/2, this.screenHeight/2, 24, "center", "middle");
         //@ts-ignore
         let winner = _.find(this.players, (player) => {
           return player.won;
         });
-        Helpers.drawText(game.ctx, winner.name + " wins", this.screenWidth/2, (this.screenHeight/2) + 30, "white", "black", 12, "center", "top", "mmx_font");
+        Helpers.drawTextMMX(game.ctx, winner.name + " wins", this.screenWidth/2, (this.screenHeight/2) + 30, 12, "center", "top");
       }
     }
 
@@ -375,7 +377,7 @@ export class Level {
         Helpers.drawRect(game.ctx, new Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
       }
       weaponSprite.draw(i, x, y);
-      Helpers.drawText(game.ctx, String(i+1), x, y + 12, "black", "", 6, "", "", "mmx_font");
+      Helpers.drawTextMMX(game.ctx, String(i+1), x, y + 12, 6, "", "");
     }
   }
 
@@ -423,7 +425,7 @@ export class Level {
 
   addKillFeedEntry(killFeed: KillFeedEntry) {
     this.killFeed.unshift(killFeed);
-    if(this.killFeed.length > 5) this.killFeed.pop();
+    if(this.killFeed.length > 4) this.killFeed.pop();
   }
 
   drawTopHUD() {
@@ -433,8 +435,8 @@ export class Level {
     else if(place === 2) placeStr = "2nd";
     else if(place === 3) placeStr = "3rd";
     else placeStr = String(place) + "th";
-    Helpers.drawText(game.ctx, "Leader: " + String(this.currentWinner.kills), 5, 10, "black", "", 8, "left", "Top", "mmx_font");
-    Helpers.drawText(game.ctx, "Kills: " + String(this.mainPlayer.kills) + "(" + placeStr + ")", 5, 20, "black", "", 8, "left", "Top", "mmx_font");
+    Helpers.drawTextMMX(game.ctx, "Leader: " + String(this.currentWinner.kills), 5, 10, 8, "left", "Top");
+    Helpers.drawTextMMX(game.ctx, "Kills: " + String(this.mainPlayer.kills) + "(" + placeStr + ")", 5, 20, 8, "left", "Top");
   }
 
   get currentWinner() {
@@ -475,11 +477,20 @@ export class Level {
   drawKillFeed() {
     let fromRight = this.screenWidth - 10;
     let fromTop = 10;
-    let yDist = 8;
+    let yDist = 12;
     for(let i = 0; i < this.killFeed.length; i++) {
       let killFeed = this.killFeed[i];
-      let msg = killFeed.killer.name + " killed " + killFeed.victim.name + " with " + killFeed.weapon.constructor.name;
-      Helpers.drawText(game.ctx, msg, fromRight, fromTop + (i*yDist), "black", "", 4, "right", "Top", "mmx_font");
+      let msg = killFeed.killer.name + "    " + killFeed.victim.name;
+      game.ctx.font = "6px mmx_font";
+      if(killFeed.killer === this.mainPlayer || killFeed.victim == this.mainPlayer) {
+        let msgLen = game.ctx.measureText(msg).width;
+        let msgHeight = 10;
+        Helpers.drawRect(game.ctx, new Rect(fromRight - msgLen - 2, fromTop - 2 + (i*yDist) - msgHeight/2, fromRight + 2, fromTop - 2 + msgHeight/2 + (i*yDist)), "black", "white", 1, 0.75);
+      }
+      let nameLen = game.ctx.measureText(killFeed.victim.name).width;
+      Helpers.drawTextMMX(game.ctx, msg, fromRight, fromTop + (i*yDist), 6, "right", "Top");
+      let weaponIndex = killFeed.weapon.index;
+      game.sprites["hud_killfeed_weapon"].draw(weaponIndex, fromRight - nameLen - 13, fromTop + (i*yDist) - 2, undefined, undefined, undefined, undefined, undefined);
     }
   }
 

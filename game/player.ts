@@ -31,6 +31,7 @@ export class Player {
   kills: number = 0;
   deaths: number = 0;
   won: boolean = false;
+  lockWeapon: boolean = false;
 
   constructor(name: string, isAI: boolean, alliance: number, maxHealth: number, palette?: Palette) {
     this.name = name;
@@ -105,7 +106,7 @@ export class Player {
       this.character.changePaletteWeapon();
       this.character.xDir = -1;
     }
-    if(this.respawnTime > 0) {
+    if(this.respawnTime > 0 && !game.level.isOver) {
       this.respawnTime = Helpers.clampMin0(this.respawnTime - game.deltaTime);
     }
   }

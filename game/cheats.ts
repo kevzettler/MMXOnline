@@ -26,6 +26,14 @@ export function cheat(key: string, keycode: number) {
     });
     cpu.kills = 19;
   }
+  if(keycode === 116) {
+    for(let player of game.level.players) {
+      if(player.isAI) {
+        player.character.changeWeapon(3);
+        player.lockWeapon = true;
+      }
+    }
+  }
   if(key === "reset") {
     game.restartLevel("sm_bossroom");
     return;

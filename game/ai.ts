@@ -108,7 +108,7 @@ export class AI {
         if(this.jumpTime < 0) this.jumpTime = 0;
       }
     }
-    if(this.aiState.randomlyChangeWeapon) {
+    if(this.aiState.randomlyChangeWeapon && !this.player.lockWeapon) {
       this.weaponTime += game.deltaTime;
       if(this.weaponTime > 5) {
         this.weaponTime = 0;

@@ -158,7 +158,7 @@ let helperCtx3 = helperCanvas3.getContext("2d");
 noCanvasSmoothing(helperCtx3);
 
 export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement, sX: number, sY: number, sW?: number, sH?: number, 
-  x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette): void {
+  x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number): void {
   
   if(!sW) {
     ctx.drawImage(imgEl, Math.floor(sX), Math.floor(sY));
@@ -171,9 +171,11 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   helperCanvas.height = sH;
   
   helperCtx.save();
-  flipX = flipX || 1;
-  flipY = flipY || 1;
-  helperCtx.scale(flipX, flipY);
+  scaleX = scaleX || 1;
+  scaleY = scaleY || 1;
+  flipX = (flipX || 1);
+  flipY = (flipY || 1);
+  helperCtx.scale(flipX * scaleX, flipY * scaleY);
 
   helperCtx.clearRect(0, 0, helperCanvas.width, helperCanvas.height);
   helperCtx.drawImage(
@@ -305,6 +307,31 @@ export function drawPolygon(ctx: CanvasRenderingContext2D, shape: Shape, closed:
   }
 
   ctx.globalAlpha = 1;
+}
+
+export function drawTextMMX(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, hAlign: string, vAlign: string) {
+  ctx.save();
+  
+  ctx.shadowColor = "black" // string
+  ctx.shadowOffsetX = size/2; // integer
+  ctx.shadowOffsetY = size/2; // integer
+  ctx.shadowBlur = 0; // integer
+  
+  let gradient = ctx.createLinearGradient(x, y - size/2, x, y);
+  gradient.addColorStop(0, "#6090D0");
+  gradient.addColorStop(0.5, "#C8D8E8");
+  gradient.addColorStop(1.0, "#6090D0");
+  ctx.fillStyle = gradient;
+
+  size = size || 14;
+  hAlign = hAlign || "center";  //start,end,left,center,right
+  vAlign = vAlign || "middle";  //Top,Bottom,Middle,Alphabetic,Hanging
+
+  ctx.font = size + "px mmx_font";
+  ctx.textAlign = hAlign;
+  ctx.textBaseline = vAlign;
+  ctx.fillText(text,x,y);
+  ctx.restore();
 }
 
 export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, fillColor: string, outlineColor: string, size: number, hAlign: string, vAlign: string, font: string) {

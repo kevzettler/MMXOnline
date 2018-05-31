@@ -114,7 +114,7 @@ export class Sprite {
     return new Point(x + offset.x * flipX, y + offset.y * flipY);
   }
 
-  draw(frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette) {
+  draw(frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
     
     flipX = flipX || 1;
     flipY = flipY || 1;
@@ -123,7 +123,7 @@ export class Sprite {
     let rect = frame.rect;
     let offset = this.getAlignOffset(frameIndex, flipX, flipY);
 
-    Helpers.drawImage(game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette);
+    Helpers.drawImage(game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
 
   }
 }

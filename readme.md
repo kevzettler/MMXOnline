@@ -1,19 +1,16 @@
--Press 1-9 to switch weapon
--HUD: show weapon icon kills
+-If die on lost don't respawn
 
--Improve text: make it shiny like the MMX text and add drop shadow
--Killcam: show yours highlighted
+-Zoom scale glitches
+-Collision glitch: only looks at up to 1 non-trigger collider, resulting in possibly going thru walls
 -Still jerky walking animations
--Play music => mute music
 
 -Refactor break
 
--If die on lost don't respawn
 -Storm tornado glitches when pushing against wall (doesn't go forward)
 -AI should switch weapons that have no ammo
 -Walls stop weapons
 -Menu system
--Rolling shield on ceiling
+
 
 -All the special weapon charges
 
