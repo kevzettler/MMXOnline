@@ -530,7 +530,7 @@ class CharState {
       if(ladders.length > 0) {
         let rect = ladders[0].collider.shape.getRect();
         let snapX = (rect.x1 + rect.x2)/2;
-        if(!game.level.checkCollisionActor(this.character, 0, 30)) {
+        if(!game.level.checkCollisionActor(this.character, snapX - this.character.pos.x, 30)) {
           this.character.changeState(new LadderClimb(ladders[0].gameObject, snapX)); 
           this.character.move(new Point(0, 30), false);
         }
@@ -965,6 +965,11 @@ class Die extends CharState {
     this.character.globalCollider = undefined;
     this.character.stopCharge();
     new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"], 1);
+  }
+
+  onExit(newState: CharState) {
+    this.character.dead = false;
+    throw "Should not have come back to life";
   }
 
   update() {

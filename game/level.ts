@@ -47,7 +47,7 @@ export class Level {
   overTime: number = 0;
 
   constructor(levelJson: any) {
-    this.zoomScale = 1;
+    this.zoomScale = 3;
     this.gravity = 900;
     this.camX = 0;
     this.camY = 0;
@@ -128,7 +128,7 @@ export class Level {
 
   startLevel() {
     
-    let numCPUs = 6;
+    let numCPUs = 4;
 
     let health = 32;
     if(!this.fixedCam) {
@@ -293,16 +293,13 @@ export class Level {
 
   render() {
     
-    //game.canvas.width = Math.min(game.canvas.width, Math.round(this.background.width * this.zoomScale));
-    //game.canvas.height = Math.min(game.canvas.height, Math.round(this.background.height * this.zoomScale));
-    
     if(this.fixedCam) {
       game.canvas.width = Math.round(this.background.width * this.zoomScale);
       game.canvas.height = Math.round(this.background.height * this.zoomScale);
     }
     else {
-      game.canvas.width = Math.min(game.canvas.width, Math.round(this.background.width * this.zoomScale));
-      game.canvas.height = Math.min(game.canvas.height, Math.round(this.background.height * this.zoomScale));
+      game.canvas.width = Math.min(game.defaultCanvasWidth * this.zoomScale, Math.round(this.background.width * this.zoomScale));
+      game.canvas.height = Math.min(game.defaultCanvasHeight * this.zoomScale, Math.round(this.background.height * this.zoomScale));
     }
 
     if(!game.options.antiAlias) {
@@ -311,23 +308,28 @@ export class Level {
 
     if(this.mainPlayer.character) {
       this.computeCamPos(this.mainPlayer.character);
+      this.debugString = this.camX + "," + this.camY;
     }
+
+    let camX = Helpers.roundEpsilon(this.camX);
+    let camY = Helpers.roundEpsilon(this.camY);
+
     game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
     Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
-    if(this.parallax) Helpers.drawImage(game.ctx, this.parallax, -this.camX * 0.5, -this.camY * 0.5);
-    Helpers.drawImage(game.ctx, this.background, -this.camX, -this.camY);
+    if(this.parallax) Helpers.drawImage(game.ctx, this.parallax, -camX * 0.5, -camY * 0.5);
+    Helpers.drawImage(game.ctx, this.background, -camX, -camY);
     
     for(let go of this.gameObjects) {
-      go.render(-this.camX, -this.camY);
+      go.render(-camX, -camY);
     }
 
     for(let effect of this.effects) {
-      effect.render(-this.camX, -this.camY);
+      effect.render(-camX, -camY);
     }
 
     this.drawHUD();
-    Helpers.drawText(game.ctx, this.debugString, 10, 10, "white", "black", 8, "left", "top", "");
+    Helpers.drawText(game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
   }
 
   drawHUD() {
@@ -554,6 +556,9 @@ export class Level {
       this.camX = camX;
       this.camY = camY;
     }
+
+    this.camX = Helpers.roundEpsilon(this.camX);
+    this.camY = Helpers.roundEpsilon(this.camY);
     
   }
   

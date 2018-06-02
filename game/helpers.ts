@@ -133,6 +133,15 @@ export function getHex(r: number, g: number, b: number, a: number) {
   return "#" + r.toString(16) + g.toString(16) + b.toString(16) + a.toString(16);
 }
 
+export function roundEpsilon(num: number) {
+  let numRound = Math.round(num);
+  let diff = Math.abs(numRound - num);
+  if(diff < 0.0001) {
+    return numRound;
+  }
+  return num;
+}
+
 let autoInc = 0;
 export function getAutoIncId() {
   autoInc++;
@@ -161,7 +170,7 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number): void {
   
   if(!sW) {
-    ctx.drawImage(imgEl, Math.floor(sX), Math.floor(sY));
+    ctx.drawImage(imgEl, Math.ceil(sX), Math.ceil(sY));
     return;
   }
 

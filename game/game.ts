@@ -49,9 +49,15 @@ class Game {
   soundSheet: Howl;
   soundSheetLoaded: boolean = false;
 
+  defaultCanvasWidth: number;
+  defaultCanvasHeight: number;
+
   constructor() {
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.ctx = this.canvas.getContext("2d");
+
+    this.defaultCanvasWidth = this.canvas.width;
+    this.defaultCanvasHeight = this.canvas.height;
 
     Helpers.noCanvasSmoothing(this.ctx);
   }

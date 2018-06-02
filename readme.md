@@ -1,4 +1,3 @@
--Zoom scale glitches
 -Still jerky walking animations
 
 -Storm tornado glitches when pushing against wall (doesn't go forward)

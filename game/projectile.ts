@@ -298,6 +298,7 @@ export class StingProj extends Projectile {
         this.yDir = -1;
       }
     }
+    this.changeSprite(this.sprite, false);
     this.fadeSprite = game.sprites["buster1_fade"];
     this.type = type;
   }

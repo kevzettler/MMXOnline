@@ -634,6 +634,15 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
         return "#" + r.toString(16) + g.toString(16) + b.toString(16) + a.toString(16);
     }
     exports_6("getHex", getHex);
+    function roundEpsilon(num) {
+        var numRound = Math.round(num);
+        var diff = Math.abs(numRound - num);
+        if (diff < 0.0001) {
+            return numRound;
+        }
+        return num;
+    }
+    exports_6("roundEpsilon", roundEpsilon);
     function getAutoIncId() {
         autoInc++;
         return autoInc;
@@ -647,7 +656,7 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
     exports_6("noCanvasSmoothing", noCanvasSmoothing);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
         if (!sW) {
-            ctx.drawImage(imgEl, Math.floor(sX), Math.floor(sY));
+            ctx.drawImage(imgEl, Math.ceil(sX), Math.ceil(sY));
             return;
         }
         ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;
@@ -1527,6 +1536,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                             _this.yDir = -1;
                         }
                     }
+                    _this.changeSprite(_this.sprite, false);
                     _this.fadeSprite = game_3.game.sprites["buster1_fade"];
                     _this.type = type;
                     return _this;
@@ -2860,7 +2870,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         if (ladders.length > 0) {
                             var rect = ladders[0].collider.shape.getRect();
                             var snapX = (rect.x1 + rect.x2) / 2;
-                            if (!game_6.game.level.checkCollisionActor(this.character, 0, 30)) {
+                            if (!game_6.game.level.checkCollisionActor(this.character, snapX - this.character.pos.x, 30)) {
                                 this.character.changeState(new LadderClimb(ladders[0].gameObject, snapX));
                                 this.character.move(new point_8.Point(0, 30), false);
                             }
@@ -3249,6 +3259,10 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.character.globalCollider = undefined;
                     this.character.stopCharge();
                     new actor_3.Anim(this.character.pos.addxy(0, -12), game_6.game.sprites["die_sparks"], 1);
+                };
+                Die.prototype.onExit = function (newState) {
+                    this.character.dead = false;
+                    throw "Should not have come back to life";
                 };
                 Die.prototype.update = function () {
                     _super.prototype.update.call(this);
@@ -3677,7 +3691,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                     this.isOver = false;
                     this.killsToWin = 20;
                     this.overTime = 0;
-                    this.zoomScale = 1;
+                    this.zoomScale = 3;
                     this.gravity = 900;
                     this.camX = 0;
                     this.camY = 0;
@@ -3756,7 +3770,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                 }
                 Level.prototype.startLevel = function () {
                     var _this = this;
-                    var numCPUs = 6;
+                    var numCPUs = 4;
                     var health = 32;
                     if (!this.fixedCam) {
                         health = 16;
@@ -3913,31 +3927,34 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                         game_10.game.canvas.height = Math.round(this.background.height * this.zoomScale);
                     }
                     else {
-                        game_10.game.canvas.width = Math.min(game_10.game.canvas.width, Math.round(this.background.width * this.zoomScale));
-                        game_10.game.canvas.height = Math.min(game_10.game.canvas.height, Math.round(this.background.height * this.zoomScale));
+                        game_10.game.canvas.width = Math.min(game_10.game.defaultCanvasWidth * this.zoomScale, Math.round(this.background.width * this.zoomScale));
+                        game_10.game.canvas.height = Math.min(game_10.game.defaultCanvasHeight * this.zoomScale, Math.round(this.background.height * this.zoomScale));
                     }
                     if (!game_10.game.options.antiAlias) {
                         Helpers.noCanvasSmoothing(game_10.game.ctx);
                     }
                     if (this.mainPlayer.character) {
                         this.computeCamPos(this.mainPlayer.character);
+                        this.debugString = this.camX + "," + this.camY;
                     }
+                    var camX = Helpers.roundEpsilon(this.camX);
+                    var camY = Helpers.roundEpsilon(this.camY);
                     game_10.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
                     game_10.game.ctx.clearRect(0, 0, game_10.game.canvas.width, game_10.game.canvas.height);
                     Helpers.drawRect(game_10.game.ctx, new rect_4.Rect(0, 0, game_10.game.canvas.width, game_10.game.canvas.height), "gray");
                     if (this.parallax)
-                        Helpers.drawImage(game_10.game.ctx, this.parallax, -this.camX * 0.5, -this.camY * 0.5);
-                    Helpers.drawImage(game_10.game.ctx, this.background, -this.camX, -this.camY);
+                        Helpers.drawImage(game_10.game.ctx, this.parallax, -camX * 0.5, -camY * 0.5);
+                    Helpers.drawImage(game_10.game.ctx, this.background, -camX, -camY);
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
-                        go.render(-this.camX, -this.camY);
+                        go.render(-camX, -camY);
                     }
                     for (var _b = 0, _c = this.effects; _b < _c.length; _b++) {
                         var effect = _c[_b];
-                        effect.render(-this.camX, -this.camY);
+                        effect.render(-camX, -camY);
                     }
                     this.drawHUD();
-                    Helpers.drawText(game_10.game.ctx, this.debugString, 10, 10, "white", "black", 8, "left", "top", "");
+                    Helpers.drawText(game_10.game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
                 };
                 Level.prototype.drawHUD = function () {
                     var player1 = this.localPlayers[0];
@@ -4174,6 +4191,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                         this.camX = camX;
                         this.camY = camY;
                     }
+                    this.camX = Helpers.roundEpsilon(this.camX);
+                    this.camY = Helpers.roundEpsilon(this.camY);
                 };
                 Level.prototype.addGameObject = function (go) {
                     this.gameObjects.push(go);
@@ -4470,6 +4489,8 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.restartLevelName = "";
                     this.canvas = $("#canvas")[0];
                     this.ctx = this.canvas.getContext("2d");
+                    this.defaultCanvasWidth = this.canvas.width;
+                    this.defaultCanvasHeight = this.canvas.height;
                     Helpers.noCanvasSmoothing(this.ctx);
                 }
                 Game.prototype.start = function () {
