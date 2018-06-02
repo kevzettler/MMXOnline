@@ -423,7 +423,7 @@ export class TornadoProj extends Projectile {
     let botY = this.spriteStart.frames[0].rect.h * 2;
 
     let rect = new Rect(topX, topY, botX, botY);
-    this.globalCollider = new Collider(rect.getPoints(), true);
+    this.globalCollider = new Collider(rect.getPoints(), true, this);
 
     if(this.time > 0.2) {
       if(this.length < 6) {

@@ -53,6 +53,10 @@ export class Actor {
 
     ///@ts-ignoretsignore
     this.sprite = _.cloneDeep(sprite);
+
+    for(let hitbox of this.sprite.hitboxes) {
+      hitbox.actor = this;
+    }
     
     if(resetFrame) {
       this.frameIndex = 0;
@@ -146,12 +150,14 @@ export class Actor {
     //Regular collider: need to detect collision incrementally and stop moving past a collider if that's the case
     else {
 
+      /*
       //Already were colliding in first place: make the move as normal
       if(game.level.checkCollisionActor(this, 0, 0)) {
         //console.log("ALREADY COLLIDING")
         this.pos.inc(amount.times(times));
         return;
       }
+      */
 
       let inc: Point = amount.clone();
 
@@ -169,6 +175,12 @@ export class Actor {
         else {
           break;
         }
+      }
+      let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
+      if(collideData) {
+        Helpers.drawRect(game.ctx, collideData.collider.shape.getRect(), "red", undefined, undefined, 0.5);
+        Helpers.drawRect(game.ctx, this.collider.shape.getRect(), "green", undefined, undefined, 0.5);
+        //throw "BAD";
       }
       this.pos.inc(inc.multiply(times));
     }
@@ -207,15 +219,12 @@ export class Actor {
   get collider(): Collider {
     if(this.sprite.hitboxes.length === 0) {
       if(this.globalCollider) {
-        let rect = this.globalCollider.shape.getRect();
-        let offset = this.sprite.getAlignOffsetHelper(rect, new Point(0,0), this.xDir, this.yDir);
-        this.globalCollider.changePos(this.pos.x + offset.x, this.pos.y + offset.y);
         return this.globalCollider;
       }
       return undefined;
     }
-    let offset = this.sprite.getAlignOffset(0, this.xDir, this.yDir);
-    this.sprite.hitboxes[0].changePos(this.pos.x + offset.x, this.pos.y + offset.y);
+    //let offset = this.sprite.getAlignOffset(this.frameIndex, this.xDir, this.yDir);
+    //this.sprite.hitboxes[0].changePos(this.pos.x + offset.x, this.pos.y + offset.y);
     return this.sprite.hitboxes[0];
   }
 

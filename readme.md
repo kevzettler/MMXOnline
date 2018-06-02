@@ -1,16 +1,10 @@
--If die on lost don't respawn
-
 -Zoom scale glitches
--Collision glitch: only looks at up to 1 non-trigger collider, resulting in possibly going thru walls
 -Still jerky walking animations
-
--Refactor break
 
 -Storm tornado glitches when pushing against wall (doesn't go forward)
 -AI should switch weapons that have no ammo
 -Walls stop weapons
 -Menu system
-
 
 -All the special weapon charges
 
@@ -19,7 +13,8 @@
   -Need matrix collision system / way for 2 non-triggers to avoid collision
   -Collision callbacks with parent actor/gameobject available
 
--CollideData does not need both gameobjec tand gameobject.collider
+-Free the stuck object(s) with the "path of least resistance"
+
 -Vue must be set for prod mode once deployed
 
 ========================

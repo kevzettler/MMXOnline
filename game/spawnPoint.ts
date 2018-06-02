@@ -9,7 +9,7 @@ export class SpawnPoint {
   }
 
   occupied() {
-    let nearbyChars = game.level.getActorsInRadius(this.pos, 10, ["Character"]);
+    let nearbyChars = game.level.getActorsInRadius(this.pos, 30, ["Character"]);
     if(nearbyChars.length > 0) return true;
     return false;
   }

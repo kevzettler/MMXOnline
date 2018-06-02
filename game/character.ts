@@ -68,12 +68,12 @@ export class Character extends Actor {
 
   getStandingCollider() {
     let rect = new Rect(0, 0, 18, 34);
-    return new Collider(rect.getPoints(), false);
+    return new Collider(rect.getPoints(), false, this);
   }
 
   getDashingCollider() {
     let rect = new Rect(0, 0, 18, 22);
-    return new Collider(rect.getPoints(), false);
+    return new Collider(rect.getPoints(), false, this);
   }
 
   preUpdate() {
@@ -82,6 +82,13 @@ export class Character extends Actor {
   }
 
   update() {
+
+    if(!(this.charState instanceof Dash) && !(this.charState instanceof AirDash) && !(this.charState instanceof Die)) {
+      let standingCollider = this.getStandingCollider();
+      if(!game.level.checkCollisionShape(standingCollider.shape, [this])) {
+        this.globalCollider = standingCollider;
+      }
+    }
 
     if(this.player.alliance === 0) {
       //game.level.debugString = "y: " + this.pos.y;
@@ -455,7 +462,11 @@ class CharState {
       if(ladders.length > 0) {
         let midX = ladders[0].collider.shape.getRect().midX;
         if(Math.abs(this.character.pos.x - midX) < 12) {
-          this.character.changeState(new LadderClimb(ladders[0].gameObject));
+          let rect = ladders[0].collider.shape.getRect();
+          let snapX = (rect.x1 + rect.x2)/2;
+          if(!game.level.checkCollisionActor(this.character, snapX - this.character.pos.x, 0)) {
+            this.character.changeState(new LadderClimb(ladders[0].gameObject, snapX));
+          }
         }
       }
     }
@@ -517,8 +528,12 @@ class CharState {
       this.character.checkLadderDown = true;
       let ladders = game.level.getTriggerList(this.character, 0, 1, undefined, "Ladder");
       if(ladders.length > 0) {
-        this.character.changeState(new LadderClimb(ladders[0].gameObject));
-        this.character.move(new Point(0, 30), false);
+        let rect = ladders[0].collider.shape.getRect();
+        let snapX = (rect.x1 + rect.x2)/2;
+        if(!game.level.checkCollisionActor(this.character, 0, 30)) {
+          this.character.changeState(new LadderClimb(ladders[0].gameObject, snapX)); 
+          this.character.move(new Point(0, 30), false);
+        }
       }
       this.character.checkLadderDown = false;
     }
@@ -645,7 +660,6 @@ class Dash extends CharState {
 
   onExit(newState: CharState) {
     super.onExit(newState);
-    this.character.globalCollider = this.character.getStandingCollider();
   }
 
   update() {
@@ -692,7 +706,6 @@ class AirDash extends CharState {
 
   onExit(newState: CharState) { 
     this.character.useGravity = true;
-    this.character.globalCollider = this.character.getStandingCollider();
     super.onExit(newState);
   }
 
@@ -814,15 +827,19 @@ class WallKick extends CharState {
 class LadderClimb extends CharState {
 
   ladder: Ladder;
-  constructor(ladder: Ladder) {
+  snapX: number;
+  constructor(ladder: Ladder, snapX?: number) {
     super(game.sprites["mmx_ladder_climb"], game.sprites["mmx_ladder_shoot"], game.sprites["mmx_ladder_start"]);
     this.ladder = ladder;
+    this.snapX = snapX;
   }
 
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
     let rect = this.ladder.collider.shape.getRect();
-    this.character.pos.x = (rect.x1 + rect.x2)/2;
+    if(this.snapX !== undefined) {
+      this.character.pos.x = this.snapX;
+    }
     if(this.character.player === game.level.mainPlayer) {
       game.level.lerpCamTime = 0.25;
     }
@@ -860,7 +877,10 @@ class LadderClimb extends CharState {
     let yDist = this.character.collider.shape.getRect().y2 - ladderTop;
     if(!this.ladder.collider.isCollidingWith(this.character.collider) || Math.abs(yDist) < 12) {
       if(this.player.isHeld("up")) {
-        this.character.changeState(new LadderEnd(ladderTop - 1));
+        let targetY = ladderTop - 1;
+        if(!game.level.checkCollisionActor(this.character, 0, targetY - this.character.pos.y)) {
+          this.character.changeState(new LadderEnd(targetY));
+        }
       }
       else {
         this.character.changeState(new Fall());

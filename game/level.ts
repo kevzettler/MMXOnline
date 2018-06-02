@@ -13,7 +13,7 @@ import { Character } from "./character";
 import { SpawnPoint } from "./spawnPoint";
 import { NoScroll } from "./noScroll";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
-import { Line } from "./shape";
+import { Line, Shape } from "./shape";
 import { KillFeedEntry } from "./killFeedEntry";
 
 export class Level {
@@ -47,7 +47,7 @@ export class Level {
   overTime: number = 0;
 
   constructor(levelJson: any) {
-    this.zoomScale = 4;
+    this.zoomScale = 1;
     this.gravity = 900;
     this.camX = 0;
     this.camY = 0;
@@ -128,7 +128,7 @@ export class Level {
 
   startLevel() {
     
-    let numCPUs = 5;
+    let numCPUs = 6;
 
     let health = 32;
     if(!this.fixedCam) {
@@ -568,10 +568,6 @@ export class Level {
   //Should actor collide with gameobject?
   shouldTrigger(actor: Actor, gameObject: GameObject, offset: Point) {
 
-    if(actor instanceof RollingShieldProj || gameObject instanceof RollingShieldProj) {
-      var a = 0;
-    }
-
     if(!actor.collider.isTrigger && gameObject instanceof Ladder) {
       if(actor.pos.y < gameObject.collider.shape.getRect().y1 && offset.y > 0) {
         if(actor instanceof Character && !actor.checkLadderDown) {
@@ -589,13 +585,20 @@ export class Level {
     return false;
   }
 
+  checkCollisionShape(shape: Shape, exclusions: GameObject[]) : CollideData {
+    for(let go of this.gameObjects) {
+      if(!go.collider) continue;
+      if(exclusions.indexOf(go) !== -1) continue;
+      if(go.collider.shape.intersectsShape(shape)) {
+        return new CollideData(go.collider, undefined, false, go);
+      }
+    }
+    return undefined;
+  }
+
   //Checks for collisions and returns the first one collided.
   checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
-    
-    if(actor instanceof RollingShieldProj) {
-      var a = 0;
-    }
-
+  
     if(!actor.collider || actor.collider.isTrigger) return undefined;
     for(let go of this.gameObjects) {
       if(go === actor) continue;

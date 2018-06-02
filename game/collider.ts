@@ -2,6 +2,7 @@ import { Point } from "./point";
 import { GameObject } from "./gameObject";
 import { Shape } from "./shape";
 import { game } from "./game";
+import { Actor } from "./actor";
 
 export class Collider {
 
@@ -10,25 +11,32 @@ export class Collider {
   wallOnly: boolean = false;
   isClimbable: boolean = true;
   //gameObject: GameObject;
-  offset: Point = new Point(0, 0);
+  actor: Actor;
 
-  constructor(points: Point[], isTrigger: boolean) {
+  constructor(points: Point[], isTrigger: boolean, actor: Actor) {
     this._shape = new Shape(points);
     this.isTrigger = isTrigger;
     //this.gameObject = gameObject;
+    this.actor = actor;
+  }
+
+  getWorldCollider(actor: Actor) {
+    
   }
 
   get shape() {
-    return this._shape.clone(this.offset.x, this.offset.y);
+    let offset = new Point(0, 0);
+    if(this.actor) {
+      let rect = this._shape.getRect();
+      offset = this.actor.sprite.getAlignOffsetHelper(rect, new Point(0,0), this.actor.xDir, this.actor.yDir);
+      offset.x += this.actor.pos.x;
+      offset.y += this.actor.pos.y
+    }
+    return this._shape.clone(offset.x, offset.y);
   }
 
   onCollision(other: CollideData) {
     
-  }
-
-  changePos(x: number, y: number) {
-    this.offset.x = x;
-    this.offset.y = y;
   }
 
   isCollidingWith(other: Collider) {
