@@ -556,7 +556,7 @@ class Idle extends CharState {
     if(this.player.isPressed("dash")) {
       this.character.changeState(new Dash());
     }
-    if(game.level.isOver) {
+    if(game.level.gameMode.isOver) {
       if(this.player.won) {
         if(this.character.sprite.name !== "mmx_win") {
           this.character.changeSprite(game.sprites["mmx_win"], true);

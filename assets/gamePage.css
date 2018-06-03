@@ -13,3 +13,7 @@ body {
   font-family: 'mmx_font';
   src: url('fonts/Mega Man X.ttf');
 }
+
+#ui {
+  position: absolute;
+}

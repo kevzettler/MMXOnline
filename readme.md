@@ -5,6 +5,8 @@
   -decorative background
   -options + control binding
 
+-bUG: Sometimes players stop taking damage (or zero damage)
+
 -Storm tornado glitches when pushing against wall (doesn't go forward)
 -AI should switch weapons that have no ammon
 -Walls stop weapons

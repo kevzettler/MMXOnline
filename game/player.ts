@@ -97,22 +97,22 @@ export class Player {
       for(let weapon of this.weapons) {
         weapon.ammo = weapon.maxAmmo;
       }
-      let spawnPoint = game.level.getSpawnPoint();
+      let spawnPoint = game.level.getSpawnPoint(this);
       this.character = new Character(this, spawnPoint.pos.x, spawnPoint.pos.y);
       if(this.isAI) {
         this.character.addAI();
       }
       this.character.palette = this.palette;
       this.character.changePaletteWeapon();
-      this.character.xDir = -1;
+      this.character.xDir = spawnPoint.xDir;
     }
-    if(this.respawnTime > 0 && !game.level.isOver) {
+    if(this.respawnTime > 0 && !game.level.gameMode.isOver) {
       this.respawnTime = Helpers.clampMin0(this.respawnTime - game.deltaTime);
     }
   }
 
   get canControl() {
-    if(game.level.isOver) {
+    if(game.level.gameMode.isOver) {
       return false;
     }
     return true;

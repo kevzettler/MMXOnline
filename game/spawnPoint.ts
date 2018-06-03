@@ -4,8 +4,12 @@ import { game } from "./game";
 export class SpawnPoint {
 
   pos: Point;
-  constructor(point: Point) {
+  xDir: number;
+  num: number;
+  constructor(point: Point, xDir: number, num: number) {
     this.pos = point;
+    this.xDir = xDir || 1;
+    this.num = num || 0;
   }
 
   occupied() {

@@ -7,6 +7,7 @@ import { Palette } from "./color";
 import * as Helpers from "./helpers";
 import * as Tests from "./tests";
 import { Point } from "./point";
+import { GameMode, Brawl, FFADeathMatch } from "./gameMode";
 
 class Options {
   showHitboxes: boolean = false;
@@ -14,6 +15,33 @@ class Options {
   invulnFrames: boolean = false;
   antiAlias: boolean = false;
   playMusic: boolean = false;
+  constructor() { }
+}
+
+enum Menu {
+  None,
+  Loading,
+  NameSelect,
+  MainMenu,
+  BrawlMenu,
+  ArenaMenu
+}
+
+class UIData {
+  playerName: string = "Player 1";
+  menu: Menu;
+  isBrawl: boolean = false;
+  brawlMaps: string[] = ["sm_bossroom"];
+  arenaMaps: string[] = ["powerplant"];
+  selectedBrawlMap: string = this.brawlMaps[0];
+  selectedArenaMap: string = this.arenaMaps[0];
+  gameModes: string[] = ["deathmatch"];
+  selectedGameMode: string = this.gameModes[0];
+  maxPlayers: number = 7;
+  numBots: number = 7;
+  playTo: number = 20;
+  isPlayer1CPU: boolean = false;
+  isPlayer2CPU: boolean = false;
   constructor() { }
 }
 
@@ -35,6 +63,7 @@ class Game {
   isClient: boolean = true;
 
   options: Options;
+  uiData: UIData;
 
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -52,9 +81,14 @@ class Game {
   defaultCanvasWidth: number;
   defaultCanvasHeight: number;
 
+  uiEl: HTMLDivElement;
+  ui: any;
+
   constructor() {
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.ctx = this.canvas.getContext("2d");
+
+    this.uiEl = <HTMLDivElement>$("#ui")[0];
 
     this.defaultCanvasWidth = this.canvas.width;
     this.defaultCanvasHeight = this.canvas.height;
@@ -64,11 +98,9 @@ class Game {
 
   start() {
 
-    /*
-    window.onerror = function(error) {
-      console.error(error);
-    }
-    */
+    //window.onerror = function(error) {
+    //  console.error(error);
+    //}
 
     let optionString = localStorage.getItem("options");
     if(optionString) {
@@ -78,6 +110,60 @@ class Game {
       this.options = new Options();
     }
     
+    let options = this.options;
+
+    // @ts-ignore
+    var devOptions = new Vue({
+      el: '#dev-options',
+      data: {
+        options: options
+      },
+      methods: {
+        onChange() {
+          localStorage.setItem("options", JSON.stringify(this.options));
+        }
+      }
+    });
+
+    this.uiData = new UIData();
+    this.uiData.menu = Menu.Loading;
+    let game = this;
+
+    //@ts-ignore
+    this.ui = new Vue({
+      el: '#ui',
+      data: {
+        uiData: this.uiData
+      },
+      methods: {
+        submitName: function() {
+          this.uiData.menu = Menu.MainMenu;
+        },
+        goTo1v1: function() {
+          this.uiData.isBrawl = true;
+          this.uiData.menu = Menu.BrawlMenu;
+        },
+        goToArena: function() {
+          this.uiData.isBrawl = false;
+          this.uiData.menu = Menu.ArenaMenu;
+        },
+        goToBattle: function(selectedMap: any) {
+          this.uiData.menu = Menu.None;
+          $("#dev-options").show();
+          game.loadLevel(selectedMap);
+        },
+        goToMainMenu: function() {
+          this.uiData.menu = Menu.MainMenu;
+        },
+        isBrawlReady: function() {
+          return this.uiData.selectedBrawlMap !== "";
+        },
+        isArenaReady: function() {
+          return this.uiData.selectedArenaMap !== "";
+        }
+      }
+    });
+
     this.loadSprites();
     this.loadLevels();
     this.loadPalettes();
@@ -119,29 +205,25 @@ class Game {
       //console.log("LOADED");
       window.clearInterval(this.interval);
       
-      this.loadLevel("powerplant");
+      //this.loadLevel("powerplant");
+      
+      let name = localStorage.getItem("playerName");
+      if(!name) {
+        this.uiData.menu = Menu.NameSelect;
+      }
+      else {
+        this.uiData.playerName = name;
+        this.uiData.menu = Menu.MainMenu;
+      }
+      this.refreshUI();
     }
     else {
       //console.log("LOADING...");
     }
   }
 
-  startVue() {
-
-    let options = this.options;
-
-    // @ts-ignore
-    var app1 = new Vue({
-      el: '#app',
-      data: {
-        options: options
-      },
-      methods: {
-        onChange() {
-          localStorage.setItem("options", JSON.stringify(this.options));
-        }
-      }
-    });
+  refreshUI() {
+    this.ui.$forceUpdate();
   }
 
   test() {
@@ -164,11 +246,41 @@ class Game {
   loadLevel(name: string) {
 
     let level = this.levels[name];
+
+    if(!level) {
+      throw "Bad level";
+    }
+
     ///@ts-ignore
     this.level = _.cloneDeep(level);
     this.level.background = level.background;
 
-    this.level.startLevel();
+    let player1 = undefined;
+    let player2 = undefined;
+    if(!(this.uiData.isBrawl && this.uiData.isPlayer1CPU)) {
+      player1 = new Player(game.uiData.playerName, false, 0, 32);
+    }
+    if(this.uiData.isBrawl && !this.uiData.isPlayer2CPU) {
+      player2 = new Player(game.uiData.playerName, false, 1, 32, this.palettes["red"]);
+    }
+
+    let numBots = this.uiData.numBots;
+    if(this.uiData.isBrawl) {
+      numBots = 0;
+      numBots += (player1 === undefined ? 1 : 0);
+      numBots += (player2 === undefined ? 1 : 0);
+    }
+
+    let gameMode;
+    if(this.uiData.isBrawl) {
+      gameMode = new Brawl(this.level);
+    }
+    else {
+      gameMode = new FFADeathMatch(this.level, game.uiData.playTo);
+    }
+
+    $(this.canvas).show();
+    this.level.startLevel(numBots, numBots, gameMode, player1, player2);
 
     this.gameLoop(0);
   }

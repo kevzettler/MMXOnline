@@ -6,9 +6,61 @@
 </head>
 <body>
 <div id="content">
-  <canvas id="canvas" width="320" height="240"></canvas>
+  
+  <div id="ui">
+    <!--Name select menu-->
+    <div id="loading" v-if="uiData.menu === 1">
+      <div>Loading...</div>
+      <div></div>
+    </div>
+    <div id="name-select" v-if="uiData.menu === 2">
+      <label for="name-select">Enter a name</label><input v-model="uiData.playerName" type="text" maxlength="10">
+      <button type="submit" v-on:click="submitName">Submit</button>
+    </div>
+    <!--Main menu-->
+    <div id="mainMenu" v-if="uiData.menu === 3">
+      <h1>Select Mode</h1>
+      <button type="submit" v-on:click="goTo1v1()">1v1</button>
+      <button type="submit" v-on:click="goToArena()">Arena (Bots only)</button>
+      <button type="submit" disabled title="Coming soon!">Arena (Online Multiplayer)</button>
+    </div>
+    <!--1v1 menu-->
+    <div id="mainMenu" v-if="uiData.menu === 4">
+      <h1>1v1 Setup</h1>
+      <div>
+        <div>Player 1</div>
+        <label>CPU?</label><input v-model="uiData.isPlayer1CPU" type="checkbox" />
+        <div>Player 2</div>
+        <label>CPU?</label><input v-model="uiData.isPlayer2CPU" type="checkbox" />
+        <label>Map</label>
+        <select v-model="uiData.selectedBrawlMap">
+          <option v-for="map in uiData.brawlMaps" v-bind:value="map">{{ map }}</option>
+        </select>
+      </div>
+      <button type="submit" :disabled="!isBrawlReady()" v-on:click="goToBattle(uiData.selectedBrawlMap)">Battle!</button>
+    </div>
+    <!--arena menu-->
+    <div id="mainMenu" v-if="uiData.menu === 5">
+      <h1>Arena Map Select</h1>
+      <label>Select Map</label>
+      <select v-model="uiData.selectedArenaMap">
+        <option v-for="map in uiData.arenaMaps" v-bind:value="map">{{ map }}</option>
+      </select>
 
-  <div id="app">
+      <label>Game Mode</label>
+      <select v-model="uiData.selectedGameMode">
+          <option v-for="mode in uiData.gameModes" v-bind:value="mode">{{ mode }}</option>
+      </select>
+
+      <label>Max Players</label><input v-model:number="uiData.maxPlayers" type="number">
+      <label>Number of Bots</label><input v-model:number="uiData.numBots" type="number">
+      <label>Play to:</label><input v-model:number="uiData.playTo" type="number">
+      <button type="submit" :disabled="!isArenaReady()" v-on:click="goToBattle(uiData.selectedArenaMap)">Battle!</button>
+    </div>
+  </div>
+  <canvas id="canvas" width="320" height="240" style="display:none"></canvas>
+  
+  <div id="dev-options" style="display:none">
     <input type="checkbox" v-model="options.showHitboxes" @change="onChange()">Show hitboxes? 
     <input type="checkbox" v-model="options.playMusic" @change="onChange()">Play Music?<br>
     <input type="checkbox" v-model="options.alwaysFlinch" @change="onChange()">Always flinch? <br>
@@ -28,7 +80,6 @@
 <script>
   SystemJS.import("game").then(function(game) {
     game.game.start();
-    game.game.startVue();
   });
 </script>
 

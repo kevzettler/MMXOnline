@@ -15,6 +15,7 @@ import { NoScroll } from "./noScroll";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 import { Line, Shape } from "./shape";
 import { KillFeedEntry } from "./killFeedEntry";
+import { GameMode, FFADeathMatch } from "./gameMode";
 
 export class Level {
 
@@ -42,9 +43,7 @@ export class Level {
   lerpCamTime: number = 0;
   navMeshNodes: NavMeshNode[] = [];
   killFeed: KillFeedEntry[] = [];
-  isOver: boolean = false;
-  killsToWin: number = 20;
-  overTime: number = 0;
+  gameMode: GameMode;
 
   constructor(levelJson: any) {
     this.zoomScale = 3;
@@ -80,7 +79,8 @@ export class Level {
         this.noScrolls.push(new NoScroll(rect));
       }
       else if(instance.objectName === "Spawn Point") {
-        this.spawnPoints.push(new SpawnPoint(new Point(instance.pos.x, instance.pos.y)));
+        let properties = instance.properties;
+        this.spawnPoints.push(new SpawnPoint(new Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
       }
       else if(instance.objectName === "Node") {
         let name = instance.name;
@@ -99,7 +99,7 @@ export class Level {
     for(let navMeshNode of this.navMeshNodes) {
       navMeshNode.setNeighbors(this.navMeshNodes, this.gameObjects);
     }
-    console.log(this.navMeshNodes);
+    //console.log(this.navMeshNodes);
 
     this.localPlayers = [];
     this.players = [];
@@ -126,24 +126,40 @@ export class Level {
     }
   }
 
-  startLevel() {
+  startLevel(numCPUs: number, maxPlayers: number, gameMode: GameMode, player1?: Player, player2?: Player) {
     
-    let numCPUs = 4;
+    this.gameMode = gameMode;
 
     let health = 32;
     if(!this.fixedCam) {
       health = 16;
     }
 
-    let player1: Player = new Player("Player 1", false, 0, health);
-    this.players.push(player1);
-    this.localPlayers.push(player1);
-    this.mainPlayer = player1;
+    if(player1) {
+      player1.health = health;
+      player1.maxHealth = health;
+      this.players.push(player1);
+      this.localPlayers.push(player1);
+      this.mainPlayer = player1;
+    }
+    if(player2) {
+      player2.health = health;
+      player2.maxHealth = health;
+      this.players.push(player2);
+      this.localPlayers.push(player2);
+      if(!this.mainPlayer) {
+        this.mainPlayer = player2;
+      }
+    }
 
     for(var i = 0; i < numCPUs; i++) {
-      let cpu: Player = new Player("CPU" + String(i+1), false, i + 1, health, game.palettes["red"]);
+      let cpu: Player = new Player("CPU" + String(i+1), true, i + 1, health, game.palettes["red"]);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
+    }
+
+    if(!this.mainPlayer) {
+      this.mainPlayer = player1;
     }
 
     document.onkeydown = (e) => {
@@ -163,7 +179,6 @@ export class Level {
         e.preventDefault();
       }
     }
-
 
     let music = new Howl({
       src: ["assets/music/" + this.levelMusic],
@@ -191,35 +206,7 @@ export class Level {
 
     game.music.volume((game.options.playMusic ? 1 : 0));
 
-    if(!this.isOver) {
-      for(let player of this.players) {
-        if(player.kills >= this.killsToWin) {
-          this.isOver = true;
-          player.won = true;
-        }
-      }
-      if(this.isOver) {
-        game.music.stop();
-        if(this.mainPlayer && this.mainPlayer.won) {
-          game.music = new Howl({
-            src: ["assets/music/win.mp3"],
-          });
-          game.music.play();
-        }
-        else if(this.mainPlayer && !this.mainPlayer.won) {
-          game.music = new Howl({
-            src: ["assets/music/lose.mp3"],
-          });
-          game.music.play();
-        }
-      }
-    }
-    else {
-      this.overTime += game.deltaTime;
-      if(this.overTime > 10) {
-        game.restartLevel(this.name);
-      }
-    }
+    this.gameMode.checkIfWin();
 
     for(let i = this.killFeed.length - 1; i >= 0; i--) {
       let killFeed = this.killFeed[i];
@@ -332,6 +319,13 @@ export class Level {
     Helpers.drawText(game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
   }
 
+  getWinner(): Player {
+    //@ts-ignore
+    return _.find(this.players, (player) => {
+      return player.won;
+    });
+  }
+
   drawHUD() {
     let player1 = this.localPlayers[0];
     this.drawPlayerHUD(player1, 1);
@@ -339,30 +333,29 @@ export class Level {
       let player2 = this.localPlayers[1];
       this.drawPlayerHUD(player2, 2);
     }
-    this.drawKillFeed();
-    
-    if(this.isOver) {
-      if(this.mainPlayer.won) {
-        Helpers.drawTextMMX(game.ctx, "You won!", this.screenWidth/2, this.screenHeight/2, 24, "center", "middle");
-      }
-      else {
-        Helpers.drawTextMMX(game.ctx, "You lost!", this.screenWidth/2, this.screenHeight/2, 24, "center", "middle");
-        //@ts-ignore
-        let winner = _.find(this.players, (player) => {
-          return player.won;
-        });
-        Helpers.drawTextMMX(game.ctx, winner.name + " wins", this.screenWidth/2, (this.screenHeight/2) + 30, 12, "center", "top");
-      }
+
+    this.gameMode.drawHUD();
+  }
+
+  drawArenaWinScreen() {
+    if(this.mainPlayer.won) {
+      Helpers.drawTextMMX(game.ctx, "You won!", this.screenWidth/2, this.screenHeight/2, 24, "center", "middle");
     }
-
-    this.drawTopHUD();
-
-    this.drawWeaponSwitchHUD();
-
-    if(this.mainPlayer && this.mainPlayer.isHeld("scoreboard", false)) {
-      this.drawScoreboard();
+    else {
+      Helpers.drawTextMMX(game.ctx, "You lost!", this.screenWidth/2, this.screenHeight/2, 24, "center", "middle");
+      //@ts-ignore
+      let winner = _.find(this.players, (player) => {
+        return player.won;
+      });
+      Helpers.drawTextMMX(game.ctx, winner.name + " wins", this.screenWidth/2, (this.screenHeight/2) + 30, 12, "center", "top");
     }
+  }
 
+  drawBrawlWinScreen() {
+    let winner = this.getWinner();
+    if(winner) {
+      Helpers.drawTextMMX(game.ctx, winner.name + " wins!", this.screenWidth/2, this.screenHeight/2, 12, "center", "middle");
+    }
   }
 
   drawWeaponSwitchHUD() {
@@ -458,7 +451,7 @@ export class Level {
     Helpers.drawRect(game.ctx, new Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
     Helpers.drawText(game.ctx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
     Helpers.drawText(game.ctx, "Map: " + this.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
-    Helpers.drawText(game.ctx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"), 
+    Helpers.drawText(game.ctx, "Playing to: " + String((<FFADeathMatch>this.gameMode).killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"), 
     Helpers.drawLine(game.ctx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
     Helpers.drawText(game.ctx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
     Helpers.drawText(game.ctx, "Kills", col2x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
@@ -716,11 +709,17 @@ export class Level {
     return _.sample(this.navMeshNodes);
   }
 
-  getSpawnPoint() {
+  getSpawnPoint(player: Player) {
     //@ts-ignore
     let unoccupied = _.filter(this.spawnPoints, (spawnPoint) => {
       return !spawnPoint.occupied();
     });
+    if(game.level.fixedCam) {
+      //@ts-ignore
+      return _.find(unoccupied, (spawnPoint) => {
+        return spawnPoint.num === player.alliance;
+      });
+    }
     //@ts-ignore
     return _.sample(unoccupied);
   }
