@@ -656,7 +656,7 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
     exports_6("noCanvasSmoothing", noCanvasSmoothing);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
         if (!sW) {
-            ctx.drawImage(imgEl, Math.ceil(sX), Math.ceil(sY));
+            ctx.drawImage(imgEl, Math.floor(sX), Math.floor(sY));
             return;
         }
         ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;

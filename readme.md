@@ -1,9 +1,13 @@
--Still jerky walking animations
+-Menu/UI system
+  -Non-canvas based
+  -overlay on actual canvas for pause menus/etc
+  -move killcam, score, and health bars out of there
+  -decorative background
+  -options + control binding
 
 -Storm tornado glitches when pushing against wall (doesn't go forward)
--AI should switch weapons that have no ammo
+-AI should switch weapons that have no ammon
 -Walls stop weapons
--Menu system
 
 -All the special weapon charges
 
