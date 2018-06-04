@@ -874,6 +874,146 @@ System.register("helpers", ["point"], function (exports_6, context_6) {
         }
     }
     exports_6("inLine", inLine);
+    function keyCodeToString(charCode) {
+        if (charCode === 0)
+            return "left mouse";
+        if (charCode === 1)
+            return "middle mouse";
+        if (charCode === 2)
+            return "right mouse";
+        if (charCode === 3)
+            return "wheel up";
+        if (charCode === 4)
+            return "wheel down";
+        if (charCode == 8)
+            return "backspace";
+        if (charCode == 9)
+            return "tab";
+        if (charCode == 13)
+            return "enter";
+        if (charCode == 16)
+            return "shift";
+        if (charCode == 17)
+            return "ctrl";
+        if (charCode == 18)
+            return "alt";
+        if (charCode == 19)
+            return "pause/break";
+        if (charCode == 20)
+            return "caps lock";
+        if (charCode == 27)
+            return "escape";
+        if (charCode == 33)
+            return "page up";
+        if (charCode == 34)
+            return "page down";
+        if (charCode == 35)
+            return "end";
+        if (charCode == 36)
+            return "home";
+        if (charCode == 37)
+            return "left arrow";
+        if (charCode == 38)
+            return "up arrow";
+        if (charCode == 39)
+            return "right arrow";
+        if (charCode == 40)
+            return "down arrow";
+        if (charCode == 45)
+            return "insert";
+        if (charCode == 46)
+            return "delete";
+        if (charCode == 91)
+            return "left window";
+        if (charCode == 92)
+            return "right window";
+        if (charCode == 93)
+            return "select key";
+        if (charCode == 96)
+            return "numpad 0";
+        if (charCode == 97)
+            return "numpad 1";
+        if (charCode == 98)
+            return "numpad 2";
+        if (charCode == 99)
+            return "numpad 3";
+        if (charCode == 100)
+            return "numpad 4";
+        if (charCode == 101)
+            return "numpad 5";
+        if (charCode == 102)
+            return "numpad 6";
+        if (charCode == 103)
+            return "numpad 7";
+        if (charCode == 104)
+            return "numpad 8";
+        if (charCode == 105)
+            return "numpad 9";
+        if (charCode == 106)
+            return "multiply";
+        if (charCode == 107)
+            return "add";
+        if (charCode == 109)
+            return "subtract";
+        if (charCode == 110)
+            return "decimal point";
+        if (charCode == 111)
+            return "divide";
+        if (charCode == 112)
+            return "F1";
+        if (charCode == 113)
+            return "F2";
+        if (charCode == 114)
+            return "F3";
+        if (charCode == 115)
+            return "F4";
+        if (charCode == 116)
+            return "F5";
+        if (charCode == 117)
+            return "F6";
+        if (charCode == 118)
+            return "F7";
+        if (charCode == 119)
+            return "F8";
+        if (charCode == 120)
+            return "F9";
+        if (charCode == 121)
+            return "F10";
+        if (charCode == 122)
+            return "F11";
+        if (charCode == 123)
+            return "F12";
+        if (charCode == 144)
+            return "num lock";
+        if (charCode == 145)
+            return "scroll lock";
+        if (charCode == 186)
+            return ";";
+        if (charCode == 187)
+            return "=";
+        if (charCode == 188)
+            return ",";
+        if (charCode == 189)
+            return "-";
+        if (charCode == 190)
+            return ".";
+        if (charCode == 191)
+            return "/";
+        if (charCode == 192)
+            return "`";
+        if (charCode == 219)
+            return "[";
+        if (charCode == 220)
+            return "\\";
+        if (charCode == 221)
+            return "]";
+        if (charCode == 222)
+            return "'";
+        if (charCode == 32)
+            return "space";
+        return String.fromCharCode(charCode);
+    }
+    exports_6("keyCodeToString", keyCodeToString);
     var point_3, autoInc, helperCanvas, helperCtx, helperCanvas2, helperCtx2, helperCanvas3, helperCtx3;
     return {
         setters: [
@@ -2690,10 +2830,10 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         return 3;
                     }
                 };
-                Character.prototype.changeState = function (newState) {
+                Character.prototype.changeState = function (newState, forceChange) {
                     if (this.charState && newState && this.charState.constructor === newState.constructor)
                         return;
-                    if (this.changedStateInFrame)
+                    if (this.changedStateInFrame && !forceChange)
                         return;
                     this.changedStateInFrame = true;
                     newState.character = this;
@@ -2725,10 +2865,10 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         this.player.health = 0;
                         if (!this.dead) {
                             this.dead = true;
-                            this.changeState(new Die());
+                            this.changeState(new Die(), true);
                             attacker.kills++;
                             this.player.deaths++;
-                            game_6.game.level.addKillFeedEntry(new killFeedEntry_1.KillFeedEntry(attacker, this.player, weapon));
+                            game_6.game.level.gameMode.addKillFeedEntry(new killFeedEntry_1.KillFeedEntry(attacker, this.player, weapon));
                         }
                     }
                 };
@@ -3374,37 +3514,10 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                     this.isAI = isAI;
                     this.palette = palette;
                     if (!isAI && alliance === 0) {
-                        this.inputMapping[37] = "left";
-                        this.inputMapping[39] = "right";
-                        this.inputMapping[38] = "up";
-                        this.inputMapping[40] = "down";
-                        this.inputMapping[90] = "dash";
-                        this.inputMapping[88] = "jump";
-                        this.inputMapping[67] = "shoot";
-                        this.inputMapping[65] = "weaponleft";
-                        this.inputMapping[83] = "weaponright";
-                        this.inputMapping[27] = "reset";
-                        this.inputMapping[9] = "scoreboard";
-                        this.inputMapping[49] = "weapon1";
-                        this.inputMapping[50] = "weapon2";
-                        this.inputMapping[51] = "weapon3";
-                        this.inputMapping[52] = "weapon4";
-                        this.inputMapping[53] = "weapon5";
-                        this.inputMapping[54] = "weapon6";
-                        this.inputMapping[55] = "weapon7";
-                        this.inputMapping[56] = "weapon8";
-                        this.inputMapping[57] = "weapon9";
+                        this.inputMapping = game_8.game.getPlayerControls(1);
                     }
                     if (!isAI && alliance === 1) {
-                        this.inputMapping[100] = "left";
-                        this.inputMapping[102] = "right";
-                        this.inputMapping[104] = "up";
-                        this.inputMapping[101] = "down";
-                        this.inputMapping[13] = "dash";
-                        this.inputMapping[96] = "jump";
-                        this.inputMapping[97] = "shoot";
-                        this.inputMapping[103] = "weaponleft";
-                        this.inputMapping[105] = "weaponright";
+                        this.inputMapping = game_8.game.getPlayerControls(2);
                     }
                     this.health = maxHealth;
                     this.maxHealth = maxHealth;
@@ -3571,6 +3684,12 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                 };
                 Player.prototype.clearInputPressed = function () {
                     this.inputPressed = {};
+                    var mouseUpMap = this.inputMapping[3];
+                    if (mouseUpMap)
+                        this.input[mouseUpMap] = false;
+                    var mouseDownMap = this.inputMapping[4];
+                    if (mouseDownMap)
+                        this.input[mouseDownMap] = false;
                     this.controllerInputPressed = {};
                 };
                 Player.prototype.clearAiInput = function () {
@@ -3634,14 +3753,23 @@ System.register("noScroll", [], function (exports_20, context_20) {
         }
     };
 });
-System.register("gameMode", ["game"], function (exports_21, context_21) {
+System.register("gameMode", ["game", "player", "helpers", "rect"], function (exports_21, context_21) {
     "use strict";
     var __moduleName = context_21 && context_21.id;
-    var game_10, GameMode, Brawl, FFADeathMatch;
+    var game_10, player_1, Helpers, rect_4, GameMode, Brawl, FFADeathMatch;
     return {
         setters: [
             function (game_10_1) {
                 game_10 = game_10_1;
+            },
+            function (player_1_1) {
+                player_1 = player_1_1;
+            },
+            function (Helpers_8) {
+                Helpers = Helpers_8;
+            },
+            function (rect_4_1) {
+                rect_4 = rect_4_1;
             }
         ],
         execute: function () {
@@ -3649,23 +3777,223 @@ System.register("gameMode", ["game"], function (exports_21, context_21) {
                 function GameMode(level) {
                     this.isOver = false;
                     this.overTime = 0;
+                    this.localPlayers = [];
+                    this.players = [];
+                    this.killFeed = [];
                     this.level = level;
                 }
+                Object.defineProperty(GameMode.prototype, "screenWidth", {
+                    get: function () { return this.level.screenWidth; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(GameMode.prototype, "screenHeight", {
+                    get: function () { return this.level.screenHeight; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(GameMode.prototype, "zoomScale", {
+                    get: function () { return this.level.zoomScale; },
+                    enumerable: true,
+                    configurable: true
+                });
+                GameMode.prototype.setupPlayers = function () {
+                    var _this = this;
+                    document.onkeydown = function (e) {
+                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
+                            var player = _a[_i];
+                            player.onKeyDown(e.keyCode);
+                        }
+                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
+                            e.preventDefault();
+                        }
+                    };
+                    document.onkeyup = function (e) {
+                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
+                            var player = _a[_i];
+                            player.onKeyUp(e.keyCode);
+                        }
+                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
+                            e.preventDefault();
+                        }
+                    };
+                    document.onmousedown = function (e) {
+                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
+                            var player = _a[_i];
+                            player.onKeyDown(e.button);
+                        }
+                        if (e.button === 2) {
+                            e.preventDefault();
+                        }
+                    };
+                    document.onmouseup = function (e) {
+                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
+                            var player = _a[_i];
+                            player.onKeyUp(e.button);
+                        }
+                        if (e.button === 2) {
+                            e.preventDefault();
+                        }
+                    };
+                    document.onwheel = function (e) {
+                        if (e.deltaY < 0) {
+                            for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
+                                var player = _a[_i];
+                                console.log("MOUSEHWEELUP");
+                                player.onKeyDown(3);
+                            }
+                        }
+                        else if (e.deltaY > 0) {
+                            for (var _b = 0, _c = _this.localPlayers; _b < _c.length; _b++) {
+                                var player = _c[_b];
+                                console.log("MOUSEHWEELDOWN");
+                                player.onKeyDown(4);
+                            }
+                        }
+                    };
+                };
+                GameMode.prototype.update = function () {
+                    for (var i = this.killFeed.length - 1; i >= 0; i--) {
+                        var killFeed = this.killFeed[i];
+                        killFeed.time += game_10.game.deltaTime;
+                        if (killFeed.time > 8) {
+                            _.remove(this.killFeed, killFeed);
+                        }
+                    }
+                    this.players.sort(function (a, b) {
+                        if (a.kills > b.kills)
+                            return -1;
+                        else if (a.kills === b.kills) {
+                            if (a.deaths < b.deaths)
+                                return -1;
+                            if (a.deaths === b.deaths)
+                                return 0;
+                            if (a.deaths > b.deaths)
+                                return 1;
+                        }
+                        else {
+                            return 1;
+                        }
+                    });
+                };
                 GameMode.prototype.drawHUD = function () {
                 };
                 GameMode.prototype.checkIfWin = function () {
+                };
+                GameMode.prototype.getWinner = function () {
+                    return _.find(this.players, function (player) {
+                        return player.won;
+                    });
+                };
+                GameMode.prototype.drawArenaWinScreen = function () {
+                    if (this.mainPlayer.won) {
+                        Helpers.drawTextMMX(game_10.game.ctx, "You won!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
+                    }
+                    else {
+                        Helpers.drawTextMMX(game_10.game.ctx, "You lost!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
+                        var winner = _.find(this.players, function (player) {
+                            return player.won;
+                        });
+                        Helpers.drawTextMMX(game_10.game.ctx, winner.name + " wins", this.screenWidth / 2, (this.screenHeight / 2) + 30, 12, "center", "top");
+                    }
+                };
+                GameMode.prototype.drawBrawlWinScreen = function () {
+                    var winner = this.getWinner();
+                    if (winner) {
+                        Helpers.drawTextMMX(game_10.game.ctx, winner.name + " wins!", this.screenWidth / 2, this.screenHeight / 2, 12, "center", "middle");
+                    }
+                };
+                GameMode.prototype.drawWeaponSwitchHUD = function () {
+                    var weaponSprite = game_10.game.sprites["hud_weapon_icon"];
+                    var startX = 50;
+                    var width = 20;
+                    var iconW = 9;
+                    var iconH = 9;
+                    var startY = this.screenHeight - 15;
+                    for (var i = 0; i < 9; i++) {
+                        var x = startX + (i * width);
+                        var y = startY;
+                        if (this.mainPlayer.weaponIndex === i) {
+                            Helpers.drawRect(game_10.game.ctx, new rect_4.Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
+                        }
+                        weaponSprite.draw(i, x, y);
+                        Helpers.drawTextMMX(game_10.game.ctx, String(i + 1), x, y + 12, 6, "", "");
+                    }
+                };
+                GameMode.prototype.addKillFeedEntry = function (killFeed) {
+                    this.killFeed.unshift(killFeed);
+                    if (this.killFeed.length > 4)
+                        this.killFeed.pop();
+                };
+                GameMode.prototype.drawTopHUD = function () {
+                    var placeStr = "";
+                    var place = this.players.indexOf(this.mainPlayer) + 1;
+                    if (place === 1)
+                        placeStr = "1st";
+                    else if (place === 2)
+                        placeStr = "2nd";
+                    else if (place === 3)
+                        placeStr = "3rd";
+                    else
+                        placeStr = String(place) + "th";
+                    Helpers.drawTextMMX(game_10.game.ctx, "Leader: " + String(this.currentWinner.kills), 5, 10, 8, "left", "Top");
+                    Helpers.drawTextMMX(game_10.game.ctx, "Kills: " + String(this.mainPlayer.kills) + "(" + placeStr + ")", 5, 20, 8, "left", "Top");
+                };
+                Object.defineProperty(GameMode.prototype, "currentWinner", {
+                    get: function () {
+                        return this.players[0];
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                GameMode.prototype.drawKillFeed = function () {
+                    var fromRight = this.screenWidth - 10;
+                    var fromTop = 10;
+                    var yDist = 12;
+                    for (var i = 0; i < this.killFeed.length; i++) {
+                        var killFeed = this.killFeed[i];
+                        var msg = killFeed.killer.name + "    " + killFeed.victim.name;
+                        game_10.game.ctx.font = "6px mmx_font";
+                        if (killFeed.killer === this.mainPlayer || killFeed.victim == this.mainPlayer) {
+                            var msgLen = game_10.game.ctx.measureText(msg).width;
+                            var msgHeight = 10;
+                            Helpers.drawRect(game_10.game.ctx, new rect_4.Rect(fromRight - msgLen - 2, fromTop - 2 + (i * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i * yDist)), "black", "white", 1, 0.75);
+                        }
+                        var nameLen = game_10.game.ctx.measureText(killFeed.victim.name).width;
+                        Helpers.drawTextMMX(game_10.game.ctx, msg, fromRight, fromTop + (i * yDist), 6, "right", "Top");
+                        var weaponIndex = killFeed.weapon.index;
+                        game_10.game.sprites["hud_killfeed_weapon"].draw(weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
+                    }
                 };
                 return GameMode;
             }());
             exports_21("GameMode", GameMode);
             Brawl = (function (_super) {
                 __extends(Brawl, _super);
-                function Brawl(level) {
-                    return _super.call(this, level) || this;
+                function Brawl(level, uiData) {
+                    var _this = _super.call(this, level) || this;
+                    var health = 32;
+                    var p1Name = uiData.isPlayer1CPU ? "CPU 1" : "Player 1";
+                    var p2Name = uiData.isPlayer2CPU ? "CPU" : "Player";
+                    if (p1Name.includes(p2Name)) {
+                        p2Name += " 2";
+                    }
+                    else {
+                        p2Name += " 1";
+                    }
+                    var player1 = new player_1.Player(p1Name, uiData.isPlayer1CPU, 0, health);
+                    var player2 = new player_1.Player(p2Name, uiData.isPlayer2CPU, 1, health, game_10.game.palettes["red"]);
+                    _this.players.push(player1);
+                    _this.localPlayers.push(player1);
+                    _this.mainPlayer = player1;
+                    _this.players.push(player2);
+                    _this.localPlayers.push(player2);
+                    _this.setupPlayers();
+                    return _this;
                 }
                 Brawl.prototype.drawHUD = function () {
                     if (this.isOver) {
-                        this.level.drawBrawlWinScreen();
+                        this.drawBrawlWinScreen();
                     }
                 };
                 Brawl.prototype.checkIfWin = function () {
@@ -3702,21 +4030,60 @@ System.register("gameMode", ["game"], function (exports_21, context_21) {
             exports_21("Brawl", Brawl);
             FFADeathMatch = (function (_super) {
                 __extends(FFADeathMatch, _super);
-                function FFADeathMatch(level, killsToWin) {
+                function FFADeathMatch(level, uiData) {
                     var _this = _super.call(this, level) || this;
                     _this.killsToWin = 20;
-                    _this.killsToWin = killsToWin;
+                    _this.killsToWin = uiData.playTo;
+                    var health = 16;
+                    var player1 = new player_1.Player(game_10.game.uiData.playerName, false, 0, health);
+                    _this.players.push(player1);
+                    _this.localPlayers.push(player1);
+                    _this.mainPlayer = player1;
+                    for (var i = 0; i < uiData.numBots; i++) {
+                        var cpu = new player_1.Player("CPU" + String(i + 1), true, i + 1, health, game_10.game.palettes["red"]);
+                        _this.players.push(cpu);
+                        _this.localPlayers.push(cpu);
+                    }
+                    _this.setupPlayers();
                     return _this;
                 }
                 FFADeathMatch.prototype.drawHUD = function () {
                     if (this.isOver) {
-                        this.level.drawArenaWinScreen();
+                        this.drawArenaWinScreen();
                     }
-                    this.level.drawKillFeed();
-                    this.level.drawTopHUD();
-                    this.level.drawWeaponSwitchHUD();
-                    if (this.level.mainPlayer && this.level.mainPlayer.isHeld("scoreboard", false)) {
-                        this.level.drawScoreboard();
+                    this.drawKillFeed();
+                    this.drawTopHUD();
+                    this.drawWeaponSwitchHUD();
+                    if (this.mainPlayer && this.mainPlayer.isHeld("scoreboard", false)) {
+                        this.drawScoreboard();
+                    }
+                };
+                FFADeathMatch.prototype.drawScoreboard = function () {
+                    var padding = 10;
+                    var fontSize = 8;
+                    var col1x = padding + 10;
+                    var col2x = this.screenWidth * 0.5;
+                    var col3x = this.screenWidth * 0.75;
+                    var lineY = padding + 35;
+                    var labelY = lineY + 5;
+                    var line2Y = labelY + 10;
+                    var topPlayerY = line2Y + 5;
+                    Helpers.drawRect(game_10.game.ctx, new rect_4.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
+                    Helpers.drawText(game_10.game.ctx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
+                    Helpers.drawText(game_10.game.ctx, "Map: " + this.level.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
+                    Helpers.drawText(game_10.game.ctx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
+                        Helpers.drawLine(game_10.game.ctx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
+                    Helpers.drawText(game_10.game.ctx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+                    Helpers.drawText(game_10.game.ctx, "Kills", col2x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+                    Helpers.drawText(game_10.game.ctx, "Deaths", col3x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+                    Helpers.drawLine(game_10.game.ctx, padding + 10, line2Y, this.screenWidth - padding - 10, line2Y, "white", 1);
+                    var rowH = 10;
+                    for (var i = 0; i < this.players.length; i++) {
+                        var player = this.players[i];
+                        var color = (player === this.mainPlayer) ? "lightgreen" : "white";
+                        Helpers.drawText(game_10.game.ctx, player.name, col1x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
+                        Helpers.drawText(game_10.game.ctx, String(player.kills), col2x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
+                        Helpers.drawText(game_10.game.ctx, String(player.deaths), col3x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
                     }
                 };
                 FFADeathMatch.prototype.checkIfWin = function () {
@@ -3757,10 +4124,10 @@ System.register("gameMode", ["game"], function (exports_21, context_21) {
         }
     };
 });
-System.register("level", ["wall", "point", "game", "helpers", "actor", "player", "rect", "collider", "character", "spawnPoint", "noScroll", "navMesh", "shape"], function (exports_22, context_22) {
+System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "collider", "character", "spawnPoint", "noScroll", "navMesh", "shape"], function (exports_22, context_22) {
     "use strict";
     var __moduleName = context_22 && context_22.id;
-    var wall_3, point_9, game_11, Helpers, actor_4, player_1, rect_4, collider_4, character_4, spawnPoint_1, noScroll_1, navMesh_1, shape_1, Level;
+    var wall_3, point_9, game_11, Helpers, actor_4, rect_5, collider_4, character_4, spawnPoint_1, noScroll_1, navMesh_1, shape_1, Level;
     return {
         setters: [
             function (wall_3_1) {
@@ -3772,17 +4139,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
             function (game_11_1) {
                 game_11 = game_11_1;
             },
-            function (Helpers_8) {
-                Helpers = Helpers_8;
+            function (Helpers_9) {
+                Helpers = Helpers_9;
             },
             function (actor_4_1) {
                 actor_4 = actor_4_1;
             },
-            function (player_1_1) {
-                player_1 = player_1_1;
-            },
-            function (rect_4_1) {
-                rect_4 = rect_4_1;
+            function (rect_5_1) {
+                rect_5 = rect_5_1;
             },
             function (collider_4_1) {
                 collider_4 = collider_4_1;
@@ -3812,7 +4176,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                     this.debugString = "";
                     this.lerpCamTime = 0;
                     this.navMeshNodes = [];
-                    this.killFeed = [];
                     this.zoomScale = 3;
                     this.gravity = 900;
                     this.camX = 0;
@@ -3845,7 +4208,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                                 var point = _g[_f];
                                 points.push(new point_9.Point(point.x, point.y));
                             }
-                            var rect = new rect_4.Rect(points[0].x, points[0].y, points[2].x, points[2].y);
+                            var rect = new rect_5.Rect(points[0].x, points[0].y, points[2].x, points[2].y);
                             this.noScrolls.push(new noScroll_1.NoScroll(rect));
                         }
                         else if (instance.objectName === "Spawn Point") {
@@ -3869,8 +4232,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                         var navMeshNode = _j[_h];
                         navMeshNode.setNeighbors(this.navMeshNodes, this.gameObjects);
                     }
-                    this.localPlayers = [];
-                    this.players = [];
                     this.twoFrameCycle = 0;
                     var parallax = "";
                     if (this.name === "sm_bossroom") {
@@ -3890,55 +4251,23 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                         this.parallax = game_11.game.getBackground("assets/backgrounds/" + parallax);
                     }
                 }
-                Level.prototype.startLevel = function (numCPUs, maxPlayers, gameMode, player1, player2) {
-                    var _this = this;
+                Object.defineProperty(Level.prototype, "localPlayers", {
+                    get: function () { return this.gameMode.localPlayers; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Level.prototype, "players", {
+                    get: function () { return this.gameMode.players; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Level.prototype, "mainPlayer", {
+                    get: function () { return this.gameMode.mainPlayer; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Level.prototype.startLevel = function (gameMode) {
                     this.gameMode = gameMode;
-                    var health = 32;
-                    if (!this.fixedCam) {
-                        health = 16;
-                    }
-                    if (player1) {
-                        player1.health = health;
-                        player1.maxHealth = health;
-                        this.players.push(player1);
-                        this.localPlayers.push(player1);
-                        this.mainPlayer = player1;
-                    }
-                    if (player2) {
-                        player2.health = health;
-                        player2.maxHealth = health;
-                        this.players.push(player2);
-                        this.localPlayers.push(player2);
-                        if (!this.mainPlayer) {
-                            this.mainPlayer = player2;
-                        }
-                    }
-                    for (var i = 0; i < numCPUs; i++) {
-                        var cpu = new player_1.Player("CPU" + String(i + 1), true, i + 1, health, game_11.game.palettes["red"]);
-                        this.players.push(cpu);
-                        this.localPlayers.push(cpu);
-                    }
-                    if (!this.mainPlayer) {
-                        this.mainPlayer = player1;
-                    }
-                    document.onkeydown = function (e) {
-                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            player.onKeyDown(e.keyCode);
-                        }
-                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
-                            e.preventDefault();
-                        }
-                    };
-                    document.onkeyup = function (e) {
-                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            player.onKeyUp(e.keyCode);
-                        }
-                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
-                            e.preventDefault();
-                        }
-                    };
                     var music = new Howl({
                         src: ["assets/music/" + this.levelMusic],
                         sprite: {
@@ -3960,13 +4289,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                 Level.prototype.update = function () {
                     game_11.game.music.volume((game_11.game.options.playMusic ? 1 : 0));
                     this.gameMode.checkIfWin();
-                    for (var i = this.killFeed.length - 1; i >= 0; i--) {
-                        var killFeed = this.killFeed[i];
-                        killFeed.time += game_11.game.deltaTime;
-                        if (killFeed.time > 8) {
-                            _.remove(this.killFeed, killFeed);
-                        }
-                    }
                     var gamepads = navigator.getGamepads();
                     for (var i = 0; i < gamepads.length; i++) {
                         if (i >= this.localPlayers.length)
@@ -4013,21 +4335,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                     this.twoFrameCycle++;
                     if (this.twoFrameCycle > 2)
                         this.twoFrameCycle = -2;
-                    this.players.sort(function (a, b) {
-                        if (a.kills > b.kills)
-                            return -1;
-                        else if (a.kills === b.kills) {
-                            if (a.deaths < b.deaths)
-                                return -1;
-                            if (a.deaths === b.deaths)
-                                return 0;
-                            if (a.deaths > b.deaths)
-                                return 1;
-                        }
-                        else {
-                            return 1;
-                        }
-                    });
+                    this.gameMode.update();
                 };
                 Level.prototype.render = function () {
                     if (this.fixedCam) {
@@ -4043,13 +4351,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                     }
                     if (this.mainPlayer.character) {
                         this.computeCamPos(this.mainPlayer.character);
-                        this.debugString = this.camX + "," + this.camY;
                     }
                     var camX = Helpers.roundEpsilon(this.camX);
                     var camY = Helpers.roundEpsilon(this.camY);
                     game_11.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
                     game_11.game.ctx.clearRect(0, 0, game_11.game.canvas.width, game_11.game.canvas.height);
-                    Helpers.drawRect(game_11.game.ctx, new rect_4.Rect(0, 0, game_11.game.canvas.width, game_11.game.canvas.height), "gray");
+                    Helpers.drawRect(game_11.game.ctx, new rect_5.Rect(0, 0, game_11.game.canvas.width, game_11.game.canvas.height), "gray");
                     if (this.parallax)
                         Helpers.drawImage(game_11.game.ctx, this.parallax, -camX * 0.5, -camY * 0.5);
                     Helpers.drawImage(game_11.game.ctx, this.background, -camX, -camY);
@@ -4064,11 +4371,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                     this.drawHUD();
                     Helpers.drawText(game_11.game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
                 };
-                Level.prototype.getWinner = function () {
-                    return _.find(this.players, function (player) {
-                        return player.won;
-                    });
-                };
                 Level.prototype.drawHUD = function () {
                     var player1 = this.localPlayers[0];
                     this.drawPlayerHUD(player1, 1);
@@ -4077,41 +4379,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                         this.drawPlayerHUD(player2, 2);
                     }
                     this.gameMode.drawHUD();
-                };
-                Level.prototype.drawArenaWinScreen = function () {
-                    if (this.mainPlayer.won) {
-                        Helpers.drawTextMMX(game_11.game.ctx, "You won!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
-                    }
-                    else {
-                        Helpers.drawTextMMX(game_11.game.ctx, "You lost!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
-                        var winner = _.find(this.players, function (player) {
-                            return player.won;
-                        });
-                        Helpers.drawTextMMX(game_11.game.ctx, winner.name + " wins", this.screenWidth / 2, (this.screenHeight / 2) + 30, 12, "center", "top");
-                    }
-                };
-                Level.prototype.drawBrawlWinScreen = function () {
-                    var winner = this.getWinner();
-                    if (winner) {
-                        Helpers.drawTextMMX(game_11.game.ctx, winner.name + " wins!", this.screenWidth / 2, this.screenHeight / 2, 12, "center", "middle");
-                    }
-                };
-                Level.prototype.drawWeaponSwitchHUD = function () {
-                    var weaponSprite = game_11.game.sprites["hud_weapon_icon"];
-                    var startX = 50;
-                    var width = 20;
-                    var iconW = 9;
-                    var iconH = 9;
-                    var startY = this.screenHeight - 15;
-                    for (var i = 0; i < 9; i++) {
-                        var x = startX + (i * width);
-                        var y = startY;
-                        if (this.mainPlayer.weaponIndex === i) {
-                            Helpers.drawRect(game_11.game.ctx, new rect_4.Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
-                        }
-                        weaponSprite.draw(i, x, y);
-                        Helpers.drawTextMMX(game_11.game.ctx, String(i + 1), x, y + 12, 6, "", "");
-                    }
                 };
                 Level.prototype.drawPlayerHUD = function (player, playerNum) {
                     var baseX = 10;
@@ -4147,79 +4414,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                             baseY -= 2;
                         }
                         game_11.game.sprites["hud_health_top"].draw(0, baseX, baseY);
-                    }
-                };
-                Level.prototype.addKillFeedEntry = function (killFeed) {
-                    this.killFeed.unshift(killFeed);
-                    if (this.killFeed.length > 4)
-                        this.killFeed.pop();
-                };
-                Level.prototype.drawTopHUD = function () {
-                    var placeStr = "";
-                    var place = this.players.indexOf(this.mainPlayer) + 1;
-                    if (place === 1)
-                        placeStr = "1st";
-                    else if (place === 2)
-                        placeStr = "2nd";
-                    else if (place === 3)
-                        placeStr = "3rd";
-                    else
-                        placeStr = String(place) + "th";
-                    Helpers.drawTextMMX(game_11.game.ctx, "Leader: " + String(this.currentWinner.kills), 5, 10, 8, "left", "Top");
-                    Helpers.drawTextMMX(game_11.game.ctx, "Kills: " + String(this.mainPlayer.kills) + "(" + placeStr + ")", 5, 20, 8, "left", "Top");
-                };
-                Object.defineProperty(Level.prototype, "currentWinner", {
-                    get: function () {
-                        return this.players[0];
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Level.prototype.drawScoreboard = function () {
-                    var padding = 10;
-                    var fontSize = 8;
-                    var col1x = padding + 10;
-                    var col2x = this.screenWidth * 0.5;
-                    var col3x = this.screenWidth * 0.75;
-                    var lineY = padding + 35;
-                    var labelY = lineY + 5;
-                    var line2Y = labelY + 10;
-                    var topPlayerY = line2Y + 5;
-                    Helpers.drawRect(game_11.game.ctx, new rect_4.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
-                    Helpers.drawText(game_11.game.ctx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
-                    Helpers.drawText(game_11.game.ctx, "Map: " + this.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
-                    Helpers.drawText(game_11.game.ctx, "Playing to: " + String(this.gameMode.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
-                        Helpers.drawLine(game_11.game.ctx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
-                    Helpers.drawText(game_11.game.ctx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-                    Helpers.drawText(game_11.game.ctx, "Kills", col2x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-                    Helpers.drawText(game_11.game.ctx, "Deaths", col3x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-                    Helpers.drawLine(game_11.game.ctx, padding + 10, line2Y, this.screenWidth - padding - 10, line2Y, "white", 1);
-                    var rowH = 10;
-                    for (var i = 0; i < this.players.length; i++) {
-                        var player = this.players[i];
-                        var color = (player === this.mainPlayer) ? "lightgreen" : "white";
-                        Helpers.drawText(game_11.game.ctx, player.name, col1x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
-                        Helpers.drawText(game_11.game.ctx, String(player.kills), col2x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
-                        Helpers.drawText(game_11.game.ctx, String(player.deaths), col3x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
-                    }
-                };
-                Level.prototype.drawKillFeed = function () {
-                    var fromRight = this.screenWidth - 10;
-                    var fromTop = 10;
-                    var yDist = 12;
-                    for (var i = 0; i < this.killFeed.length; i++) {
-                        var killFeed = this.killFeed[i];
-                        var msg = killFeed.killer.name + "    " + killFeed.victim.name;
-                        game_11.game.ctx.font = "6px mmx_font";
-                        if (killFeed.killer === this.mainPlayer || killFeed.victim == this.mainPlayer) {
-                            var msgLen = game_11.game.ctx.measureText(msg).width;
-                            var msgHeight = 10;
-                            Helpers.drawRect(game_11.game.ctx, new rect_4.Rect(fromRight - msgLen - 2, fromTop - 2 + (i * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i * yDist)), "black", "white", 1, 0.75);
-                        }
-                        var nameLen = game_11.game.ctx.measureText(killFeed.victim.name).width;
-                        Helpers.drawTextMMX(game_11.game.ctx, msg, fromRight, fromTop + (i * yDist), 6, "right", "Top");
-                        var weaponIndex = killFeed.weapon.index;
-                        game_11.game.sprites["hud_killfeed_weapon"].draw(weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
                     }
                 };
                 Object.defineProperty(Level.prototype, "width", {
@@ -4274,7 +4468,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "player",
                         camX = maxX;
                     if (camY > maxY)
                         camY = maxY;
-                    var camRect = new rect_4.Rect(camX, camY, camX + scaledCanvasW, camY + scaledCanvasH);
+                    var camRect = new rect_5.Rect(camX, camY, camX + scaledCanvasW, camY + scaledCanvasH);
                     for (var _i = 0, _a = this.noScrolls; _i < _a.length; _i++) {
                         var noScroll = _a[_i];
                         if (noScroll.rect.overlaps(camRect)) {
@@ -4549,10 +4743,10 @@ System.register("tests", ["shape", "point"], function (exports_25, context_25) {
         }
     };
 });
-System.register("game", ["sprite", "level", "sprites", "levels", "player", "color", "helpers", "tests", "gameMode"], function (exports_26, context_26) {
+System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "tests", "gameMode"], function (exports_26, context_26) {
     "use strict";
     var __moduleName = context_26 && context_26.id;
-    var sprite_1, level_1, sprites_1, levels_1, player_2, color_1, Helpers, Tests, gameMode_1, Options, Menu, UIData, Game, game;
+    var sprite_1, level_1, sprites_1, levels_1, color_1, Helpers, Tests, gameMode_1, Options, Menu, UIData, Game, game;
     return {
         setters: [
             function (sprite_1_1) {
@@ -4567,14 +4761,11 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
             function (levels_1_1) {
                 levels_1 = levels_1_1;
             },
-            function (player_2_1) {
-                player_2 = player_2_1;
-            },
             function (color_1_1) {
                 color_1 = color_1_1;
             },
-            function (Helpers_9) {
-                Helpers = Helpers_9;
+            function (Helpers_10) {
+                Helpers = Helpers_10;
             },
             function (Tests_1) {
                 Tests = Tests_1;
@@ -4601,6 +4792,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                 Menu[Menu["MainMenu"] = 3] = "MainMenu";
                 Menu[Menu["BrawlMenu"] = 4] = "BrawlMenu";
                 Menu[Menu["ArenaMenu"] = 5] = "ArenaMenu";
+                Menu[Menu["Controls"] = 6] = "Controls";
             })(Menu || (Menu = {}));
             UIData = (function () {
                 function UIData() {
@@ -4612,14 +4804,17 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.selectedArenaMap = this.arenaMaps[0];
                     this.gameModes = ["deathmatch"];
                     this.selectedGameMode = this.gameModes[0];
-                    this.maxPlayers = 7;
-                    this.numBots = 7;
+                    this.maxPlayers = 4;
+                    this.numBots = 4;
                     this.playTo = 20;
                     this.isPlayer1CPU = false;
                     this.isPlayer2CPU = false;
+                    this.whoseControls = 1;
+                    this.currentControls = {};
                 }
                 return UIData;
             }());
+            exports_26("UIData", UIData);
             Game = (function () {
                 function Game() {
                     this.sprites = {};
@@ -4655,27 +4850,110 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         this.options = new Options();
                     }
                     var options = this.options;
+                    var game = this;
+                    this.uiData = new UIData();
+                    this.uiData.menu = Menu.Loading;
                     var devOptions = new Vue({
-                        el: '#dev-options',
+                        el: '#options',
                         data: {
-                            options: options
+                            options: options,
+                            uiData: this.uiData
                         },
                         methods: {
                             onChange: function () {
                                 localStorage.setItem("options", JSON.stringify(this.options));
+                            },
+                            exitGame: function () {
+                                console.log("EXITING");
+                                cancelAnimationFrame(game.requestId);
+                                game.level = undefined;
+                                game.uiData.menu = Menu.MainMenu;
+                                $(game.canvas).hide();
+                                $("#options").hide();
                             }
                         }
                     });
-                    this.uiData = new UIData();
-                    this.uiData.menu = Menu.Loading;
-                    var game = this;
                     this.ui = new Vue({
                         el: '#ui',
                         data: {
                             uiData: this.uiData
                         },
                         methods: {
+                            goToControls: function (whoseControls) {
+                                this.uiData.currentControls = game.getPlayerControls(whoseControls);
+                                this.uiData.whoseControls = whoseControls;
+                                this.uiData.menu = Menu.Controls;
+                            },
+                            getBind: function (key, whoseControls) {
+                                var playerControls = this.uiData.currentControls;
+                                var keyCode = _.findKey(playerControls, function (value) {
+                                    return String(value) === String(key);
+                                });
+                                if (!keyCode) {
+                                    return "";
+                                }
+                                return Helpers.keyCodeToString(Number(keyCode));
+                            },
+                            setBind: function (e, key, whoseControls, nextId) {
+                                if (document.activeElement !== e.target && e.button !== undefined) {
+                                    return;
+                                }
+                                var playerControls = this.uiData.currentControls;
+                                var keyCode = _.findKey(playerControls, function (value) {
+                                    return String(value) === String(key);
+                                });
+                                delete playerControls[keyCode];
+                                if (e.keyCode !== undefined) {
+                                    playerControls[e.keyCode] = key;
+                                }
+                                else if (e.deltaY !== undefined) {
+                                    if (e.deltaY < 0) {
+                                        playerControls[3] = key;
+                                    }
+                                    else if (e.deltaY > 0) {
+                                        playerControls[4] = key;
+                                    }
+                                }
+                                else if (e.button !== undefined) {
+                                    playerControls[e.button] = key;
+                                }
+                                e.preventDefault();
+                                $("#" + nextId).focus();
+                                game.refreshUI();
+                            },
+                            saveControls: function (whoseControls) {
+                                game.setPlayerControls(whoseControls, this.uiData.currentControls);
+                                this.goToMainMenu();
+                            },
+                            canSaveControls: function () {
+                                var playerControls = this.uiData.currentControls;
+                                var upFound = false, downFound = false, leftFound = false, rightFound = false, shootFound = false, jumpFound = false, dashFound = false, scoreboardFound = false, weaponleftFound = false, weaponrightFound = false;
+                                for (var key in playerControls) {
+                                    if (playerControls[key] === "up")
+                                        upFound = true;
+                                    if (playerControls[key] === "down")
+                                        downFound = true;
+                                    if (playerControls[key] === "left")
+                                        leftFound = true;
+                                    if (playerControls[key] === "right")
+                                        rightFound = true;
+                                    if (playerControls[key] === "shoot")
+                                        shootFound = true;
+                                    if (playerControls[key] === "jump")
+                                        jumpFound = true;
+                                    if (playerControls[key] === "dash")
+                                        dashFound = true;
+                                    if (playerControls[key] === "scoreboard")
+                                        scoreboardFound = true;
+                                    if (playerControls[key] === "weaponleft")
+                                        weaponleftFound = true;
+                                    if (playerControls[key] === "weaponright")
+                                        weaponrightFound = true;
+                                }
+                                return upFound && downFound && leftFound && rightFound && shootFound && jumpFound && dashFound && scoreboardFound && weaponleftFound && weaponrightFound;
+                            },
                             submitName: function () {
+                                localStorage.setItem("playerName", game.uiData.playerName);
                                 this.uiData.menu = Menu.MainMenu;
                             },
                             goTo1v1: function () {
@@ -4688,6 +4966,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                             },
                             goToBattle: function (selectedMap) {
                                 this.uiData.menu = Menu.None;
+                                $("#options").show();
                                 $("#dev-options").show();
                                 game.loadLevel(selectedMap);
                             },
@@ -4766,35 +5045,21 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                     this.loadLevel(name);
                 };
                 Game.prototype.loadLevel = function (name) {
-                    var level = this.levels[name];
-                    if (!level) {
+                    var prototypeLevel = this.levels[name];
+                    if (!prototypeLevel) {
                         throw "Bad level";
                     }
-                    this.level = _.cloneDeep(level);
-                    this.level.background = level.background;
-                    var player1 = undefined;
-                    var player2 = undefined;
-                    if (!(this.uiData.isBrawl && this.uiData.isPlayer1CPU)) {
-                        player1 = new player_2.Player(game.uiData.playerName, false, 0, 32);
-                    }
-                    if (this.uiData.isBrawl && !this.uiData.isPlayer2CPU) {
-                        player2 = new player_2.Player(game.uiData.playerName, false, 1, 32, this.palettes["red"]);
-                    }
-                    var numBots = this.uiData.numBots;
-                    if (this.uiData.isBrawl) {
-                        numBots = 0;
-                        numBots += (player1 === undefined ? 1 : 0);
-                        numBots += (player2 === undefined ? 1 : 0);
-                    }
+                    this.level = _.cloneDeep(prototypeLevel);
+                    this.level.background = prototypeLevel.background;
+                    $(this.canvas).show();
                     var gameMode;
                     if (this.uiData.isBrawl) {
-                        gameMode = new gameMode_1.Brawl(this.level);
+                        gameMode = new gameMode_1.Brawl(this.level, this.uiData);
                     }
                     else {
-                        gameMode = new gameMode_1.FFADeathMatch(this.level, game.uiData.playTo);
+                        gameMode = new gameMode_1.FFADeathMatch(this.level, this.uiData);
                     }
-                    $(this.canvas).show();
-                    this.level.startLevel(numBots, numBots, gameMode, player1, player2);
+                    this.level.startLevel(gameMode);
                     this.gameLoop(0);
                 };
                 Game.prototype.getSpritesheet = function (path) {
@@ -4892,6 +5157,54 @@ System.register("game", ["sprite", "level", "sprites", "levels", "player", "colo
                         this.soundSheet.volume(volume, id);
                     }
                 };
+                Game.prototype.getPlayerControls = function (playerNum) {
+                    var controlJson = localStorage.getItem("player" + String(playerNum) + "-controls");
+                    var inputMapping = {};
+                    if (!controlJson) {
+                        if (playerNum === 1) {
+                            inputMapping[37] = "left";
+                            inputMapping[39] = "right";
+                            inputMapping[38] = "up";
+                            inputMapping[40] = "down";
+                            inputMapping[90] = "dash";
+                            inputMapping[88] = "jump";
+                            inputMapping[67] = "shoot";
+                            inputMapping[65] = "weaponleft";
+                            inputMapping[83] = "weaponright";
+                            inputMapping[9] = "scoreboard";
+                            inputMapping[27] = "reset";
+                            inputMapping[49] = "weapon1";
+                            inputMapping[50] = "weapon2";
+                            inputMapping[51] = "weapon3";
+                            inputMapping[52] = "weapon4";
+                            inputMapping[53] = "weapon5";
+                            inputMapping[54] = "weapon6";
+                            inputMapping[55] = "weapon7";
+                            inputMapping[56] = "weapon8";
+                            inputMapping[57] = "weapon9";
+                        }
+                        else if (playerNum === 2) {
+                            inputMapping[100] = "left";
+                            inputMapping[102] = "right";
+                            inputMapping[104] = "up";
+                            inputMapping[101] = "down";
+                            inputMapping[13] = "dash";
+                            inputMapping[96] = "jump";
+                            inputMapping[97] = "shoot";
+                            inputMapping[103] = "weaponleft";
+                            inputMapping[105] = "weaponright";
+                            inputMapping[9] = "scoreboard";
+                        }
+                    }
+                    else {
+                        inputMapping = JSON.parse(controlJson);
+                    }
+                    return inputMapping;
+                };
+                Game.prototype.setPlayerControls = function (playerNum, inputMapping) {
+                    var json = JSON.stringify(inputMapping);
+                    localStorage.setItem("player" + String(playerNum) + "-controls", json);
+                };
                 return Game;
             }());
             game = new Game();
@@ -4987,7 +5300,7 @@ System.register("frame", [], function (exports_28, context_28) {
 System.register("sprite", ["collider", "frame", "point", "rect", "game", "helpers"], function (exports_29, context_29) {
     "use strict";
     var __moduleName = context_29 && context_29.id;
-    var collider_5, frame_1, point_12, rect_5, game_12, Helpers, Sprite;
+    var collider_5, frame_1, point_12, rect_6, game_12, Helpers, Sprite;
     return {
         setters: [
             function (collider_5_1) {
@@ -4999,14 +5312,14 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
             function (point_12_1) {
                 point_12 = point_12_1;
             },
-            function (rect_5_1) {
-                rect_5 = rect_5_1;
+            function (rect_6_1) {
+                rect_6 = rect_6_1;
             },
             function (game_12_1) {
                 game_12 = game_12_1;
             },
-            function (Helpers_10) {
-                Helpers = Helpers_10;
+            function (Helpers_11) {
+                Helpers = Helpers_11;
             }
         ],
         execute: function () {
@@ -5035,7 +5348,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     }
                     for (var _b = 0, _c = spriteJson.frames; _b < _c.length; _b++) {
                         var frameJson = _c[_b];
-                        var frame = new frame_1.Frame(new rect_5.Rect(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y, frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y), frameJson.duration, new point_12.Point(frameJson.offset.x, frameJson.offset.y));
+                        var frame = new frame_1.Frame(new rect_6.Rect(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y, frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y), frameJson.duration, new point_12.Point(frameJson.offset.x, frameJson.offset.y));
                         if (frameJson.POIs) {
                             for (var _d = 0, _e = frameJson.POIs; _d < _e.length; _d++) {
                                 var poi = _e[_d];
@@ -5131,8 +5444,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_30, con
             function (game_13_1) {
                 game_13 = game_13_1;
             },
-            function (Helpers_11) {
-                Helpers = Helpers_11;
+            function (Helpers_12) {
+                Helpers = Helpers_12;
             }
         ],
         execute: function () {

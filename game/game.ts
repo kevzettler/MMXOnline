@@ -24,10 +24,11 @@ enum Menu {
   NameSelect,
   MainMenu,
   BrawlMenu,
-  ArenaMenu
+  ArenaMenu,
+  Controls
 }
 
-class UIData {
+export class UIData {
   playerName: string = "Player 1";
   menu: Menu;
   isBrawl: boolean = false;
@@ -37,11 +38,13 @@ class UIData {
   selectedArenaMap: string = this.arenaMaps[0];
   gameModes: string[] = ["deathmatch"];
   selectedGameMode: string = this.gameModes[0];
-  maxPlayers: number = 7;
-  numBots: number = 7;
+  maxPlayers: number = 4;
+  numBots: number = 4;
   playTo: number = 20;
   isPlayer1CPU: boolean = false;
   isPlayer2CPU: boolean = false;
+  whoseControls: number = 1;
+  currentControls: { [code: number]: string } = {};
   constructor() { }
 }
 
@@ -111,23 +114,31 @@ class Game {
     }
     
     let options = this.options;
+    let game = this;
+    this.uiData = new UIData();
+    this.uiData.menu = Menu.Loading;
 
     // @ts-ignore
     var devOptions = new Vue({
-      el: '#dev-options',
+      el: '#options',
       data: {
-        options: options
+        options: options,
+        uiData: this.uiData
       },
       methods: {
         onChange() {
           localStorage.setItem("options", JSON.stringify(this.options));
+        },
+        exitGame() {
+          console.log("EXITING");
+          cancelAnimationFrame(game.requestId);
+          game.level = undefined;
+          game.uiData.menu = Menu.MainMenu;
+          $(game.canvas).hide();
+          $("#options").hide();
         }
       }
     });
-
-    this.uiData = new UIData();
-    this.uiData.menu = Menu.Loading;
-    let game = this;
 
     //@ts-ignore
     this.ui = new Vue({
@@ -136,7 +147,79 @@ class Game {
         uiData: this.uiData
       },
       methods: {
+        goToControls: function(whoseControls: number) {
+          this.uiData.currentControls = game.getPlayerControls(whoseControls);
+          this.uiData.whoseControls = whoseControls;
+          this.uiData.menu = Menu.Controls;
+        },
+        getBind(key: string, whoseControls: number) {
+          let playerControls = this.uiData.currentControls;
+          //@ts-ignore
+          let keyCode = _.findKey(playerControls, (value) => {
+            return String(value) === String(key);
+          });
+          if(!keyCode) {
+            return "";
+          }
+          return Helpers.keyCodeToString(Number(keyCode));
+        },
+        setBind(e: any, key: string, whoseControls: number, nextId: string) {
+          if(document.activeElement !== e.target && e.button !== undefined) {
+            //console.log("Only detect click when focused");
+            return;
+          }
+          let playerControls = this.uiData.currentControls;
+          //@ts-ignore
+          let keyCode = _.findKey(playerControls, (value) => {
+            return String(value) === String(key);
+          });
+          delete playerControls[keyCode];
+
+          if(e.keyCode !== undefined) {
+            playerControls[e.keyCode] = key;
+          }
+          else if(e.deltaY !== undefined) {
+            if(e.deltaY < 0) {
+              playerControls[3] = key;
+            }
+            else if(e.deltaY > 0) {
+              playerControls[4] = key;
+            }
+          }
+          else if(e.button !== undefined) {
+            playerControls[e.button] = key;
+          }
+          
+          e.preventDefault();
+
+          $("#" + nextId).focus();
+
+          game.refreshUI();
+        },
+        saveControls(whoseControls: number) {
+          game.setPlayerControls(whoseControls, this.uiData.currentControls);
+          this.goToMainMenu();
+        },
+        canSaveControls() {
+          let playerControls = this.uiData.currentControls;
+          let upFound = false, downFound = false, leftFound = false, rightFound = false, shootFound = false, jumpFound = false, 
+              dashFound = false, scoreboardFound = false, weaponleftFound = false, weaponrightFound = false;
+          for(let key in playerControls) {
+            if(playerControls[key] === "up") upFound = true;
+            if(playerControls[key] === "down") downFound = true;
+            if(playerControls[key] === "left") leftFound = true;
+            if(playerControls[key] === "right") rightFound = true;
+            if(playerControls[key] === "shoot") shootFound = true;
+            if(playerControls[key] === "jump") jumpFound = true;
+            if(playerControls[key] === "dash") dashFound = true;
+            if(playerControls[key] === "scoreboard") scoreboardFound = true;
+            if(playerControls[key] === "weaponleft") weaponleftFound = true;
+            if(playerControls[key] === "weaponright") weaponrightFound = true;
+          }
+          return upFound && downFound && leftFound && rightFound && shootFound && jumpFound && dashFound && scoreboardFound && weaponleftFound && weaponrightFound;
+        },
         submitName: function() {
+          localStorage.setItem("playerName", game.uiData.playerName);
           this.uiData.menu = Menu.MainMenu;
         },
         goTo1v1: function() {
@@ -149,6 +232,7 @@ class Game {
         },
         goToBattle: function(selectedMap: any) {
           this.uiData.menu = Menu.None;
+          $("#options").show();
           $("#dev-options").show();
           game.loadLevel(selectedMap);
         },
@@ -245,42 +329,28 @@ class Game {
 
   loadLevel(name: string) {
 
-    let level = this.levels[name];
+    let prototypeLevel = this.levels[name];
 
-    if(!level) {
+    if(!prototypeLevel) {
       throw "Bad level";
     }
 
     ///@ts-ignore
-    this.level = _.cloneDeep(level);
-    this.level.background = level.background;
-
-    let player1 = undefined;
-    let player2 = undefined;
-    if(!(this.uiData.isBrawl && this.uiData.isPlayer1CPU)) {
-      player1 = new Player(game.uiData.playerName, false, 0, 32);
-    }
-    if(this.uiData.isBrawl && !this.uiData.isPlayer2CPU) {
-      player2 = new Player(game.uiData.playerName, false, 1, 32, this.palettes["red"]);
-    }
-
-    let numBots = this.uiData.numBots;
-    if(this.uiData.isBrawl) {
-      numBots = 0;
-      numBots += (player1 === undefined ? 1 : 0);
-      numBots += (player2 === undefined ? 1 : 0);
-    }
-
-    let gameMode;
-    if(this.uiData.isBrawl) {
-      gameMode = new Brawl(this.level);
-    }
-    else {
-      gameMode = new FFADeathMatch(this.level, game.uiData.playTo);
-    }
+    this.level = _.cloneDeep(prototypeLevel);
+    this.level.background = prototypeLevel.background;
 
     $(this.canvas).show();
-    this.level.startLevel(numBots, numBots, gameMode, player1, player2);
+    
+    let gameMode : GameMode;
+
+    if(this.uiData.isBrawl) {
+      gameMode = new Brawl(this.level, this.uiData);
+    }
+    else {
+      gameMode = new FFADeathMatch(this.level, this.uiData);
+    }
+
+    this.level.startLevel(gameMode);
 
     this.gameLoop(0);
   }
@@ -379,6 +449,57 @@ class Game {
       let id = this.soundSheet.play(clip);
       this.soundSheet.volume(volume, id);
     }
+  }
+
+  getPlayerControls(playerNum: number) {
+    let controlJson = localStorage.getItem("player" + String(playerNum) + "-controls");
+    let inputMapping: { [code: number]: string } = {};
+    if(!controlJson) {
+      if(playerNum === 1) {
+        inputMapping[37] = "left";
+        inputMapping[39] = "right";
+        inputMapping[38] = "up";
+        inputMapping[40] = "down";
+        inputMapping[90] = "dash";
+        inputMapping[88] = "jump";
+        inputMapping[67] = "shoot";
+        inputMapping[65] = "weaponleft";
+        inputMapping[83] = "weaponright";
+        inputMapping[9] = "scoreboard";
+
+        inputMapping[27] = "reset";
+        inputMapping[49] = "weapon1";  
+        inputMapping[50] = "weapon2";
+        inputMapping[51] = "weapon3";
+        inputMapping[52] = "weapon4";
+        inputMapping[53] = "weapon5";
+        inputMapping[54] = "weapon6";
+        inputMapping[55] = "weapon7";
+        inputMapping[56] = "weapon8";
+        inputMapping[57] = "weapon9";
+      }
+      else if(playerNum === 2) {
+        inputMapping[100] = "left";
+        inputMapping[102] = "right";
+        inputMapping[104] = "up";
+        inputMapping[101] = "down";
+        inputMapping[13] = "dash";
+        inputMapping[96] = "jump";
+        inputMapping[97] = "shoot";
+        inputMapping[103] = "weaponleft";
+        inputMapping[105] = "weaponright";
+        inputMapping[9] = "scoreboard";
+      }
+    }
+    else {
+      inputMapping = JSON.parse(controlJson);
+    }
+    return inputMapping;
+  }
+
+  setPlayerControls(playerNum: number, inputMapping: { [code: number]: string }) {
+    let json = JSON.stringify(inputMapping);
+    localStorage.setItem("player" + String(playerNum) + "-controls", json);
   }
   
 }

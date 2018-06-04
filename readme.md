@@ -1,11 +1,8 @@
 -Menu/UI system
-  -Non-canvas based
-  -overlay on actual canvas for pause menus/etc
-  -move killcam, score, and health bars out of there
+  -focusable canvas
+  -if canvas focused, hide mouse, no keyboard/mouse events allowed, etc.
   -decorative background
-  -options + control binding
-
--bUG: Sometimes players stop taking damage (or zero damage)
+  -support multiple binds per key
 
 -Storm tornado glitches when pushing against wall (doesn't go forward)
 -AI should switch weapons that have no ammon

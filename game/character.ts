@@ -323,9 +323,9 @@ export class Character extends Actor {
     }
   }
 
-  changeState(newState: CharState) {
+  changeState(newState: CharState, forceChange?: boolean) {
     if(this.charState && newState && this.charState.constructor === newState.constructor) return;
-    if(this.changedStateInFrame) return;
+    if(this.changedStateInFrame && !forceChange) return;
     this.changedStateInFrame = true;
     newState.character = this;
     if(this.shootAnimTime === 0 || !newState.canShoot) {
@@ -358,10 +358,10 @@ export class Character extends Actor {
       this.player.health = 0;
       if(!this.dead) {
         this.dead = true;
-        this.changeState(new Die());
+        this.changeState(new Die(), true);
         attacker.kills++;
         this.player.deaths++;
-        game.level.addKillFeedEntry(new KillFeedEntry(attacker, this.player, weapon));
+        game.level.gameMode.addKillFeedEntry(new KillFeedEntry(attacker, this.player, weapon));
       }
     }
   }

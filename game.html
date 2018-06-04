@@ -23,6 +23,9 @@
       <button type="submit" v-on:click="goTo1v1()">1v1</button>
       <button type="submit" v-on:click="goToArena()">Arena (Bots only)</button>
       <button type="submit" disabled title="Coming soon!">Arena (Online Multiplayer)</button>
+      <button v-on:click="goToControls(1)">Keyboard Controls (Player 1)</button>
+      <button v-on:click="goToControls(2)">Keyboard Controls (Player 2)</button>
+      <!--<button v-on:click="">Options</button>-->
     </div>
     <!--1v1 menu-->
     <div id="mainMenu" v-if="uiData.menu === 4">
@@ -38,6 +41,7 @@
         </select>
       </div>
       <button type="submit" :disabled="!isBrawlReady()" v-on:click="goToBattle(uiData.selectedBrawlMap)">Battle!</button>
+      <button v-on:click="goToMainMenu()">Back</button>
     </div>
     <!--arena menu-->
     <div id="mainMenu" v-if="uiData.menu === 5">
@@ -56,16 +60,36 @@
       <label>Number of Bots</label><input v-model:number="uiData.numBots" type="number">
       <label>Play to:</label><input v-model:number="uiData.playTo" type="number">
       <button type="submit" :disabled="!isArenaReady()" v-on:click="goToBattle(uiData.selectedArenaMap)">Battle!</button>
+      <button v-on:click="goToMainMenu()">Back</button>
+    </div>
+    <!--Control config-->
+    <div id="controlMenu" v-if="uiData.menu === 6">
+      <h1>Player {{ uiData.whoseControls }} Controls</h1>
+      <label>Up</label><input id="c1" type="text" v-bind:value="getBind('up',uiData.whoseControls)" v-on:keydown="setBind($event,'up',uiData.whoseControls, 'c2')" v-on:mousedown="setBind($event,'up',uiData.whoseControls, 'c2')" v-on:wheel="setBind($event,'up',uiData.whoseControls, 'c2')"/><br>
+      <label>Down</label><input id="c2" type="text" v-bind:value="getBind('down',uiData.whoseControls)" v-on:keydown="setBind($event,'down',uiData.whoseControls, 'c3')" v-on:mousedown="setBind($event,'down',uiData.whoseControls, 'c3')" v-on:wheel="setBind($event,'down',uiData.whoseControls, 'c3')"/><br>
+      <label>Left</label><input id="c3" type="text" v-bind:value="getBind('left',uiData.whoseControls)" v-on:keydown="setBind($event,'left',uiData.whoseControls, 'c4')" v-on:mousedown="setBind($event,'left',uiData.whoseControls, 'c4')" v-on:wheel="setBind($event,'left',uiData.whoseControls, 'c4')"/><br>
+      <label>Right</label><input id="c4" type="text" v-bind:value="getBind('right',uiData.whoseControls)" v-on:keydown="setBind($event,'right',uiData.whoseControls, 'c5')" v-on:mousedown="setBind($event,'right',uiData.whoseControls, 'c5')" v-on:wheel="setBind($event,'right',uiData.whoseControls, 'c5')"/><br>
+      <label>Shoot</label><input id="c5" type="text" v-bind:value="getBind('shoot',uiData.whoseControls)" v-on:keydown="setBind($event,'shoot',uiData.whoseControls, 'c6')" v-on:mousedown="setBind($event,'shoot',uiData.whoseControls, 'c6')" v-on:wheel="setBind($event,'shoot',uiData.whoseControls, 'c6')"/><br>
+      <label>Jump</label><input id="c6" type="text" v-bind:value="getBind('jump',uiData.whoseControls)" v-on:keydown="setBind($event,'jump',uiData.whoseControls, 'c7')" v-on:mousedown="setBind($event,'jump',uiData.whoseControls, 'c7')" v-on:wheel="setBind($event,'jump',uiData.whoseControls, 'c7')"/><br>
+      <label>Dash</label><input id="c7" type="text" v-bind:value="getBind('dash',uiData.whoseControls)" v-on:keydown="setBind($event,'dash',uiData.whoseControls, 'c8')" v-on:mousedown="setBind($event,'dash',uiData.whoseControls, 'c8')" v-on:wheel="setBind($event,'dash',uiData.whoseControls, 'c8')"/><br>
+      <label>Weapon Left</label><input id="c8" type="text" v-bind:value="getBind('weaponleft',uiData.whoseControls)" v-on:keydown="setBind($event,'weaponleft',uiData.whoseControls, 'c9')" v-on:mousedown="setBind($event,'weaponleft',uiData.whoseControls, 'c9')" v-on:wheel="setBind($event,'weaponleft',uiData.whoseControls, 'c9')"/><br>
+      <label>Weapon Right</label><input id="c9" type="text" v-bind:value="getBind('weaponright',uiData.whoseControls)" v-on:keydown="setBind($event,'weaponright',uiData.whoseControls, 'c10')" v-on:mousedown="setBind($event,'weaponright',uiData.whoseControls, 'c10')" v-on:wheel="setBind($event,'weaponright',uiData.whoseControls, 'c10')"/><br>
+      <label>Check Score</label><input id="c10" type="text" v-bind:value="getBind('scoreboard',uiData.whoseControls)" v-on:keydown="setBind($event,'scoreboard',uiData.whoseControls, 'c-submit')" v-on:mousedown="seind($event,'scoreboard',uiData.whoseControls, 'c-submit')" v-on:wheel="seind($event,'scoreboard',uiData.whoseControls, 'c-submit')"/><br>
+      <button id="c-submit" type="submit" v-on:click="saveControls(uiData.whoseControls)" :disabled="!canSaveControls()">Save</button>
+      <button v-on:click="goToMainMenu()">Back</button>
     </div>
   </div>
   <canvas id="canvas" width="320" height="240" style="display:none"></canvas>
-  
-  <div id="dev-options" style="display:none">
-    <input type="checkbox" v-model="options.showHitboxes" @change="onChange()">Show hitboxes? 
-    <input type="checkbox" v-model="options.playMusic" @change="onChange()">Play Music?<br>
-    <input type="checkbox" v-model="options.alwaysFlinch" @change="onChange()">Always flinch? <br>
-    <input type="checkbox" v-model="options.invulnFrames" @change="onChange()">Invuln frames? <br>
-    <input type="checkbox" v-model="options.antiAlias" @change="onChange()">Anti Alias? <br>
+
+  <div id="options" style="display:none">
+    <button v-on:click="exitGame()">Exit game</button>
+    <div id="dev-options" style="display:none">
+      <input type="checkbox" v-model="options.showHitboxes" @change="onChange()">Show hitboxes? 
+      <input type="checkbox" v-model="options.playMusic" @change="onChange()">Play Music?<br>
+      <input type="checkbox" v-model="options.alwaysFlinch" @change="onChange()">Always flinch? <br>
+      <input type="checkbox" v-model="options.invulnFrames" @change="onChange()">Invuln frames? <br>
+      <input type="checkbox" v-model="options.antiAlias" @change="onChange()">Anti Alias? <br>
+    </div>
   </div>
 
 </div>

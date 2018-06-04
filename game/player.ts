@@ -41,38 +41,11 @@ export class Player {
     this.palette = palette;
 
     if(!isAI && alliance === 0) {
-      this.inputMapping[37] = "left";
-      this.inputMapping[39] = "right";
-      this.inputMapping[38] = "up";
-      this.inputMapping[40] = "down";
-      this.inputMapping[90] = "dash";
-      this.inputMapping[88] = "jump";
-      this.inputMapping[67] = "shoot";
-      this.inputMapping[65] = "weaponleft";
-      this.inputMapping[83] = "weaponright";
-      this.inputMapping[27] = "reset";
-      this.inputMapping[9] = "scoreboard";
-      this.inputMapping[49] = "weapon1";  
-      this.inputMapping[50] = "weapon2";
-      this.inputMapping[51] = "weapon3";
-      this.inputMapping[52] = "weapon4";
-      this.inputMapping[53] = "weapon5";
-      this.inputMapping[54] = "weapon6";
-      this.inputMapping[55] = "weapon7";
-      this.inputMapping[56] = "weapon8";
-      this.inputMapping[57] = "weapon9";
+      this.inputMapping = game.getPlayerControls(1);
     }
 
     if(!isAI && alliance === 1) {
-      this.inputMapping[100] = "left";
-      this.inputMapping[102] = "right";
-      this.inputMapping[104] = "up";
-      this.inputMapping[101] = "down";
-      this.inputMapping[13] = "dash";
-      this.inputMapping[96] = "jump";
-      this.inputMapping[97] = "shoot";
-      this.inputMapping[103] = "weaponleft";
-      this.inputMapping[105] = "weaponright";
+      this.inputMapping = game.getPlayerControls(2);
     }
 
     this.health = maxHealth;
@@ -223,9 +196,7 @@ export class Player {
     let key = this.inputMapping[keycode];
     if(!this.input[key]) this.inputPressed[key] = true;
     this.input[key] = true;
-
     cheat(key, keycode);
-
   }
 
   onKeyUp(keycode: number) {
@@ -237,6 +208,11 @@ export class Player {
 
   clearInputPressed() {
     this.inputPressed = {};
+    //No "mousewheel up" event, must clean up manually
+    let mouseUpMap = this.inputMapping[3];
+    if(mouseUpMap) this.input[mouseUpMap] = false;
+    let mouseDownMap = this.inputMapping[4];
+    if(mouseDownMap) this.input[mouseDownMap] = false;
     this.controllerInputPressed = {};
   }
 
