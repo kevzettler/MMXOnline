@@ -1,8 +1,7 @@
 -Menu/UI system
-  -focusable canvas
-  -if canvas focused, hide mouse, no keyboard/mouse events allowed, etc.
+  -Invert keymappings: make the key name the key, and the value the keycode
+    -Supports multi-purpose keys, i.e. in vehicle, a key would do something else
   -decorative background
-  -support multiple binds per key
 
 -Storm tornado glitches when pushing against wall (doesn't go forward)
 -AI should switch weapons that have no ammon

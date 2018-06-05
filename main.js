@@ -3817,23 +3817,22 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             e.preventDefault();
                         }
                     };
-                    document.onmousedown = function (e) {
+                    game_10.game.canvas.onmousedown = function (e) {
                         for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
                             var player = _a[_i];
                             player.onKeyDown(e.button);
                         }
-                        if (e.button === 2) {
-                            e.preventDefault();
-                        }
+                        e.preventDefault();
                     };
-                    document.onmouseup = function (e) {
+                    game_10.game.canvas.oncontextmenu = function (e) {
+                        e.preventDefault();
+                    };
+                    game_10.game.canvas.onmouseup = function (e) {
                         for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
                             var player = _a[_i];
                             player.onKeyUp(e.button);
                         }
-                        if (e.button === 2) {
-                            e.preventDefault();
-                        }
+                        e.preventDefault();
                     };
                     document.onwheel = function (e) {
                         if (e.deltaY < 0) {
@@ -4793,6 +4792,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Menu[Menu["BrawlMenu"] = 4] = "BrawlMenu";
                 Menu[Menu["ArenaMenu"] = 5] = "ArenaMenu";
                 Menu[Menu["Controls"] = 6] = "Controls";
+                Menu[Menu["ExitMenu"] = 7] = "ExitMenu";
             })(Menu || (Menu = {}));
             UIData = (function () {
                 function UIData() {
@@ -4853,26 +4853,6 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     var game = this;
                     this.uiData = new UIData();
                     this.uiData.menu = Menu.Loading;
-                    var devOptions = new Vue({
-                        el: '#options',
-                        data: {
-                            options: options,
-                            uiData: this.uiData
-                        },
-                        methods: {
-                            onChange: function () {
-                                localStorage.setItem("options", JSON.stringify(this.options));
-                            },
-                            exitGame: function () {
-                                console.log("EXITING");
-                                cancelAnimationFrame(game.requestId);
-                                game.level = undefined;
-                                game.uiData.menu = Menu.MainMenu;
-                                $(game.canvas).hide();
-                                $("#options").hide();
-                            }
-                        }
-                    });
                     this.ui = new Vue({
                         el: '#ui',
                         data: {
@@ -4978,6 +4958,37 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             },
                             isArenaReady: function () {
                                 return this.uiData.selectedArenaMap !== "";
+                            },
+                            goToExitMenu: function () {
+                                this.uiData.menu = Menu.ExitMenu;
+                            },
+                            confirmExit: function (exit) {
+                                if (exit) {
+                                    console.log("EXITING");
+                                    cancelAnimationFrame(game.requestId);
+                                    game.level = undefined;
+                                    game.uiData.menu = Menu.MainMenu;
+                                    $(game.canvas).hide();
+                                    $("#options").hide();
+                                }
+                                else {
+                                    game.uiData.menu = Menu.None;
+                                }
+                            }
+                        }
+                    });
+                    var devOptions = new Vue({
+                        el: '#options',
+                        data: {
+                            options: options,
+                            uiData: this.uiData
+                        },
+                        methods: {
+                            onChange: function () {
+                                localStorage.setItem("options", JSON.stringify(this.options));
+                            },
+                            exitGame: function () {
+                                game.ui.goToExitMenu();
                             }
                         }
                     });

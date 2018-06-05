@@ -17,3 +17,7 @@ body {
 #ui {
   position: absolute;
 }
+
+#canvas {
+  cursor: none;
+}

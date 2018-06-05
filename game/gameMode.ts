@@ -43,23 +43,22 @@ export class GameMode {
       }
     }
 
-    document.onmousedown = (e) => {
+    game.canvas.onmousedown = (e) => {
       for(let player of this.localPlayers) {
         player.onKeyDown(e.button);
       }
-      //Right click
-      if(e.button === 2) {
-        e.preventDefault();
-      }
+      e.preventDefault();
     }
 
-    document.onmouseup = (e) => {
+    game.canvas.oncontextmenu = (e) => {
+      e.preventDefault();
+    }
+
+    game.canvas.onmouseup = (e) => {
       for(let player of this.localPlayers) {
         player.onKeyUp(e.button);
       }
-      if(e.button === 2) {
-        e.preventDefault();
-      }
+      e.preventDefault();
     }
 
     document.onwheel = (e) => {

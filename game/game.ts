@@ -25,7 +25,8 @@ enum Menu {
   MainMenu,
   BrawlMenu,
   ArenaMenu,
-  Controls
+  Controls,
+  ExitMenu
 }
 
 export class UIData {
@@ -117,28 +118,6 @@ class Game {
     let game = this;
     this.uiData = new UIData();
     this.uiData.menu = Menu.Loading;
-
-    // @ts-ignore
-    var devOptions = new Vue({
-      el: '#options',
-      data: {
-        options: options,
-        uiData: this.uiData
-      },
-      methods: {
-        onChange() {
-          localStorage.setItem("options", JSON.stringify(this.options));
-        },
-        exitGame() {
-          console.log("EXITING");
-          cancelAnimationFrame(game.requestId);
-          game.level = undefined;
-          game.uiData.menu = Menu.MainMenu;
-          $(game.canvas).hide();
-          $("#options").hide();
-        }
-      }
-    });
 
     //@ts-ignore
     this.ui = new Vue({
@@ -244,6 +223,39 @@ class Game {
         },
         isArenaReady: function() {
           return this.uiData.selectedArenaMap !== "";
+        },
+        goToExitMenu: function() {
+          this.uiData.menu = Menu.ExitMenu;
+        },
+        confirmExit: function(exit: boolean) {
+          if(exit) {
+            console.log("EXITING");
+            cancelAnimationFrame(game.requestId);
+            game.level = undefined;
+            game.uiData.menu = Menu.MainMenu;
+            $(game.canvas).hide();
+            $("#options").hide();
+          }
+          else {
+            game.uiData.menu = Menu.None;
+          }
+        }
+      }
+    });
+
+    // @ts-ignore
+    var devOptions = new Vue({
+      el: '#options',
+      data: {
+        options: options,
+        uiData: this.uiData
+      },
+      methods: {
+        onChange() {
+          localStorage.setItem("options", JSON.stringify(this.options));
+        },
+        exitGame() {
+          game.ui.goToExitMenu();
         }
       }
     });

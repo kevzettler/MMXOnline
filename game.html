@@ -78,8 +78,14 @@
       <button id="c-submit" type="submit" v-on:click="saveControls(uiData.whoseControls)" :disabled="!canSaveControls()">Save</button>
       <button v-on:click="goToMainMenu()">Back</button>
     </div>
+    <!--Confirm exit menu-->
+    <div id="exitMenu" v-if="uiData.menu === 7">
+      <h1>Really exit?</h1>
+      <button v-on:click="confirmExit(true)">Yes</button>
+      <button v-on:click="confirmExit(false)">No</button>
+    </div>
   </div>
-  <canvas id="canvas" width="320" height="240" style="display:none"></canvas>
+  <canvas id="canvas" tabindex="0" width="320" height="240" style="display:none"></canvas>
 
   <div id="options" style="display:none">
     <button v-on:click="exitGame()">Exit game</button>
