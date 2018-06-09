@@ -1,10 +1,11 @@
 import { Rect } from "./rect";
+import { Shape } from "./shape";
 
 export class NoScroll {
 
-  rect: Rect;
-  constructor(rect: Rect) {
-    this.rect = rect;
+  shape: Shape;
+  constructor(shape: Shape) {
+    this.shape = shape;
   }
 
 }

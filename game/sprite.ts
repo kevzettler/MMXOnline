@@ -36,7 +36,7 @@ export class Sprite {
         new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
         new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
         new Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
-      ], hitboxJson.isTrigger ? true : false, undefined);
+      ], hitboxJson.isTrigger ? true : false, undefined, false);
       //if(Helpers.hasTag(hitboxJson.tags, "t")) {
       //  hitbox.isTrigger = true;
       //}

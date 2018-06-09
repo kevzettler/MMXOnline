@@ -7,7 +7,7 @@ import { Palette } from "./color";
 import * as Helpers from "./helpers";
 import * as Tests from "./tests";
 import { Point } from "./point";
-import { GameMode, Brawl, FFADeathMatch } from "./gameMode";
+import { GameMode, Brawl, FFADeathMatch, TeamDeathMatch } from "./gameMode";
 
 class Options {
   showHitboxes: boolean = false;
@@ -34,10 +34,10 @@ export class UIData {
   menu: Menu;
   isBrawl: boolean = false;
   brawlMaps: string[] = ["sm_bossroom"];
-  arenaMaps: string[] = ["powerplant"];
+  arenaMaps: string[] = ["powerplant", "highway"];
   selectedBrawlMap: string = this.brawlMaps[0];
   selectedArenaMap: string = this.arenaMaps[0];
-  gameModes: string[] = ["deathmatch"];
+  gameModes: string[] = ["deathmatch", "team deathmatch"];
   selectedGameMode: string = this.gameModes[0];
   maxPlayers: number = 4;
   numBots: number = 4;
@@ -98,6 +98,19 @@ class Game {
     this.defaultCanvasHeight = this.canvas.height;
 
     Helpers.noCanvasSmoothing(this.ctx);
+  }
+  
+  doQuickStart: boolean = true;
+  quickStart() {
+    this.uiData.menu = Menu.None;
+    this.uiData.selectedArenaMap = "gallery";
+    this.uiData.selectedGameMode = "deathmatch";
+    this.uiData.maxPlayers = 0;
+    this.uiData.numBots = 0;
+    this.uiData.playTo = 20;
+    $("#options").show();
+    $("#dev-options").show();
+    game.loadLevel("gallery");
   }
 
   start() {
@@ -232,6 +245,7 @@ class Game {
             console.log("EXITING");
             cancelAnimationFrame(game.requestId);
             game.level = undefined;
+            if(game.music) game.music.stop();
             game.uiData.menu = Menu.MainMenu;
             $(game.canvas).hide();
             $("#options").hide();
@@ -286,7 +300,7 @@ class Game {
         electricSpark: [180000 + 16554, 919],
         tornado: [180000 + 7359, 2962],
         boomerang: [180000 + 5766, 1190],
-        fireWave: [180000 + 4404, 478],
+        fireWave: [180000 + 4404, 478]
       },
       onload: () => {
         this.soundSheetLoaded = true;
@@ -308,8 +322,13 @@ class Game {
         this.uiData.menu = Menu.NameSelect;
       }
       else {
-        this.uiData.playerName = name;
-        this.uiData.menu = Menu.MainMenu;
+        if(this.doQuickStart) {
+          this.quickStart();
+        }
+        else {
+          this.uiData.playerName = name;
+          this.uiData.menu = Menu.MainMenu;
+        }
       }
       this.refreshUI();
     }
@@ -358,8 +377,11 @@ class Game {
     if(this.uiData.isBrawl) {
       gameMode = new Brawl(this.level, this.uiData);
     }
-    else {
+    else if(this.uiData.selectedGameMode === "deathmatch") {
       gameMode = new FFADeathMatch(this.level, this.uiData);
+    }
+    else if(this.uiData.selectedGameMode === "team deathmatch") {
+      gameMode = new TeamDeathMatch(this.level, this.uiData);
     }
 
     this.level.startLevel(gameMode);
@@ -480,7 +502,7 @@ class Game {
         inputMapping[9] = "scoreboard";
 
         inputMapping[27] = "reset";
-        inputMapping[49] = "weapon1";  
+        inputMapping[49] = "weapon1";
         inputMapping[50] = "weapon2";
         inputMapping[51] = "weapon3";
         inputMapping[52] = "weapon4";

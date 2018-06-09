@@ -11,7 +11,7 @@ export class Geometry {
 
   constructor(name: string, points: Point[]) {
     this.name = name;
-    this.collider = new Collider(points, false, undefined);
+    this.collider = new Collider(points, false, undefined, true);
   }
 
   preUpdate() {

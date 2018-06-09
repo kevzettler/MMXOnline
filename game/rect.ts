@@ -1,4 +1,5 @@
 import { Point } from "./point";
+import { Shape } from "./shape";
 
 export class Rect {
 
@@ -12,6 +13,10 @@ export class Rect {
   constructor(x1: number, y1: number, x2: number, y2: number) {    
     this.topLeftPoint = new Point(x1, y1);
     this.botRightPoint = new Point(x2, y2);
+  }
+
+  getShape(): Shape {
+    return new Shape([this.topLeftPoint, new Point(this.x2, this.y1), this.botRightPoint, new Point(this.x1, this.y2)]);
   }
 
   get midX(): number {

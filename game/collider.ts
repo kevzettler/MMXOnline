@@ -13,11 +13,12 @@ export class Collider {
   //gameObject: GameObject;
   actor: Actor;
 
-  constructor(points: Point[], isTrigger: boolean, actor: Actor) {
+  constructor(points: Point[], isTrigger: boolean, actor: Actor, isClimbable: boolean) {
     this._shape = new Shape(points);
     this.isTrigger = isTrigger;
     //this.gameObject = gameObject;
     this.actor = actor;
+    this.isClimbable = isClimbable;
   }
 
   getWorldCollider(actor: Actor) {

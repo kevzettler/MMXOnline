@@ -16,6 +16,7 @@ import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 import { Line, Shape } from "./shape";
 import { KillFeedEntry } from "./killFeedEntry";
 import { GameMode, FFADeathMatch } from "./gameMode";
+import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, SmallHealthPickup } from "./pickup";
 
 export class Level {
 
@@ -24,6 +25,7 @@ export class Level {
   effects: Effect[] = [];
   background: HTMLImageElement;
   parallax: HTMLImageElement;
+  foreground: HTMLImageElement;
   gravity: number;
   camX: number;
   camY: number;
@@ -40,6 +42,8 @@ export class Level {
   lerpCamTime: number = 0;
   navMeshNodes: NavMeshNode[] = [];
   gameMode: GameMode;
+  pickupSpawners: PickupSpawner[] = [];
+  killY: number;
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
@@ -61,7 +65,9 @@ export class Level {
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        this.gameObjects.push(new Wall(instance.name, points));
+        let wall = new Wall(instance.name, points);
+        wall.collider.isClimbable = (instance.properties && instance.properties.climbable === "false") ? false : true;
+        this.gameObjects.push(wall);
       }
       else if(instance.objectName === "Ladder") {
         let points: Point[] = [];
@@ -75,8 +81,8 @@ export class Level {
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        let rect = new Rect(points[0].x, points[0].y, points[2].x, points[2].y);
-        this.noScrolls.push(new NoScroll(rect));
+        let shape = new Shape(points);
+        this.noScrolls.push(new NoScroll(shape));
       }
       else if(instance.objectName === "Spawn Point") {
         let properties = instance.properties;
@@ -87,6 +93,18 @@ export class Level {
         let pos = new Point(instance.pos.x, instance.pos.y);
         let node: NavMeshNode = new NavMeshNode(name, pos, instance.properties);
         this.navMeshNodes.push(node);
+      }
+      else if(instance.objectName === "Large Health") {
+        this.pickupSpawners.push(new PickupSpawner(new Point(instance.pos.x, instance.pos.y), LargeHealthPickup));
+      }
+      else if(instance.objectName === "Small Health") {
+        this.pickupSpawners.push(new PickupSpawner(new Point(instance.pos.x, instance.pos.y), SmallHealthPickup));
+      }
+      else if(instance.objectName === "Large Ammo") {
+        this.pickupSpawners.push(new PickupSpawner(new Point(instance.pos.x, instance.pos.y), LargeAmmoPickup));
+      }
+      else if(instance.objectName === "Small Ammo") {
+        this.pickupSpawners.push(new PickupSpawner(new Point(instance.pos.x, instance.pos.y), SmallAmmoPickup));
       }
       else {
         let actor: Actor = new Actor(game.sprites[instance.spriteName], true);
@@ -104,6 +122,7 @@ export class Level {
     this.twoFrameCycle = 0;
 
     let parallax = "";
+    let foreground = "";
 
     if(this.name === "sm_bossroom") {
       this.fixedCam = true;
@@ -118,9 +137,30 @@ export class Level {
       this.musicLoopStart = 51040;
       this.musicLoopEnd = 101116;
     }
+    else if(this.name === "highway") {
+      this.fixedCam = false;
+      this.levelMusic = "highway.mp3";
+      parallax = "highway_parallax.png";
+      this.musicLoopStart = 44440;
+      this.musicLoopEnd = 87463;
+      this.killY = 300;
+      foreground = "highway_foreground.png";
+    }
+    else if(this.name === "gallery") {
+      this.fixedCam = false;
+      //this.levelMusic = "highway.mp3";
+      parallax = "gallery_parallax.png";
+      //this.musicLoopStart = 44440;
+      //this.musicLoopEnd = 87463;
+      //this.killY = 300;
+      //foreground = "highway_foreground.png";
+    }
 
     if(parallax) {
       this.parallax = game.getBackground("assets/backgrounds/" + parallax);
+    }
+    if(foreground) {
+      this.foreground = game.getBackground("assets/backgrounds/" + foreground);
     }
   }
 
@@ -128,31 +168,36 @@ export class Level {
     
     this.gameMode = gameMode;
 
-    let music = new Howl({
-      src: ["assets/music/" + this.levelMusic],
-      sprite: {
-        musicStart: [0, this.musicLoopStart],
-        musicLoop: [this.musicLoopStart, this.musicLoopEnd - this.musicLoopStart]
-      },
-      onload: () => {
-      }
-    });
-    
-    window.setTimeout(
-      () => {
-        music.play("musicStart");
-        music.on("end", function() {
-          console.log("Loop");
-          music.play("musicLoop");
-        });
-      },
-      1000);
-    game.music = music;
+    if(this.levelMusic) {
+      let music = new Howl({
+        src: ["assets/music/" + this.levelMusic],
+        sprite: {
+          musicStart: [0, this.musicLoopStart],
+          musicLoop: [this.musicLoopStart, this.musicLoopEnd - this.musicLoopStart]
+        },
+        onload: () => {
+        }
+      });
+      
+      window.setTimeout(
+        () => {
+          music.play("musicStart");
+          music.on("end", function() {
+            console.log("Loop");
+            music.play("musicLoop");
+          });
+        },
+        1000);
+
+      game.music = music;
+    }
   }
   
   update() {
 
-    game.music.volume((game.options.playMusic ? 1 : 0));
+    if(game.music) {
+      game.music.volume((game.options.playMusic ? 1 : 0));
+    }
 
     this.gameMode.checkIfWin();
 
@@ -195,6 +240,10 @@ export class Level {
 
     for(let player of this.players) {
       player.update();
+    }
+
+    for(let pickupSpawner of this.pickupSpawners) {
+      pickupSpawner.update();
     }
 
     this.frameCount++;
@@ -241,6 +290,8 @@ export class Level {
     for(let effect of this.effects) {
       effect.render(-camX, -camY);
     }
+
+    if(this.foreground) Helpers.drawImage(game.ctx, this.foreground, -camX, -camY);
 
     this.drawHUD();
     Helpers.drawText(game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
@@ -329,24 +380,31 @@ export class Level {
     if(camY > maxY) camY = maxY;
 
     let camRect = new Rect(camX, camY, camX + scaledCanvasW, camY + scaledCanvasH);
+    let camRectShape = camRect.getShape();
     for(let noScroll of this.noScrolls) {
-      if(noScroll.rect.overlaps(camRect)) {
-        let upDist = camRect.y2 - noScroll.rect.y1;
-        let downDist = noScroll.rect.y2 - camRect.y1;
-        let leftDist = camRect.x2 - noScroll.rect.x1;
-        let rightDist = noScroll.rect.x2 - camRect.x1;
-        if(Math.min(upDist, downDist, leftDist, rightDist) === upDist) {
-          camY -= upDist;
+      if(noScroll.shape.intersectsShape(camRectShape)) {
+        let noScrollRect = noScroll.shape.getRect();
+        if(noScrollRect) { 
+          let upDist = camRect.y2 - noScrollRect.y1;
+          let downDist = noScrollRect.y2 - camRect.y1;
+          let leftDist = camRect.x2 - noScrollRect.x1;
+          let rightDist = noScrollRect.x2 - camRect.x1;
+          if(Math.min(upDist, downDist, leftDist, rightDist) === upDist) {
+            camY -= upDist;
+          }
+          else if(Math.min(upDist, downDist, leftDist, rightDist) === downDist) {
+            camY += downDist;
+          }
+          else if(Math.min(upDist, downDist, leftDist, rightDist) === leftDist) {
+            camX -= leftDist;
+          }
+          else if(Math.min(upDist, downDist, leftDist, rightDist) === rightDist) {
+            camX += rightDist;
+          }
         }
-        else if(Math.min(upDist, downDist, leftDist, rightDist) === downDist) {
-          camY += downDist;
-        }
-        else if(Math.min(upDist, downDist, leftDist, rightDist) === leftDist) {
-          camX -= leftDist;
-        }
-        else if(Math.min(upDist, downDist, leftDist, rightDist) === rightDist) {
-          camX += rightDist;
-        }
+      }
+      else {
+        
       }
     }
 
@@ -369,6 +427,10 @@ export class Level {
     this.gameObjects.push(go);
   }
 
+  hasGameObject(go: GameObject) {
+    return this.gameObjects.includes(go);
+  }
+
   addEffect(effect: Effect) {
     this.effects.push(effect);
   }
@@ -387,8 +449,12 @@ export class Level {
     if(actor.collider.isTrigger || gameObject.collider.isTrigger) return true;
 
     if(actor.collider.wallOnly && !(gameObject instanceof Wall)) return true;
+
     if(gameObject instanceof Actor) {
       if(gameObject.collider.wallOnly) return true;
+    }
+    if(actor instanceof Character && gameObject instanceof Character && actor.player.alliance === gameObject.player.alliance) {
+      return true;
     }
     return false;
   }
@@ -433,13 +499,13 @@ export class Level {
     return actors;
   }
 
-  getTriggerList(actor: Actor, offsetX: number, offsetY: number, vel?: Point, className?: string): CollideData[] {
+  getTriggerList(actor: Actor, offsetX: number, offsetY: number, vel?: Point, classType?: any): CollideData[] {
     let triggers: CollideData[] = [];
     if(!actor.collider) return triggers;
     for(let go of this.gameObjects) {
       if(go === actor) continue;
       if(!go.collider) continue;
-      if(className && go.constructor.name !== className) {
+      if(classType && !(go instanceof classType)) {
         continue;
       }
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);

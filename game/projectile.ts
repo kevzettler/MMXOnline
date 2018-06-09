@@ -12,6 +12,7 @@ import { LoDashImplicitNumberArrayWrapper } from "../node_modules/@types/lodash/
 import { GameObject } from "./gameObject";
 import { Rect } from "./rect";
 import { FireWave, Tornado, Torpedo, ShotgunIce, RollingShield, ElectricSpark, Sting, Boomerang, Weapon } from "./weapon";
+import { Pickup } from "./pickup";
 
 export class Projectile extends Actor {
 
@@ -424,7 +425,7 @@ export class TornadoProj extends Projectile {
     let botY = this.spriteStart.frames[0].rect.h * 2;
 
     let rect = new Rect(topX, topY, botX, botY);
-    this.globalCollider = new Collider(rect.getPoints(), true, this);
+    this.globalCollider = new Collider(rect.getPoints(), true, this, false);
 
     if(this.time > 0.2) {
       if(this.length < 6) {
@@ -470,6 +471,7 @@ export class BoomerangProj extends Projectile {
  
   angleDist: number = 0;
   turnDir: number = 1;
+  pickup: Pickup;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
     super(weapon, pos, vel, 2, player, game.sprites["boomerang"]);
     //this.fadeSprite = game.sprites["electric_spark_fade"];
@@ -483,8 +485,18 @@ export class BoomerangProj extends Projectile {
 
   onCollision(other: CollideData) {
     super.onCollision(other);
+
+    if(other.gameObject instanceof Pickup) {
+      this.pickup = other.gameObject;
+      this.pickup.collider.isTrigger = true;
+      this.pickup.pos = this.pos;
+    }
+
     let character = other.gameObject;
     if(this.time > 0.22 && character instanceof Character && character.player === this.damager.owner) {
+      if(this.pickup) {
+        this.pickup.pos = character.pos;
+      }
       this.destroySelf();
       if(character.player.weapon instanceof Boomerang) {
         character.player.weapon.ammo++;
@@ -498,6 +510,7 @@ export class BoomerangProj extends Projectile {
 
   update() {
     super.update();
+
     if(this.time > 0.22) {
       if(this.angleDist < 180) {
         let angInc = (-this.xDir * this.turnDir) * game.deltaTime * 300;

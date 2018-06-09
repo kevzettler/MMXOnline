@@ -249,9 +249,10 @@ export class Actor {
     }
   }
 
-  playSound(soundName: string) {
+  playSound(soundName: string, overrideVolume?: number) {
     let dist = new Point(game.level.camCenterX, game.level.camCenterY).distanceTo(this.pos);
     let volume = 1 - (dist / (game.level.screenWidth));
+    if(overrideVolume !== undefined) volume = overrideVolume;
     volume = Helpers.clampMin0(volume);
     game.playSound(soundName, volume);
   }

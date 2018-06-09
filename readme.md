@@ -1,31 +1,63 @@
+===============
+Level editor
+===============
+-Remember last tool used and keep it open
+
+===============
+Features
+===============
+
+-A way to quickly start testing a map
+
+-More maps:
+  -Boomer kwanger (no new features needed)
+  -Launch octopus (inclined colliders, underwater coding)
+  -Highway (level foreground layer)
+  -Armored armadillo (inclined colliders, fall-death, minecart)
+
 -Menu/UI system
-  -Invert keymappings: make the key name the key, and the value the keycode
-    -Supports multi-purpose keys, i.e. in vehicle, a key would do something else
   -decorative background
+
+-Stop vue temp UI flashing
+
+-All the special weapon charges
+
+===============
+Post-V1 Features
+===============
+
+-Play as Zero
+-HUD changes
+
+-Team games:
+  -team-colored outline instead of palette swap
+  -possibly team-colored projectiles as well
+  -allies: show health bar
+-Should not be able to destroy teammates' projectiles
+-CTF
+
+-Vue must be set for prod mode once deployed
+
+===============
+Bugs/improvements
+===============
 
 -Storm tornado glitches when pushing against wall (doesn't go forward)
 -AI should switch weapons that have no ammon
 -Walls stop weapons
-
--All the special weapon charges
+-Free the stuck object(s) with the "path of least resistance"
 
 -Collision system
   -Ability for "soft collision"
   -Need matrix collision system / way for 2 non-triggers to avoid collision
-  -Collision callbacks with parent actor/gameobject available
-
--Free the stuck object(s) with the "path of least resistance"
-
--Vue must be set for prod mode once deployed
 
 ========================
 Useful optimizations and fixes
 ========================
+
 -Homing torpedo better behavior
 -Shotgun ice meatshot when hit
 -If pushing against wall don't play run animation
--Characters y positions can be inconsistent on ground
--Shoot offsets are bad for wall slide
 
 ========================
 Sprite editor useful features

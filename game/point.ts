@@ -28,6 +28,27 @@ export class Point {
     return point;
   }
 
+  dotProduct(other: Point) {
+    return (this.x * other.x) + (this.y * other.y);
+  }
+
+  project(other: Point) {
+    let dp = this.dotProduct(other);
+    return new Point((dp / (other.x * other.x + other.y * other.y)) * other.x, (dp / (other.x * other.x + other.y * other.y)) * other.y);
+  }
+
+  leftNormal() {
+    return new Point(-this.y, this.x);
+  }
+
+  rightNormal() {
+    return new Point(this.y, -this.x);
+  }
+
+  perProduct(other: Point) {
+    return this.dotProduct(other.rightNormal());
+  }
+
   //Returns new point
   add(other: Point) {
     let point = new Point(this.x + other.x, this.y + other.y);

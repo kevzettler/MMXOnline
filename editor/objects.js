@@ -24,7 +24,19 @@ var objects = [
   },
   {
     "name": "Large Health",
-    "spriteName": "large_health"
+    "spriteName": "pickup_health_large"
+  },
+  {
+    "name": "Small Health",
+    "spriteName": "pickup_health_small"
+  },
+  {
+    "name": "Large Ammo",
+    "spriteName": "pickup_ammo_large"
+  },
+  {
+    "name": "Small Ammo",
+    "spriteName": "pickup_ammo_small"
   },
   {
     "name": "Test",

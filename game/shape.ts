@@ -19,7 +19,7 @@ export class Line {
     let r = other.point2.x;
     let s = other.point2.y;
 
-    var det, gamma, lambda;
+    let det, gamma, lambda;
     det = (c - a) * (s - q) - (r - p) * (d - b);
     if (det === 0) {
       return false;
@@ -38,7 +38,7 @@ export class Line {
   //@ts-ignore
   checkLineIntersection(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
     // if the lines intersect, the result contains the x and y of the intersection (treating the lines as infinite) and booleans for whether line segment 1 or line segment 2 contain the point
-    var denominator, a, b, numerator1, numerator2, result = {
+    let denominator, a, b, numerator1, numerator2, result = {
         //@ts-ignore
         x: null,
         //@ts-ignore
@@ -78,7 +78,7 @@ export class Line {
   }
 
   getIntersectPoint(other: Line): Point {
-    var intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
+    let intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
     if(intersection.x !== null && intersection.y !== null)
       return new Point(intersection.x, intersection.y);
     return undefined;
@@ -96,7 +96,7 @@ export class Line {
   }
 
   get xInt() {
-    var slope;
+    let slope;
     if (this.y1 === this.y2) return this.x1 == 0 ? 0 : NaN;
     if (this.x1 === this.x2) return this.x1;
     return (-1 * ((slope = this.slope * this.x1 - this.y1)) / this.slope);
@@ -142,9 +142,20 @@ export class Shape {
     return lines;
   }
 
+  getNormals(): Point[] {
+    let normals = [];
+    for (let i = 0; i < this.points.length; i++) {
+      let p1 = this.points[i];
+      let p2 = (i == this.points.length - 1 ? this.points[0] : this.points[i + 1]);
+      let v = new Point(p2.x - p1.x, p2.y - p1.y);
+      normals.push(v.leftNormal().normalize());
+    }
+    return normals;
+  }
+
   intersectsLine(line: Line) {
     let lines = this.getLines();
-    for(var myLine of lines) {
+    for(let myLine of lines) {
       if(myLine.intersectsLine(line)) {
         return true;
       }
@@ -167,8 +178,8 @@ export class Shape {
     else {
       let lines1 = this.getLines();
       let lines2 = other.getLines();
-      for(var line1 of lines1) {
-        for(var line2 of lines2) {
+      for(let line1 of lines1) {
+        for(let line2 of lines2) {
           if(line1.intersectsLine(line2)) {
             return true;
           }
@@ -220,6 +231,56 @@ export class Shape {
 
   getClosestPointOnBounds(point: Point) {
 
+  }
+
+  // project vectors on to normal and return min/max value
+  minMaxDotProd(normal: Point) {
+    let min: number = null,
+        max: number = null;
+    for (let point of this.points) {
+      let dp = point.dotProduct(normal);
+      if (min === null || dp < min) min = dp;
+      if (max === null || dp > max) max = dp;
+    }
+    return [min, max];
+  }
+  
+  checkNormal(other: Shape, normal: Point) {
+    // project points onto normal to find bounds of shadow on axis
+    let aMinMax = this.minMaxDotProd(normal);
+    let bMinMax = other.minMaxDotProd(normal);
+    // check for overlap of shadows on axis
+    if (aMinMax[0] <= bMinMax[1] && aMinMax[1] >= bMinMax[0]) {
+      // correction vector is in direction of normal x amount overlapping
+      let correction = normal.times(bMinMax[1] - aMinMax[0]);
+      //correction.surface = normal.rightNormal();
+      return correction;
+    }
+    return undefined;
+  }
+
+  getMinTransVector(b: Shape): Point {
+    let correctionVectors = [];
+    // project a&b points on a's normals and check for overlaps
+    for (let normal of this.getNormals()) {
+      let result = this.checkNormal(b, normal);
+      if (result) correctionVectors.push(result);
+      //else return undefined;
+    }
+    // project a&b poitns on b's normals and check for overlaps
+    for (let normal of b.getNormals()) {
+      let result = this.checkNormal(b, normal);
+      if (result) correctionVectors.push(result);
+      //else return undefined;
+    }
+    // if we have any overlaps, return smallest correction vector
+    if (correctionVectors.length > 0) {
+      //@ts-ignore
+      return _.minBy(correctionVectors, (correctionVector) => {
+        return correctionVector.magnitude;
+      });
+    }
+    return undefined;
   }
 
   clone(x: number, y: number) {

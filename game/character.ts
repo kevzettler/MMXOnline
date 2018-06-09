@@ -12,6 +12,7 @@ import { ChargeEffect, DieEffect } from "./effects";
 import { AI } from "./ai";
 import { Ladder } from "./wall";
 import { KillFeedEntry } from "./killFeedEntry";
+import { FFADeathMatch, Brawl } from "./gameMode";
 
 export class Character extends Actor {
 
@@ -39,6 +40,10 @@ export class Character extends Actor {
   checkLadderDown: boolean = false;
   dashedInAir: boolean = false;
   dead: boolean = false;
+  healAmount: number = 0;
+  healTime: number = 0;
+  weaponHealAmount: number = 0;
+  weaponHealTime: number = 0;
 
   constructor(player: Player, x: number, y: number) {
     super(undefined);
@@ -48,7 +53,6 @@ export class Character extends Actor {
     this.isDashing = false;
 
     this.globalCollider = this.getStandingCollider();
-    this.globalCollider.isClimbable = false;
     
     this.changeState(new Idle());
     
@@ -68,12 +72,12 @@ export class Character extends Actor {
 
   getStandingCollider() {
     let rect = new Rect(0, 0, 18, 34);
-    return new Collider(rect.getPoints(), false, this);
+    return new Collider(rect.getPoints(), false, this, false);
   }
 
   getDashingCollider() {
     let rect = new Rect(0, 0, 18, 22);
-    return new Collider(rect.getPoints(), false, this);
+    return new Collider(rect.getPoints(), false, this, false);
   }
 
   preUpdate() {
@@ -82,6 +86,35 @@ export class Character extends Actor {
   }
 
   update() {
+
+    if(game.level.killY !== undefined && this.pos.y > game.level.killY) {
+      this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
+    }
+
+    if(this.player.health >= this.player.maxHealth) {
+      this.healAmount = 0;
+    }
+    if(this.healAmount > 0 && this.player.health > 0) {
+      this.healTime += game.deltaTime;
+      if(this.healTime > 0.05) {
+        this.healTime = 0;
+        this.healAmount--;
+        this.player.health = Helpers.clampMax(this.player.health + 1, this.player.maxHealth);
+        this.playSound("heal");
+      }
+    }
+    if(this.player.weapon.ammo >= this.player.weapon.maxAmmo) {
+      this.weaponHealAmount = 0;
+    }
+    if(this.weaponHealAmount > 0 && this.player.health > 0) {
+      this.weaponHealTime += game.deltaTime;
+      if(this.weaponHealTime > 0.05) {
+        this.weaponHealTime = 0;
+        this.weaponHealAmount--;
+        this.player.weapon.ammo = Helpers.clampMax(this.player.weapon.ammo + 1, this.player.weapon.maxAmmo);
+        this.playSound("heal");
+      }
+    }
 
     if(!(this.charState instanceof Dash) && !(this.charState instanceof AirDash) && !(this.charState instanceof Die)) {
       let standingCollider = this.getStandingCollider();
@@ -208,7 +241,7 @@ export class Character extends Actor {
   }
 
   changePaletteWeapon() {
-    if(!game.level.fixedCam) {
+    if(!game.level.gameMode.isTeamMode && !(game.level.gameMode instanceof Brawl)) {
       this.palette = this.player.weapon.palette;
     }
   }
@@ -359,10 +392,21 @@ export class Character extends Actor {
       if(!this.dead) {
         this.dead = true;
         this.changeState(new Die(), true);
-        attacker.kills++;
+        if(attacker) attacker.kills++;
         this.player.deaths++;
         game.level.gameMode.addKillFeedEntry(new KillFeedEntry(attacker, this.player, weapon));
       }
+    }
+  }
+
+  addHealth(amount: number) {
+    this.healAmount += amount;
+  }
+
+  addAmmo(amount: number) {
+    this.player.weapon.ammo += amount;
+    if(this.player.weapon.ammo > this.player.weapon.maxAmmo) {
+      this.player.weapon.ammo = this.player.weapon.maxAmmo;
     }
   }
 
@@ -458,7 +502,7 @@ class CharState {
       this.framesJumpNotHeld = 0;
     }
     if(this.player.isHeld("up")) {
-      let ladders = game.level.getTriggerList(this.character, 0, 0, undefined, "Ladder");
+      let ladders = game.level.getTriggerList(this.character, 0, 0, undefined, Ladder);
       if(ladders.length > 0) {
         let midX = ladders[0].collider.shape.getRect().midX;
         if(Math.abs(this.character.pos.x - midX) < 12) {
@@ -526,7 +570,7 @@ class CharState {
     }
     else if(this.player.isPressed("down")) {
       this.character.checkLadderDown = true;
-      let ladders = game.level.getTriggerList(this.character, 0, 1, undefined, "Ladder");
+      let ladders = game.level.getTriggerList(this.character, 0, 1, undefined, Ladder);
       if(ladders.length > 0) {
         let rect = ladders[0].collider.shape.getRect();
         let snapX = (rect.x1 + rect.x2)/2;
@@ -975,7 +1019,13 @@ class Die extends CharState {
   update() {
     super.update();
     if(this.stateTime > 0.75) {
-      this.character.playSound("die");
+      if(this.character.player === game.level.mainPlayer) {
+        this.character.playSound("die", 1);
+      }
+      else {
+        this.character.playSound("die");
+      }
+      
       new DieEffect(this.character.pos);
       this.player.destroyCharacter();
     }
