@@ -90,6 +90,9 @@ export class Character extends Actor {
     if(game.level.killY !== undefined && this.pos.y > game.level.killY) {
       this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
     }
+    else if(game.level.isInKillZone(this)) {
+      this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
+    }
 
     if(this.player.health >= this.player.maxHealth) {
       this.healAmount = 0;

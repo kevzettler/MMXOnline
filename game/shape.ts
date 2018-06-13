@@ -1,5 +1,6 @@
 import { Point } from "./point";
 import { Rect } from "./rect";
+import { CollideData } from "./collider";
 
 export class Line {
   point1: Point;
@@ -78,6 +79,7 @@ export class Line {
   }
 
   getIntersectPoint(other: Line): Point {
+    if(!this.intersectsLine(other)) return undefined;
     let intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
     if(intersection.x !== null && intersection.y !== null)
       return new Point(intersection.x, intersection.y);
@@ -163,29 +165,48 @@ export class Shape {
     return false;
   }
 
-  intersectsShape(other: Shape): boolean {
+  getLineIntersectCollisions(line: Line): CollideData[] {
+    let collideDatas = [];
+    let lines = this.getLines();
+    let normals = this.getNormals();
+    for(let i = 0; i < lines.length; i++) {
+      let myLine = lines[i];
+      let point = myLine.getIntersectPoint(line);
+      if(point) {
+        let normal = normals[i];
+        let collideData = new CollideData(undefined, undefined, false, undefined, normal, point);
+        collideDatas.push(collideData);
+      }
+    }
+    return collideDatas;
+  }
+
+  //IMPORTANT NOTE: When determining normals, it is always off "other".
+  intersectsShape(other: Shape): CollideData {
     let rect1 = this.getRect();
     let rect2 = other.getRect();
     if(rect1 && rect2) {
       // If one rectangle is on left side of other
       if (rect1.x1 > rect2.x2 || rect2.x1 > rect1.x2)
-        return false;
+        return undefined;
       // If one rectangle is above other
       if (rect1.y1 > rect2.y2 || rect2.y1 > rect1.y2)
-        return false;
-      return true;
+        return undefined;
+      return new CollideData(undefined, undefined, false, undefined, undefined, undefined);
     }
     else {
       let lines1 = this.getLines();
       let lines2 = other.getLines();
       for(let line1 of lines1) {
-        for(let line2 of lines2) {
+        let normals = other.getNormals();
+        for(let i = 0; i < lines2.length; i++) {
+          let line2 = lines2[i];
           if(line1.intersectsLine(line2)) {
-            return true;
+            return new CollideData(undefined, undefined, false, undefined, normals[i], undefined);
           }
         }
       }
-      return false;
+      return undefined;
     }
   }
 

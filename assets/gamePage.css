@@ -1,12 +1,240 @@
+@font-face {
+  font-family: mmx_font;
+  src: url(fonts/Mega\ Man\ X.ttf);
+}
+
 body {
-  background-color: lightgray;
+  padding: 0;
+  margin: 0;
+  background-color: black;
+  /*background-image: url("images/bg2.jpg");*/
+  height:100vh;
+}
+
+h1 {
+  text-align: center;
+}
+
+input[type='number'] {
+  width: 100px;
+  font-family: mmx_font;
+  height: 15px;
+}
+
+select {
+  font-family: mmx_font;
+  height: 25px;
+}
+
+h1, h2, h3, h4, h5, h6, p, label {
+  font-family: mmx_font;
+  background: -webkit-linear-gradient(#6090D0, #C8D8E8, #6090D0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+button {
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  font-size: 30px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-family: mmx_font;
+  background-color: darkblue;
+  color: white;
+  text-shadow: 0px 0px 10px #4286f4;
+}
+
+#top-flex {
+  display: flex;
+  flex-direction: row;
 }
 
 #content {
-  width: 1200px;
-  display: block;
+  width: 933px;
+  height: 100vh;
+}
+
+#ui, #canvas {
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+  padding: 19px;
+}
+
+#exitMenu {
+  width:100%;
+  height:100%;
+  position: absolute;
+}
+
+#ui {
+  width: 933px;
+  position: absolute;
+  height: 713px;
+}
+
+#ui-background {
+  width: 895px;
+  height: 675px;
+  position: absolute;
+  z-index: -3;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+}
+
+.player-block {
+  width: 45%;
+  display:inline-block;
+  text-align: center;
+}
+
+.map-img {
+  width: 300px;
+  height: 200px;
+}
+
+.battlemenu-button-group {
+  float: right;
+  margin-top: 25px;
+  margin-right: 125px;
+}
+
+.player-img {
+  /*image-rendering: pixelated;*/
+  width: 90px;
+  height: 102px;
+  vertical-align: middle;
+}
+
+.back-button {
+  background-color:#444444;
+  text-shadow: none;
+}
+
+.map-box {
+  margin-left: 100px;
+}
+
+.game-config {
+  display: inline-block;
+  vertical-align: top;
+  margin-top:80px;
+  margin-left: 20px;
+}
+
+.player-img-box {
+  background-image: url("images/playerbox.png");
+  background-repeat: no-repeat;
+  background-size: 192px 192px;
+  width: 192px;
+  height: 192px;
+  text-align: center;
+  line-height: 192px;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 5px;
+}
+
+#canvas {
+  cursor: none;
+  position: absolute;
+  z-index: -2;
+}
+
+#border-image {
+  width: 933px;
+  height: 713px;
+  flex-grow: 1;
+}
+
+#ingame-pause {
+  background:rgba(0,0,0,0.9);
+  width: 933px;
+  height: 713px;
+  position: absolute;
+  z-index: -1;
+}
+
+#logo {
+  display: block;
+  margin-left:auto;
+  margin-right:auto;
+  height: 100px;
+}
+
+#left-panel {
+  flex-grow: 1;
+  height: 100vh;
+}
+
+#right-panel {
+  flex-grow: 1;
+  height: 100vh;
+}
+
+#button-switch, #button-controls, #button-options, #button-quit {
+  display: inline-block;
+  width: 123px;
+  height: 123px;
+  background-size: 123px 123px;
+  background-repeat: none;
+}
+
+#button-group {
+  display: block;
+  width:100%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+#button-switch {
+  background-image: url("images/switch_off.png");
+}
+
+#button-controls {
+  background-image: url("images/controls_off.png");
+}
+
+#button-options {
+  background-image: url("images/options_off.png");
+}
+
+#button-quit {
+  background-image: url("images/quit_off.png");
+}
+
+#button-switch:hover {
+  background-image: url("images/switch_on.png");
+}
+
+#button-controls:hover {
+  background-image: url("images/controls_on.png");
+}
+
+#button-options:hover {
+  background-image: url("images/options_on.png");
+}
+
+#button-quit:hover {
+  background-image: url("images/quit_on.png");
+}
+
+#left-image, #right-image {    
+  display: block;
+  width: 450px;
+  margin: 0 auto;
+  margin-top: 90px;
+  visibility: hidden;
+}
+
+#right-image {
+  visibility: hidden;
 }
 
 @font-face {
@@ -14,10 +242,6 @@ body {
   src: url('fonts/Mega Man X.ttf');
 }
 
-#ui {
-  position: absolute;
-}
-
-#canvas {
-  cursor: none;
+#dev-options {
+  background: white;
 }

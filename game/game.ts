@@ -15,10 +15,12 @@ class Options {
   invulnFrames: boolean = false;
   antiAlias: boolean = false;
   playMusic: boolean = false;
+  showFPS: boolean = false;
+  capTo30FPS: boolean = false;
   constructor() { }
 }
 
-enum Menu {
+export enum Menu {
   None,
   Loading,
   NameSelect,
@@ -34,7 +36,7 @@ export class UIData {
   menu: Menu;
   isBrawl: boolean = false;
   brawlMaps: string[] = ["sm_bossroom"];
-  arenaMaps: string[] = ["powerplant", "highway"];
+  arenaMaps: string[] = ["powerplant", "highway", "gallery"];
   selectedBrawlMap: string = this.brawlMaps[0];
   selectedArenaMap: string = this.arenaMaps[0];
   gameModes: string[] = ["deathmatch", "team deathmatch"];
@@ -43,7 +45,7 @@ export class UIData {
   numBots: number = 4;
   playTo: number = 20;
   isPlayer1CPU: boolean = false;
-  isPlayer2CPU: boolean = false;
+  isPlayer2CPU: boolean = true;
   whoseControls: number = 1;
   currentControls: { [code: number]: string } = {};
   constructor() { }
@@ -100,7 +102,7 @@ class Game {
     Helpers.noCanvasSmoothing(this.ctx);
   }
   
-  doQuickStart: boolean = true;
+  doQuickStart: boolean = false;
   quickStart() {
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
@@ -139,6 +141,13 @@ class Game {
         uiData: this.uiData
       },
       methods: {
+        mapImage: function(selectedMap: any) {
+          if(selectedMap === "sm_bossroom") return "sm_bossroom.png";
+          else if(selectedMap === "highway") return "highway.png";
+          else if(selectedMap === "powerplant") return "powerplant.png";
+          else if(selectedMap === "gallery") return "gallery.png";
+          else return "";
+        },
         goToControls: function(whoseControls: number) {
           this.uiData.currentControls = game.getPlayerControls(whoseControls);
           this.uiData.whoseControls = whoseControls;
@@ -190,7 +199,17 @@ class Game {
         },
         saveControls(whoseControls: number) {
           game.setPlayerControls(whoseControls, this.uiData.currentControls);
-          this.goToMainMenu();
+          if(!game.level) {
+            this.goToMainMenu();
+          }
+          else {
+            //@ts-ignore
+            _.each(game.level.players, (player) => {
+              player.updateControls();
+            });
+            game.uiData.menu = Menu.None;
+            $("#ingame-pause").hide();
+          }
         },
         canSaveControls() {
           let playerControls = this.uiData.currentControls;
@@ -229,7 +248,13 @@ class Game {
           game.loadLevel(selectedMap);
         },
         goToMainMenu: function() {
-          this.uiData.menu = Menu.MainMenu;
+          if(!game.level) {
+            this.uiData.menu = Menu.MainMenu;
+          }
+          else {
+            game.uiData.menu = Menu.None;
+            $("#ingame-pause").hide();
+          }
         },
         isBrawlReady: function() {
           return this.uiData.selectedBrawlMap !== "";
@@ -238,11 +263,11 @@ class Game {
           return this.uiData.selectedArenaMap !== "";
         },
         goToExitMenu: function() {
+          $("#ingame-pause").show();
           this.uiData.menu = Menu.ExitMenu;
         },
         confirmExit: function(exit: boolean) {
           if(exit) {
-            console.log("EXITING");
             cancelAnimationFrame(game.requestId);
             game.level = undefined;
             if(game.music) game.music.stop();
@@ -253,6 +278,7 @@ class Game {
           else {
             game.uiData.menu = Menu.None;
           }
+          $("#ingame-pause").hide();
         }
       }
     });
@@ -262,6 +288,7 @@ class Game {
       el: '#options',
       data: {
         options: options,
+        hideDevOptions: false,
         uiData: this.uiData
       },
       methods: {
@@ -270,6 +297,16 @@ class Game {
         },
         exitGame() {
           game.ui.goToExitMenu();
+        },
+        switchClick() {
+
+        },
+        goToControls: function(whoseControls: any) {
+          $("#ingame-pause").show();
+          game.ui.goToControls(whoseControls);
+        },
+        optionsClick() {
+
         }
       }
     });
@@ -347,6 +384,9 @@ class Game {
 
   restartLevelName: string = "";
   restartLevel(name: string) {
+    if(this.music) {
+      this.music.stop();
+    }
     console.log("RESET");
     this.restartLevelName = name;
   }
@@ -460,6 +500,10 @@ class Game {
     this.deltaTime = (currentTime - this.startTime) /1000;
     this.time += this.deltaTime;
     if(Math.abs(this.deltaTime) > 1/30) this.deltaTime = 1/30;
+    if(this.options.showFPS) {
+      let fps = (1 / this.deltaTime);
+      this.level.debugString = "FPS: " + fps;
+    }
     this.level.update();
     this.startTime = currentTime;
     if(this.restartLevelName !== "") {

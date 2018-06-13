@@ -60,12 +60,16 @@ export class CollideData {
   vel: Point; //The velocity at which we collided with the other thing above
   isTrigger: boolean;
   gameObject: GameObject; //Gameobject of collider
+  normal: Point;
+  hitPoint: Point;
 
-  constructor(collider: Collider, vel: Point, isTrigger: boolean, gameObject: GameObject) {
+  constructor(collider: Collider, vel: Point, isTrigger: boolean, gameObject: GameObject, normal: Point, hitPoint: Point) {
     this.collider = collider;
     this.vel = vel;
     this.isTrigger = isTrigger;
     this.gameObject = gameObject;
+    this.normal = normal;
+    this.hitPoint = hitPoint;
   }
 
 }

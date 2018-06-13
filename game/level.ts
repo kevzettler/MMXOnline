@@ -11,12 +11,13 @@ import { Effect } from "./effects";
 import { RollingShieldProj } from "./projectile";
 import { Character } from "./character";
 import { SpawnPoint } from "./spawnPoint";
-import { NoScroll } from "./noScroll";
+import { NoScroll, Direction } from "./noScroll";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 import { Line, Shape } from "./shape";
 import { KillFeedEntry } from "./killFeedEntry";
 import { GameMode, FFADeathMatch } from "./gameMode";
 import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, SmallHealthPickup } from "./pickup";
+import { KillZone } from "./killZone";
 
 export class Level {
 
@@ -43,6 +44,7 @@ export class Level {
   navMeshNodes: NavMeshNode[] = [];
   gameMode: GameMode;
   pickupSpawners: PickupSpawner[] = [];
+  killZones: KillZone[] = [];
   killY: number;
 
   get localPlayers() { return this.gameMode.localPlayers; }
@@ -52,8 +54,6 @@ export class Level {
   constructor(levelJson: any) {
     this.zoomScale = 3;
     this.gravity = 900;
-    this.camX = 0;
-    this.camY = 0;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
     this.frameCount = 0;
@@ -82,7 +82,22 @@ export class Level {
           points.push(new Point(point.x, point.y));
         }
         let shape = new Shape(points);
-        this.noScrolls.push(new NoScroll(shape));
+        let dir: Direction;
+        if(instance.properties) {
+          if(instance.properties.freeDir === "up") dir = Direction.Up;
+          if(instance.properties.freeDir === "down") dir = Direction.Down;
+          if(instance.properties.freeDir === "left") dir = Direction.Left;
+          if(instance.properties.freeDir === "right") dir = Direction.Right;
+        }
+        this.noScrolls.push(new NoScroll(shape, dir));
+      }
+      else if(instance.objectName === "Kill Zone") {
+        let points: Point[] = [];
+        for(var point of instance.points) {
+          points.push(new Point(point.x, point.y));
+        }
+        let shape = new Shape(points);
+        this.killZones.push(new KillZone(shape));
       }
       else if(instance.objectName === "Spawn Point") {
         let properties = instance.properties;
@@ -148,12 +163,12 @@ export class Level {
     }
     else if(this.name === "gallery") {
       this.fixedCam = false;
-      //this.levelMusic = "highway.mp3";
+      this.levelMusic = "gallery.mp3";
       parallax = "gallery_parallax.png";
-      //this.musicLoopStart = 44440;
-      //this.musicLoopEnd = 87463;
+      this.musicLoopStart = 0;
+      this.musicLoopEnd = 110687;
       //this.killY = 300;
-      //foreground = "highway_foreground.png";
+      foreground = "gallery_foreground.png";
     }
 
     if(parallax) {
@@ -222,10 +237,24 @@ export class Level {
       }
     }
 
+    let playerX = 0;
+    let playerY = 0;
+    if(this.mainPlayer.character) {
+      playerX = this.mainPlayer.character.pos.x;
+      playerY = this.mainPlayer.character.pos.y;
+    }
+    
     for(let go of this.gameObjects) {
       go.preUpdate();
       go.update();
     }
+    
+    if(this.mainPlayer.character) {
+      let deltaX = this.mainPlayer.character.pos.x - playerX;
+      let deltaY = this.mainPlayer.character.pos.y - playerY;
+      this.updateCamPos(deltaX, deltaY);
+    }
+
     for(let effect of this.effects) {
       effect.update();
     }
@@ -267,11 +296,6 @@ export class Level {
 
     if(!game.options.antiAlias) {
       Helpers.noCanvasSmoothing(game.ctx);
-    }
-
-    if(this.mainPlayer.character) {
-      this.computeCamPos(this.mainPlayer.character);
-      //this.debugString = this.camX + "," + this.camY;
     }
 
     let camX = Helpers.roundEpsilon(this.camX);
@@ -363,6 +387,94 @@ export class Level {
     return (game.canvas.width / this.zoomScale) * 0.375;
   }
 
+  updateCamPos(deltaX: number, deltaY: number) {
+
+    let playerX = this.mainPlayer.character.pos.x;
+    let playerY = this.mainPlayer.character.getCamCenterPos().y;
+
+    let dontMoveX = false;
+    let dontMoveY = false;
+
+    let scaledCanvasW = game.canvas.width / this.zoomScale;
+    let scaledCanvasH = game.canvas.height / this.zoomScale;
+    
+    let maxX = this.background.width - scaledCanvasW/2;
+    let maxY = this.background.height - scaledCanvasH/2;
+
+    if(playerX < scaledCanvasW/2) {
+      this.camX = 0;
+      dontMoveX = true;
+    }
+    if(playerY < scaledCanvasH/2) {
+      this.camY = 0;
+      dontMoveY = true;
+    }
+
+    if(playerX > maxX) {
+      this.camX = this.background.width - scaledCanvasW;
+      dontMoveX = true;
+    }
+    if(playerY > maxY) {
+      this.camY = this.background.height - scaledCanvasH;
+      dontMoveY = true;
+    }
+
+    if(playerX > this.camX + scaledCanvasW/2 && deltaX < 0) {
+      dontMoveX = true;
+    }
+    if(playerX < this.camX + scaledCanvasW/2 && deltaX > 0) {
+      dontMoveX = true;
+    }
+    if(playerY > this.camY + scaledCanvasH/2 && deltaY < 0) {
+      dontMoveY = true;
+    }
+    if(playerY < this.camY + scaledCanvasH/2 && deltaY > 0) {
+      dontMoveY = true;
+    }
+
+    if(!dontMoveX) {
+      this.camX += deltaX;
+    }
+    if(!dontMoveY) {
+      this.camY += deltaY;
+    }
+
+    let camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+    let camRectShape = camRect.getShape();
+    for(let noScroll of this.noScrolls) {
+      if(noScroll.shape.intersectsShape(camRectShape)) {
+        if(noScroll.freeDir === Direction.Left) {
+          while(noScroll.shape.intersectsShape(camRectShape)) {
+            this.camX--;
+            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+            camRectShape = camRect.getShape();
+          }
+        }
+        else if(noScroll.freeDir === Direction.Right) {
+          while(noScroll.shape.intersectsShape(camRectShape)) {
+            this.camX++;
+            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+            camRectShape = camRect.getShape();
+          }
+        }
+        else if(noScroll.freeDir === Direction.Up) {
+          while(noScroll.shape.intersectsShape(camRectShape)) {
+            this.camY--;
+            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+            camRectShape = camRect.getShape();
+          }
+        }
+        else if(noScroll.freeDir === Direction.Down) {
+          while(noScroll.shape.intersectsShape(camRectShape)) {
+            this.camY++;
+            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+            camRectShape = camRect.getShape();
+          }
+        }
+      }
+    }
+  }
+
   computeCamPos(character: Character) {
     let scaledCanvasW = game.canvas.width / this.zoomScale;
     let scaledCanvasH = game.canvas.height / this.zoomScale;
@@ -379,6 +491,7 @@ export class Level {
     if(camX > maxX) camX = maxX;
     if(camY > maxY) camY = maxY;
 
+    /*
     let camRect = new Rect(camX, camY, camX + scaledCanvasW, camY + scaledCanvasH);
     let camRectShape = camRect.getShape();
     for(let noScroll of this.noScrolls) {
@@ -407,19 +520,10 @@ export class Level {
         
       }
     }
+    */
 
-    if(this.lerpCamTime > 0) {
-      this.camX = Helpers.lerpNoOver(this.camX, camX, game.deltaTime * 30);
-      this.camY = Helpers.lerpNoOver(this.camY, camY, game.deltaTime * 30);
-      this.lerpCamTime = Helpers.clampMin0(this.lerpCamTime - game.deltaTime);
-    }
-    else {
-      this.camX = camX;
-      this.camY = camY;
-    }
-
-    this.camX = Helpers.roundEpsilon(this.camX);
-    this.camY = Helpers.roundEpsilon(this.camY);
+    this.camX = camX;
+    this.camY = camY;    
     
   }
   
@@ -433,6 +537,16 @@ export class Level {
 
   addEffect(effect: Effect) {
     this.effects.push(effect);
+  }
+
+  isInKillZone(actor: Actor) {
+    if(!actor.collider) return false;
+    for(let killZone of this.killZones) {
+      if(killZone.shape.intersectsShape(actor.collider.shape)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   //Should actor collide with gameobject?
@@ -459,12 +573,30 @@ export class Level {
     return false;
   }
 
+  //Get ALL colliders this is colliding with. Get the entire "mega"-box (the box that encompasses all the collision boxes)
+  getAllColliders(actor: Actor): Shape[] {
+    let shapes = [];
+    for(let go of this.gameObjects) {
+      if(!go.collider) continue;
+      if(go === actor) continue;
+      if(this.shouldTrigger(actor, go, new Point(0, 0))) continue;
+      let shape = go.collider.shape.intersectsShape(actor.collider.shape);
+      if(shape) {
+        shapes.push(go.collider.shape);
+      }
+    }
+    return shapes;
+  }
+
   checkCollisionShape(shape: Shape, exclusions: GameObject[]) : CollideData {
     for(let go of this.gameObjects) {
       if(!go.collider) continue;
       if(exclusions.indexOf(go) !== -1) continue;
-      if(go.collider.shape.intersectsShape(shape)) {
-        return new CollideData(go.collider, undefined, false, go);
+      let collideData = go.collider.shape.intersectsShape(shape);
+      if(collideData) {
+        collideData.collider = go.collider;
+        collideData.gameObject = go;
+        return collideData;
       }
     }
     return undefined;
@@ -478,10 +610,14 @@ export class Level {
       if(go === actor) continue;
       if(!go.collider) continue;
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
-      if(go.collider.shape.intersectsShape(actorShape)) {
-        let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
-        if(isTrigger) continue;
-        return new CollideData(go.collider, vel, isTrigger, go);
+      let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
+      if(isTrigger) continue;
+      let collideData = actorShape.intersectsShape(go.collider.shape);
+      if(collideData) {
+        collideData.collider = go.collider;
+        collideData.vel = vel;
+        collideData.gameObject = go;
+        return collideData;
       }
     }
     return undefined;
@@ -509,10 +645,10 @@ export class Level {
         continue;
       }
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
-      if(go.collider.shape.intersectsShape(actorShape)) {
-        let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
-        if(!isTrigger) continue;
-        triggers.push(new CollideData(go.collider, vel, isTrigger, go));
+      let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
+      if(!isTrigger) continue;
+      if(go.collider.shape.intersectsShape(actorShape)) {  
+        triggers.push(new CollideData(go.collider, vel, isTrigger, go, undefined, undefined));
       }
     }
     return triggers;
@@ -530,13 +666,20 @@ export class Level {
     return found;
   }
 
-  raycastAll(pos1: Point, pos2: Point, classNames: string[]) {
+  raycastAll(pos1: Point, pos2: Point, classNames: string[]): CollideData[] {
     let hits: CollideData[] = [];
     for(let go of this.gameObjects) {
       if(!go.collider) continue;
       if(!this.isOfClass(go, classNames)) continue;
-      if(go.collider.shape.intersectsLine(new Line(pos1, pos2))) {
-        hits.push(new CollideData(go.collider, undefined, true, go));
+      let collideDatas = go.collider.shape.getLineIntersectCollisions(new Line(pos1, pos2));
+      //@ts-ignore
+      let closestCollideData = _.minBy(collideDatas, (collideData) => {
+        return collideData.hitPoint.distanceTo(pos1);
+      });
+      if(closestCollideData) {
+        closestCollideData.collider = go.collider;
+        closestCollideData.gameObject = go;
+        hits.push(closestCollideData);
       }
     }
     return hits;

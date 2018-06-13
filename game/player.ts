@@ -1,6 +1,6 @@
 import { Character } from "./character";
 import { Weapon, Buster, Torpedo, Sting, RollingShield, ShotgunIce, FireWave, Tornado, Boomerang, ElectricSpark } from "./weapon";
-import { game } from "./game";
+import { game, Menu } from "./game";
 import { Palette } from "./color";
 import { ElectricSparkProj } from "./projectile";
 import * as Helpers from "./helpers";
@@ -64,6 +64,18 @@ export class Player {
     this.weaponIndex = 0;
   }
 
+  updateControls() {
+    
+    if(!this.isAI && this.alliance === 0) {
+      this.inputMapping = game.getPlayerControls(1);
+    }
+
+    if(!this.isAI && this.alliance === 1) {
+      this.inputMapping = game.getPlayerControls(2);
+    }
+
+  }
+
   update() {
     if(this.respawnTime === 0 && !this.character) {
       this.health = this.maxHealth;
@@ -78,6 +90,13 @@ export class Player {
       this.character.palette = this.palette;
       this.character.changePaletteWeapon();
       this.character.xDir = spawnPoint.xDir;
+      
+      if(this === game.level.mainPlayer) {
+        console.log("Computing");
+        game.level.computeCamPos(this.character);
+        //this.debugString = this.camX + "," + this.camY;
+      }
+
     }
     if(this.respawnTime > 0 && !game.level.gameMode.isOver) {
       this.respawnTime = Helpers.clampMin0(this.respawnTime - game.deltaTime);
@@ -86,6 +105,9 @@ export class Player {
 
   get canControl() {
     if(game.level.gameMode.isOver) {
+      return false;
+    }
+    if(game.uiData.menu !== Menu.None && !this.isAI) {
       return false;
     }
     return true;

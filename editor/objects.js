@@ -19,6 +19,11 @@ var objects = [
     "color": "magenta"
   },
   {
+    "name": "Kill Zone",
+    "isShape": true,
+    "color": "red"
+  },
+  {
     "name": "Spawn Point",
     "image": "spawnPoint.png"
   },

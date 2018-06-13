@@ -6,6 +6,8 @@ import * as Helpers from "./helpers";
 import { Palette } from "./color";
 import { Shape } from "./shape";
 import { Character } from "./character";
+import { RollingShield } from "./weapon";
+import { RollingShieldProj } from "./projectile";
 
 //Anything that has: a position, rotation, name and sprite. Can also have an optional collider
 //This MUST have a sprite. There is too much maintenance effort to support a sprite-less actor class
@@ -104,7 +106,11 @@ export class Actor {
         this.vel.y = 1000;
       }
     }
-    this.move(this.vel);
+
+    if(this.constructor.name === "Character")
+      this.move(this.vel, true, false, false);
+    else
+      this.move(this.vel, true, true, true);
 
     if(this.collider && !this.collider.isTrigger) {
       let collideData = game.level.checkCollisionActor(this, 0, 1);
@@ -139,7 +145,7 @@ export class Actor {
   }
 
 
-  move(amount: Point, useDeltaTime: boolean = true) {
+  move(amount: Point, useDeltaTime: boolean = true, pushIncline: boolean = true, snapInclineGravity: boolean = true) {
 
     let times = useDeltaTime ? game.deltaTime : 1;
 
@@ -150,39 +156,86 @@ export class Actor {
     //Regular collider: need to detect collision incrementally and stop moving past a collider if that's the case
     else {
 
-      /*
-      //Already were colliding in first place: make the move as normal
-      if(game.level.checkCollisionActor(this, 0, 0)) {
+      //Already were colliding in first place: free with path of least resistance
+      let shapes = game.level.getAllColliders(this);
+      for(let shape of shapes) {
         //console.log("ALREADY COLLIDING")
-        this.pos.inc(amount.times(times));
-        return;
+        let freeVec = this.collider.shape.getMinTransVector(shape);
+        this.pos.inc(freeVec.add(freeVec.normalize()));
       }
-      */
 
       let inc: Point = amount.clone();
+      let pushDir: Point;
 
       while(inc.magnitude > 0) {
         let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
         if(collideData && !collideData.isTrigger) {
           this.registerCollision(collideData);
-          inc.multiply(0.5);
-          if(inc.magnitude < 0.5) {
-            inc.x = 0;
-            inc.y = 0;
+          if(collideData.normal && collideData.normal.isAngled() && pushIncline) {
+            pushDir = Helpers.getInclinePushDir(collideData.normal, amount);
             break;
-          } 
+          }
+          else {
+            inc.multiply(0.5);
+            if(inc.magnitude < 0.5) {
+              inc.x = 0;
+              inc.y = 0;
+              break;
+            }
+          }
         }
         else {
           break;
         }
       }
+      
+      //Pushing against diagonal
+      let loop = 0;
+      if(pushDir && this.grounded) {
+        while(true) {
+          loop++;if(loop > 100) {throw "INFINITELOOP";}
+          this.pos.x += pushDir.x;
+          this.pos.y += pushDir.y;
+          let collideData = game.level.checkCollisionActor(this, 0, 0);
+          if(collideData && !collideData.isTrigger) {
+          }
+          else {
+            break;
+          }
+        }
+      }
+
+      /*
+      //A quick debug sanity assert/check
       let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
       if(collideData) {
         Helpers.drawRect(game.ctx, collideData.collider.shape.getRect(), "red", undefined, undefined, 0.5);
         Helpers.drawRect(game.ctx, this.collider.shape.getRect(), "green", undefined, undefined, 0.5);
         //throw "BAD";
       }
+      */
+
       this.pos.inc(inc.multiply(times));
+
+      //Snapping to incline ground when walking down stairs
+      let height = this.collider.shape.getRect().h;
+      let wallsBelow = game.level.raycastAll(this.pos.addxy(0, -1), this.centerPos.addxy(0, 30), ["Wall"]);
+      //@ts-ignore
+      let inclineBelow = _.find(wallsBelow, (wall) => {
+        return wall;//wall.normal && wall.normal.isAngled();
+      });
+      if(inclineBelow && this.grounded && !this.collider.isTrigger && snapInclineGravity) {
+        let loop = 0;
+        while(true) {
+          loop++;if(loop > 100) {throw "INFINITELOOP";}
+          let collideData = game.level.checkCollisionActor(this, 0, 1);
+          if(collideData && !collideData.isTrigger) {
+            break;
+          }
+          this.pos.y++;
+        }
+      }
+
     }
   }
 

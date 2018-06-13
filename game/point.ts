@@ -1,3 +1,5 @@
+import * as Helpers from "./helpers";
+
 export class Point {
   x: number;
   y: number;
@@ -18,6 +20,8 @@ export class Point {
   }
 
   normalize() {
+    this.x = Helpers.roundEpsilon(this.x);
+    this.y = Helpers.roundEpsilon(this.y);
     if(this.x === 0 && this.y === 0) return new Point(0, 0);
     let mag = this.magnitude;
     let point = new Point(this.x / this.magnitude, this.y / this.magnitude);
@@ -25,6 +29,8 @@ export class Point {
     {
       throw "NAN!";
     }
+    point.x = Helpers.roundEpsilon(point.x);
+    point.y = Helpers.roundEpsilon(point.y);
     return point;
   }
 
@@ -37,11 +43,11 @@ export class Point {
     return new Point((dp / (other.x * other.x + other.y * other.y)) * other.x, (dp / (other.x * other.x + other.y * other.y)) * other.y);
   }
 
-  leftNormal() {
+  rightNormal() {
     return new Point(-this.y, this.x);
   }
 
-  rightNormal() {
+  leftNormal() {
     return new Point(this.y, -this.x);
   }
 
@@ -91,5 +97,8 @@ export class Point {
   }
   directionTo(other: Point) {
     return new Point(other.x - this.x, other.y - this.y);
+  }
+  isAngled() {
+    return this.x !== 0 && this.y !== 0;
   }
 }

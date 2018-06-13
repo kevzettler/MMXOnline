@@ -433,6 +433,19 @@ export function inLine(mouseX: number, mouseY: number, x0: number, y0: number, x
   }
 }
 
+export function getInclinePushDir(inclineNormal: Point, pushDir: Point) {
+  let bisectingPoint = inclineNormal.normalize().add(pushDir.normalize());
+  bisectingPoint = bisectingPoint.normalize();
+  //Snap to the nearest axis
+  if(Math.abs(bisectingPoint.x) >= Math.abs(bisectingPoint.y)) {
+    bisectingPoint.y = 0;
+  }
+  else {
+    bisectingPoint.x = 0;
+  }
+  return bisectingPoint.normalize();
+}
+
 export function keyCodeToString(charCode: number) {
 
   if(charCode === 0) return "left mouse";

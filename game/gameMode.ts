@@ -127,11 +127,11 @@ export class GameMode {
 
   drawWeaponSwitchHUD() {
     let weaponSprite = game.sprites["hud_weapon_icon"];
-    let startX = 50;
+    let startX = Math.round(this.screenWidth * 0.225);
     let width = 20;
     let iconW = 9;
     let iconH = 9;
-    let startY = this.screenHeight - 15;
+    let startY = this.screenHeight - 18;
     for(let i = 0; i < 9; i++) {
       let x = startX + (i * width);
       let y = startY;

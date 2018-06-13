@@ -332,20 +332,21 @@ export class RollingShieldProj extends Projectile {
     if(game.level.checkCollisionActor(this, 0, 0)) {
       //this.xDir *= -1;
       //this.vel.x *= -1;
-      this.time = 1.25;
+      //this.time = 1.25;
     }
   }
 
   update() {
+    
     if(!game.level.checkCollisionActor(this, 0, 0)) {
       let collideData = game.level.checkCollisionActor(this, this.xDir, -1);
-      if(collideData) {
+      if(collideData && (!collideData.normal || !collideData.normal.isAngled)) {
         this.vel.x *= -1;
         this.xDir *= -1;
       }
     }
     else {
-      this.vel.x = 0;
+      //this.vel.x = 0;
     }
     super.update();
     if(this.time > 1.5) {

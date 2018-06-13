@@ -1,30 +1,43 @@
 ===============
-Level editor
-===============
--Remember last tool used and keep it open
-
-===============
 Features
 ===============
 
--A way to quickly start testing a map
+-Loading screen
+-Add to logo "deathmatch"
+-Validate number of bots and play to
+-Background image on main menu
+-1v1 bossroom scale is off
+-1 and 2 keep getting rebinded
 
--More maps:
-  -Boomer kwanger (no new features needed)
-  -Launch octopus (inclined colliders, underwater coding)
-  -Highway (level foreground layer)
-  -Armored armadillo (inclined colliders, fall-death, minecart)
-
--Menu/UI system
-  -decorative background
+-Climbing up slopes: constantly jumping
+-Camera/sprite anim jittering
+-Profiling/optimization
 
 -Stop vue temp UI flashing
+-Can't check score when dead
+-Incorrect team report won (always blue)
 
 -All the special weapon charges
+
+-E.spark follow normals
+
+-Remove all console logging
+-An analytics/telemetry system
+
+===============
+Level editor
+===============
+-Remember last tool used and keep it open
+-Basic undo
+-The json data binding is weird/has issues
 
 ===============
 Post-V1 Features
 ===============
+
+-More maps:
+  -Boomer kwanger (no new features needed)
+  -Launch octopus (underwater coding)
 
 -Play as Zero
 -HUD changes
@@ -35,6 +48,11 @@ Post-V1 Features
   -allies: show health bar
 -Should not be able to destroy teammates' projectiles
 -CTF
+
+-More nav-mesh features:
+  -Ability to climb a wall to a waypoint
+  -Ability to drop down to a waypoint
+  -Ability to jump over gaps
 
 -Vue must be set for prod mode once deployed
 
