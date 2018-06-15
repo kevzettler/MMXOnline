@@ -17,6 +17,8 @@ class Options {
   playMusic: boolean = false;
   showFPS: boolean = false;
   capTo30FPS: boolean = false;
+  musicVolume: number = 100;
+  soundVolume: number = 100;
   constructor() { }
 }
 
@@ -28,7 +30,8 @@ export enum Menu {
   BrawlMenu,
   ArenaMenu,
   Controls,
-  ExitMenu
+  ExitMenu,
+  OptionsMenu
 }
 
 export class UIData {
@@ -48,7 +51,17 @@ export class UIData {
   isPlayer2CPU: boolean = true;
   whoseControls: number = 1;
   currentControls: { [code: number]: string } = {};
+  optionsCopy: Options;
   constructor() { }
+
+  getSelectedMapMaxPlayers() {
+    if(this.isBrawl) {
+      return game.levels[this.selectedBrawlMap].maxPlayers;
+    }
+    else {
+      return game.levels[this.selectedArenaMap].maxPlayers;
+    }
+  }
 }
 
 class Game {
@@ -106,13 +119,20 @@ class Game {
   quickStart() {
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
-    this.uiData.selectedGameMode = "deathmatch";
-    this.uiData.maxPlayers = 0;
-    this.uiData.numBots = 0;
+    this.uiData.selectedGameMode = "team deathmatch";
+    this.uiData.maxPlayers = 8;
+    this.uiData.numBots = 8;
     this.uiData.playTo = 20;
     $("#options").show();
     $("#dev-options").show();
     game.loadLevel("gallery");
+  }
+
+  getMusicVolume01() {
+    return Number(this.options.musicVolume) / 100;
+  }
+  getSoundVolume01() {
+    return Number(this.options.soundVolume) / 100;
   }
 
   start() {
@@ -141,6 +161,22 @@ class Game {
         uiData: this.uiData
       },
       methods: {
+        numBotsChange: function() {
+          if(this.uiData.numBots > this.uiData.getSelectedMapMaxPlayers() - 1) {
+            this.uiData.numBots = this.uiData.getSelectedMapMaxPlayers() - 1;
+          }
+          else if(this.uiData.numBots < 0) {
+            this.uiData.numBots = 0;
+          }
+        },
+        playToChange: function() {
+          if(this.uiData.playTo > 100) {
+            this.uiData.playTo = 100;
+          }
+          else if(this.uiData.playTo < 1) {
+            this.uiData.playTo = 1;
+          }
+        },
         mapImage: function(selectedMap: any) {
           if(selectedMap === "sm_bossroom") return "sm_bossroom.png";
           else if(selectedMap === "highway") return "highway.png";
@@ -152,6 +188,16 @@ class Game {
           this.uiData.currentControls = game.getPlayerControls(whoseControls);
           this.uiData.whoseControls = whoseControls;
           this.uiData.menu = Menu.Controls;
+        },
+        goToOptions: function() {
+          this.uiData.menu = Menu.OptionsMenu;
+          //@ts-ignore
+          this.uiData.optionsCopy = _.clone(game.options);
+        },
+        saveOptions: function() {
+          game.options = this.uiData.optionsCopy;
+          localStorage.setItem("options", JSON.stringify(game.options));
+          this.goToMainMenu();
         },
         getBind(key: string, whoseControls: number) {
           let playerControls = this.uiData.currentControls;
@@ -306,7 +352,8 @@ class Game {
           game.ui.goToControls(whoseControls);
         },
         optionsClick() {
-
+          $("#ingame-pause").show();
+          game.ui.goToOptions();
         }
       }
     });
@@ -354,7 +401,9 @@ class Game {
       
       //this.loadLevel("powerplant");
       
-      let name = localStorage.getItem("playerName");
+      this.startMenuMusic();
+
+      let name = "Player 1";// localStorage.getItem("playerName");
       if(!name) {
         this.uiData.menu = Menu.NameSelect;
       }
@@ -372,6 +421,35 @@ class Game {
     else {
       //console.log("LOADING...");
     }
+  }
+
+  startMenuMusic() {
+
+    if(this.doQuickStart) return;
+
+    let music = new Howl({
+      src: ["assets/music/menu.mp3"],
+      sprite: {
+        musicStart: [0, 2006],
+        musicLoop: [2006, 25083 - 2006]
+      },
+      onload: () => {
+      }
+    });
+    
+    window.setTimeout(
+      () => {
+        music.play("musicStart");
+        music.on("end", function() {
+          console.log("Loop");
+          
+          music.play("musicLoop");
+        });
+      },
+      1000);
+
+    music.volume(game.options.playMusic ? game.getMusicVolume01() : 0);
+    this.music = music;
   }
 
   refreshUI() {
@@ -423,7 +501,6 @@ class Game {
     else if(this.uiData.selectedGameMode === "team deathmatch") {
       gameMode = new TeamDeathMatch(this.level, this.uiData);
     }
-
     this.level.startLevel(gameMode);
 
     this.gameLoop(0);
@@ -504,7 +581,16 @@ class Game {
       let fps = (1 / this.deltaTime);
       this.level.debugString = "FPS: " + fps;
     }
-    this.level.update();
+    
+    try 
+    {
+      this.level.update();
+    }
+    catch(e)
+    {
+      console.error(e);//conversion to Error type
+    }
+
     this.startTime = currentTime;
     if(this.restartLevelName !== "") {
       this.doRestart();
@@ -521,12 +607,17 @@ class Game {
   playSound(clip: string, volume: number) {
     if(this.sounds[clip]) {
       let id = this.sounds[clip].play();
-      this.sounds[clip].volume(volume, id);
+      this.sounds[clip].volume(volume * game.getSoundVolume01(), id);
     }
     else {
       let id = this.soundSheet.play(clip);
-      this.soundSheet.volume(volume, id);
+      this.soundSheet.volume(volume * game.getSoundVolume01(), id);
     }
+  }
+
+  playClip(clip: Howl, volume: number) {
+    clip.volume(volume * game.getSoundVolume01());
+    return clip.play();
   }
 
   getPlayerControls(playerNum: number) {
@@ -576,6 +667,7 @@ class Game {
   }
 
   setPlayerControls(playerNum: number, inputMapping: { [code: number]: string }) {
+    if(!inputMapping[49]) throw "Bad input mapping";
     let json = JSON.stringify(inputMapping);
     localStorage.setItem("player" + String(playerNum) + "-controls", json);
   }

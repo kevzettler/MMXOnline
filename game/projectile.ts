@@ -362,7 +362,7 @@ export class FireWaveProj extends Projectile {
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
     super(weapon, pos, vel, 1, player, game.sprites["fire_wave"]);
     this.fadeSprite = game.sprites["fire_wave_fade"];
-    this.hitCooldown = 0.3;
+    this.hitCooldown = 0.225;
     //this.fadeSound = "explosion";
   }
 

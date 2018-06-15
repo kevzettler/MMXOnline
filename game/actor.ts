@@ -189,6 +189,18 @@ export class Actor {
         }
       }
       
+      /*
+      //A quick debug sanity assert/check
+      let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
+      if(collideData) {
+        Helpers.drawRect(game.ctx, collideData.collider.shape.getRect(), "red", undefined, undefined, 0.5);
+        Helpers.drawRect(game.ctx, this.collider.shape.getRect(), "green", undefined, undefined, 0.5);
+        //throw "BAD";
+      }
+      */
+
+      this.pos.inc(inc.multiply(times));
+      
       //Pushing against diagonal
       let loop = 0;
       if(pushDir && this.grounded) {
@@ -204,18 +216,6 @@ export class Actor {
           }
         }
       }
-
-      /*
-      //A quick debug sanity assert/check
-      let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
-      if(collideData) {
-        Helpers.drawRect(game.ctx, collideData.collider.shape.getRect(), "red", undefined, undefined, 0.5);
-        Helpers.drawRect(game.ctx, this.collider.shape.getRect(), "green", undefined, undefined, 0.5);
-        //throw "BAD";
-      }
-      */
-
-      this.pos.inc(inc.multiply(times));
 
       //Snapping to incline ground when walking down stairs
       let height = this.collider.shape.getRect().h;
@@ -302,9 +302,15 @@ export class Actor {
     }
   }
 
-  playSound(soundName: string, overrideVolume?: number) {
+  getSoundVolume() {
     let dist = new Point(game.level.camCenterX, game.level.camCenterY).distanceTo(this.pos);
     let volume = 1 - (dist / (game.level.screenWidth));
+    volume = Helpers.clampMin0(volume);
+    return volume;
+  }
+
+  playSound(soundName: string, overrideVolume?: number) {
+    let volume = this.getSoundVolume();
     if(overrideVolume !== undefined) volume = overrideVolume;
     volume = Helpers.clampMin0(volume);
     game.playSound(soundName, volume);

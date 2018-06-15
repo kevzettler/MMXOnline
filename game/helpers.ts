@@ -148,6 +148,10 @@ export function getAutoIncId() {
   return autoInc;
 }
 
+export function stringReplace(str: string, pattern: string, replacement: string) {
+  return str.replace(new RegExp(pattern, 'g'), replacement);
+}
+
 export function noCanvasSmoothing(c: CanvasRenderingContext2D) {
   c.webkitImageSmoothingEnabled = false;
   c.mozImageSmoothingEnabled = false;
@@ -318,7 +322,7 @@ export function drawPolygon(ctx: CanvasRenderingContext2D, shape: Shape, closed:
   ctx.globalAlpha = 1;
 }
 
-export function drawTextMMX(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, hAlign: string, vAlign: string, isRed?: boolean) {
+export function drawTextMMX(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, hAlign: string, vAlign: string, isRed?: boolean, overrideColor?: string) {
   ctx.save();
   
   ctx.shadowColor = "black" // string
@@ -326,13 +330,18 @@ export function drawTextMMX(ctx: CanvasRenderingContext2D, text: string, x: numb
   ctx.shadowOffsetY = size/2; // integer
   ctx.shadowBlur = 0; // integer
   
-  let gradient = ctx.createLinearGradient(x, y - size/2, x, y);
-  let col = "#6090D0";
-  if(isRed) col = "#f44256";
-  gradient.addColorStop(0, col);
-  gradient.addColorStop(0.5, "#C8D8E8");
-  gradient.addColorStop(1.0, col);
-  ctx.fillStyle = gradient;
+  if(!overrideColor) {
+    let gradient = ctx.createLinearGradient(x, y - size/2, x, y);
+    let col = "#6090D0";
+    if(isRed) col = "#f44256";
+    gradient.addColorStop(0, col);
+    gradient.addColorStop(0.5, "#C8D8E8");
+    gradient.addColorStop(1.0, col);
+    ctx.fillStyle = gradient;
+  }
+  else {
+    ctx.fillStyle = overrideColor;
+  }
 
   size = size || 14;
   hAlign = hAlign || "center";  //start,end,left,center,right

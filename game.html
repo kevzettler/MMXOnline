@@ -13,11 +13,11 @@
     <img id="logo" src="assets/images/logo.png" />
     <!--256-->
     <canvas id="canvas" tabindex="0" width="298" height="224" style="display:none"></canvas>
-    <div id="ui">
+    <div id="ui" v-cloak>
       <img src="assets/images/bg4.png" id="ui-background" />
       <!--Name select menu-->
       <div id="loading" v-if="uiData.menu === 1">
-        <h1>Loading...</h1>
+        <h1 id="loading1">Loading...</h1>
       </div>
       <div id="name-select" v-if="uiData.menu === 2">
         <label for="name-select">Enter a name</label><input v-model="uiData.playerName" type="text" maxlength="10">
@@ -26,8 +26,8 @@
       <!--Main menu-->
       <div id="mainMenu" v-if="uiData.menu === 3">
         <h1>Select Mode</h1>
-        <br><br>
-        <div class="button-group">
+        <img src="assets/images/mmx.png" id="splash-image"/>
+        <div class="button-group" style="margin-top:350px">
           <button type="submit" v-on:click="goTo1v1()">1 on 1</button>
           <button type="submit" v-on:click="goToArena()">Arena</button>
           <button v-on:click="goToControls(1)">Keyboard Controls (P1)</button>
@@ -101,11 +101,11 @@
             -->
             <tr>
               <td><label>Bots</label></td>
-              <td><input v-model:number="uiData.numBots" type="number"></td>
+              <td><input v-model:number="uiData.numBots" @change="numBotsChange" type="number"></td>
             </tr>
             <tr>
               <td><label>Play to</label></td>
-              <td><input v-model:number="uiData.playTo" type="number"></td>
+              <td><input v-model:number="uiData.playTo" @change="playToChange" type="number"></td>
             </tr>
           </table>
         </div>
@@ -121,6 +121,14 @@
           <button type="submit" :disabled="!isArenaReady()" v-on:click="goToBattle(uiData.selectedArenaMap)">Battle!</button>
           <button v-on:click="goToMainMenu()" class="back-button">Back</button>
         </div>
+      </div>
+      <!--Options menu-->
+      <div id="optionsMenu" v-if="uiData.menu === 8" style="padding-left: 10px">
+        <h1>Options</h1>
+        <label>Music volume</label><input type="range" min="0" max="100" v-model:number="uiData.optionsCopy.musicVolume" class="slider" id="myRange"><br>
+        <label>Sound volume</label><input type="range" min="0" max="100" v-model:number="uiData.optionsCopy.soundVolume" class="slider" id="myRange">
+        <button id="c-submit" type="submit" v-on:click="saveOptions()">Save</button>
+        <button v-on:click="goToMainMenu()" class="back-button">Back</button>
       </div>
       <!--Control config-->
       <div id="controlMenu" v-if="uiData.menu === 6">
@@ -173,6 +181,7 @@
       </div>
       <!--Confirm exit menu-->
       <div id="exitMenu" v-if="uiData.menu === 7">
+        <br><br><br><br>
         <h1>Really exit?</h1>
         <button v-on:click="confirmExit(true)">Yes</button>
         <button v-on:click="confirmExit(false)">No</button>
@@ -181,7 +190,7 @@
     <div id="ingame-pause" style="display:none"></div>
     <img src="assets/images/border.png" id="border-image" style="pointer-events:none;" />
     
-    <div id="options" style="display:none;width:100%;">
+    <div id="options" style="display:none;width:100%;" v-cloak>
       <div id="button-group">
         <div id="button-switch" v-on:click="switchClick()"></div>
         <div id="button-controls" v-on:click="goToControls(1)"></div>

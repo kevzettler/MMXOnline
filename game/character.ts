@@ -213,11 +213,11 @@ export class Character extends Actor {
     if(this.isCharging()) {
       let maxFlashTime = 0.1;
       if(!this.chargeSoundId && !this.chargeLoopSoundId) {
-        this.chargeSoundId = this.chargeSound.play();
+        this.chargeSoundId = game.playClip(this.chargeSound, this.getSoundVolume());
       }
       if(this.chargeSoundId && !this.chargeSound.playing(this.chargeSoundId)) {
         this.chargeSoundId = undefined;
-        this.chargeLoopSoundId = this.chargeLoopSound.play();
+        this.chargeLoopSoundId = game.playClip(this.chargeLoopSound, this.getSoundVolume());
       }
       this.chargeFlashTime += game.deltaTime;
       if(this.chargeFlashTime > maxFlashTime) {

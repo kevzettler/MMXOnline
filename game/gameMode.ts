@@ -449,39 +449,86 @@ export class TeamDeathMatch extends GameMode {
   }
 
   drawWinScreen() {
-    let team = this.mainPlayer.alliance === 0 ? "Blue" : "Red";
+    let team: string;
+    if(this.mainPlayer.won) {
+      team = this.mainPlayer.alliance === 0 ? "Blue" : "Red";
+    }
+    else {
+      team = this.mainPlayer.alliance === 0 ? "Red" : "Blue";
+    }
     Helpers.drawTextMMX(game.ctx, team + " team won!", this.screenWidth/2, this.screenHeight/2, 12, "center", "middle");
   }
   
   drawScoreboard() {
-    /*
     let padding = 10;
+    let hPadding = padding + 5;
     let fontSize = 8;
-    let col1x = padding + 10;
-    let col2x = this.screenWidth * 0.5;
-    let col3x = this.screenWidth * 0.75;
-    let lineY = padding + 35;
+    let col1x = padding + 5;
+    let col2x = this.screenWidth * 0.3;
+    let col3x = this.screenWidth * 0.4;
+    let teamLabelY = padding + 40;
+    let lineY = teamLabelY + 10;
     let labelY = lineY + 5;
     let line2Y = labelY + 10;
     let topPlayerY = line2Y + 5;
-    Helpers.drawRect(game.ctx, new Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
-    Helpers.drawText(game.ctx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
-    Helpers.drawText(game.ctx, "Map: " + this.level.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
-    Helpers.drawText(game.ctx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"), 
-    Helpers.drawLine(game.ctx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
-    Helpers.drawText(game.ctx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-    Helpers.drawText(game.ctx, "Kills", col2x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-    Helpers.drawText(game.ctx, "Deaths", col3x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-    Helpers.drawLine(game.ctx, padding + 10, line2Y, this.screenWidth - padding - 10, line2Y, "white", 1);
-    let rowH = 10;
-    for(let i = 0; i < this.players.length; i++) {
-      let player = this.players[i];
-      let color = (player === this.mainPlayer) ? "lightgreen" : "white";
-      Helpers.drawText(game.ctx, player.name, col1x, topPlayerY + (i)*rowH, color, "", fontSize, "left", "top", "mmx_font");
-      Helpers.drawText(game.ctx, String(player.kills), col2x, topPlayerY + (i)*rowH, color, "", fontSize, "left", "top", "mmx_font");
-      Helpers.drawText(game.ctx, String(player.deaths), col3x, topPlayerY + (i)*rowH, color, "", fontSize, "left", "top", "mmx_font");
+
+    let blueKills = 0;
+    let redKills = 0;
+    for(let player of this.level.players) {
+      if(player.alliance === 0) blueKills+=player.kills;
+      else redKills+=player.kills;
     }
+
+    //@ts-ignore
+    let redPlayers = _.filter(this.players, (player) => {
+      return player.alliance === 1;
+    });
+    //@ts-ignore
+    let bluePlayers = _.filter(this.players, (player) => {
+      return player.alliance === 0;
+    });
+
+    Helpers.drawRect(game.ctx, new Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
+    Helpers.drawText(game.ctx, "Game Mode: Team Deathmatch", hPadding, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
+    Helpers.drawText(game.ctx, "Map: " + this.level.name, hPadding, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
+    Helpers.drawText(game.ctx, "Playing to: " + String(this.killsToWin), hPadding, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"), 
+    Helpers.drawLine(game.ctx, hPadding, lineY, this.screenWidth - hPadding, lineY, "white", 1);
+
+    //Blue
+    Helpers.drawTextMMX(game.ctx, "Blue: " + blueKills, col1x, teamLabelY, fontSize, "left", "top");
+    Helpers.drawTextMMX(game.ctx, "Player", col1x, labelY, fontSize, "left", "top");
+    Helpers.drawTextMMX(game.ctx, "K", col2x, labelY, fontSize, "left", "top");
+    Helpers.drawTextMMX(game.ctx, "D", col3x, labelY, fontSize, "left", "top");
+
+    //Red
+    Helpers.drawTextMMX(game.ctx, "Red: " + redKills, this.screenWidth*0.5 + col1x, teamLabelY, fontSize, "left", "top", true);
+    Helpers.drawTextMMX(game.ctx, "Player", this.screenWidth*0.5 + col1x, labelY, fontSize, "left", "top", true);
+    Helpers.drawTextMMX(game.ctx, "K", this.screenWidth*0.5 + col2x, labelY, fontSize, "left", "top", true);
+    Helpers.drawTextMMX(game.ctx, "D", this.screenWidth*0.5 + col3x, labelY, fontSize, "left", "top", true);
+    
+    /*
+    Helpers.drawLine(game.ctx, col2x - 5, lineY, col2x - 5, lineY + this.screenHeight * 0.5, "white", 1);
+    Helpers.drawLine(game.ctx, col3x - 5, lineY, col3x - 5, lineY + this.screenHeight * 0.5, "white", 1);
+    Helpers.drawLine(game.ctx, this.screenWidth*0.5 + col2x - 5, lineY, this.screenWidth*0.5 + col2x - 5, lineY + this.screenHeight * 0.5, "white", 1);
+    Helpers.drawLine(game.ctx, this.screenWidth*0.5 + col3x - 5, lineY, this.screenWidth*0.5 + col3x - 5, lineY + this.screenHeight * 0.5, "white", 1);
     */
+
+    Helpers.drawLine(game.ctx, hPadding, line2Y, this.screenWidth - hPadding, line2Y, "white", 1);
+    let rowH = 10;
+    for(let i = 0; i < bluePlayers.length; i++) {
+      let player = bluePlayers[i];
+      let color = (player === this.mainPlayer) ? "lightgreen" : "";
+      Helpers.drawTextMMX(game.ctx, Helpers.stringReplace(player.name, " ", ""), col1x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, color);
+      Helpers.drawTextMMX(game.ctx, String(player.kills), col2x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, color);
+      Helpers.drawTextMMX(game.ctx, String(player.deaths), col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, color);
+    }
+    for(let i = 0; i < redPlayers.length; i++) {
+      let player = redPlayers[i];
+      let color = (player === this.mainPlayer) ? "lightgreen" : "";
+      Helpers.drawTextMMX(game.ctx, Helpers.stringReplace(player.name, " ", ""), this.screenWidth*0.5 + col1x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, color);
+      Helpers.drawTextMMX(game.ctx, String(player.kills), this.screenWidth*0.5 + col2x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, color);
+      Helpers.drawTextMMX(game.ctx, String(player.deaths), this.screenWidth*0.5 + col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, color);
+    }
   }
 
   checkIfWin() {

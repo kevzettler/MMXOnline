@@ -4,7 +4,11 @@ export function cheat(key: string, keycode: number) {
   //F1
   if(keycode === 112) {
     for(let player of game.level.players) {
-      player.health = 1;
+      //player.health = 1;
+    }
+    if(game.level.mainPlayer) {
+      game.level.mainPlayer.character.pos.x = 200;
+      game.level.mainPlayer.character.pos.y = 200;
     }
   }
   //F2

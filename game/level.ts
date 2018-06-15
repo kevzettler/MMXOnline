@@ -46,6 +46,7 @@ export class Level {
   pickupSpawners: PickupSpawner[] = [];
   killZones: KillZone[] = [];
   killY: number;
+  maxPlayers: number = 0;
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
@@ -144,6 +145,7 @@ export class Level {
       this.levelMusic = "BossBattle.mp3";
       this.musicLoopStart = 1500;
       this.musicLoopEnd = 29664;
+      this.maxPlayers = 2;
     }
     else if(this.name === "powerplant") {
       this.fixedCam = false;
@@ -151,6 +153,7 @@ export class Level {
       parallax = "powerplant_parallex.png";
       this.musicLoopStart = 51040;
       this.musicLoopEnd = 101116;
+      this.maxPlayers = 8;
     }
     else if(this.name === "highway") {
       this.fixedCam = false;
@@ -160,6 +163,7 @@ export class Level {
       this.musicLoopEnd = 87463;
       this.killY = 300;
       foreground = "highway_foreground.png";
+      this.maxPlayers = 8;
     }
     else if(this.name === "gallery") {
       this.fixedCam = false;
@@ -169,6 +173,7 @@ export class Level {
       this.musicLoopEnd = 110687;
       //this.killY = 300;
       foreground = "gallery_foreground.png";
+      this.maxPlayers = 10;
     }
 
     if(parallax) {
@@ -184,6 +189,9 @@ export class Level {
     this.gameMode = gameMode;
 
     if(this.levelMusic) {
+      if(game.music) {
+        game.music.stop();
+      }
       let music = new Howl({
         src: ["assets/music/" + this.levelMusic],
         sprite: {
@@ -211,7 +219,7 @@ export class Level {
   update() {
 
     if(game.music) {
-      game.music.volume((game.options.playMusic ? 1 : 0));
+      game.music.volume((game.options.playMusic ? game.getMusicVolume01() : 0));
     }
 
     this.gameMode.checkIfWin();
@@ -473,6 +481,8 @@ export class Level {
         }
       }
     }
+    this.camX = Helpers.roundEpsilon(this.camX);
+    this.camY = Helpers.roundEpsilon(this.camY);
   }
 
   computeCamPos(character: Character) {

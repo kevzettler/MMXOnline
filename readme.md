@@ -2,34 +2,22 @@
 Features
 ===============
 
--Loading screen
--Add to logo "deathmatch"
--Validate number of bots and play to
--Background image on main menu
--1v1 bossroom scale is off
--1 and 2 keep getting rebinded
-
--Climbing up slopes: constantly jumping
 -Camera/sprite anim jittering
+-The camera for gallery stage is weird down the slope
+-Walking up/down slopes jittering camera
 -Profiling/optimization
 
--Stop vue temp UI flashing
--Can't check score when dead
--Incorrect team report won (always blue)
-
--All the special weapon charges
-
+-Default to max players
+-Reduce jump height
 -E.spark follow normals
 
+-Detect bad browsers
+-Remove dev options
+-Remove special weapon charge
+-Remove "switch" button
 -Remove all console logging
 -An analytics/telemetry system
-
-===============
-Level editor
-===============
--Remember last tool used and keep it open
--Basic undo
--The json data binding is weird/has issues
+-Vue must be set for prod mode once deployed
 
 ===============
 Post-V1 Features
@@ -39,8 +27,9 @@ Post-V1 Features
   -Boomer kwanger (no new features needed)
   -Launch octopus (underwater coding)
 
+-All the special weapon charges
 -Play as Zero
--HUD changes
+-HUD changes: -Switch UI - switch weapons/char, and the menu HUDs too
 
 -Team games:
   -team-colored outline instead of palette swap
@@ -54,7 +43,12 @@ Post-V1 Features
   -Ability to drop down to a waypoint
   -Ability to jump over gaps
 
--Vue must be set for prod mode once deployed
+===============
+Level editor
+===============
+-Remember last tool used and keep it open
+-Basic undo
+-The json data binding is weird/has issues
 
 ===============
 Bugs/improvements
