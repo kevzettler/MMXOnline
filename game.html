@@ -15,6 +15,10 @@
     <canvas id="canvas" tabindex="0" width="298" height="224" style="display:none"></canvas>
     <div id="ui" v-cloak>
       <img src="assets/images/bg4.png" id="ui-background" />
+      <!--Browser not supported menu-->
+      <div id="bad-browser" v-if="uiData.menu === 9">
+        <h1>Browser not supported! Please download Chrome.</h1>
+      </div>
       <!--Name select menu-->
       <div id="loading" v-if="uiData.menu === 1">
         <h1 id="loading1">Loading...</h1>

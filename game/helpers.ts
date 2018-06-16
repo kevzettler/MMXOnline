@@ -2,6 +2,7 @@ import { Rect } from "./rect";
 import { Point } from "./point";
 import { Shape } from "./shape";
 import { Palette } from "./color";
+import { game } from "./game";
 
 export function inRect(x: number, y: number, rect: Rect): boolean {
   let rx:number = rect.x1;
@@ -255,6 +256,7 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   else if(flipX === -1) x = Math.floor(x);
   if(flipY === 1) y = Math.ceil(y);
   else if(flipY === -1) y = Math.floor(y);
+
   ctx.drawImage(helperCanvas, x, y);
   
   ctx.globalAlpha = 1;
@@ -320,6 +322,35 @@ export function drawPolygon(ctx: CanvasRenderingContext2D, shape: Shape, closed:
   }
 
   ctx.globalAlpha = 1;
+}
+
+export function isSupportedBrowser() {
+    //Check if browser is IE
+    if (navigator.userAgent.search("MSIE") >= 0) {
+        // insert conditional IE code here
+        return false;
+    }
+    //Check if browser is Chrome
+    else if (navigator.userAgent.search("Chrome") >= 0) {
+        // insert conditional Chrome code here
+        return true;
+    }
+    //Check if browser is Firefox 
+    else if (navigator.userAgent.search("Firefox") >= 0) {
+        // insert conditional Firefox Code here
+        return false;
+    }
+    //Check if browser is Safari
+    else if (navigator.userAgent.search("Safari") >= 0 && navigator.userAgent.search("Chrome") < 0) {
+        // insert conditional Safari code here
+        return false;
+    }
+    //Check if browser is Opera
+    else if (navigator.userAgent.search("Opera") >= 0) {
+        // insert conditional Opera code here
+        return false;
+    }
+    return false;
 }
 
 export function drawTextMMX(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, hAlign: string, vAlign: string, isRed?: boolean, overrideColor?: string) {

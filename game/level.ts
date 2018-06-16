@@ -397,6 +397,9 @@ export class Level {
 
   updateCamPos(deltaX: number, deltaY: number) {
 
+    let oldCamX = this.camX;
+    let oldCamY = this.camY;
+
     let playerX = this.mainPlayer.character.pos.x;
     let playerY = this.mainPlayer.character.getCamCenterPos().y;
 
@@ -533,8 +536,8 @@ export class Level {
     */
 
     this.camX = camX;
-    this.camY = camY;    
-    
+    this.camY = camY;
+
   }
   
   addGameObject(go: GameObject) {

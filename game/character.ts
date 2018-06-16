@@ -127,7 +127,7 @@ export class Character extends Actor {
     }
 
     if(this.player.alliance === 0) {
-      //game.level.debugString = "y: " + this.pos.y;
+      //game.level.debugString = "x: " + this.pos.x;
     }
 
     for(let projName in this.projectileCooldown) {

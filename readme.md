@@ -3,6 +3,9 @@ Features
 ===============
 
 -Camera/sprite anim jittering
+  -Camera + sprite can cause jitter due to camera offsetting proper floor/ceil logic in drawImage
+  -Sprites with odd number width/height can also cause problems
+  
 -The camera for gallery stage is weird down the slope
 -Walking up/down slopes jittering camera
 -Profiling/optimization
@@ -11,13 +14,17 @@ Features
 -Reduce jump height
 -E.spark follow normals
 
--Detect bad browsers
--Remove dev options
+-A "prod" system
+  -Remove dev options
+  -Remove all console logging
+  -Vue must be set for prod mode once deployed
+  -An analytics/telemetry system only in prod mode
+
+-P2 controls in in-game options
+-Gallery stage needs deathY and a block on left side of map
+-in 1v1, turn on flich or hitstun
 -Remove special weapon charge
 -Remove "switch" button
--Remove all console logging
--An analytics/telemetry system
--Vue must be set for prod mode once deployed
 
 ===============
 Post-V1 Features
@@ -31,10 +38,11 @@ Post-V1 Features
 -Play as Zero
 -HUD changes: -Switch UI - switch weapons/char, and the menu HUDs too
 
+
 -Team games:
   -team-colored outline instead of palette swap
   -possibly team-colored projectiles as well
-  -allies: show health bar
+  -allies: show health bar + name
 -Should not be able to destroy teammates' projectiles
 -CTF
 

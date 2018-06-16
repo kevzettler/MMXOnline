@@ -43,8 +43,7 @@ export class Player {
     if(!isAI && alliance === 0) {
       this.inputMapping = game.getPlayerControls(1);
     }
-
-    if(!isAI && alliance === 1) {
+    else if(!isAI && alliance === 1) {
       this.inputMapping = game.getPlayerControls(2);
     }
 
@@ -69,8 +68,7 @@ export class Player {
     if(!this.isAI && this.alliance === 0) {
       this.inputMapping = game.getPlayerControls(1);
     }
-
-    if(!this.isAI && this.alliance === 1) {
+    else if(!this.isAI && this.alliance === 1) {
       this.inputMapping = game.getPlayerControls(2);
     }
 
@@ -92,7 +90,6 @@ export class Player {
       this.character.xDir = spawnPoint.xDir;
       
       if(this === game.level.mainPlayer) {
-        console.log("Computing");
         game.level.computeCamPos(this.character);
         //this.debugString = this.camX + "," + this.camY;
       }

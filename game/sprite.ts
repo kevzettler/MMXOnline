@@ -82,6 +82,11 @@ export class Sprite {
     let halfW = w * 0.5;
     let halfH = h * 0.5;
 
+    if(flipX > 0) halfW = Math.floor(halfW);
+    else halfW = Math.ceil(halfW);
+    if(flipY > 0) halfH = Math.floor(halfH);
+    else halfH = Math.ceil(halfH);
+
     let x; let y;
 
     if(this.alignment === "topleft") {

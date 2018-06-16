@@ -31,7 +31,8 @@ export enum Menu {
   ArenaMenu,
   Controls,
   ExitMenu,
-  OptionsMenu
+  OptionsMenu,
+  BadBrowserMenu = 9
 }
 
 export class UIData {
@@ -115,17 +116,29 @@ class Game {
     Helpers.noCanvasSmoothing(this.ctx);
   }
   
-  doQuickStart: boolean = false;
+  doQuickStart: boolean = true;
   quickStart() {
+    
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
     this.uiData.selectedGameMode = "team deathmatch";
-    this.uiData.maxPlayers = 8;
-    this.uiData.numBots = 8;
+    this.uiData.maxPlayers = 0;
+    this.uiData.numBots = 0;
     this.uiData.playTo = 20;
     $("#options").show();
     $("#dev-options").show();
     game.loadLevel("gallery");
+    /*
+    this.uiData.menu = Menu.None;
+    this.uiData.isBrawl = true;
+    this.uiData.maxPlayers = 1;
+    this.uiData.isPlayer2CPU = false;
+    this.uiData.maxPlayers = 0;
+    this.uiData.numBots = 0;
+    $("#options").show();
+    $("#dev-options").show();
+    game.loadLevel("sm_bossroom");
+    */
   }
 
   getMusicVolume01() {
@@ -152,7 +165,13 @@ class Game {
     let options = this.options;
     let game = this;
     this.uiData = new UIData();
-    this.uiData.menu = Menu.Loading;
+
+    if(Helpers.isSupportedBrowser()) {
+      this.uiData.menu = Menu.Loading;
+    }
+    else {
+      this.uiData.menu = Menu.BadBrowserMenu;
+    }
 
     //@ts-ignore
     this.ui = new Vue({
@@ -391,7 +410,9 @@ class Game {
       }
     });
 
-    this.interval = window.setInterval(() => this.onLoad(), 1);
+    if(this.uiData.menu !== Menu.BadBrowserMenu) {
+      this.interval = window.setInterval(() => this.onLoad(), 1);
+    }
   }
 
   onLoad() {
@@ -667,7 +688,7 @@ class Game {
   }
 
   setPlayerControls(playerNum: number, inputMapping: { [code: number]: string }) {
-    if(!inputMapping[49]) throw "Bad input mapping";
+    if(playerNum === 1 && !inputMapping[49]) throw "Bad input mapping";
     let json = JSON.stringify(inputMapping);
     localStorage.setItem("player" + String(playerNum) + "-controls", json);
   }
