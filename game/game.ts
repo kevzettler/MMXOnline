@@ -88,7 +88,7 @@ class Game {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 
-  startTime: number = 0;
+  previousTime: number = 0;
   deltaTime: number = 0;
   time: number = 0;
   interval: number = 0;
@@ -593,26 +593,55 @@ class Game {
     return true;
   }
 
+  timePassed: number = 0;
+  lag: number = 0;
+  
+  MS_PER_UPDATE: number = 16.6666;
+
   //Main game loop
   gameLoop(currentTime: number) {
-    this.deltaTime = (currentTime - this.startTime) /1000;
+
+    let elapsed = currentTime - this.previousTime;
+    if(elapsed >= this.MS_PER_UPDATE * 3) {
+      elapsed = this.MS_PER_UPDATE * 3;
+    }
+
+    this.previousTime = currentTime;
+    this.lag += elapsed;
+
+    //Translate to deltaTime
+    this.deltaTime = 1/60;//elapsed / 1000;
     this.time += this.deltaTime;
-    if(Math.abs(this.deltaTime) > 1/30) this.deltaTime = 1/30;
+    this.timePassed += this.deltaTime;
+    
     if(this.options.showFPS) {
       let fps = (1 / this.deltaTime);
       this.level.debugString = "FPS: " + fps;
+      //console.log(fps);
     }
     
     try 
     {
-      this.level.update();
+      this.level.input();
+      while(this.lag >= this.MS_PER_UPDATE) {
+        this.level.update();
+        this.lag -= this.MS_PER_UPDATE;
+      }
+      this.level.render();
+      /*
+      if(!this.options.capTo30FPS || this.timePassed >= 1/60) {
+        this.deltaTime = this.timePassed;
+        this.timePassed = 0; 
+        this.level.update();
+        this.level.render();
+      }
+      */
     }
     catch(e)
     {
       console.error(e);//conversion to Error type
     }
 
-    this.startTime = currentTime;
     if(this.restartLevelName !== "") {
       this.doRestart();
     }

@@ -216,14 +216,8 @@ export class Level {
     }
   }
   
-  update() {
-
-    if(game.music) {
-      game.music.volume((game.options.playMusic ? game.getMusicVolume01() : 0));
-    }
-
-    this.gameMode.checkIfWin();
-
+  input() {
+    
     let gamepads = navigator.getGamepads();
     for(let i = 0; i < gamepads.length; i++) {
       if(i >= this.localPlayers.length) break;
@@ -245,6 +239,16 @@ export class Level {
       }
     }
 
+  }
+
+  update() {
+
+    if(game.music) {
+      game.music.volume((game.options.playMusic ? game.getMusicVolume01() : 0));
+    }
+
+    this.gameMode.checkIfWin();
+
     let playerX = 0;
     let playerY = 0;
     if(this.mainPlayer.character) {
@@ -260,14 +264,16 @@ export class Level {
     if(this.mainPlayer.character) {
       let deltaX = this.mainPlayer.character.pos.x - playerX;
       let deltaY = this.mainPlayer.character.pos.y - playerY;
+      let oldCamPosX = this.camX;
+      let oldCamPosY = this.camY;
       this.updateCamPos(deltaX, deltaY);
+      console.log(deltaX + "," + deltaY);
     }
 
     for(let effect of this.effects) {
       effect.update();
     }
-    this.render();
-
+    
     for(let player of this.localPlayers) {
       player.clearInputPressed();
       if(player.isAI) {
@@ -396,9 +402,6 @@ export class Level {
   }
 
   updateCamPos(deltaX: number, deltaY: number) {
-
-    let oldCamX = this.camX;
-    let oldCamY = this.camY;
 
     let playerX = this.mainPlayer.character.pos.x;
     let playerY = this.mainPlayer.character.getCamCenterPos().y;

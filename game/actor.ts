@@ -207,7 +207,7 @@ export class Actor {
         while(true) {
           loop++;if(loop > 100) {throw "INFINITELOOP";}
           this.pos.x += pushDir.x;
-          this.pos.y += pushDir.y;
+          this.pos.y += (pushDir.y * 0.1);
           let collideData = game.level.checkCollisionActor(this, 0, 0);
           if(collideData && !collideData.isTrigger) {
           }
@@ -232,7 +232,7 @@ export class Actor {
           if(collideData && !collideData.isTrigger) {
             break;
           }
-          this.pos.y++;
+          this.pos.y+=0.1;
         }
       }
 

@@ -4217,11 +4217,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         game_12.game.music = music_1;
                     }
                 };
-                Level.prototype.update = function () {
-                    if (game_12.game.music) {
-                        game_12.game.music.volume((game_12.game.options.playMusic ? game_12.game.getMusicVolume01() : 0));
-                    }
-                    this.gameMode.checkIfWin();
+                Level.prototype.input = function () {
                     var gamepads = navigator.getGamepads();
                     for (var i = 0; i < gamepads.length; i++) {
                         if (i >= this.localPlayers.length)
@@ -4243,6 +4239,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             player.setAxes(j, gamepad.axes[j]);
                         }
                     }
+                };
+                Level.prototype.update = function () {
+                    if (game_12.game.music) {
+                        game_12.game.music.volume((game_12.game.options.playMusic ? game_12.game.getMusicVolume01() : 0));
+                    }
+                    this.gameMode.checkIfWin();
                     var playerX = 0;
                     var playerY = 0;
                     if (this.mainPlayer.character) {
@@ -4257,13 +4259,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     if (this.mainPlayer.character) {
                         var deltaX = this.mainPlayer.character.pos.x - playerX;
                         var deltaY = this.mainPlayer.character.pos.y - playerY;
+                        var oldCamPosX = this.camX;
+                        var oldCamPosY = this.camY;
                         this.updateCamPos(deltaX, deltaY);
+                        console.log(deltaX + "," + deltaY);
                     }
                     for (var _b = 0, _c = this.effects; _b < _c.length; _b++) {
                         var effect = _c[_b];
                         effect.update();
                     }
-                    this.render();
                     for (var _d = 0, _e = this.localPlayers; _d < _e.length; _d++) {
                         var player = _e[_d];
                         player.clearInputPressed();
@@ -4401,8 +4405,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     configurable: true
                 });
                 Level.prototype.updateCamPos = function (deltaX, deltaY) {
-                    var oldCamX = this.camX;
-                    var oldCamY = this.camY;
                     var playerX = this.mainPlayer.character.pos.x;
                     var playerY = this.mainPlayer.character.getCamCenterPos().y;
                     var dontMoveX = false;
@@ -4888,7 +4890,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.palettes = {};
                     this.isServer = false;
                     this.isClient = true;
-                    this.startTime = 0;
+                    this.previousTime = 0;
                     this.deltaTime = 0;
                     this.time = 0;
                     this.interval = 0;
@@ -4896,6 +4898,9 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.soundSheetLoaded = false;
                     this.doQuickStart = true;
                     this.restartLevelName = "";
+                    this.timePassed = 0;
+                    this.lag = 0;
+                    this.MS_PER_UPDATE = 16.6666;
                     this.canvas = $("#canvas")[0];
                     this.ctx = this.canvas.getContext("2d");
                     this.uiEl = $("#ui")[0];
@@ -5325,21 +5330,30 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 };
                 Game.prototype.gameLoop = function (currentTime) {
                     var _this = this;
-                    this.deltaTime = (currentTime - this.startTime) / 1000;
+                    var elapsed = currentTime - this.previousTime;
+                    if (elapsed >= this.MS_PER_UPDATE * 3) {
+                        elapsed = this.MS_PER_UPDATE * 3;
+                    }
+                    this.previousTime = currentTime;
+                    this.lag += elapsed;
+                    this.deltaTime = 1 / 60;
                     this.time += this.deltaTime;
-                    if (Math.abs(this.deltaTime) > 1 / 30)
-                        this.deltaTime = 1 / 30;
+                    this.timePassed += this.deltaTime;
                     if (this.options.showFPS) {
                         var fps = (1 / this.deltaTime);
                         this.level.debugString = "FPS: " + fps;
                     }
                     try {
-                        this.level.update();
+                        this.level.input();
+                        while (this.lag >= this.MS_PER_UPDATE) {
+                            this.level.update();
+                            this.lag -= this.MS_PER_UPDATE;
+                        }
+                        this.level.render();
                     }
                     catch (e) {
                         console.error(e);
                     }
-                    this.startTime = currentTime;
                     if (this.restartLevelName !== "") {
                         this.doRestart();
                     }
@@ -5586,7 +5600,7 @@ System.register("helpers", ["point"], function (exports_27, context_27) {
     exports_27("noCanvasSmoothing", noCanvasSmoothing);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
         if (!sW) {
-            ctx.drawImage(imgEl, Math.floor(sX), Math.floor(sY));
+            ctx.drawImage(imgEl, sX, sY);
             return;
         }
         ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;
@@ -6523,7 +6537,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                                     throw "INFINITELOOP";
                                 }
                                 this.pos.x += pushDir.x;
-                                this.pos.y += pushDir.y;
+                                this.pos.y += (pushDir.y * 0.1);
                                 var collideData = game_14.game.level.checkCollisionActor(this, 0, 0);
                                 if (collideData && !collideData.isTrigger) {
                                 }
@@ -6548,7 +6562,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                                 if (collideData && !collideData.isTrigger) {
                                     break;
                                 }
-                                this.pos.y++;
+                                this.pos.y += 0.1;
                             }
                         }
                     }
