@@ -280,16 +280,27 @@ export class Shape {
     return undefined;
   }
 
-  getMinTransVector(b: Shape): Point {
+  //Get the min trans vector to get this shape out of shape b.
+  getMinTransVector(b: Shape, dir?: Point): Point {
     let correctionVectors = [];
+    let thisNormals: Point[];
+    let bNormals: Point[];
+    if(dir) {
+      thisNormals = [dir];
+      bNormals = [dir];
+    }
+    else {
+      thisNormals = this.getNormals();
+      bNormals = b.getNormals();
+    }
     // project a&b points on a's normals and check for overlaps
-    for (let normal of this.getNormals()) {
+    for (let normal of thisNormals) {
       let result = this.checkNormal(b, normal);
       if (result) correctionVectors.push(result);
       //else return undefined;
     }
     // project a&b poitns on b's normals and check for overlaps
-    for (let normal of b.getNormals()) {
+    for (let normal of bNormals) {
       let result = this.checkNormal(b, normal);
       if (result) correctionVectors.push(result);
       //else return undefined;
@@ -302,6 +313,42 @@ export class Shape {
       });
     }
     return undefined;
+  }
+
+  getMinTransVectorDir(b: Shape, dir: Point) {
+    let mag = 0;
+    let maxMag = 0;
+    for(let point of this.points) {
+      let line = new Line(point, point.add(dir.times(10000)));
+      for(let bLine of b.getLines()) {
+        let intersectPoint = bLine.getIntersectPoint(line);
+        if(intersectPoint) {
+          mag = point.distanceTo(intersectPoint);
+          if(mag > maxMag) {
+            maxMag = mag;
+          }
+        }
+      }
+    }
+    return dir.times(maxMag);
+  }
+
+  getSnapVector(b: Shape, dir: Point) {
+    let mag = 0;
+    let minMag = Infinity;
+    for(let point of this.points) {
+      let line = new Line(point, point.add(dir.times(10000)));
+      for(let bLine of b.getLines()) {
+        let intersectPoint = bLine.getIntersectPoint(line);
+        if(intersectPoint) {
+          mag = point.distanceTo(intersectPoint);
+          if(mag < minMag) {
+            minMag = mag;
+          }
+        }
+      }
+    }
+    return dir.times(minMag);
   }
 
   clone(x: number, y: number) {

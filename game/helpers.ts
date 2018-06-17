@@ -175,7 +175,7 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number): void {
   
   if(!sW) {
-    ctx.drawImage(imgEl, sX, sY);
+    ctx.drawImage(imgEl, (sX), (sY));
     return;
   }
 

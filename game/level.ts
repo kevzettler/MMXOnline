@@ -267,7 +267,8 @@ export class Level {
       let oldCamPosX = this.camX;
       let oldCamPosY = this.camY;
       this.updateCamPos(deltaX, deltaY);
-      console.log(deltaX + "," + deltaY);
+      //console.log(deltaX + "," + deltaY);
+      //console.log(this.camX + "," + this.camY)
     }
 
     for(let effect of this.effects) {
@@ -458,32 +459,20 @@ export class Level {
     for(let noScroll of this.noScrolls) {
       if(noScroll.shape.intersectsShape(camRectShape)) {
         if(noScroll.freeDir === Direction.Left) {
-          while(noScroll.shape.intersectsShape(camRectShape)) {
-            this.camX--;
-            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-            camRectShape = camRect.getShape();
-          }
+          let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(-1, 0)); 
+          this.camX += mtv.x;
         }
         else if(noScroll.freeDir === Direction.Right) {
-          while(noScroll.shape.intersectsShape(camRectShape)) {
-            this.camX++;
-            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-            camRectShape = camRect.getShape();
-          }
+          let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(1, 0)); 
+          this.camX += mtv.x;
         }
         else if(noScroll.freeDir === Direction.Up) {
-          while(noScroll.shape.intersectsShape(camRectShape)) {
-            this.camY--;
-            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-            camRectShape = camRect.getShape();
-          }
+          let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(0, -1));
+          this.camY += mtv.y;
         }
         else if(noScroll.freeDir === Direction.Down) {
-          while(noScroll.shape.intersectsShape(camRectShape)) {
-            this.camY++;
-            camRect = new Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-            camRectShape = camRect.getShape();
-          }
+          let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(0, 1));
+          this.camY += mtv.y;
         }
       }
     }

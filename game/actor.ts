@@ -148,6 +148,7 @@ export class Actor {
   move(amount: Point, useDeltaTime: boolean = true, pushIncline: boolean = true, snapInclineGravity: boolean = true) {
 
     let times = useDeltaTime ? game.deltaTime : 1;
+    let collideData: CollideData;
 
     //No collider: just move
     if(!this.collider) {
@@ -168,7 +169,7 @@ export class Actor {
       let pushDir: Point;
 
       while(inc.magnitude > 0) {
-        let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
+        collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
         if(collideData && !collideData.isTrigger) {
           this.registerCollision(collideData);
           if(collideData.normal && collideData.normal.isAngled() && pushIncline) {

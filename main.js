@@ -288,16 +288,26 @@ System.register("shape", ["point", "rect", "collider"], function (exports_1, con
                     }
                     return undefined;
                 };
-                Shape.prototype.getMinTransVector = function (b) {
+                Shape.prototype.getMinTransVector = function (b, dir) {
                     var correctionVectors = [];
-                    for (var _i = 0, _a = this.getNormals(); _i < _a.length; _i++) {
-                        var normal = _a[_i];
+                    var thisNormals;
+                    var bNormals;
+                    if (dir) {
+                        thisNormals = [dir];
+                        bNormals = [dir];
+                    }
+                    else {
+                        thisNormals = this.getNormals();
+                        bNormals = b.getNormals();
+                    }
+                    for (var _i = 0, thisNormals_1 = thisNormals; _i < thisNormals_1.length; _i++) {
+                        var normal = thisNormals_1[_i];
                         var result = this.checkNormal(b, normal);
                         if (result)
                             correctionVectors.push(result);
                     }
-                    for (var _b = 0, _c = b.getNormals(); _b < _c.length; _b++) {
-                        var normal = _c[_b];
+                    for (var _a = 0, bNormals_1 = bNormals; _a < bNormals_1.length; _a++) {
+                        var normal = bNormals_1[_a];
                         var result = this.checkNormal(b, normal);
                         if (result)
                             correctionVectors.push(result);
@@ -308,6 +318,44 @@ System.register("shape", ["point", "rect", "collider"], function (exports_1, con
                         });
                     }
                     return undefined;
+                };
+                Shape.prototype.getMinTransVectorDir = function (b, dir) {
+                    var mag = 0;
+                    var maxMag = 0;
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        var line = new Line(point, point.add(dir.times(10000)));
+                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
+                            var bLine = _c[_b];
+                            var intersectPoint = bLine.getIntersectPoint(line);
+                            if (intersectPoint) {
+                                mag = point.distanceTo(intersectPoint);
+                                if (mag > maxMag) {
+                                    maxMag = mag;
+                                }
+                            }
+                        }
+                    }
+                    return dir.times(maxMag);
+                };
+                Shape.prototype.getSnapVector = function (b, dir) {
+                    var mag = 0;
+                    var minMag = Infinity;
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        var line = new Line(point, point.add(dir.times(10000)));
+                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
+                            var bLine = _c[_b];
+                            var intersectPoint = bLine.getIntersectPoint(line);
+                            if (intersectPoint) {
+                                mag = point.distanceTo(intersectPoint);
+                                if (mag < minMag) {
+                                    minMag = mag;
+                                }
+                            }
+                        }
+                    }
+                    return dir.times(minMag);
                 };
                 Shape.prototype.clone = function (x, y) {
                     var points = [];
@@ -4262,7 +4310,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         var oldCamPosX = this.camX;
                         var oldCamPosY = this.camY;
                         this.updateCamPos(deltaX, deltaY);
-                        console.log(deltaX + "," + deltaY);
                     }
                     for (var _b = 0, _c = this.effects; _b < _c.length; _b++) {
                         var effect = _c[_b];
@@ -4453,32 +4500,20 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         var noScroll = _a[_i];
                         if (noScroll.shape.intersectsShape(camRectShape)) {
                             if (noScroll.freeDir === noScroll_1.Direction.Left) {
-                                while (noScroll.shape.intersectsShape(camRectShape)) {
-                                    this.camX--;
-                                    camRect = new rect_5.Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-                                    camRectShape = camRect.getShape();
-                                }
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(-1, 0));
+                                this.camX += mtv.x;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Right) {
-                                while (noScroll.shape.intersectsShape(camRectShape)) {
-                                    this.camX++;
-                                    camRect = new rect_5.Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-                                    camRectShape = camRect.getShape();
-                                }
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(1, 0));
+                                this.camX += mtv.x;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Up) {
-                                while (noScroll.shape.intersectsShape(camRectShape)) {
-                                    this.camY--;
-                                    camRect = new rect_5.Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-                                    camRectShape = camRect.getShape();
-                                }
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(0, -1));
+                                this.camY += mtv.y;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Down) {
-                                while (noScroll.shape.intersectsShape(camRectShape)) {
-                                    this.camY++;
-                                    camRect = new rect_5.Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
-                                    camRectShape = camRect.getShape();
-                                }
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(0, 1));
+                                this.camY += mtv.y;
                             }
                         }
                     }
@@ -5600,7 +5635,7 @@ System.register("helpers", ["point"], function (exports_27, context_27) {
     exports_27("noCanvasSmoothing", noCanvasSmoothing);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
         if (!sW) {
-            ctx.drawImage(imgEl, sX, sY);
+            ctx.drawImage(imgEl, (sX), (sY));
             return;
         }
         ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;
@@ -6495,6 +6530,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     if (pushIncline === void 0) { pushIncline = true; }
                     if (snapInclineGravity === void 0) { snapInclineGravity = true; }
                     var times = useDeltaTime ? game_14.game.deltaTime : 1;
+                    var collideData;
                     if (!this.collider) {
                         this.pos.inc(amount.times(times));
                     }
@@ -6508,7 +6544,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         var inc = amount.clone();
                         var pushDir = void 0;
                         while (inc.magnitude > 0) {
-                            var collideData = game_14.game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
+                            collideData = game_14.game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
                             if (collideData && !collideData.isTrigger) {
                                 this.registerCollision(collideData);
                                 if (collideData.normal && collideData.normal.isAngled() && pushIncline) {
@@ -6538,8 +6574,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                                 }
                                 this.pos.x += pushDir.x;
                                 this.pos.y += (pushDir.y * 0.1);
-                                var collideData = game_14.game.level.checkCollisionActor(this, 0, 0);
-                                if (collideData && !collideData.isTrigger) {
+                                var collideData_1 = game_14.game.level.checkCollisionActor(this, 0, 0);
+                                if (collideData_1 && !collideData_1.isTrigger) {
                                 }
                                 else {
                                     break;
@@ -6558,8 +6594,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                                 if (loop_1 > 100) {
                                     throw "INFINITELOOP";
                                 }
-                                var collideData = game_14.game.level.checkCollisionActor(this, 0, 1);
-                                if (collideData && !collideData.isTrigger) {
+                                var collideData_2 = game_14.game.level.checkCollisionActor(this, 0, 1);
+                                if (collideData_2 && !collideData_2.isTrigger) {
                                     break;
                                 }
                                 this.pos.y += 0.1;
