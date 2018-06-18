@@ -2,27 +2,19 @@
 Features
 ===============
 
--Camera/sprite anim jittering
-  -Camera + sprite can cause jitter due to camera offsetting proper floor/ceil logic in drawImage
-  -Sprites with odd number width/height can also cause problems
-  
--The camera for gallery stage is weird down the slope
--Walking up/down slopes jittering camera
--Profiling/optimization
-
--Default to max players
--Reduce jump height
--E.spark follow normals
-
--A "prod" system
-  -Remove dev options
-  -Remove all console logging
-  -Vue must be set for prod mode once deployed
+-A "prod" system/switch
   -An analytics/telemetry system only in prod mode
+-Transpiler
+  -Remove all console logging
+  -Add try/catch around every function block
 
--P2 controls in in-game options
--Gallery stage needs deathY and a block on left side of map
--in 1v1, turn on flich or hitstun
+-Camera still has issues sometimes, gets jammed too far down and snaps
+-Profiling/optimization
+  -Use mtv for incline slope/fix problems with it
+  -mtv still has glitch, check slope
+-The effects time are now off with new game loop refactor
+-Now various maps aren't working (re-test everything)
+
 -Remove special weapon charge
 -Remove "switch" button
 

@@ -126,6 +126,9 @@ export class GameMode {
   }
 
   drawWeaponSwitchHUD() {
+    if(!game.options.showWeaponHUD) {
+      return;
+    }
     let weaponSprite = game.sprites["hud_weapon_icon"];
     let startX = Math.round(this.screenWidth * 0.225);
     let width = 20;

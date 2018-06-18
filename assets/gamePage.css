@@ -201,7 +201,7 @@ button {
   height: 100vh;
 }
 
-#button-switch, #button-controls, #button-options, #button-quit {
+#button-switch, #button-controls, #button-controls2, #button-options, #button-quit {
   display: inline-block;
   width: 123px;
   height: 123px;
@@ -225,6 +225,10 @@ button {
   background-image: url("images/controls_off.png");
 }
 
+#button-controls2 {
+  background-image: url("images/controls_off2.png");
+}
+
 #button-options {
   background-image: url("images/options_off.png");
 }
@@ -239,6 +243,10 @@ button {
 
 #button-controls:hover {
   background-image: url("images/controls_on.png");
+}
+
+#button-controls2:hover {
+  background-image: url("images/controls_on2.png");
 }
 
 #button-options:hover {

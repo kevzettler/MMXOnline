@@ -54,7 +54,7 @@ export class Level {
 
   constructor(levelJson: any) {
     this.zoomScale = 3;
-    this.gravity = 900;
+    this.gravity = 550;
     this.name = levelJson.name;
     this.background = game.getBackground(levelJson.backgroundPath);
     this.frameCount = 0;
@@ -171,7 +171,7 @@ export class Level {
       parallax = "gallery_parallax.png";
       this.musicLoopStart = 0;
       this.musicLoopEnd = 110687;
-      //this.killY = 300;
+      this.killY = 1034;
       foreground = "gallery_foreground.png";
       this.maxPlayers = 10;
     }
@@ -652,8 +652,9 @@ export class Level {
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
       if(!isTrigger) continue;
-      if(go.collider.shape.intersectsShape(actorShape)) {  
-        triggers.push(new CollideData(go.collider, vel, isTrigger, go, undefined, undefined));
+      let collideData = actorShape.intersectsShape(go.collider.shape);
+      if(collideData) {  
+        triggers.push(new CollideData(go.collider, vel, isTrigger, go, collideData.normal, collideData.hitPoint));
       }
     }
     return triggers;

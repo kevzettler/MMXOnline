@@ -94,7 +94,7 @@ export class Projectile extends Actor {
           character.applyDamage(this.damager.owner, this.weapon, this.damager.damage * (weakness ? 2 : 1));
 
           if(this.flinch || game.options.alwaysFlinch || weakness) {
-            if(game.options.invulnFrames) {
+            if(game.useInvulnFrames()) {
               this.playSound("weakness");
             }
             else {
@@ -103,14 +103,14 @@ export class Projectile extends Actor {
             character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
           }
           else {
-            if(game.options.invulnFrames) {
+            if(game.useInvulnFrames()) {
               this.playSound("weakness");
             }
             else {
               this.playSound("hit");
             }
           }
-          if(game.options.invulnFrames) {
+          if(game.useInvulnFrames()) {
             character.invulnFrames = 1;
             character.renderEffectTime = 1;
           }
@@ -124,7 +124,7 @@ export class Projectile extends Actor {
     }
     let wall = other.gameObject;
     if(wall instanceof Wall) {
-      this.onHitWall(wall);
+      this.onHitWall(other);
     }
   }
 
@@ -132,7 +132,7 @@ export class Projectile extends Actor {
     this.destroySelf(this.fadeSprite, this.fadeSound);
   }
 
-  onHitWall(wall: Wall) {
+  onHitWall(other: CollideData) {
 
   }
 
@@ -458,11 +458,19 @@ export class ElectricSparkProj extends Projectile {
     this.type = type;
   }
 
-  onHitWall(wall: Wall) {
+  onHitWall(other: CollideData) {
     if(this.type === 0) {
+      let normal = other.normal;
+      if(normal) {
+        normal = normal.leftNormal();
+      }
+      else {
+        normal = new Point(0, 1)
+      }
+      normal.multiply(this.speed * 3);
       this.destroySelf(this.fadeSprite);
-      new ElectricSparkProj(this.weapon, this.pos.clone(), new Point(0, this.speed * 3), this.damager.owner, 1);
-      new ElectricSparkProj(this.weapon, this.pos.clone(), new Point(0, -this.speed * 3), this.damager.owner, 1);
+      new ElectricSparkProj(this.weapon, this.pos.clone(), normal, this.damager.owner, 1);
+      new ElectricSparkProj(this.weapon, this.pos.clone(), normal.times(-1), this.damager.owner, 1);
     }
   }
 
@@ -574,8 +582,8 @@ export class ShotgunIceProj extends Projectile {
     }
   }
 
-  onHitWall(wall: Wall) {
-    this.onHit(wall);
+  onHitWall(other: CollideData) {
+    this.onHit(other.gameObject);
   }
 
   onHitChar(character: Character) {

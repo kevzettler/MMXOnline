@@ -80,7 +80,7 @@
         <div class="map-box" style="display:inline-block">
           <h2 style="display:inline">Select Map</h2>
           <br><br>
-          <select v-model="uiData.selectedArenaMap">
+          <select v-model="uiData.selectedArenaMap" @change="onArenaMapChange()">
             <option v-for="map in uiData.arenaMaps" v-bind:value="map">{{ map }}</option>
           </select>
           <br><br>
@@ -130,7 +130,8 @@
       <div id="optionsMenu" v-if="uiData.menu === 8" style="padding-left: 10px">
         <h1>Options</h1>
         <label>Music volume</label><input type="range" min="0" max="100" v-model:number="uiData.optionsCopy.musicVolume" class="slider" id="myRange"><br>
-        <label>Sound volume</label><input type="range" min="0" max="100" v-model:number="uiData.optionsCopy.soundVolume" class="slider" id="myRange">
+        <label>Sound volume</label><input type="range" min="0" max="100" v-model:number="uiData.optionsCopy.soundVolume" class="slider" id="myRange"><br><br>
+        <label>Show weapon switch HUD?</label><input type="checkbox" v-model="uiData.optionsCopy.showWeaponHUD"><br><br>
         <button id="c-submit" type="submit" v-on:click="saveOptions()">Save</button>
         <button v-on:click="goToMainMenu()" class="back-button">Back</button>
       </div>
@@ -198,11 +199,12 @@
       <div id="button-group">
         <div id="button-switch" v-on:click="switchClick()"></div>
         <div id="button-controls" v-on:click="goToControls(1)"></div>
+        <div id="button-controls2" v-if="uiData.isBrawl && !uiData.isPlayer2CPU" v-on:click="goToControls(2)"></div>
         <div id="button-options" v-on:click="optionsClick()"></div>
         <div id="button-quit" v-on:click="exitGame()"></div>
       </div>
       
-      <div id="dev-options" v-if="!hideDevOptions" style="margin-top: -130px; display:none">
+      <div id="dev-options" v-if="!hideDevOptions && !uiData.isProd" style="margin-top: -130px; display:none">
         <div style="display:inline-block">
           <input type="checkbox" v-model="options.showHitboxes" @change="onChange()">Show hitboxes? <br>
           <input type="checkbox" v-model="hideDevOptions" @change="onChange()">Hide dev options<br>
@@ -226,7 +228,8 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/lodash/4.17.1/lodash.min.js"></script>
-<script src="https://unpkg.com/vue"></script>
+<!--<script src="https://unpkg.com/vue"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.0"></script>
 <script src="node_modules/howler/dist/howler.min.js"></script>
 <script src="node_modules/systemjs/dist/system.js"></script>

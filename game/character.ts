@@ -56,8 +56,8 @@ export class Character extends Actor {
     
     this.changeState(new Idle());
     
-    this.jumpPower = 350;
-    this.runSpeed = 100;
+    this.jumpPower = 230;
+    this.runSpeed = 80;
 
     this.chargeTime = 0;
     this.charge1Time = 0.75;

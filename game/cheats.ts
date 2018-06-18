@@ -1,6 +1,9 @@
 import { game } from "./game";
 
 export function cheat(key: string, keycode: number) {
+
+  if(game.uiData.isProd) return false;
+
   //F1
   if(keycode === 112) {
     for(let player of game.level.players) {

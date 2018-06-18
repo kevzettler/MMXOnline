@@ -19,6 +19,7 @@ class Options {
   capTo30FPS: boolean = false;
   musicVolume: number = 100;
   soundVolume: number = 100;
+  showWeaponHUD: boolean = true;
   constructor() { }
 }
 
@@ -36,6 +37,7 @@ export enum Menu {
 }
 
 export class UIData {
+  isProd: boolean = false;
   playerName: string = "Player 1";
   menu: Menu;
   isBrawl: boolean = false;
@@ -147,6 +149,10 @@ class Game {
   getSoundVolume01() {
     return Number(this.options.soundVolume) / 100;
   }
+  useInvulnFrames() {
+    //return this.options.invulnFrames;
+    return this.uiData.isBrawl;
+  }
 
   start() {
 
@@ -195,6 +201,9 @@ class Game {
           else if(this.uiData.playTo < 1) {
             this.uiData.playTo = 1;
           }
+        },
+        onArenaMapChange: function() {
+          this.uiData.numBots = game.levels[this.uiData.selectedArenaMap].maxPlayers - 1;
         },
         mapImage: function(selectedMap: any) {
           if(selectedMap === "sm_bossroom") return "sm_bossroom.png";
@@ -305,6 +314,7 @@ class Game {
         goToArena: function() {
           this.uiData.isBrawl = false;
           this.uiData.menu = Menu.ArenaMenu;
+          this.onArenaMapChange();
         },
         goToBattle: function(selectedMap: any) {
           this.uiData.menu = Menu.None;
