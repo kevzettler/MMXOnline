@@ -382,8 +382,10 @@ export class Character extends Actor {
   }
   
   render(x: number, y: number) {
+    //@ts-ignore
     window.playerDebug = true;
     super.render(x, y);
+    //@ts-ignore
     window.playerDebug = false;
     if(this.chargeEffect) {
       this.chargeEffect.render(this.getCenterPos().add(new Point(x, y)), this.getChargeLevel())

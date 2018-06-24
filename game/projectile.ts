@@ -275,7 +275,7 @@ export class TorpedoProj extends Projectile {
     else if(normAngle >= 54 && normAngle < 72) frameIndex = 3;
     else if(normAngle >= 72 && normAngle < 90) frameIndex = 4;
 
-    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
+    this.sprite.draw(game.ctx, frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
   }
   
 }
@@ -398,13 +398,13 @@ export class TornadoProj extends Projectile {
   
   render(x: number, y: number) {
     
-    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+    this.spriteStart.draw(game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     let i = 0;
     let spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
     for(i; i < this.length; i++) {
-      this.spriteMid.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+      this.spriteMid.draw(game.ctx, this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     }
-    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+    this.spriteEnd.draw(game.ctx, this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
 
     this.renderEffect = "";
     if(game.options.showHitboxes && this.collider) {
@@ -514,7 +514,7 @@ export class BoomerangProj extends Projectile {
   }
 
   renderFromAngle(x: number, y: number) {
-    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+    this.sprite.draw(game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
   }
 
   update() {

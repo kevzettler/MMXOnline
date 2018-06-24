@@ -106,8 +106,14 @@ class Game {
   uiEl: HTMLDivElement;
   ui: any;
 
+  uiCanvas: HTMLCanvasElement;
+  uiCtx: CanvasRenderingContext2D;
+
   constructor() {
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
+    this.uiCanvas = <HTMLCanvasElement>$("#ui-canvas")[0];
+    this.uiCtx = this.uiCanvas.getContext("2d");
+
     this.ctx = this.canvas.getContext("2d");
 
     this.uiEl = <HTMLDivElement>$("#ui")[0];
@@ -116,6 +122,7 @@ class Game {
     this.defaultCanvasHeight = this.canvas.height;
 
     Helpers.noCanvasSmoothing(this.ctx);
+    Helpers.noCanvasSmoothing(this.uiCtx);
   }
   
   doQuickStart: boolean = true;
@@ -348,6 +355,7 @@ class Game {
             if(game.music) game.music.stop();
             game.uiData.menu = Menu.MainMenu;
             $(game.canvas).hide();
+            $(game.uiCanvas).hide();
             $("#options").hide();
           }
           else {
@@ -520,6 +528,7 @@ class Game {
     this.level.background = prototypeLevel.background;
 
     $(this.canvas).show();
+    $(this.uiCanvas).show();
     
     let gameMode : GameMode;
 

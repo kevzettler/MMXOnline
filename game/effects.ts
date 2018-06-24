@@ -54,7 +54,7 @@ export class ChargeEffect {
       let point = this.points[i];
       let chargePart = game.sprites["charge_part_" + String(chargeLevel)];
       if(this.pointTimes[i] > 0) {
-        chargePart.draw(Math.round(this.pointTimes[i]), centerPos.x + point.x, centerPos.y + point.y);
+        chargePart.draw(game.ctx, Math.round(this.pointTimes[i]), centerPos.x + point.x, centerPos.y + point.y);
       }
     }
 
@@ -77,7 +77,7 @@ export class DieEffectParticles {
       let x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
       let y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
       let diePartSprite = game.sprites["die_particle"];
-      diePartSprite.draw(Math.round(this.time * 20) % diePartSprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", Helpers.clamp01(1 - this.time*0.5));
+      diePartSprite.draw(game.ctx, Math.round(this.time * 20) % diePartSprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", Helpers.clamp01(1 - this.time*0.5));
     }
     this.ang += game.deltaTime * 100;
   }

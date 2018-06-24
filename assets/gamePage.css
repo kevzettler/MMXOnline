@@ -82,11 +82,15 @@ button {
   height: 100vh;
 }
 
-#ui, #canvas {
+#ui, #canvas, #ui-canvas {
   -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
   -moz-box-sizing: border-box;    /* Firefox, other Gecko */
   box-sizing: border-box;         /* Opera/IE 8+ */
   padding: 19px;
+}
+
+#ui-canvas {
+  position: absolute;
 }
 
 #exitMenu {

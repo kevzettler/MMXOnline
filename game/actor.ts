@@ -244,7 +244,7 @@ export class Actor {
     //console.log(this.pos.x + "," + this.pos.y);
     
     if(this.angle === undefined) {
-      this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+      this.sprite.draw(game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     }
     else {
       this.renderFromAngle(x, y);
@@ -257,7 +257,7 @@ export class Actor {
   }
 
   renderFromAngle(x: number, y: number) {
-    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+    this.sprite.draw(game.ctx, 0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
   }
 
   registerCollision(other: CollideData) {

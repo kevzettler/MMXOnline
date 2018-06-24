@@ -175,10 +175,11 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number): void {
   
   if(!sW) {
+    //@ts-ignore
     if(window.debugBackground) {
       game.level.debugString2 = sY + "(" +Math.floor(sY) + ")";
     }
-    ctx.drawImage(imgEl, (sX), Math.floor(sY));
+    ctx.drawImage(imgEl, (sX), sY);
     return;
   }
 
@@ -255,11 +256,14 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
     helperCtx.putImageData(imageData, 0, 0);​
   }
 
+  /*
   if(flipX === 1) x = Math.ceil(x);
   else if(flipX === -1) x = Math.floor(x);
   if(flipY === 1) y = Math.ceil(y);
   else if(flipY === -1) y = Math.floor(y);
-
+  */
+  
+  //@ts-ignore
   if(window.playerDebug)
     game.level.debugString = "y: " + y;
   ctx.drawImage(helperCanvas, x, y);
@@ -392,6 +396,7 @@ export function drawTextMMX(ctx: CanvasRenderingContext2D, text: string, x: numb
 
 export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, fillColor: string, outlineColor: string, size: number, hAlign: string, vAlign: string, font: string) {
   ctx.save();
+
   /*
   ctx.scale(0.25, 0.25);
   x *= 4;

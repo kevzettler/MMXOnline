@@ -1273,7 +1273,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                         frameIndex = 3;
                     else if (normAngle >= 72 && normAngle < 90)
                         frameIndex = 4;
-                    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(game_4.game.ctx, frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
                 };
                 return TorpedoProj;
             }(Projectile));
@@ -1380,13 +1380,13 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     return _this;
                 }
                 TornadoProj.prototype.render = function (x, y) {
-                    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    this.spriteStart.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     var i = 0;
                     var spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
                     for (i; i < this.length; i++) {
-                        this.spriteMid.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                        this.spriteMid.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     }
-                    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    this.spriteEnd.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     this.renderEffect = "";
                     if (game_4.game.options.showHitboxes && this.collider) {
                         Helpers.drawPolygon(game_4.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
@@ -1481,7 +1481,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     }
                 };
                 BoomerangProj.prototype.renderFromAngle = function (x, y) {
-                    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
                 };
                 BoomerangProj.prototype.update = function () {
                     _super.prototype.update.call(this);
@@ -1616,7 +1616,7 @@ System.register("effects", ["point", "game", "helpers"], function (exports_11, c
                         var point = this.points[i];
                         var chargePart = game_5.game.sprites["charge_part_" + String(chargeLevel)];
                         if (this.pointTimes[i] > 0) {
-                            chargePart.draw(Math.round(this.pointTimes[i]), centerPos.x + point.x, centerPos.y + point.y);
+                            chargePart.draw(game_5.game.ctx, Math.round(this.pointTimes[i]), centerPos.x + point.x, centerPos.y + point.y);
                         }
                     }
                 };
@@ -1635,7 +1635,7 @@ System.register("effects", ["point", "game", "helpers"], function (exports_11, c
                         var x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
                         var y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
                         var diePartSprite = game_5.game.sprites["die_particle"];
-                        diePartSprite.draw(Math.round(this.time * 20) % diePartSprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", Helpers.clamp01(1 - this.time * 0.5));
+                        diePartSprite.draw(game_5.game.ctx, Math.round(this.time * 20) % diePartSprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", Helpers.clamp01(1 - this.time * 0.5));
                     }
                     this.ang += game_5.game.deltaTime * 100;
                 };
@@ -2311,10 +2311,10 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         var x = startX + (i * width);
                         var y = startY;
                         if (this.mainPlayer.weaponIndex === i) {
-                            Helpers.drawRect(game_7.game.ctx, new rect_3.Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
+                            Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
                         }
-                        weaponSprite.draw(i, x, y);
-                        Helpers.drawTextMMX(game_7.game.ctx, String(i + 1), x, y + 12, 6, "", "");
+                        weaponSprite.draw(game_7.game.uiCtx, i, x, y);
+                        Helpers.drawTextMMX(game_7.game.uiCtx, String(i + 1), x, y + 12, 6, "", "");
                     }
                 };
                 GameMode.prototype.addKillFeedEntry = function (killFeed) {
@@ -2333,8 +2333,8 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         placeStr = "3rd";
                     else
                         placeStr = String(place) + "th";
-                    Helpers.drawTextMMX(game_7.game.ctx, "Leader: " + String(this.currentWinner.kills), 5, 10, 8, "left", "Top");
-                    Helpers.drawTextMMX(game_7.game.ctx, "Kills: " + String(this.mainPlayer.kills) + "(" + placeStr + ")", 5, 20, 8, "left", "Top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Leader: " + String(this.currentWinner.kills), 5, 10, 8, "left", "Top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Kills: " + String(this.mainPlayer.kills) + "(" + placeStr + ")", 5, 20, 8, "left", "Top");
                 };
                 Object.defineProperty(GameMode.prototype, "currentWinner", {
                     get: function () {
@@ -2356,25 +2356,25 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         else {
                             msg = killFeed.victim.name + " died";
                         }
-                        game_7.game.ctx.font = "6px mmx_font";
+                        game_7.game.uiCtx.font = "6px mmx_font";
                         if (killFeed.killer === this.mainPlayer || killFeed.victim == this.mainPlayer) {
-                            var msgLen = game_7.game.ctx.measureText(msg).width;
+                            var msgLen = game_7.game.uiCtx.measureText(msg).width;
                             var msgHeight = 10;
-                            Helpers.drawRect(game_7.game.ctx, new rect_3.Rect(fromRight - msgLen - 2, fromTop - 2 + (i * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i * yDist)), "black", "white", 1, 0.75);
+                            Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(fromRight - msgLen - 2, fromTop - 2 + (i * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i * yDist)), "black", "white", 1, 0.75);
                         }
                         var isKillerRed = killFeed.killer && killFeed.killer.alliance === 1 && this.isTeamMode;
                         var isVictimRed = killFeed.victim.alliance === 1 && this.isTeamMode;
                         if (killFeed.killer) {
-                            var nameLen = game_7.game.ctx.measureText(killFeed.victim.name).width;
-                            Helpers.drawTextMMX(game_7.game.ctx, killFeed.victim.name, fromRight, fromTop + (i * yDist), 6, "right", "Top", isVictimRed);
-                            var victimNameWidth = game_7.game.ctx.measureText(killFeed.victim.name).width;
-                            Helpers.drawTextMMX(game_7.game.ctx, killFeed.killer.name + "    ", fromRight - victimNameWidth, fromTop + (i * yDist), 6, "right", "Top", isKillerRed);
-                            var firstPartWidth = game_7.game.ctx.measureText(killFeed.killer.name + "    ").width;
+                            var nameLen = game_7.game.uiCtx.measureText(killFeed.victim.name).width;
+                            Helpers.drawTextMMX(game_7.game.uiCtx, killFeed.victim.name, fromRight, fromTop + (i * yDist), 6, "right", "Top", isVictimRed);
+                            var victimNameWidth = game_7.game.uiCtx.measureText(killFeed.victim.name).width;
+                            Helpers.drawTextMMX(game_7.game.uiCtx, killFeed.killer.name + "    ", fromRight - victimNameWidth, fromTop + (i * yDist), 6, "right", "Top", isKillerRed);
+                            var firstPartWidth = game_7.game.uiCtx.measureText(killFeed.killer.name + "    ").width;
                             var weaponIndex = killFeed.weapon.index;
-                            game_7.game.sprites["hud_killfeed_weapon"].draw(weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
+                            game_7.game.sprites["hud_killfeed_weapon"].draw(game_7.game.ctx, weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
                         }
                         else {
-                            Helpers.drawTextMMX(game_7.game.ctx, msg, fromRight, fromTop + (i * yDist), 6, "right", "Top", isVictimRed);
+                            Helpers.drawTextMMX(game_7.game.uiCtx, msg, fromRight, fromTop + (i * yDist), 6, "right", "Top", isVictimRed);
                         }
                     }
                 };
@@ -2410,7 +2410,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 Brawl.prototype.drawWinScreen = function () {
                     var winner = this.getWinner();
                     if (winner) {
-                        Helpers.drawTextMMX(game_7.game.ctx, winner.name + " wins!", this.screenWidth / 2, this.screenHeight / 2, 12, "center", "middle");
+                        Helpers.drawTextMMX(game_7.game.uiCtx, winner.name + " wins!", this.screenWidth / 2, this.screenHeight / 2, 12, "center", "middle");
                     }
                 };
                 Brawl.prototype.checkIfWin = function () {
@@ -2477,14 +2477,14 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 };
                 FFADeathMatch.prototype.drawWinScreen = function () {
                     if (this.mainPlayer.won) {
-                        Helpers.drawTextMMX(game_7.game.ctx, "You won!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
+                        Helpers.drawTextMMX(game_7.game.uiCtx, "You won!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
                     }
                     else {
-                        Helpers.drawTextMMX(game_7.game.ctx, "You lost!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
+                        Helpers.drawTextMMX(game_7.game.uiCtx, "You lost!", this.screenWidth / 2, this.screenHeight / 2, 24, "center", "middle");
                         var winner = _.find(this.players, function (player) {
                             return player.won;
                         });
-                        Helpers.drawTextMMX(game_7.game.ctx, winner.name + " wins", this.screenWidth / 2, (this.screenHeight / 2) + 30, 12, "center", "top");
+                        Helpers.drawTextMMX(game_7.game.uiCtx, winner.name + " wins", this.screenWidth / 2, (this.screenHeight / 2) + 30, 12, "center", "top");
                     }
                 };
                 FFADeathMatch.prototype.drawScoreboard = function () {
@@ -2497,22 +2497,22 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                     var labelY = lineY + 5;
                     var line2Y = labelY + 10;
                     var topPlayerY = line2Y + 5;
-                    Helpers.drawRect(game_7.game.ctx, new rect_3.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
-                    Helpers.drawText(game_7.game.ctx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
-                    Helpers.drawText(game_7.game.ctx, "Map: " + this.level.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
-                    Helpers.drawText(game_7.game.ctx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
-                        Helpers.drawLine(game_7.game.ctx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
-                    Helpers.drawText(game_7.game.ctx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-                    Helpers.drawText(game_7.game.ctx, "Kills", col2x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-                    Helpers.drawText(game_7.game.ctx, "Deaths", col3x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
-                    Helpers.drawLine(game_7.game.ctx, padding + 10, line2Y, this.screenWidth - padding - 10, line2Y, "white", 1);
+                    Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
+                    Helpers.drawText(game_7.game.uiCtx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
+                    Helpers.drawText(game_7.game.uiCtx, "Map: " + this.level.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
+                    Helpers.drawText(game_7.game.uiCtx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
+                        Helpers.drawLine(game_7.game.uiCtx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
+                    Helpers.drawText(game_7.game.uiCtx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+                    Helpers.drawText(game_7.game.uiCtx, "Kills", col2x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+                    Helpers.drawText(game_7.game.uiCtx, "Deaths", col3x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
+                    Helpers.drawLine(game_7.game.uiCtx, padding + 10, line2Y, this.screenWidth - padding - 10, line2Y, "white", 1);
                     var rowH = 10;
                     for (var i = 0; i < this.players.length; i++) {
                         var player = this.players[i];
                         var color = (player === this.mainPlayer) ? "lightgreen" : "white";
-                        Helpers.drawText(game_7.game.ctx, player.name, col1x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
-                        Helpers.drawText(game_7.game.ctx, String(player.kills), col2x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
-                        Helpers.drawText(game_7.game.ctx, String(player.deaths), col3x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
+                        Helpers.drawText(game_7.game.uiCtx, player.name, col1x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
+                        Helpers.drawText(game_7.game.uiCtx, String(player.kills), col2x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
+                        Helpers.drawText(game_7.game.uiCtx, String(player.deaths), col3x, topPlayerY + (i) * rowH, color, "", fontSize, "left", "top", "mmx_font");
                     }
                 };
                 FFADeathMatch.prototype.checkIfWin = function () {
@@ -2592,8 +2592,8 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         else
                             redKills += player.kills;
                     }
-                    Helpers.drawTextMMX(game_7.game.ctx, "Red: " + String(redKills), 5, 10, 8, "left", "Top");
-                    Helpers.drawTextMMX(game_7.game.ctx, "Blue: " + String(blueKills), 5, 20, 8, "left", "Top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Red: " + String(redKills), 5, 10, 8, "left", "Top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Blue: " + String(blueKills), 5, 20, 8, "left", "Top");
                 };
                 TeamDeathMatch.prototype.drawWinScreen = function () {
                     var team;
@@ -2603,7 +2603,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                     else {
                         team = this.mainPlayer.alliance === 0 ? "Red" : "Blue";
                     }
-                    Helpers.drawTextMMX(game_7.game.ctx, team + " team won!", this.screenWidth / 2, this.screenHeight / 2, 12, "center", "middle");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, team + " team won!", this.screenWidth / 2, this.screenHeight / 2, 12, "center", "middle");
                 };
                 TeamDeathMatch.prototype.drawScoreboard = function () {
                     var padding = 10;
@@ -2632,34 +2632,34 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                     var bluePlayers = _.filter(this.players, function (player) {
                         return player.alliance === 0;
                     });
-                    Helpers.drawRect(game_7.game.ctx, new rect_3.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
-                    Helpers.drawText(game_7.game.ctx, "Game Mode: Team Deathmatch", hPadding, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
-                    Helpers.drawText(game_7.game.ctx, "Map: " + this.level.name, hPadding, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
-                    Helpers.drawText(game_7.game.ctx, "Playing to: " + String(this.killsToWin), hPadding, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
-                        Helpers.drawLine(game_7.game.ctx, hPadding, lineY, this.screenWidth - hPadding, lineY, "white", 1);
-                    Helpers.drawTextMMX(game_7.game.ctx, "Blue: " + blueKills, col1x, teamLabelY, fontSize, "left", "top");
-                    Helpers.drawTextMMX(game_7.game.ctx, "Player", col1x, labelY, fontSize, "left", "top");
-                    Helpers.drawTextMMX(game_7.game.ctx, "K", col2x, labelY, fontSize, "left", "top");
-                    Helpers.drawTextMMX(game_7.game.ctx, "D", col3x, labelY, fontSize, "left", "top");
-                    Helpers.drawTextMMX(game_7.game.ctx, "Red: " + redKills, this.screenWidth * 0.5 + col1x, teamLabelY, fontSize, "left", "top", true);
-                    Helpers.drawTextMMX(game_7.game.ctx, "Player", this.screenWidth * 0.5 + col1x, labelY, fontSize, "left", "top", true);
-                    Helpers.drawTextMMX(game_7.game.ctx, "K", this.screenWidth * 0.5 + col2x, labelY, fontSize, "left", "top", true);
-                    Helpers.drawTextMMX(game_7.game.ctx, "D", this.screenWidth * 0.5 + col3x, labelY, fontSize, "left", "top", true);
-                    Helpers.drawLine(game_7.game.ctx, hPadding, line2Y, this.screenWidth - hPadding, line2Y, "white", 1);
+                    Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
+                    Helpers.drawText(game_7.game.uiCtx, "Game Mode: Team Deathmatch", hPadding, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
+                    Helpers.drawText(game_7.game.uiCtx, "Map: " + this.level.name, hPadding, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
+                    Helpers.drawText(game_7.game.uiCtx, "Playing to: " + String(this.killsToWin), hPadding, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
+                        Helpers.drawLine(game_7.game.uiCtx, hPadding, lineY, this.screenWidth - hPadding, lineY, "white", 1);
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Blue: " + blueKills, col1x, teamLabelY, fontSize, "left", "top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Player", col1x, labelY, fontSize, "left", "top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "K", col2x, labelY, fontSize, "left", "top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "D", col3x, labelY, fontSize, "left", "top");
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Red: " + redKills, this.screenWidth * 0.5 + col1x, teamLabelY, fontSize, "left", "top", true);
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "Player", this.screenWidth * 0.5 + col1x, labelY, fontSize, "left", "top", true);
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "K", this.screenWidth * 0.5 + col2x, labelY, fontSize, "left", "top", true);
+                    Helpers.drawTextMMX(game_7.game.uiCtx, "D", this.screenWidth * 0.5 + col3x, labelY, fontSize, "left", "top", true);
+                    Helpers.drawLine(game_7.game.uiCtx, hPadding, line2Y, this.screenWidth - hPadding, line2Y, "white", 1);
                     var rowH = 10;
                     for (var i = 0; i < bluePlayers.length; i++) {
                         var player = bluePlayers[i];
                         var color = (player === this.mainPlayer) ? "lightgreen" : "";
-                        Helpers.drawTextMMX(game_7.game.ctx, Helpers.stringReplace(player.name, " ", ""), col1x, topPlayerY + (i) * rowH, fontSize, "left", "top", false, color);
-                        Helpers.drawTextMMX(game_7.game.ctx, String(player.kills), col2x, topPlayerY + (i) * rowH, fontSize, "left", "top", false, color);
-                        Helpers.drawTextMMX(game_7.game.ctx, String(player.deaths), col3x, topPlayerY + (i) * rowH, fontSize, "left", "top", false, color);
+                        Helpers.drawTextMMX(game_7.game.uiCtx, Helpers.stringReplace(player.name, " ", ""), col1x, topPlayerY + (i) * rowH, fontSize, "left", "top", false, color);
+                        Helpers.drawTextMMX(game_7.game.uiCtx, String(player.kills), col2x, topPlayerY + (i) * rowH, fontSize, "left", "top", false, color);
+                        Helpers.drawTextMMX(game_7.game.uiCtx, String(player.deaths), col3x, topPlayerY + (i) * rowH, fontSize, "left", "top", false, color);
                     }
                     for (var i = 0; i < redPlayers.length; i++) {
                         var player = redPlayers[i];
                         var color = (player === this.mainPlayer) ? "lightgreen" : "";
-                        Helpers.drawTextMMX(game_7.game.ctx, Helpers.stringReplace(player.name, " ", ""), this.screenWidth * 0.5 + col1x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
-                        Helpers.drawTextMMX(game_7.game.ctx, String(player.kills), this.screenWidth * 0.5 + col2x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
-                        Helpers.drawTextMMX(game_7.game.ctx, String(player.deaths), this.screenWidth * 0.5 + col3x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
+                        Helpers.drawTextMMX(game_7.game.uiCtx, Helpers.stringReplace(player.name, " ", ""), this.screenWidth * 0.5 + col1x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
+                        Helpers.drawTextMMX(game_7.game.uiCtx, String(player.kills), this.screenWidth * 0.5 + col2x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
+                        Helpers.drawTextMMX(game_7.game.uiCtx, String(player.deaths), this.screenWidth * 0.5 + col3x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
                     }
                 };
                 TeamDeathMatch.prototype.checkIfWin = function () {
@@ -4364,29 +4364,31 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         game_12.game.canvas.width = Math.min(game_12.game.defaultCanvasWidth * this.zoomScale, Math.round(this.background.width * this.zoomScale));
                         game_12.game.canvas.height = Math.min(game_12.game.defaultCanvasHeight * this.zoomScale, Math.round(this.background.height * this.zoomScale));
                     }
+                    game_12.game.uiCanvas.width = game_12.game.canvas.width;
+                    game_12.game.uiCanvas.height = game_12.game.canvas.height;
                     if (!game_12.game.options.antiAlias) {
                         Helpers.noCanvasSmoothing(game_12.game.ctx);
+                        Helpers.noCanvasSmoothing(game_12.game.uiCtx);
                     }
-                    var camX = Helpers.roundEpsilon(this.camX);
-                    var camY = Helpers.roundEpsilon(this.camY);
-                    game_12.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+                    game_12.game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+                    game_12.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
                     game_12.game.ctx.clearRect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height);
                     Helpers.drawRect(game_12.game.ctx, new rect_5.Rect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height), "gray");
                     if (this.parallax)
-                        Helpers.drawImage(game_12.game.ctx, this.parallax, -camX * 0.5, -camY * 0.5);
+                        Helpers.drawImage(game_12.game.ctx, this.parallax, this.camX * 0.5, this.camY * 0.5);
                     window.debugBackground = true;
-                    Helpers.drawImage(game_12.game.ctx, this.background, -camX, -camY);
+                    Helpers.drawImage(game_12.game.ctx, this.background, 0, 0);
                     window.debugBackground = false;
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
-                        go.render(-camX, -camY);
+                        go.render(0, 0);
                     }
                     for (var _b = 0, _c = this.effects; _b < _c.length; _b++) {
                         var effect = _c[_b];
-                        effect.render(-camX, -camY);
+                        effect.render(0, 0);
                     }
                     if (this.foreground)
-                        Helpers.drawImage(game_12.game.ctx, this.foreground, -camX, -camY);
+                        Helpers.drawImage(game_12.game.ctx, this.foreground, 0, 0);
                     this.drawHUD();
                     Helpers.drawText(game_12.game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
                     Helpers.drawText(game_12.game.ctx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
@@ -4406,34 +4408,34 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         baseX = game_12.game.canvas.width / this.zoomScale - 4 - baseX;
                     var baseY = game_12.game.canvas.height / this.zoomScale / 2;
                     baseY += 25;
-                    game_12.game.sprites["hud_health_base"].draw(0, baseX, baseY, 1, 1, "", 1, player.palette);
+                    game_12.game.sprites["hud_health_base"].draw(game_12.game.uiCtx, 0, baseX, baseY, 1, 1, "", 1, player.palette);
                     baseY -= 16;
                     for (var i = 0; i < Math.ceil(player.health); i++) {
-                        game_12.game.sprites["hud_health_full"].draw(0, baseX, baseY);
+                        game_12.game.sprites["hud_health_full"].draw(game_12.game.uiCtx, 0, baseX, baseY);
                         baseY -= 2;
                     }
                     for (var i = 0; i < player.maxHealth - Math.ceil(player.health); i++) {
-                        game_12.game.sprites["hud_health_empty"].draw(0, baseX, baseY);
+                        game_12.game.sprites["hud_health_empty"].draw(game_12.game.uiCtx, 0, baseX, baseY);
                         baseY -= 2;
                     }
-                    game_12.game.sprites["hud_health_top"].draw(0, baseX, baseY);
+                    game_12.game.sprites["hud_health_top"].draw(game_12.game.uiCtx, 0, baseX, baseY);
                     if (player.weaponIndex !== 0) {
                         baseX = 25;
                         if (playerNum === 2)
                             baseX = game_12.game.canvas.width / this.zoomScale - 4 - baseX;
                         baseY = game_12.game.canvas.height / this.zoomScale / 2;
                         baseY += 25;
-                        game_12.game.sprites["hud_weapon_base"].draw(player.weapon.index - 1, baseX, baseY);
+                        game_12.game.sprites["hud_weapon_base"].draw(game_12.game.uiCtx, player.weapon.index - 1, baseX, baseY);
                         baseY -= 16;
                         for (var i = 0; i < Math.ceil(player.weapon.ammo); i++) {
-                            game_12.game.sprites["hud_weapon_full"].draw(player.weapon.index - 1, baseX, baseY);
+                            game_12.game.sprites["hud_weapon_full"].draw(game_12.game.uiCtx, player.weapon.index - 1, baseX, baseY);
                             baseY -= 2;
                         }
                         for (var i = 0; i < player.weapon.maxAmmo - Math.ceil(player.weapon.ammo); i++) {
-                            game_12.game.sprites["hud_health_empty"].draw(0, baseX, baseY);
+                            game_12.game.sprites["hud_health_empty"].draw(game_12.game.uiCtx, 0, baseX, baseY);
                             baseY -= 2;
                         }
-                        game_12.game.sprites["hud_health_top"].draw(0, baseX, baseY);
+                        game_12.game.sprites["hud_health_top"].draw(game_12.game.uiCtx, 0, baseX, baseY);
                     }
                 };
                 Object.defineProperty(Level.prototype, "width", {
@@ -4535,8 +4537,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    this.camX = Helpers.roundEpsilon(this.camX);
-                    this.camY = Helpers.roundEpsilon(this.camY);
                 };
                 Level.prototype.computeCamPos = function (character) {
                     var scaledCanvasW = game_12.game.defaultCanvasWidth;
@@ -5031,11 +5031,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.lag = 0;
                     this.MS_PER_UPDATE = 16.6666;
                     this.canvas = $("#canvas")[0];
+                    this.uiCanvas = $("#ui-canvas")[0];
+                    this.uiCtx = this.uiCanvas.getContext("2d");
                     this.ctx = this.canvas.getContext("2d");
                     this.uiEl = $("#ui")[0];
                     this.defaultCanvasWidth = this.canvas.width;
                     this.defaultCanvasHeight = this.canvas.height;
                     Helpers.noCanvasSmoothing(this.ctx);
+                    Helpers.noCanvasSmoothing(this.uiCtx);
                 }
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
@@ -5249,6 +5252,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                                         game.music.stop();
                                     game.uiData.menu = Menu.MainMenu;
                                     $(game.canvas).hide();
+                                    $(game.uiCanvas).hide();
                                     $("#options").hide();
                                 }
                                 else {
@@ -5388,6 +5392,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.level = _.cloneDeep(prototypeLevel);
                     this.level.background = prototypeLevel.background;
                     $(this.canvas).show();
+                    $(this.uiCanvas).show();
                     var gameMode;
                     if (this.uiData.isBrawl) {
                         gameMode = new gameMode_2.Brawl(this.level, this.uiData);
@@ -5740,7 +5745,7 @@ System.register("helpers", ["point", "game"], function (exports_27, context_27) 
             if (window.debugBackground) {
                 game_13.game.level.debugString2 = sY + "(" + Math.floor(sY) + ")";
             }
-            ctx.drawImage(imgEl, (sX), Math.floor(sY));
+            ctx.drawImage(imgEl, (sX), sY);
             return;
         }
         ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;
@@ -5799,14 +5804,6 @@ System.register("helpers", ["point", "game"], function (exports_27, context_27) 
             }
             helperCtx.putImageData(imageData, 0, 0);
         }
-        if (flipX === 1)
-            x = Math.ceil(x);
-        else if (flipX === -1)
-            x = Math.floor(x);
-        if (flipY === 1)
-            y = Math.ceil(y);
-        else if (flipY === -1)
-            y = Math.floor(y);
         if (window.playerDebug)
             game_13.game.level.debugString = "y: " + y;
         ctx.drawImage(helperCanvas, x, y);
@@ -6495,13 +6492,13 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     }
                     return new point_12.Point(x + offset.x * flipX, y + offset.y * flipY);
                 };
-                Sprite.prototype.draw = function (frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
+                Sprite.prototype.draw = function (ctx, frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
                     flipX = flipX || 1;
                     flipY = flipY || 1;
                     var frame = this.frames[frameIndex];
                     var rect = frame.rect;
                     var offset = this.getAlignOffset(frameIndex, flipX, flipY);
-                    Helpers.drawImage(game_14.game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
+                    Helpers.drawImage(ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
                 };
                 return Sprite;
             }());
@@ -6715,7 +6712,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                 };
                 Actor.prototype.render = function (x, y) {
                     if (this.angle === undefined) {
-                        this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                        this.sprite.draw(game_15.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     }
                     else {
                         this.renderFromAngle(x, y);
@@ -6726,7 +6723,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     }
                 };
                 Actor.prototype.renderFromAngle = function (x, y) {
-                    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(game_15.game.ctx, 0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
                 };
                 Actor.prototype.registerCollision = function (other) {
                     if (!this.collidedInFrame.has(other.collider)) {

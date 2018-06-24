@@ -307,36 +307,43 @@ export class Level {
       game.canvas.width = Math.min(game.defaultCanvasWidth * this.zoomScale, Math.round(this.background.width * this.zoomScale));
       game.canvas.height = Math.min(game.defaultCanvasHeight * this.zoomScale, Math.round(this.background.height * this.zoomScale));
     }
+    game.uiCanvas.width = game.canvas.width;
+    game.uiCanvas.height = game.canvas.height;
 
     if(!game.options.antiAlias) {
       Helpers.noCanvasSmoothing(game.ctx);
+      Helpers.noCanvasSmoothing(game.uiCtx);
     }
 
-    let camX = Helpers.roundEpsilon(this.camX);
-    let camY = Helpers.roundEpsilon(this.camY);
-
-    game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+    game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+    game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
     Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
-    if(this.parallax) Helpers.drawImage(game.ctx, this.parallax, -camX * 0.5, -camY * 0.5);
+    if(this.parallax) Helpers.drawImage(game.ctx, this.parallax, this.camX * 0.5, this.camY * 0.5);
     
+    //@ts-ignore
     window.debugBackground = true;
-    Helpers.drawImage(game.ctx, this.background, -camX, -camY);
+
+    Helpers.drawImage(game.ctx, this.background, 0, 0);
+    
+    //@ts-ignore
     window.debugBackground = false;
 
     for(let go of this.gameObjects) {
-      go.render(-camX, -camY);
+      go.render(0, 0);
     }
 
     for(let effect of this.effects) {
-      effect.render(-camX, -camY);
+      effect.render(0, 0);
     }
 
-    if(this.foreground) Helpers.drawImage(game.ctx, this.foreground, -camX, -camY);
+    if(this.foreground) Helpers.drawImage(game.ctx, this.foreground, 0, 0);
 
     this.drawHUD();
     Helpers.drawText(game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
     Helpers.drawText(game.ctx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
+
+    //game.ctx.drawImage(game.uiCanvas, this.camX, this.camY);
   }
 
   drawHUD() {
@@ -358,17 +365,17 @@ export class Level {
     
     let baseY = game.canvas.height/this.zoomScale/2;
     baseY += 25;
-    game.sprites["hud_health_base"].draw(0, baseX, baseY, 1, 1, "", 1, player.palette);
+    game.sprites["hud_health_base"].draw(game.uiCtx, 0, baseX, baseY, 1, 1, "", 1, player.palette);
     baseY -= 16;
     for(let i = 0; i < Math.ceil(player.health); i++) {
-      game.sprites["hud_health_full"].draw(0, baseX, baseY);
+      game.sprites["hud_health_full"].draw(game.uiCtx, 0, baseX, baseY);
       baseY -= 2;
     }
     for(let i = 0; i < player.maxHealth - Math.ceil(player.health); i++) {
-      game.sprites["hud_health_empty"].draw(0, baseX, baseY);
+      game.sprites["hud_health_empty"].draw(game.uiCtx, 0, baseX, baseY);
       baseY -= 2;
     }
-    game.sprites["hud_health_top"].draw(0, baseX, baseY);
+    game.sprites["hud_health_top"].draw(game.uiCtx, 0, baseX, baseY);
 
     //Weapon
     if(player.weaponIndex !== 0) {
@@ -377,17 +384,17 @@ export class Level {
       
       baseY = game.canvas.height/this.zoomScale/2;
       baseY += 25;
-      game.sprites["hud_weapon_base"].draw(player.weapon.index - 1, baseX, baseY);
+      game.sprites["hud_weapon_base"].draw(game.uiCtx, player.weapon.index - 1, baseX, baseY);
       baseY -= 16;
       for(let i = 0; i < Math.ceil(player.weapon.ammo); i++) {
-        game.sprites["hud_weapon_full"].draw(player.weapon.index - 1, baseX, baseY);
+        game.sprites["hud_weapon_full"].draw(game.uiCtx, player.weapon.index - 1, baseX, baseY);
         baseY -= 2;
       }
       for(let i = 0; i < player.weapon.maxAmmo - Math.ceil(player.weapon.ammo); i++) {
-        game.sprites["hud_health_empty"].draw(0, baseX, baseY);
+        game.sprites["hud_health_empty"].draw(game.uiCtx, 0, baseX, baseY);
         baseY -= 2;
       }
-      game.sprites["hud_health_top"].draw(0, baseX, baseY);
+      game.sprites["hud_health_top"].draw(game.uiCtx, 0, baseX, baseY);
     }
 
   }
@@ -420,20 +427,16 @@ export class Level {
     let maxY = this.background.height - scaledCanvasH/2;
 
     if(playerX < scaledCanvasW/2) {
-      //this.camX = 0;
       dontMoveX = true;
     }
     if(playerY < scaledCanvasH/2) {
-      //this.camY = 0;
       dontMoveY = true;
     }
 
     if(playerX > maxX) {
-      //this.camX = this.background.width - scaledCanvasW;
       dontMoveX = true;
     }
     if(playerY > maxY) {
-      //this.camY = this.background.height - scaledCanvasH;
       dontMoveY = true;
     }
 
@@ -479,8 +482,6 @@ export class Level {
         }
       }
     }
-    this.camX = Helpers.roundEpsilon(this.camX);
-    this.camY = Helpers.roundEpsilon(this.camY);
   }
 
   computeCamPos(character: Character) {

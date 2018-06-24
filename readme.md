@@ -47,6 +47,7 @@ Level editor
 -Remember last tool used and keep it open
 -Basic undo
 -The json data binding is weird/has issues
+-be able to select under images/change z-order
 
 ===============
 Bugs/improvements
