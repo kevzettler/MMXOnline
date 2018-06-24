@@ -40,6 +40,7 @@ export class Level {
   musicLoopStart: number;
   musicLoopEnd: number;
   debugString: string = "";
+  debugString2: string = "";
   lerpCamTime: number = 0;
   navMeshNodes: NavMeshNode[] = [];
   gameMode: GameMode;
@@ -264,8 +265,6 @@ export class Level {
     if(this.mainPlayer.character) {
       let deltaX = this.mainPlayer.character.pos.x - playerX;
       let deltaY = this.mainPlayer.character.pos.y - playerY;
-      let oldCamPosX = this.camX;
-      let oldCamPosY = this.camY;
       this.updateCamPos(deltaX, deltaY);
       //console.log(deltaX + "," + deltaY);
       //console.log(this.camX + "," + this.camY)
@@ -320,8 +319,11 @@ export class Level {
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
     Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
     if(this.parallax) Helpers.drawImage(game.ctx, this.parallax, -camX * 0.5, -camY * 0.5);
-    Helpers.drawImage(game.ctx, this.background, -camX, -camY);
     
+    window.debugBackground = true;
+    Helpers.drawImage(game.ctx, this.background, -camX, -camY);
+    window.debugBackground = false;
+
     for(let go of this.gameObjects) {
       go.render(-camX, -camY);
     }
@@ -334,6 +336,7 @@ export class Level {
 
     this.drawHUD();
     Helpers.drawText(game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
+    Helpers.drawText(game.ctx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
   }
 
   drawHUD() {
@@ -410,8 +413,8 @@ export class Level {
     let dontMoveX = false;
     let dontMoveY = false;
 
-    let scaledCanvasW = game.canvas.width / this.zoomScale;
-    let scaledCanvasH = game.canvas.height / this.zoomScale;
+    let scaledCanvasW = game.defaultCanvasWidth;
+    let scaledCanvasH = game.defaultCanvasHeight;
     
     let maxX = this.background.width - scaledCanvasW/2;
     let maxY = this.background.height - scaledCanvasH/2;
@@ -481,8 +484,8 @@ export class Level {
   }
 
   computeCamPos(character: Character) {
-    let scaledCanvasW = game.canvas.width / this.zoomScale;
-    let scaledCanvasH = game.canvas.height / this.zoomScale;
+    let scaledCanvasW = game.defaultCanvasWidth;
+    let scaledCanvasH = game.defaultCanvasHeight;
     
     let camX = character.getCamCenterPos().x - scaledCanvasW/2;
     let camY = character.getCamCenterPos().y - scaledCanvasH/2;

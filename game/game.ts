@@ -118,18 +118,18 @@ class Game {
     Helpers.noCanvasSmoothing(this.ctx);
   }
   
-  doQuickStart: boolean = false;
+  doQuickStart: boolean = true;
   quickStart() {
     
     this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "gallery";
+    this.uiData.selectedArenaMap = "powerplant";
     this.uiData.selectedGameMode = "team deathmatch";
     this.uiData.maxPlayers = 0;
     this.uiData.numBots = 0;
     this.uiData.playTo = 20;
     $("#options").show();
     $("#dev-options").show();
-    game.loadLevel("gallery");
+    game.loadLevel(this.uiData.selectedArenaMap);
     /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;

@@ -175,7 +175,10 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number): void {
   
   if(!sW) {
-    ctx.drawImage(imgEl, (sX), (sY));
+    if(window.debugBackground) {
+      game.level.debugString2 = sY + "(" +Math.floor(sY) + ")";
+    }
+    ctx.drawImage(imgEl, (sX), Math.floor(sY));
     return;
   }
 
@@ -257,6 +260,8 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   if(flipY === 1) y = Math.ceil(y);
   else if(flipY === -1) y = Math.floor(y);
 
+  if(window.playerDebug)
+    game.level.debugString = "y: " + y;
   ctx.drawImage(helperCanvas, x, y);
   
   ctx.globalAlpha = 1;

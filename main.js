@@ -3087,7 +3087,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     }
                 };
                 Character.prototype.render = function (x, y) {
+                    window.playerDebug = true;
                     _super.prototype.render.call(this, x, y);
+                    window.playerDebug = false;
                     if (this.chargeEffect) {
                         this.chargeEffect.render(this.getCenterPos().add(new point_7.Point(x, y)), this.getChargeLevel());
                     }
@@ -3815,6 +3817,7 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                         this.character.xDir = spawnPoint.xDir;
                         if (this === game_10.game.level.mainPlayer) {
                             game_10.game.level.computeCamPos(this.character);
+                            console.log(game_10.game.level.camX + "," + game_10.game.level.camY);
                         }
                     }
                     if (this.respawnTime > 0 && !game_10.game.level.gameMode.isOver) {
@@ -4104,6 +4107,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     this.spawnPoints = [];
                     this.noScrolls = [];
                     this.debugString = "";
+                    this.debugString2 = "";
                     this.lerpCamTime = 0;
                     this.navMeshNodes = [];
                     this.pickupSpawners = [];
@@ -4324,8 +4328,6 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     if (this.mainPlayer.character) {
                         var deltaX = this.mainPlayer.character.pos.x - playerX;
                         var deltaY = this.mainPlayer.character.pos.y - playerY;
-                        var oldCamPosX = this.camX;
-                        var oldCamPosY = this.camY;
                         this.updateCamPos(deltaX, deltaY);
                     }
                     for (var _b = 0, _c = this.effects; _b < _c.length; _b++) {
@@ -4372,7 +4374,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     Helpers.drawRect(game_12.game.ctx, new rect_5.Rect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height), "gray");
                     if (this.parallax)
                         Helpers.drawImage(game_12.game.ctx, this.parallax, -camX * 0.5, -camY * 0.5);
+                    window.debugBackground = true;
                     Helpers.drawImage(game_12.game.ctx, this.background, -camX, -camY);
+                    window.debugBackground = false;
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
                         go.render(-camX, -camY);
@@ -4385,6 +4389,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         Helpers.drawImage(game_12.game.ctx, this.foreground, -camX, -camY);
                     this.drawHUD();
                     Helpers.drawText(game_12.game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
+                    Helpers.drawText(game_12.game.ctx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
                 };
                 Level.prototype.drawHUD = function () {
                     var player1 = this.localPlayers[0];
@@ -4473,8 +4478,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     var playerY = this.mainPlayer.character.getCamCenterPos().y;
                     var dontMoveX = false;
                     var dontMoveY = false;
-                    var scaledCanvasW = game_12.game.canvas.width / this.zoomScale;
-                    var scaledCanvasH = game_12.game.canvas.height / this.zoomScale;
+                    var scaledCanvasW = game_12.game.defaultCanvasWidth;
+                    var scaledCanvasH = game_12.game.defaultCanvasHeight;
                     var maxX = this.background.width - scaledCanvasW / 2;
                     var maxY = this.background.height - scaledCanvasH / 2;
                     if (playerX < scaledCanvasW / 2) {
@@ -4534,8 +4539,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     this.camY = Helpers.roundEpsilon(this.camY);
                 };
                 Level.prototype.computeCamPos = function (character) {
-                    var scaledCanvasW = game_12.game.canvas.width / this.zoomScale;
-                    var scaledCanvasH = game_12.game.canvas.height / this.zoomScale;
+                    var scaledCanvasW = game_12.game.defaultCanvasWidth;
+                    var scaledCanvasH = game_12.game.defaultCanvasHeight;
                     var camX = character.getCamCenterPos().x - scaledCanvasW / 2;
                     var camY = character.getCamCenterPos().y - scaledCanvasH / 2;
                     if (camX < 0)
@@ -5020,7 +5025,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.interval = 0;
                     this.requestId = 0;
                     this.soundSheetLoaded = false;
-                    this.doQuickStart = false;
+                    this.doQuickStart = true;
                     this.restartLevelName = "";
                     this.timePassed = 0;
                     this.lag = 0;
@@ -5034,14 +5039,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 }
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
-                    this.uiData.selectedArenaMap = "gallery";
+                    this.uiData.selectedArenaMap = "powerplant";
                     this.uiData.selectedGameMode = "team deathmatch";
                     this.uiData.maxPlayers = 0;
                     this.uiData.numBots = 0;
                     this.uiData.playTo = 20;
                     $("#options").show();
                     $("#dev-options").show();
-                    game.loadLevel("gallery");
+                    game.loadLevel(this.uiData.selectedArenaMap);
                 };
                 Game.prototype.getMusicVolume01 = function () {
                     return Number(this.options.musicVolume) / 100;
@@ -5571,7 +5576,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
         }
     };
 });
-System.register("helpers", ["point"], function (exports_27, context_27) {
+System.register("helpers", ["point", "game"], function (exports_27, context_27) {
     "use strict";
     var __moduleName = context_27 && context_27.id;
     function inRect(x, y, rect) {
@@ -5732,7 +5737,10 @@ System.register("helpers", ["point"], function (exports_27, context_27) {
     exports_27("noCanvasSmoothing", noCanvasSmoothing);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
         if (!sW) {
-            ctx.drawImage(imgEl, (sX), (sY));
+            if (window.debugBackground) {
+                game_13.game.level.debugString2 = sY + "(" + Math.floor(sY) + ")";
+            }
+            ctx.drawImage(imgEl, (sX), Math.floor(sY));
             return;
         }
         ctx.globalAlpha = (alpha === null || alpha === undefined) ? 1 : alpha;
@@ -5799,6 +5807,8 @@ System.register("helpers", ["point"], function (exports_27, context_27) {
             y = Math.ceil(y);
         else if (flipY === -1)
             y = Math.floor(y);
+        if (window.playerDebug)
+            game_13.game.level.debugString = "y: " + y;
         ctx.drawImage(helperCanvas, x, y);
         ctx.globalAlpha = 1;
         helperCtx.restore();
@@ -6129,11 +6139,14 @@ System.register("helpers", ["point"], function (exports_27, context_27) {
         return String.fromCharCode(charCode);
     }
     exports_27("keyCodeToString", keyCodeToString);
-    var point_10, autoInc, helperCanvas, helperCtx, helperCanvas2, helperCtx2, helperCanvas3, helperCtx3;
+    var point_10, game_13, autoInc, helperCanvas, helperCtx, helperCanvas2, helperCtx2, helperCanvas3, helperCtx3;
     return {
         setters: [
             function (point_10_1) {
                 point_10 = point_10_1;
+            },
+            function (game_13_1) {
+                game_13 = game_13_1;
             }
         ],
         execute: function () {
@@ -6356,7 +6369,7 @@ System.register("frame", [], function (exports_30, context_30) {
 System.register("sprite", ["collider", "frame", "point", "rect", "game", "helpers"], function (exports_31, context_31) {
     "use strict";
     var __moduleName = context_31 && context_31.id;
-    var collider_6, frame_1, point_12, rect_6, game_13, Helpers, Sprite;
+    var collider_6, frame_1, point_12, rect_6, game_14, Helpers, Sprite;
     return {
         setters: [
             function (collider_6_1) {
@@ -6371,8 +6384,8 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
             function (rect_6_1) {
                 rect_6 = rect_6_1;
             },
-            function (game_13_1) {
-                game_13 = game_13_1;
+            function (game_14_1) {
+                game_14 = game_14_1;
             },
             function (Helpers_12) {
                 Helpers = Helpers_12;
@@ -6391,7 +6404,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     }
                     this.frames = [];
                     this.hitboxes = [];
-                    game_13.game.getSpritesheet(spriteJson.spritesheetPath);
+                    game_14.game.getSpritesheet(spriteJson.spritesheetPath);
                     for (var _i = 0, _a = spriteJson.hitboxes; _i < _a.length; _i++) {
                         var hitboxJson = _a[_i];
                         var hitbox = new collider_6.Collider([
@@ -6416,7 +6429,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                 }
                 Object.defineProperty(Sprite.prototype, "spritesheet", {
                     get: function () {
-                        return game_13.game.getSpritesheet(this.spritesheetPath);
+                        return game_14.game.getSpritesheet(this.spritesheetPath);
                     },
                     enumerable: true,
                     configurable: true
@@ -6488,7 +6501,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     var frame = this.frames[frameIndex];
                     var rect = frame.rect;
                     var offset = this.getAlignOffset(frameIndex, flipX, flipY);
-                    Helpers.drawImage(game_13.game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
+                    Helpers.drawImage(game_14.game.ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
                 };
                 return Sprite;
             }());
@@ -6499,14 +6512,14 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
 System.register("actor", ["point", "game", "helpers"], function (exports_32, context_32) {
     "use strict";
     var __moduleName = context_32 && context_32.id;
-    var point_13, game_14, Helpers, Actor, Anim;
+    var point_13, game_15, Helpers, Actor, Anim;
     return {
         setters: [
             function (point_13_1) {
                 point_13 = point_13_1;
             },
-            function (game_14_1) {
-                game_14 = game_14_1;
+            function (game_15_1) {
+                game_15 = game_15_1;
             },
             function (Helpers_13) {
                 Helpers = Helpers_13;
@@ -6527,7 +6540,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     this.yDir = 1;
                     this.grounded = false;
                     if (!dontAddToLevel) {
-                        game_14.game.level.addGameObject(this);
+                        game_15.game.level.addGameObject(this);
                     }
                     this.collidedInFrame = new Set();
                     this.renderEffect = "";
@@ -6571,11 +6584,11 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     configurable: true
                 });
                 Actor.prototype.update = function () {
-                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_14.game.deltaTime);
+                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_15.game.deltaTime);
                     if (this.renderEffectTime <= 0) {
                         this.renderEffect = "";
                     }
-                    this.frameTime += game_14.game.deltaTime * this.frameSpeed;
+                    this.frameTime += game_15.game.deltaTime * this.frameSpeed;
                     if (this.frameTime >= this.currentFrame.duration) {
                         var onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
                         if (!onceEnd) {
@@ -6586,7 +6599,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         }
                     }
                     if (this.useGravity && !this.grounded) {
-                        this.vel.y += game_14.game.level.gravity * game_14.game.deltaTime;
+                        this.vel.y += game_15.game.level.gravity * game_15.game.deltaTime;
                         if (this.vel.y > 1000) {
                             this.vel.y = 1000;
                         }
@@ -6596,7 +6609,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     else
                         this.move(this.vel, true, true, true);
                     if (this.collider && !this.collider.isTrigger) {
-                        var collideData = game_14.game.level.checkCollisionActor(this, 0, 1);
+                        var collideData = game_15.game.level.checkCollisionActor(this, 0, 1);
                         if (collideData) {
                             this.grounded = true;
                             this.vel.y = 0;
@@ -6605,7 +6618,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                             this.grounded = false;
                         }
                     }
-                    var triggerList = game_14.game.level.getTriggerList(this, 0, 0);
+                    var triggerList = game_15.game.level.getTriggerList(this, 0, 0);
                     for (var _i = 0, triggerList_1 = triggerList; _i < triggerList_1.length; _i++) {
                         var trigger = triggerList_1[_i];
                         this.registerCollision(trigger);
@@ -6616,7 +6629,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                 };
                 Actor.prototype.sweepTest = function (offset) {
                     var inc = offset.clone();
-                    var collideData = game_14.game.level.checkCollisionActor(this, inc.x, inc.y);
+                    var collideData = game_15.game.level.checkCollisionActor(this, inc.x, inc.y);
                     if (collideData) {
                         return true;
                     }
@@ -6626,13 +6639,13 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     if (useDeltaTime === void 0) { useDeltaTime = true; }
                     if (pushIncline === void 0) { pushIncline = true; }
                     if (snapInclineGravity === void 0) { snapInclineGravity = true; }
-                    var times = useDeltaTime ? game_14.game.deltaTime : 1;
+                    var times = useDeltaTime ? game_15.game.deltaTime : 1;
                     var collideData;
                     if (!this.collider) {
                         this.pos.inc(amount.times(times));
                     }
                     else {
-                        var shapes = game_14.game.level.getAllColliders(this);
+                        var shapes = game_15.game.level.getAllColliders(this);
                         for (var _i = 0, shapes_1 = shapes; _i < shapes_1.length; _i++) {
                             var shape = shapes_1[_i];
                             var freeVec = this.collider.shape.getMinTransVector(shape);
@@ -6641,7 +6654,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         var inc = amount.clone();
                         var pushDir = void 0;
                         while (inc.magnitude > 0) {
-                            collideData = game_14.game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
+                            collideData = game_15.game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
                             if (collideData && !collideData.isTrigger) {
                                 this.registerCollision(collideData);
                                 if (collideData.normal && collideData.normal.isAngled() && pushIncline) {
@@ -6671,7 +6684,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                                 }
                                 this.pos.x += pushDir.x;
                                 this.pos.y += (pushDir.y * 0.1);
-                                var collideData_1 = game_14.game.level.checkCollisionActor(this, 0, 0);
+                                var collideData_1 = game_15.game.level.checkCollisionActor(this, 0, 0);
                                 if (collideData_1 && !collideData_1.isTrigger) {
                                 }
                                 else {
@@ -6680,7 +6693,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                             }
                         }
                         var height = this.collider.shape.getRect().h;
-                        var wallsBelow = game_14.game.level.raycastAll(this.pos.addxy(0, -1), this.centerPos.addxy(0, 30), ["Wall"]);
+                        var wallsBelow = game_15.game.level.raycastAll(this.pos.addxy(0, -1), this.centerPos.addxy(0, 30), ["Wall"]);
                         var inclineBelow = _.find(wallsBelow, function (wall) {
                             return wall;
                         });
@@ -6691,7 +6704,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                                 if (loop_1 > 100) {
                                     throw "INFINITELOOP";
                                 }
-                                var collideData_2 = game_14.game.level.checkCollisionActor(this, 0, 1);
+                                var collideData_2 = game_15.game.level.checkCollisionActor(this, 0, 1);
                                 if (collideData_2 && !collideData_2.isTrigger) {
                                     break;
                                 }
@@ -6707,9 +6720,9 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     else {
                         this.renderFromAngle(x, y);
                     }
-                    if (game_14.game.options.showHitboxes && this.collider) {
-                        Helpers.drawPolygon(game_14.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
-                        Helpers.drawCircle(game_14.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
+                    if (game_15.game.options.showHitboxes && this.collider) {
+                        Helpers.drawPolygon(game_15.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                        Helpers.drawCircle(game_15.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
                     }
                 };
                 Actor.prototype.renderFromAngle = function (x, y) {
@@ -6747,7 +6760,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     return this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration;
                 };
                 Actor.prototype.destroySelf = function (sprite, fadeSound) {
-                    game_14.game.level.gameObjects.splice(game_14.game.level.gameObjects.indexOf(this), 1);
+                    game_15.game.level.gameObjects.splice(game_15.game.level.gameObjects.indexOf(this), 1);
                     if (sprite) {
                         var anim = new Anim(this.pos, sprite, this.xDir);
                     }
@@ -6756,8 +6769,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     }
                 };
                 Actor.prototype.getSoundVolume = function () {
-                    var dist = new point_13.Point(game_14.game.level.camCenterX, game_14.game.level.camCenterY).distanceTo(this.pos);
-                    var volume = 1 - (dist / (game_14.game.level.screenWidth));
+                    var dist = new point_13.Point(game_15.game.level.camCenterX, game_15.game.level.camCenterY).distanceTo(this.pos);
+                    var volume = 1 - (dist / (game_15.game.level.screenWidth));
                     volume = Helpers.clampMin0(volume);
                     return volume;
                 };
@@ -6766,7 +6779,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     if (overrideVolume !== undefined)
                         volume = overrideVolume;
                     volume = Helpers.clampMin0(volume);
-                    game_14.game.playSound(soundName, volume);
+                    game_15.game.playSound(soundName, volume);
                 };
                 Actor.prototype.withinX = function (other, amount) {
                     return Math.abs(this.pos.x - other.pos.x) <= amount;

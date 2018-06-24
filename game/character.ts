@@ -127,7 +127,7 @@ export class Character extends Actor {
     }
 
     if(this.player.alliance === 0) {
-      //game.level.debugString = "x: " + this.pos.x;
+      //game.level.debugString = "y: " + this.pos.y;
     }
 
     for(let projName in this.projectileCooldown) {
@@ -382,7 +382,9 @@ export class Character extends Actor {
   }
   
   render(x: number, y: number) {
+    window.playerDebug = true;
     super.render(x, y);
+    window.playerDebug = false;
     if(this.chargeEffect) {
       this.chargeEffect.render(this.getCenterPos().add(new Point(x, y)), this.getChargeLevel())
     }
