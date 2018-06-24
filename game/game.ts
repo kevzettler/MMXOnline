@@ -612,6 +612,8 @@ class Game {
   gameLoop(currentTime: number) {
 
     let elapsed = currentTime - this.previousTime;
+
+    //Cover for extreme lag cases (i.e. paused browser, etc.)
     if(elapsed >= this.MS_PER_UPDATE * 3) {
       elapsed = this.MS_PER_UPDATE * 3;
     }
@@ -620,7 +622,8 @@ class Game {
     this.lag += elapsed;
 
     //Translate to deltaTime
-    this.deltaTime = 1/60;//elapsed / 1000;
+    //this.deltaTime = 1/60;
+    this.deltaTime = elapsed / 1000;
     this.time += this.deltaTime;
     this.timePassed += this.deltaTime;
     
@@ -633,19 +636,19 @@ class Game {
     try 
     {
       this.level.input();
+      /*
       while(this.lag >= this.MS_PER_UPDATE) {
         this.level.update();
         this.lag -= this.MS_PER_UPDATE;
       }
       this.level.render();
-      /*
+      */
       if(!this.options.capTo30FPS || this.timePassed >= 1/60) {
         this.deltaTime = this.timePassed;
         this.timePassed = 0; 
         this.level.update();
         this.level.render();
       }
-      */
     }
     catch(e)
     {

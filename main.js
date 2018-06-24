@@ -5467,7 +5467,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     }
                     this.previousTime = currentTime;
                     this.lag += elapsed;
-                    this.deltaTime = 1 / 60;
+                    this.deltaTime = elapsed / 1000;
                     this.time += this.deltaTime;
                     this.timePassed += this.deltaTime;
                     if (this.options.showFPS) {
@@ -5476,11 +5476,12 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     }
                     try {
                         this.level.input();
-                        while (this.lag >= this.MS_PER_UPDATE) {
+                        if (!this.options.capTo30FPS || this.timePassed >= 1 / 60) {
+                            this.deltaTime = this.timePassed;
+                            this.timePassed = 0;
                             this.level.update();
-                            this.lag -= this.MS_PER_UPDATE;
+                            this.level.render();
                         }
-                        this.level.render();
                     }
                     catch (e) {
                         console.error(e);
