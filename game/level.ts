@@ -417,20 +417,20 @@ export class Level {
     let maxY = this.background.height - scaledCanvasH/2;
 
     if(playerX < scaledCanvasW/2) {
-      this.camX = 0;
+      //this.camX = 0;
       dontMoveX = true;
     }
     if(playerY < scaledCanvasH/2) {
-      this.camY = 0;
+      //this.camY = 0;
       dontMoveY = true;
     }
 
     if(playerX > maxX) {
-      this.camX = this.background.width - scaledCanvasW;
+      //this.camX = this.background.width - scaledCanvasW;
       dontMoveX = true;
     }
     if(playerY > maxY) {
-      this.camY = this.background.height - scaledCanvasH;
+      //this.camY = this.background.height - scaledCanvasH;
       dontMoveY = true;
     }
 
@@ -495,37 +495,6 @@ export class Level {
 
     if(camX > maxX) camX = maxX;
     if(camY > maxY) camY = maxY;
-
-    /*
-    let camRect = new Rect(camX, camY, camX + scaledCanvasW, camY + scaledCanvasH);
-    let camRectShape = camRect.getShape();
-    for(let noScroll of this.noScrolls) {
-      if(noScroll.shape.intersectsShape(camRectShape)) {
-        let noScrollRect = noScroll.shape.getRect();
-        if(noScrollRect) { 
-          let upDist = camRect.y2 - noScrollRect.y1;
-          let downDist = noScrollRect.y2 - camRect.y1;
-          let leftDist = camRect.x2 - noScrollRect.x1;
-          let rightDist = noScrollRect.x2 - camRect.x1;
-          if(Math.min(upDist, downDist, leftDist, rightDist) === upDist) {
-            camY -= upDist;
-          }
-          else if(Math.min(upDist, downDist, leftDist, rightDist) === downDist) {
-            camY += downDist;
-          }
-          else if(Math.min(upDist, downDist, leftDist, rightDist) === leftDist) {
-            camX -= leftDist;
-          }
-          else if(Math.min(upDist, downDist, leftDist, rightDist) === rightDist) {
-            camX += rightDist;
-          }
-        }
-      }
-      else {
-        
-      }
-    }
-    */
 
     this.camX = camX;
     this.camY = camY;

@@ -33,6 +33,9 @@ export function cheat(key: string, keycode: number) {
     });
     cpu.kills = 19;
   }
+  if(keycode === 75) {
+    game.level.mainPlayer.character.applyDamage(undefined, undefined, 100);
+  }
   if(keycode === 116) {
     for(let player of game.level.players) {
       if(player.isAI) {

@@ -2,18 +2,16 @@
 Features
 ===============
 
--A "prod" system/switch
-  -An analytics/telemetry system only in prod mode
--Transpiler
-  -Remove all console logging
-  -Add try/catch around every function block
+-Now various maps aren't working (re-test everything)
+-The effects time are now off with new game loop refactor
 
--Camera still has issues sometimes, gets jammed too far down and snaps
+-A "prod" system/switch
+  -Hook up google analytics if it's on
+  -A telemetry system: send error logs to Azure; build some authentication app for this to view the logs
+
 -Profiling/optimization
   -Use mtv for incline slope/fix problems with it
   -mtv still has glitch, check slope
--The effects time are now off with new game loop refactor
--Now various maps aren't working (re-test everything)
 
 -Remove special weapon charge
 -Remove "switch" button

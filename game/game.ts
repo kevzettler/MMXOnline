@@ -118,7 +118,7 @@ class Game {
     Helpers.noCanvasSmoothing(this.ctx);
   }
   
-  doQuickStart: boolean = true;
+  doQuickStart: boolean = false;
   quickStart() {
     
     this.uiData.menu = Menu.None;
