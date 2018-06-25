@@ -2371,7 +2371,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             Helpers.drawTextMMX(game_7.game.uiCtx, killFeed.killer.name + "    ", fromRight - victimNameWidth, fromTop + (i * yDist), 6, "right", "Top", isKillerRed);
                             var firstPartWidth = game_7.game.uiCtx.measureText(killFeed.killer.name + "    ").width;
                             var weaponIndex = killFeed.weapon.index;
-                            game_7.game.sprites["hud_killfeed_weapon"].draw(game_7.game.ctx, weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
+                            game_7.game.sprites["hud_killfeed_weapon"].draw(game_7.game.uiCtx, weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
                         }
                         else {
                             Helpers.drawTextMMX(game_7.game.uiCtx, msg, fromRight, fromTop + (i * yDist), 6, "right", "Top", isVictimRed);
@@ -4390,8 +4390,10 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     if (this.foreground)
                         Helpers.drawImage(game_12.game.ctx, this.foreground, 0, 0);
                     this.drawHUD();
-                    Helpers.drawText(game_12.game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
-                    Helpers.drawText(game_12.game.ctx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
+                    if (!game_12.game.uiData.isProd) {
+                        Helpers.drawText(game_12.game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
+                        Helpers.drawText(game_12.game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
+                    }
                 };
                 Level.prototype.drawHUD = function () {
                     var player1 = this.localPlayers[0];

@@ -2,16 +2,14 @@
 Features
 ===============
 
--Now various maps aren't working (re-test everything)
--The effects time are now off with new game loop refactor
+-Profiling/optimization
+  -Use mtv for incline slope/fix problems with it
+  -mtv still has glitch, check slope
+  -Actors must snap to ground/the thing they are about to hit exactly
 
 -A "prod" system/switch
   -Hook up google analytics if it's on
   -A telemetry system: send error logs to Azure; build some authentication app for this to view the logs
-
--Profiling/optimization
-  -Use mtv for incline slope/fix problems with it
-  -mtv still has glitch, check slope
 
 -Remove special weapon charge
 -Remove "switch" button
@@ -20,26 +18,27 @@ Features
 Post-V1 Features
 ===============
 
--More maps:
-  -Boomer kwanger (no new features needed)
-  -Launch octopus (underwater coding)
-
 -All the special weapon charges
 -Play as Zero
 -HUD changes: -Switch UI - switch weapons/char, and the menu HUDs too
-
 
 -Team games:
   -team-colored outline instead of palette swap
   -possibly team-colored projectiles as well
   -allies: show health bar + name
 -Should not be able to destroy teammates' projectiles
--CTF
 
 -More nav-mesh features:
   -Ability to climb a wall to a waypoint
   -Ability to drop down to a waypoint
   -Ability to jump over gaps
+
+-CTF 
+-CTF AI
+
+-More maps:
+  -Boomer kwanger (no new features needed)
+  -Launch octopus (underwater coding)
 
 ===============
 Level editor

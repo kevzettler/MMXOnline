@@ -198,7 +198,7 @@ export class GameMode {
         let firstPartWidth = game.uiCtx.measureText(killFeed.killer.name + "    ").width;
           
         let weaponIndex = killFeed.weapon.index;
-        game.sprites["hud_killfeed_weapon"].draw(game.ctx, weaponIndex, fromRight - nameLen - 13, fromTop + (i*yDist) - 2, undefined, undefined, undefined, undefined, undefined);
+        game.sprites["hud_killfeed_weapon"].draw(game.uiCtx, weaponIndex, fromRight - nameLen - 13, fromTop + (i*yDist) - 2, undefined, undefined, undefined, undefined, undefined);
       }
       else {
         Helpers.drawTextMMX(game.uiCtx, msg, fromRight, fromTop + (i*yDist), 6, "right", "Top", isVictimRed);

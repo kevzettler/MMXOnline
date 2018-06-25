@@ -340,8 +340,11 @@ export class Level {
     if(this.foreground) Helpers.drawImage(game.ctx, this.foreground, 0, 0);
 
     this.drawHUD();
-    Helpers.drawText(game.ctx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
-    Helpers.drawText(game.ctx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
+
+    if(!game.uiData.isProd) {
+      Helpers.drawText(game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
+      Helpers.drawText(game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
+    }
 
     //game.ctx.drawImage(game.uiCanvas, this.camX, this.camY);
   }
