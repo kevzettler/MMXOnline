@@ -6,7 +6,7 @@ import * as Helpers from "./helpers";
 import { Actor } from "./actor";
 import { Player } from "./player";
 import { Rect } from "./rect";
-import { Collider, CollideData } from "./collider";
+import { Collider, CollideData, HitData } from "./collider";
 import { Effect } from "./effects";
 import { RollingShieldProj } from "./projectile";
 import { Character } from "./character";
@@ -554,30 +554,52 @@ export class Level {
     return false;
   }
 
-  //Get ALL colliders this is colliding with. Get the entire "mega"-box (the box that encompasses all the collision boxes)
-  getAllColliders(actor: Actor): Shape[] {
-    let shapes = [];
+  //Get ALL colliders this is colliding with at the offset.
+  getAllCollideDatas(actor: Actor, offsetX: number, offsetY: number, vel: Point): CollideData[] {
+    let actorShape = actor.collider.shape.clone(offsetX, offsetY);
+    let collideDatas = [];
     for(let go of this.gameObjects) {
       if(!go.collider) continue;
       if(go === actor) continue;
-      if(this.shouldTrigger(actor, go, new Point(0, 0))) continue;
-      let shape = go.collider.shape.intersectsShape(actor.collider.shape);
-      if(shape) {
-        shapes.push(go.collider.shape);
+      if(this.shouldTrigger(actor, go, new Point(offsetX, offsetY))) continue;
+      let hitData = actorShape.intersectsShape(go.collider.shape, vel);
+      if(hitData) {
+        let collideData = new CollideData(go.collider, vel, false, go, hitData);
+        collideDatas.push(collideData);
       }
     }
-    return shapes;
+    return collideDatas;
+  }
+
+  getMtvDir(actor: Actor, offsetX: number, offsetY: number, vel: Point): Point {
+    
+    let collideDatas = game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
+      
+    if(collideDatas.length > 0) {
+      let maxMag = 0;
+      let maxMtv: Point;
+      for(let collideData of collideDatas) {
+        actor.registerCollision(collideData);
+        let mtv = actor.collider.shape.getMinTransVectorDir(collideData.collider.shape, vel.times(-1).normalize());
+        if(mtv.magnitude >= maxMag) {
+          maxMag = mtv.magnitude;
+          maxMtv = mtv;
+        }
+      }
+      return maxMtv;
+    }
+    else {
+      return undefined;
+    }
   }
 
   checkCollisionShape(shape: Shape, exclusions: GameObject[]) : CollideData {
     for(let go of this.gameObjects) {
       if(!go.collider) continue;
       if(exclusions.indexOf(go) !== -1) continue;
-      let collideData = go.collider.shape.intersectsShape(shape);
-      if(collideData) {
-        collideData.collider = go.collider;
-        collideData.gameObject = go;
-        return collideData;
+      let hitData = shape.intersectsShape(go.collider.shape);
+      if(hitData) {
+        return new CollideData(go.collider, undefined, false, go, hitData);
       }
     }
     return undefined;
@@ -585,20 +607,16 @@ export class Level {
 
   //Checks for collisions and returns the first one collided.
   checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
-  
     if(!actor.collider || actor.collider.isTrigger) return undefined;
+    let actorShape = actor.collider.shape.clone(offsetX, offsetY);
     for(let go of this.gameObjects) {
       if(go === actor) continue;
       if(!go.collider) continue;
-      let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
       if(isTrigger) continue;
-      let collideData = actorShape.intersectsShape(go.collider.shape);
-      if(collideData) {
-        collideData.collider = go.collider;
-        collideData.vel = vel;
-        collideData.gameObject = go;
-        return collideData;
+      let hitData = actorShape.intersectsShape(go.collider.shape, vel);
+      if(hitData) {
+        return new CollideData(go.collider, vel, isTrigger, go, hitData);
       }
     }
     return undefined;
@@ -628,16 +646,16 @@ export class Level {
       let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
       if(!isTrigger) continue;
-      let collideData = actorShape.intersectsShape(go.collider.shape);
-      if(collideData) {  
-        triggers.push(new CollideData(go.collider, vel, isTrigger, go, collideData.normal, collideData.hitPoint));
+      let hitData = actorShape.intersectsShape(go.collider.shape, vel);
+      if(hitData) {  
+        triggers.push(new CollideData(go.collider, vel, isTrigger, go, hitData));
       }
     }
     return triggers;
   }
 
   isOfClass(go: GameObject, classNames?: string[]) {
-    if(!classNames) return true;
+    if(!classNames || classNames.length === 0) return true;
     let found = false;
     for(let className of classNames) {
       if(go.constructor.name === className) {
@@ -656,7 +674,7 @@ export class Level {
       let collideDatas = go.collider.shape.getLineIntersectCollisions(new Line(pos1, pos2));
       //@ts-ignore
       let closestCollideData = _.minBy(collideDatas, (collideData) => {
-        return collideData.hitPoint.distanceTo(pos1);
+        return collideData.hitData.hitPoint.distanceTo(pos1);
       });
       if(closestCollideData) {
         closestCollideData.collider = go.collider;
@@ -665,6 +683,37 @@ export class Level {
       }
     }
     return hits;
+  }
+
+  raycast(pos1: Point, pos2: Point, classNames: string[]): CollideData {
+    let hits = this.raycastAll(pos1, pos2, classNames);
+    //@ts-ignore
+    return _.minBy(hits, (collideData) => {
+      return collideData.hitData.hitPoint.distanceTo(pos1);
+    });
+  }
+
+  shapecastAll(shape: Shape, origin: Point, dir: Point, classNames: string[]): CollideData[] {
+    let hits: CollideData[] = [];
+    for(let go of this.gameObjects) {
+      if(!go.collider) continue;
+      if(!this.isOfClass(go, classNames)) continue;
+      let snapVector = shape.getSnapVector(go.collider.shape, dir);
+      if(snapVector) {
+        //let hitData: HitData = new HitData(dir.normalize().times(-1), origin.add(snapVector));
+        let collideData: CollideData = new CollideData(go.collider, dir, false, go, undefined);
+        hits.push(collideData);
+      }
+    }
+    return hits;
+  }
+
+  shapecast(shape: Shape, origin: Point, dir: Point, classNames: string[]): CollideData {
+    let hits = this.shapecastAll(shape, origin, dir, classNames);
+    //@ts-ignore
+    return _.minBy(hits, (collideData) => {
+      return collideData.hitData.hitPoint.distanceTo(origin);
+    });
   }
 
   getClosestTarget(pos: Point, alliance: number) {

@@ -8,9 +8,18 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-System.register("shape", ["point", "rect", "collider"], function (exports_1, context_1) {
+System.register("gameObject", [], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
+    return {
+        setters: [],
+        execute: function () {
+        }
+    };
+});
+System.register("shape", ["point", "rect", "collider"], function (exports_2, context_2) {
+    "use strict";
+    var __moduleName = context_2 && context_2.id;
     var point_1, rect_1, collider_1, Line, IntersectData, Shape;
     return {
         setters: [
@@ -139,7 +148,7 @@ System.register("shape", ["point", "rect", "collider"], function (exports_1, con
                 });
                 return Line;
             }());
-            exports_1("Line", Line);
+            exports_2("Line", Line);
             IntersectData = (function () {
                 function IntersectData(intersectPoint, normal) {
                     this.intersectPoint = intersectPoint;
@@ -147,7 +156,7 @@ System.register("shape", ["point", "rect", "collider"], function (exports_1, con
                 }
                 return IntersectData;
             }());
-            exports_1("IntersectData", IntersectData);
+            exports_2("IntersectData", IntersectData);
             Shape = (function () {
                 function Shape(points) {
                     this.points = points;
@@ -199,37 +208,61 @@ System.register("shape", ["point", "rect", "collider"], function (exports_1, con
                         var point = myLine.getIntersectPoint(line);
                         if (point) {
                             var normal = normals[i];
-                            var collideData = new collider_1.CollideData(undefined, undefined, false, undefined, normal, point);
+                            var collideData = new collider_1.CollideData(undefined, undefined, false, undefined, new collider_1.HitData(normal, point));
                             collideDatas.push(collideData);
                         }
                     }
                     return collideDatas;
                 };
-                Shape.prototype.intersectsShape = function (other) {
-                    var rect1 = this.getRect();
-                    var rect2 = other.getRect();
-                    if (rect1 && rect2) {
-                        if (rect1.x1 > rect2.x2 || rect2.x1 > rect1.x2)
-                            return undefined;
-                        if (rect1.y1 > rect2.y2 || rect2.y1 > rect1.y2)
-                            return undefined;
-                        return new collider_1.CollideData(undefined, undefined, false, undefined, undefined, undefined);
+                Shape.prototype.intersectsShape = function (other, vel) {
+                    var pointOutside = false;
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        if (!other.containsPoint(point)) {
+                            pointOutside = true;
+                            break;
+                        }
                     }
-                    else {
-                        var lines1 = this.getLines();
-                        var lines2 = other.getLines();
-                        for (var _i = 0, lines1_1 = lines1; _i < lines1_1.length; _i++) {
-                            var line1 = lines1_1[_i];
-                            var normals = other.getNormals();
-                            for (var i = 0; i < lines2.length; i++) {
-                                var line2 = lines2[i];
-                                if (line1.intersectsLine(line2)) {
-                                    return new collider_1.CollideData(undefined, undefined, false, undefined, normals[i], undefined);
+                    var pointOutside2 = false;
+                    for (var _b = 0, _c = other.points; _b < _c.length; _b++) {
+                        var point = _c[_b];
+                        if (!this.containsPoint(point)) {
+                            pointOutside2 = true;
+                            break;
+                        }
+                    }
+                    if (!pointOutside || !pointOutside2) {
+                        return new collider_1.HitData(undefined, undefined);
+                    }
+                    var lines1 = this.getLines();
+                    var lines2 = other.getLines();
+                    var hitNormals = [];
+                    for (var _d = 0, lines1_1 = lines1; _d < lines1_1.length; _d++) {
+                        var line1 = lines1_1[_d];
+                        var normals = other.getNormals();
+                        for (var i = 0; i < lines2.length; i++) {
+                            var line2 = lines2[i];
+                            if (line1.intersectsLine(line2)) {
+                                if (!vel) {
+                                    return new collider_1.HitData(normals[i], undefined);
+                                }
+                                else {
+                                    hitNormals.push(normals[i]);
                                 }
                             }
                         }
+                    }
+                    if (hitNormals.length === 0) {
                         return undefined;
                     }
+                    for (var _e = 0, hitNormals_1 = hitNormals; _e < hitNormals_1.length; _e++) {
+                        var normal = hitNormals_1[_e];
+                        var ang = vel.times(-1).angleWith(normal);
+                        if (ang < 90) {
+                            return new collider_1.HitData(normal, undefined);
+                        }
+                    }
+                    return undefined;
                 };
                 Shape.prototype.containsPoint = function (point) {
                     var x = point.x;
@@ -355,6 +388,9 @@ System.register("shape", ["point", "rect", "collider"], function (exports_1, con
                             }
                         }
                     }
+                    if (mag === 0) {
+                        return undefined;
+                    }
                     return dir.times(minMag);
                 };
                 Shape.prototype.clone = function (x, y) {
@@ -367,13 +403,13 @@ System.register("shape", ["point", "rect", "collider"], function (exports_1, con
                 };
                 return Shape;
             }());
-            exports_1("Shape", Shape);
+            exports_2("Shape", Shape);
         }
     };
 });
-System.register("rect", ["point", "shape"], function (exports_2, context_2) {
+System.register("rect", ["point", "shape"], function (exports_3, context_3) {
     "use strict";
-    var __moduleName = context_2 && context_2.id;
+    var __moduleName = context_3 && context_3.id;
     var point_2, shape_1, Rect;
     return {
         setters: [
@@ -462,13 +498,13 @@ System.register("rect", ["point", "shape"], function (exports_2, context_2) {
                 };
                 return Rect;
             }());
-            exports_2("Rect", Rect);
+            exports_3("Rect", Rect);
         }
     };
 });
-System.register("color", [], function (exports_3, context_3) {
+System.register("color", [], function (exports_4, context_4) {
     "use strict";
-    var __moduleName = context_3 && context_3.id;
+    var __moduleName = context_4 && context_4.id;
     var Color, paletteCanvas, paletteCtx, Palette;
     return {
         setters: [],
@@ -489,7 +525,7 @@ System.register("color", [], function (exports_3, context_3) {
                 });
                 return Color;
             }());
-            exports_3("Color", Color);
+            exports_4("Color", Color);
             paletteCanvas = document.createElement("canvas");
             paletteCtx = paletteCanvas.getContext("2d");
             Palette = (function () {
@@ -525,16 +561,7 @@ System.register("color", [], function (exports_3, context_3) {
                 };
                 return Palette;
             }());
-            exports_3("Palette", Palette);
-        }
-    };
-});
-System.register("gameObject", [], function (exports_4, context_4) {
-    "use strict";
-    var __moduleName = context_4 && context_4.id;
-    return {
-        setters: [],
-        execute: function () {
+            exports_4("Palette", Palette);
         }
     };
 });
@@ -1326,14 +1353,12 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     _this.fadeSound = "explosion";
                     _this.useGravity = true;
                     _this.collider.wallOnly = true;
-                    if (game_4.game.level.checkCollisionActor(_this, 0, 0)) {
-                    }
                     return _this;
                 }
                 RollingShieldProj.prototype.update = function () {
                     if (!game_4.game.level.checkCollisionActor(this, 0, 0)) {
-                        var collideData = game_4.game.level.checkCollisionActor(this, this.xDir, -1);
-                        if (collideData && (!collideData.normal || !collideData.normal.isAngled)) {
+                        var collideData = game_4.game.level.checkCollisionActor(this, this.xDir, -1, this.vel);
+                        if (collideData && collideData.hitData && !collideData.hitData.normal.isAngled()) {
                             this.vel.x *= -1;
                             this.xDir *= -1;
                         }
@@ -1432,7 +1457,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 }
                 ElectricSparkProj.prototype.onHitWall = function (other) {
                     if (this.type === 0) {
-                        var normal = other.normal;
+                        var normal = other.hitData ? other.hitData.normal : undefined;
                         if (normal) {
                             normal = normal.leftNormal();
                         }
@@ -1467,6 +1492,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     if (other.gameObject instanceof pickup_1.Pickup) {
                         this.pickup = other.gameObject;
                         this.pickup.collider.isTrigger = true;
+                        this.pickup.useGravity = false;
                         this.pickup.pos = this.pos;
                     }
                     var character = other.gameObject;
@@ -3528,7 +3554,6 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 }
                 LadderClimb.prototype.onEnter = function (oldState) {
                     _super.prototype.onEnter.call(this, oldState);
-                    var rect = this.ladder.collider.shape.getRect();
                     if (this.snapX !== undefined) {
                         this.character.pos.x = this.snapX;
                     }
@@ -4599,22 +4624,44 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     return false;
                 };
-                Level.prototype.getAllColliders = function (actor) {
-                    var shapes = [];
+                Level.prototype.getAllCollideDatas = function (actor, offsetX, offsetY, vel) {
+                    var actorShape = actor.collider.shape.clone(offsetX, offsetY);
+                    var collideDatas = [];
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
                         if (!go.collider)
                             continue;
                         if (go === actor)
                             continue;
-                        if (this.shouldTrigger(actor, go, new point_8.Point(0, 0)))
+                        if (this.shouldTrigger(actor, go, new point_8.Point(offsetX, offsetY)))
                             continue;
-                        var shape = go.collider.shape.intersectsShape(actor.collider.shape);
-                        if (shape) {
-                            shapes.push(go.collider.shape);
+                        var hitData = actorShape.intersectsShape(go.collider.shape, vel);
+                        if (hitData) {
+                            var collideData = new collider_5.CollideData(go.collider, vel, false, go, hitData);
+                            collideDatas.push(collideData);
                         }
                     }
-                    return shapes;
+                    return collideDatas;
+                };
+                Level.prototype.getMtvDir = function (actor, offsetX, offsetY, vel) {
+                    var collideDatas = game_12.game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
+                    if (collideDatas.length > 0) {
+                        var maxMag = 0;
+                        var maxMtv = void 0;
+                        for (var _i = 0, collideDatas_1 = collideDatas; _i < collideDatas_1.length; _i++) {
+                            var collideData = collideDatas_1[_i];
+                            actor.registerCollision(collideData);
+                            var mtv = actor.collider.shape.getMinTransVectorDir(collideData.collider.shape, vel.times(-1).normalize());
+                            if (mtv.magnitude >= maxMag) {
+                                maxMag = mtv.magnitude;
+                                maxMtv = mtv;
+                            }
+                        }
+                        return maxMtv;
+                    }
+                    else {
+                        return undefined;
+                    }
                 };
                 Level.prototype.checkCollisionShape = function (shape, exclusions) {
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
@@ -4623,11 +4670,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         if (exclusions.indexOf(go) !== -1)
                             continue;
-                        var collideData = go.collider.shape.intersectsShape(shape);
-                        if (collideData) {
-                            collideData.collider = go.collider;
-                            collideData.gameObject = go;
-                            return collideData;
+                        var hitData = shape.intersectsShape(go.collider.shape);
+                        if (hitData) {
+                            return new collider_5.CollideData(go.collider, undefined, false, go, hitData);
                         }
                     }
                     return undefined;
@@ -4635,22 +4680,19 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, vel) {
                     if (!actor.collider || actor.collider.isTrigger)
                         return undefined;
+                    var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
                         var go = _a[_i];
                         if (go === actor)
                             continue;
                         if (!go.collider)
                             continue;
-                        var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                         var isTrigger = this.shouldTrigger(actor, go, new point_8.Point(offsetX, offsetY));
                         if (isTrigger)
                             continue;
-                        var collideData = actorShape.intersectsShape(go.collider.shape);
-                        if (collideData) {
-                            collideData.collider = go.collider;
-                            collideData.vel = vel;
-                            collideData.gameObject = go;
-                            return collideData;
+                        var hitData = actorShape.intersectsShape(go.collider.shape, vel);
+                        if (hitData) {
+                            return new collider_5.CollideData(go.collider, vel, isTrigger, go, hitData);
                         }
                     }
                     return undefined;
@@ -4686,15 +4728,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         var isTrigger = this.shouldTrigger(actor, go, new point_8.Point(offsetX, offsetY));
                         if (!isTrigger)
                             continue;
-                        var collideData = actorShape.intersectsShape(go.collider.shape);
-                        if (collideData) {
-                            triggers.push(new collider_5.CollideData(go.collider, vel, isTrigger, go, collideData.normal, collideData.hitPoint));
+                        var hitData = actorShape.intersectsShape(go.collider.shape, vel);
+                        if (hitData) {
+                            triggers.push(new collider_5.CollideData(go.collider, vel, isTrigger, go, hitData));
                         }
                     }
                     return triggers;
                 };
                 Level.prototype.isOfClass = function (go, classNames) {
-                    if (!classNames)
+                    if (!classNames || classNames.length === 0)
                         return true;
                     var found = false;
                     for (var _i = 0, classNames_1 = classNames; _i < classNames_1.length; _i++) {
@@ -4716,7 +4758,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         var collideDatas = go.collider.shape.getLineIntersectCollisions(new shape_2.Line(pos1, pos2));
                         var closestCollideData = _.minBy(collideDatas, function (collideData) {
-                            return collideData.hitPoint.distanceTo(pos1);
+                            return collideData.hitData.hitPoint.distanceTo(pos1);
                         });
                         if (closestCollideData) {
                             closestCollideData.collider = go.collider;
@@ -4725,6 +4767,34 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         }
                     }
                     return hits;
+                };
+                Level.prototype.raycast = function (pos1, pos2, classNames) {
+                    var hits = this.raycastAll(pos1, pos2, classNames);
+                    return _.minBy(hits, function (collideData) {
+                        return collideData.hitData.hitPoint.distanceTo(pos1);
+                    });
+                };
+                Level.prototype.shapecastAll = function (shape, origin, dir, classNames) {
+                    var hits = [];
+                    for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
+                        var go = _a[_i];
+                        if (!go.collider)
+                            continue;
+                        if (!this.isOfClass(go, classNames))
+                            continue;
+                        var snapVector = shape.getSnapVector(go.collider.shape, dir);
+                        if (snapVector) {
+                            var collideData = new collider_5.CollideData(go.collider, dir, false, go, undefined);
+                            hits.push(collideData);
+                        }
+                    }
+                    return hits;
+                };
+                Level.prototype.shapecast = function (shape, origin, dir, classNames) {
+                    var hits = this.shapecastAll(shape, origin, dir, classNames);
+                    return _.minBy(hits, function (collideData) {
+                        return collideData.hitData.hitPoint.distanceTo(origin);
+                    });
                 };
                 Level.prototype.getClosestTarget = function (pos, alliance) {
                     var _this = this;
@@ -5486,17 +5556,12 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         var fps = (1 / this.deltaTime);
                         this.level.debugString = "FPS: " + fps;
                     }
-                    try {
-                        this.level.input();
-                        if (!this.options.capTo30FPS || this.timePassed >= 1 / 60) {
-                            this.deltaTime = this.timePassed;
-                            this.timePassed = 0;
-                            this.level.update();
-                            this.level.render();
-                        }
-                    }
-                    catch (e) {
-                        console.error(e);
+                    this.level.input();
+                    if (!this.options.capTo30FPS || this.timePassed >= 1 / 60) {
+                        this.deltaTime = this.timePassed;
+                        this.timePassed = 0;
+                        this.level.update();
+                        this.level.render();
                     }
                     if (this.restartLevelName !== "") {
                         this.doRestart();
@@ -5745,7 +5810,6 @@ System.register("helpers", ["point", "game"], function (exports_27, context_27) 
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
         if (!sW) {
             if (window.debugBackground) {
-                game_13.game.level.debugString2 = sY + "(" + Math.floor(sY) + ")";
             }
             ctx.drawImage(imgEl, (sX), sY);
             return;
@@ -6243,6 +6307,29 @@ System.register("point", ["helpers"], function (exports_28, context_28) {
                     this.y *= num;
                     return this;
                 };
+                Point.prototype.unitInc = function (num) {
+                    return this.add(this.normalize().times(num));
+                };
+                Object.defineProperty(Point.prototype, "angle", {
+                    get: function () {
+                        var ang = Math.atan2(this.y, this.x);
+                        ang *= 180 / Math.PI;
+                        if (ang < 0)
+                            ang += 360;
+                        return ang;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Point.prototype.angleWith = function (other) {
+                    var ang = Math.atan2(other.y, other.x) - Math.atan2(this.y, this.x);
+                    ang *= 180 / Math.PI;
+                    if (ang < 0)
+                        ang += 360;
+                    if (ang > 180)
+                        ang = 360 - ang;
+                    return ang;
+                };
                 Object.defineProperty(Point.prototype, "magnitude", {
                     get: function () {
                         var root = this.x * this.x + this.y * this.y;
@@ -6280,7 +6367,7 @@ System.register("point", ["helpers"], function (exports_28, context_28) {
 System.register("collider", ["point", "shape"], function (exports_29, context_29) {
     "use strict";
     var __moduleName = context_29 && context_29.id;
-    var point_11, shape_4, Collider, CollideData;
+    var point_11, shape_4, Collider, CollideData, HitData;
     return {
         setters: [
             function (point_11_1) {
@@ -6325,17 +6412,24 @@ System.register("collider", ["point", "shape"], function (exports_29, context_29
             }());
             exports_29("Collider", Collider);
             CollideData = (function () {
-                function CollideData(collider, vel, isTrigger, gameObject, normal, hitPoint) {
+                function CollideData(collider, vel, isTrigger, gameObject, hitData) {
                     this.collider = collider;
                     this.vel = vel;
                     this.isTrigger = isTrigger;
                     this.gameObject = gameObject;
-                    this.normal = normal;
-                    this.hitPoint = hitPoint;
+                    this.hitData = hitData;
                 }
                 return CollideData;
             }());
             exports_29("CollideData", CollideData);
+            HitData = (function () {
+                function HitData(normal, hitPoint) {
+                    this.normal = normal;
+                    this.hitPoint = hitPoint;
+                }
+                return HitData;
+            }());
+            exports_29("HitData", HitData);
         }
     };
 });
@@ -6604,14 +6698,12 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         }
                     }
                     if (this.constructor.name === "Character")
-                        this.move(this.vel, true, false, false);
+                        this.move(this.vel, true, false, true);
                     else
                         this.move(this.vel, true, true, true);
                     if (this.collider && !this.collider.isTrigger) {
                         var collideData = game_15.game.level.checkCollisionActor(this, 0, 1);
                         if (collideData) {
-                            this.grounded = true;
-                            this.vel.y = 0;
                         }
                         else {
                             this.grounded = false;
@@ -6644,73 +6736,31 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         this.pos.inc(amount.times(times));
                     }
                     else {
-                        var shapes = game_15.game.level.getAllColliders(this);
-                        for (var _i = 0, shapes_1 = shapes; _i < shapes_1.length; _i++) {
-                            var shape = shapes_1[_i];
-                            var freeVec = this.collider.shape.getMinTransVector(shape);
-                            this.pos.inc(freeVec.add(freeVec.normalize()));
+                        var currentCollideDatas = game_15.game.level.getAllCollideDatas(this, 0, 0, undefined);
+                        for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
+                            var collideData_1 = currentCollideDatas_1[_i];
+                            var freeVec = this.collider.shape.getMinTransVector(collideData_1.collider.shape);
+                            this.pos.inc(freeVec.unitInc(0.01));
                         }
                         var inc = amount.clone();
                         var pushDir = void 0;
-                        while (inc.magnitude > 0) {
-                            collideData = game_15.game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
-                            if (collideData && !collideData.isTrigger) {
-                                this.registerCollision(collideData);
-                                if (collideData.normal && collideData.normal.isAngled() && pushIncline) {
-                                    pushDir = Helpers.getInclinePushDir(collideData.normal, amount);
-                                    break;
-                                }
-                                else {
-                                    inc.multiply(0.5);
-                                    if (inc.magnitude < 0.5) {
-                                        inc.x = 0;
-                                        inc.y = 0;
-                                        break;
-                                    }
-                                }
-                            }
-                            else {
-                                break;
-                            }
-                        }
-                        this.pos.inc(inc.multiply(times));
-                        var loop = 0;
-                        if (pushDir && this.grounded) {
-                            while (true) {
-                                loop++;
-                                if (loop > 100) {
-                                    throw "INFINITELOOP";
-                                }
-                                this.pos.x += pushDir.x;
-                                this.pos.y += (pushDir.y * 0.1);
-                                var collideData_1 = game_15.game.level.checkCollisionActor(this, 0, 0);
-                                if (collideData_1 && !collideData_1.isTrigger) {
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                        var height = this.collider.shape.getRect().h;
-                        var wallsBelow = game_15.game.level.raycastAll(this.pos.addxy(0, -1), this.centerPos.addxy(0, 30), ["Wall"]);
-                        var inclineBelow = _.find(wallsBelow, function (wall) {
-                            return wall;
-                        });
-                        if (inclineBelow && this.grounded && !this.collider.isTrigger && snapInclineGravity) {
-                            var loop_1 = 0;
-                            while (true) {
-                                loop_1++;
-                                if (loop_1 > 100) {
-                                    throw "INFINITELOOP";
-                                }
+                        var incAmount = inc.multiply(times);
+                        this.pos.inc(incAmount);
+                        var mtv = game_15.game.level.getMtvDir(this, incAmount.x, incAmount.y, inc);
+                        if (mtv) {
+                            this.pos.inc(mtv.unitInc(0.01));
+                            if (this.useGravity && this.collider && !this.collider.isTrigger) {
                                 var collideData_2 = game_15.game.level.checkCollisionActor(this, 0, 1);
-                                if (collideData_2 && !collideData_2.isTrigger) {
-                                    break;
+                                if (collideData_2) {
+                                    this.grounded = true;
+                                    this.vel.y = 0;
                                 }
-                                this.pos.y += 0.1;
                             }
                         }
                     }
+                };
+                Actor.prototype.isRollingShield = function () {
+                    return this.constructor.name === "RollingShieldProj";
                 };
                 Actor.prototype.render = function (x, y) {
                     if (this.angle === undefined) {

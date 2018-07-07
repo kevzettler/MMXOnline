@@ -79,6 +79,26 @@ export class Point {
     this.y *= num;
     return this;
   }
+
+  unitInc(num: number) {
+    return this.add(this.normalize().times(num));
+  }
+
+  get angle() {
+    let ang = Math.atan2(this.y, this.x);
+    ang *= 180/Math.PI;
+    if(ang < 0) ang += 360;
+    return ang;
+  }
+
+  angleWith(other: Point) {
+    let ang = Math.atan2(other.y, other.x) - Math.atan2(this.y, this.x);
+    ang *= 180/Math.PI;
+    if(ang < 0) ang += 360;
+    if(ang > 180) ang = 360 - ang;
+    return ang;
+  }
+
   get magnitude() {
     let root = this.x * this.x + this.y * this.y;
     if(root < 0) root = 0;

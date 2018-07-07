@@ -108,15 +108,13 @@ export class Actor {
     }
 
     if(this.constructor.name === "Character")
-      this.move(this.vel, true, false, false);
+      this.move(this.vel, true, false, true,);
     else
       this.move(this.vel, true, true, true);
-
+      
     if(this.collider && !this.collider.isTrigger) {
       let collideData = game.level.checkCollisionActor(this, 0, 1);
       if(collideData) {
-        this.grounded = true;
-        this.vel.y = 0;
       }
       else {
         this.grounded = false;
@@ -158,50 +156,55 @@ export class Actor {
     else {
 
       //Already were colliding in first place: free with path of least resistance
-      let shapes = game.level.getAllColliders(this);
-      for(let shape of shapes) {
+      let currentCollideDatas = game.level.getAllCollideDatas(this, 0, 0, undefined);
+      for(let collideData of currentCollideDatas) {
         //console.log("ALREADY COLLIDING")
-        let freeVec = this.collider.shape.getMinTransVector(shape);
-        this.pos.inc(freeVec.add(freeVec.normalize()));
+        let freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
+        this.pos.inc(freeVec.unitInc(0.01));
       }
 
       let inc: Point = amount.clone();
       let pushDir: Point;
+      let incAmount = inc.multiply(times);
 
-      while(inc.magnitude > 0) {
-        collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
-        if(collideData && !collideData.isTrigger) {
-          this.registerCollision(collideData);
-          if(collideData.normal && collideData.normal.isAngled() && pushIncline) {
-            pushDir = Helpers.getInclinePushDir(collideData.normal, amount);
-            break;
-          }
-          else {
-            inc.multiply(0.5);
-            if(inc.magnitude < 0.5) {
-              inc.x = 0;
-              inc.y = 0;
-              break;
-            }
+      this.pos.inc(incAmount);
+      let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc);
+      if(mtv) {
+        this.pos.inc(mtv.unitInc(0.01));
+
+        if(this.useGravity && this.collider && !this.collider.isTrigger) {
+          let collideData = game.level.checkCollisionActor(this, 0, 1);
+          if(collideData) {
+            this.grounded = true;
+            this.vel.y = 0;
           }
         }
-        else {
-          break;
-        }
+
       }
-      
+
       /*
-      //A quick debug sanity assert/check
-      let collideData = game.level.checkCollisionActor(this, inc.x * times, inc.y * times);
-      if(collideData) {
-        Helpers.drawRect(game.ctx, collideData.collider.shape.getRect(), "red", undefined, undefined, 0.5);
-        Helpers.drawRect(game.ctx, this.collider.shape.getRect(), "green", undefined, undefined, 0.5);
-        //throw "BAD";
+      //Determine if grounded, and
+      //snap to ground if close. Use x-vel to determine amount to snap. If it's 0, use default value
+      if(this.useGravity && this.collider && !this.collider.isTrigger) {
+        let yDist = 1;
+        if(snapInclineGravity) {
+          yDist = 1;//amount.x || 1;
+        }
+        let collideData = game.level.checkCollisionActor(this, 0, yDist);
+        if(collideData) {
+          this.grounded = true;
+          this.vel.y = 0;
+          let yVel = new Point(0, yDist);
+          let mtv = game.level.getMtvDir(this, 0, yDist, yVel);
+          if(mtv) {
+            this.pos.inc(yVel);
+            this.pos.inc(mtv.unitInc(0.01));
+          }
+        }
       }
       */
 
-      this.pos.inc(inc.multiply(times));
-      
+      /*
       //Pushing against diagonal
       let loop = 0;
       if(pushDir && this.grounded) {
@@ -217,27 +220,13 @@ export class Actor {
           }
         }
       }
-
-      //Snapping to incline ground when walking down stairs
-      let height = this.collider.shape.getRect().h;
-      let wallsBelow = game.level.raycastAll(this.pos.addxy(0, -1), this.centerPos.addxy(0, 30), ["Wall"]);
-      //@ts-ignore
-      let inclineBelow = _.find(wallsBelow, (wall) => {
-        return wall;//wall.normal && wall.normal.isAngled();
-      });
-      if(inclineBelow && this.grounded && !this.collider.isTrigger && snapInclineGravity) {
-        let loop = 0;
-        while(true) {
-          loop++;if(loop > 100) {throw "INFINITELOOP";}
-          let collideData = game.level.checkCollisionActor(this, 0, 1);
-          if(collideData && !collideData.isTrigger) {
-            break;
-          }
-          this.pos.y+=0.1;
-        }
-      }
+      */
 
     }
+  }
+
+  isRollingShield() {
+    return this.constructor.name === "RollingShieldProj";
   }
 
   render(x: number, y: number) {

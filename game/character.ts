@@ -887,7 +887,6 @@ class LadderClimb extends CharState {
 
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
-    let rect = this.ladder.collider.shape.getRect();
     if(this.snapX !== undefined) {
       this.character.pos.x = this.snapX;
     }

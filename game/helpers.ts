@@ -177,7 +177,7 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   if(!sW) {
     //@ts-ignore
     if(window.debugBackground) {
-      game.level.debugString2 = sY + "(" +Math.floor(sY) + ")";
+      //game.level.debugString2 = sY + "(" +Math.floor(sY) + ")";
     }
     ctx.drawImage(imgEl, (sX), sY);
     return;

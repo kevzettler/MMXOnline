@@ -329,18 +329,13 @@ export class RollingShieldProj extends Projectile {
     this.fadeSound = "explosion";
     this.useGravity = true;
     this.collider.wallOnly = true;
-    if(game.level.checkCollisionActor(this, 0, 0)) {
-      //this.xDir *= -1;
-      //this.vel.x *= -1;
-      //this.time = 1.25;
-    }
   }
 
   update() {
     
     if(!game.level.checkCollisionActor(this, 0, 0)) {
-      let collideData = game.level.checkCollisionActor(this, this.xDir, -1);
-      if(collideData && (!collideData.normal || !collideData.normal.isAngled)) {
+      let collideData = game.level.checkCollisionActor(this, this.xDir, -1, this.vel);
+      if(collideData && collideData.hitData && !collideData.hitData.normal.isAngled()) {
         this.vel.x *= -1;
         this.xDir *= -1;
       }
@@ -460,7 +455,7 @@ export class ElectricSparkProj extends Projectile {
 
   onHitWall(other: CollideData) {
     if(this.type === 0) {
-      let normal = other.normal;
+      let normal = other.hitData ? other.hitData.normal : undefined;
       if(normal) {
         normal = normal.leftNormal();
       }
@@ -498,6 +493,7 @@ export class BoomerangProj extends Projectile {
     if(other.gameObject instanceof Pickup) {
       this.pickup = other.gameObject;
       this.pickup.collider.isTrigger = true;
+      this.pickup.useGravity = false;
       this.pickup.pos = this.pos;
     }
 

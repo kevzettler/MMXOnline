@@ -2,10 +2,10 @@
 Features
 ===============
 
+-Use mtv for incline slope/fix problems with it
+-mtv still has glitch, check slope
+-Actors must snap to ground/the thing they are about to hit exactly
 -Profiling/optimization
-  -Use mtv for incline slope/fix problems with it
-  -mtv still has glitch, check slope
-  -Actors must snap to ground/the thing they are about to hit exactly
 
 -A "prod" system/switch
   -Hook up google analytics if it's on

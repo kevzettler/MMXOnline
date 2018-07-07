@@ -642,28 +642,21 @@ class Game {
       //console.log(fps);
     }
     
-    try 
-    {
-      this.level.input();
-      /*
-      while(this.lag >= this.MS_PER_UPDATE) {
-        this.level.update();
-        this.lag -= this.MS_PER_UPDATE;
-      }
+    this.level.input();
+    /*
+    while(this.lag >= this.MS_PER_UPDATE) {
+      this.level.update();
+      this.lag -= this.MS_PER_UPDATE;
+    }
+    this.level.render();
+    */
+    if(!this.options.capTo30FPS || this.timePassed >= 1/60) {
+      this.deltaTime = this.timePassed;
+      this.timePassed = 0; 
+      this.level.update();
       this.level.render();
-      */
-      if(!this.options.capTo30FPS || this.timePassed >= 1/60) {
-        this.deltaTime = this.timePassed;
-        this.timePassed = 0; 
-        this.level.update();
-        this.level.render();
-      }
     }
-    catch(e)
-    {
-      console.error(e);//conversion to Error type
-    }
-
+    
     if(this.restartLevelName !== "") {
       this.doRestart();
     }

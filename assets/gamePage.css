@@ -9,6 +9,7 @@ body {
   background-color: black;
   /*background-image: url("images/bg2.jpg");*/
   height:100vh;
+  overflow: hidden;
 }
 
 #mainMenu {

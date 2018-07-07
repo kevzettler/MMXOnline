@@ -1,6 +1,7 @@
 import { Point } from "./point";
 import { Rect } from "./rect";
-import { CollideData } from "./collider";
+import { CollideData, HitData } from "./collider";
+import { GameObject } from "./gameObject";
 
 export class Line {
   point1: Point;
@@ -174,7 +175,7 @@ export class Shape {
       let point = myLine.getIntersectPoint(line);
       if(point) {
         let normal = normals[i];
-        let collideData = new CollideData(undefined, undefined, false, undefined, normal, point);
+        let collideData = new CollideData(undefined, undefined, false, undefined, new HitData(normal, point));
         collideDatas.push(collideData);
       }
     }
@@ -182,32 +183,55 @@ export class Shape {
   }
 
   //IMPORTANT NOTE: When determining normals, it is always off "other".
-  intersectsShape(other: Shape): CollideData {
-    let rect1 = this.getRect();
-    let rect2 = other.getRect();
-    if(rect1 && rect2) {
-      // If one rectangle is on left side of other
-      if (rect1.x1 > rect2.x2 || rect2.x1 > rect1.x2)
-        return undefined;
-      // If one rectangle is above other
-      if (rect1.y1 > rect2.y2 || rect2.y1 > rect1.y2)
-        return undefined;
-      return new CollideData(undefined, undefined, false, undefined, undefined, undefined);
+  intersectsShape(other: Shape, vel?: Point): HitData {
+
+    let pointOutside = false;
+    for(let point of this.points) {
+      if(!other.containsPoint(point)) {
+        pointOutside = true;
+        break;
+      }
     }
-    else {
-      let lines1 = this.getLines();
-      let lines2 = other.getLines();
-      for(let line1 of lines1) {
-        let normals = other.getNormals();
-        for(let i = 0; i < lines2.length; i++) {
-          let line2 = lines2[i];
-          if(line1.intersectsLine(line2)) {
-            return new CollideData(undefined, undefined, false, undefined, normals[i], undefined);
+    let pointOutside2 = false;
+    for(let point of other.points) {
+      if(!this.containsPoint(point)) {
+        pointOutside2 = true;
+        break;
+      }
+    }
+    if(!pointOutside || !pointOutside2) {
+      //console.log("INSIDE");
+      return new HitData(undefined, undefined);
+    }
+      
+    let lines1 = this.getLines();
+    let lines2 = other.getLines();
+    let hitNormals = [];
+    for(let line1 of lines1) {
+      let normals = other.getNormals();
+      for(let i = 0; i < lines2.length; i++) {
+        let line2 = lines2[i];
+        if(line1.intersectsLine(line2)) {
+          if(!vel) {
+            return new HitData(normals[i], undefined);
+          }
+          else {
+            hitNormals.push(normals[i]);
           }
         }
       }
+    }
+    if(hitNormals.length === 0) {
       return undefined;
     }
+    for(let normal of hitNormals) {
+      let ang = vel.times(-1).angleWith(normal);
+      if(ang < 90) {
+        return new HitData(normal, undefined);
+      }
+    }
+
+    return undefined;
   }
 
   containsPoint(point: Point): boolean {
@@ -333,6 +357,7 @@ export class Shape {
     return dir.times(maxMag);
   }
 
+  //Get the min trans vector to get this shape into shape b.
   getSnapVector(b: Shape, dir: Point) {
     let mag = 0;
     let minMag = Infinity;
@@ -347,6 +372,9 @@ export class Shape {
           }
         }
       }
+    }
+    if(mag === 0) {
+      return undefined;
     }
     return dir.times(minMag);
   }
