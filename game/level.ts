@@ -469,19 +469,19 @@ export class Level {
       if(noScroll.shape.intersectsShape(camRectShape)) {
         if(noScroll.freeDir === Direction.Left) {
           let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(-1, 0)); 
-          this.camX += mtv.x;
+          if(mtv) this.camX += mtv.x;
         }
         else if(noScroll.freeDir === Direction.Right) {
           let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(1, 0)); 
-          this.camX += mtv.x;
+          if(mtv) this.camX += mtv.x;
         }
         else if(noScroll.freeDir === Direction.Up) {
           let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(0, -1));
-          this.camY += mtv.y;
+          if(mtv) this.camY += mtv.y;
         }
         else if(noScroll.freeDir === Direction.Down) {
           let mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new Point(0, 1));
-          this.camY += mtv.y;
+          if(mtv) this.camY += mtv.y;
         }
       }
     }
@@ -571,16 +571,25 @@ export class Level {
     return collideDatas;
   }
 
-  getMtvDir(actor: Actor, offsetX: number, offsetY: number, vel: Point): Point {
-    
+  getMtvDir(actor: Actor, offsetX: number, offsetY: number, vel: Point, pushIncline: boolean): Point {
     let collideDatas = game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
-      
+    let actorShape = actor.collider.shape.clone(offsetX, offsetY);
+    let pushDir: Point = vel.times(-1).normalize();
+
+    if(collideDatas.length > 0) {
+      for(let collideData of collideDatas) { 
+        if(collideData.hitData && collideData.hitData.normal && collideData.hitData.normal.isAngled() && pushIncline) {
+          pushDir = new Point(0, -1); //Helpers.getInclinePushDir(collideData.hitData.normal, vel);
+        }
+      }
+    }
+
     if(collideDatas.length > 0) {
       let maxMag = 0;
       let maxMtv: Point;
       for(let collideData of collideDatas) {
         actor.registerCollision(collideData);
-        let mtv = actor.collider.shape.getMinTransVectorDir(collideData.collider.shape, vel.times(-1).normalize());
+        let mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
         if(mtv.magnitude >= maxMag) {
           maxMag = mtv.magnitude;
           maxMtv = mtv;

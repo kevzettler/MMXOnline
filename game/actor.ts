@@ -108,13 +108,30 @@ export class Actor {
     }
 
     if(this.constructor.name === "Character")
-      this.move(this.vel, true, false, true,);
+      this.move(this.vel, true, false, true);
     else
       this.move(this.vel, true, true, true);
       
     if(this.collider && !this.collider.isTrigger) {
-      let collideData = game.level.checkCollisionActor(this, 0, 1);
-      if(collideData) {
+
+      let yDist = 1;
+      //If already grounded, snap to ground further
+      if(this.grounded) {
+        yDist = 30;
+      }
+
+      let collideData = game.level.checkCollisionActor(this, 0, yDist);
+      if(collideData && this.vel.y >= 0) {
+        //Determine if grounded, and
+        //snap to ground if close. Use x-vel to determine amount to snap. If it's 0, use default value
+        this.grounded = true;
+        this.vel.y = 0;
+        let yVel = new Point(0, yDist);
+        let mtv = game.level.getMtvDir(this, 0, yDist, yVel, false);
+        if(mtv) {
+          this.pos.inc(yVel);
+          this.pos.inc(mtv.unitInc(0.01));
+        }
       }
       else {
         this.grounded = false;
@@ -164,63 +181,16 @@ export class Actor {
       }
 
       let inc: Point = amount.clone();
-      let pushDir: Point;
       let incAmount = inc.multiply(times);
 
+      let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
       this.pos.inc(incAmount);
-      let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc);
       if(mtv) {
+        //if(mtv.magnitude > 50) {
+        //  mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
+        //}
         this.pos.inc(mtv.unitInc(0.01));
-
-        if(this.useGravity && this.collider && !this.collider.isTrigger) {
-          let collideData = game.level.checkCollisionActor(this, 0, 1);
-          if(collideData) {
-            this.grounded = true;
-            this.vel.y = 0;
-          }
-        }
-
       }
-
-      /*
-      //Determine if grounded, and
-      //snap to ground if close. Use x-vel to determine amount to snap. If it's 0, use default value
-      if(this.useGravity && this.collider && !this.collider.isTrigger) {
-        let yDist = 1;
-        if(snapInclineGravity) {
-          yDist = 1;//amount.x || 1;
-        }
-        let collideData = game.level.checkCollisionActor(this, 0, yDist);
-        if(collideData) {
-          this.grounded = true;
-          this.vel.y = 0;
-          let yVel = new Point(0, yDist);
-          let mtv = game.level.getMtvDir(this, 0, yDist, yVel);
-          if(mtv) {
-            this.pos.inc(yVel);
-            this.pos.inc(mtv.unitInc(0.01));
-          }
-        }
-      }
-      */
-
-      /*
-      //Pushing against diagonal
-      let loop = 0;
-      if(pushDir && this.grounded) {
-        while(true) {
-          loop++;if(loop > 100) {throw "INFINITELOOP";}
-          this.pos.x += pushDir.x;
-          this.pos.y += (pushDir.y * 0.1);
-          let collideData = game.level.checkCollisionActor(this, 0, 0);
-          if(collideData && !collideData.isTrigger) {
-          }
-          else {
-            break;
-          }
-        }
-      }
-      */
 
     }
   }

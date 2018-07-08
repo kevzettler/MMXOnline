@@ -193,7 +193,7 @@ System.register("shape", ["point", "rect", "collider"], function (exports_2, con
                     var lines = this.getLines();
                     for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
                         var myLine = lines_1[_i];
-                        if (myLine.intersectsLine(line)) {
+                        if (myLine.getIntersectPoint(line)) {
                             return true;
                         }
                     }
@@ -242,7 +242,7 @@ System.register("shape", ["point", "rect", "collider"], function (exports_2, con
                         var normals = other.getNormals();
                         for (var i = 0; i < lines2.length; i++) {
                             var line2 = lines2[i];
-                            if (line1.intersectsLine(line2)) {
+                            if (line1.getIntersectPoint(line2)) {
                                 if (!vel) {
                                     return new collider_1.HitData(normals[i], undefined);
                                 }
@@ -261,6 +261,9 @@ System.register("shape", ["point", "rect", "collider"], function (exports_2, con
                         if (ang < 90) {
                             return new collider_1.HitData(normal, undefined);
                         }
+                    }
+                    if (hitNormals.length > 0) {
+                        return new collider_1.HitData(hitNormals[0], undefined);
                     }
                     return undefined;
                 };
@@ -315,16 +318,36 @@ System.register("shape", ["point", "rect", "collider"], function (exports_2, con
                 Shape.prototype.checkNormal = function (other, normal) {
                     var aMinMax = this.minMaxDotProd(normal);
                     var bMinMax = other.minMaxDotProd(normal);
+                    var overlap = 0;
+                    if (aMinMax[0] > bMinMax[0] && aMinMax[1] < bMinMax[1]) {
+                        overlap = aMinMax[1] - aMinMax[0];
+                    }
+                    if (bMinMax[0] > aMinMax[0] && bMinMax[1] < aMinMax[1]) {
+                        overlap = bMinMax[1] - bMinMax[0];
+                    }
+                    if (overlap > 0) {
+                        var mins = Math.abs(aMinMax[0] - bMinMax[0]);
+                        var maxs = Math.abs(aMinMax[1] - bMinMax[1]);
+                        if (mins < maxs) {
+                            overlap += mins;
+                        }
+                        else {
+                            overlap += maxs;
+                        }
+                        var correction = normal.times(overlap);
+                        return correction;
+                    }
                     if (aMinMax[0] <= bMinMax[1] && aMinMax[1] >= bMinMax[0]) {
                         var correction = normal.times(bMinMax[1] - aMinMax[0]);
                         return correction;
                     }
                     return undefined;
                 };
-                Shape.prototype.getMinTransVector = function (b, dir) {
+                Shape.prototype.getMinTransVector = function (b) {
                     var correctionVectors = [];
                     var thisNormals;
                     var bNormals;
+                    var dir = undefined;
                     if (dir) {
                         thisNormals = [dir];
                         bNormals = [dir];
@@ -368,6 +391,23 @@ System.register("shape", ["point", "rect", "collider"], function (exports_2, con
                                 }
                             }
                         }
+                    }
+                    for (var _d = 0, _e = b.points; _d < _e.length; _d++) {
+                        var point = _e[_d];
+                        var line = new Line(point, point.add(dir.times(-10000)));
+                        for (var _f = 0, _g = this.getLines(); _f < _g.length; _f++) {
+                            var myLine = _g[_f];
+                            var intersectPoint = myLine.getIntersectPoint(line);
+                            if (intersectPoint) {
+                                mag = point.distanceTo(intersectPoint);
+                                if (mag > maxMag) {
+                                    maxMag = mag;
+                                }
+                            }
+                        }
+                    }
+                    if (maxMag === 0) {
+                        return undefined;
                     }
                     return dir.times(maxMag);
                 };
@@ -3741,6 +3781,9 @@ System.register("cheats", ["game"], function (exports_17, context_17) {
             game_9.game.restartLevel("sm_bossroom");
             return;
         }
+        if (keycode === 80) {
+            game_9.game.paused = !game_9.game.paused;
+        }
     }
     exports_17("cheat", cheat);
     var game_9;
@@ -4548,19 +4591,23 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         if (noScroll.shape.intersectsShape(camRectShape)) {
                             if (noScroll.freeDir === noScroll_1.Direction.Left) {
                                 var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(-1, 0));
-                                this.camX += mtv.x;
+                                if (mtv)
+                                    this.camX += mtv.x;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Right) {
                                 var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(1, 0));
-                                this.camX += mtv.x;
+                                if (mtv)
+                                    this.camX += mtv.x;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Up) {
                                 var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(0, -1));
-                                this.camY += mtv.y;
+                                if (mtv)
+                                    this.camY += mtv.y;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Down) {
                                 var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(0, 1));
-                                this.camY += mtv.y;
+                                if (mtv)
+                                    this.camY += mtv.y;
                             }
                         }
                     }
@@ -4643,15 +4690,25 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     return collideDatas;
                 };
-                Level.prototype.getMtvDir = function (actor, offsetX, offsetY, vel) {
+                Level.prototype.getMtvDir = function (actor, offsetX, offsetY, vel, pushIncline) {
                     var collideDatas = game_12.game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
+                    var actorShape = actor.collider.shape.clone(offsetX, offsetY);
+                    var pushDir = vel.times(-1).normalize();
+                    if (collideDatas.length > 0) {
+                        for (var _i = 0, collideDatas_1 = collideDatas; _i < collideDatas_1.length; _i++) {
+                            var collideData = collideDatas_1[_i];
+                            if (collideData.hitData && collideData.hitData.normal && collideData.hitData.normal.isAngled() && pushIncline) {
+                                pushDir = new point_8.Point(0, -1);
+                            }
+                        }
+                    }
                     if (collideDatas.length > 0) {
                         var maxMag = 0;
                         var maxMtv = void 0;
-                        for (var _i = 0, collideDatas_1 = collideDatas; _i < collideDatas_1.length; _i++) {
-                            var collideData = collideDatas_1[_i];
+                        for (var _a = 0, collideDatas_2 = collideDatas; _a < collideDatas_2.length; _a++) {
+                            var collideData = collideDatas_2[_a];
                             actor.registerCollision(collideData);
-                            var mtv = actor.collider.shape.getMinTransVectorDir(collideData.collider.shape, vel.times(-1).normalize());
+                            var mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
                             if (mtv.magnitude >= maxMag) {
                                 maxMag = mtv.magnitude;
                                 maxMtv = mtv;
@@ -5097,6 +5154,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.interval = 0;
                     this.requestId = 0;
                     this.soundSheetLoaded = false;
+                    this.paused = false;
                     this.doQuickStart = true;
                     this.restartLevelName = "";
                     this.timePassed = 0;
@@ -5560,8 +5618,10 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     if (!this.options.capTo30FPS || this.timePassed >= 1 / 60) {
                         this.deltaTime = this.timePassed;
                         this.timePassed = 0;
-                        this.level.update();
-                        this.level.render();
+                        if (!this.paused) {
+                            this.level.update();
+                            this.level.render();
+                        }
                     }
                     if (this.restartLevelName !== "") {
                         this.doRestart();
@@ -6702,8 +6762,20 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     else
                         this.move(this.vel, true, true, true);
                     if (this.collider && !this.collider.isTrigger) {
-                        var collideData = game_15.game.level.checkCollisionActor(this, 0, 1);
-                        if (collideData) {
+                        var yDist = 1;
+                        if (this.grounded) {
+                            yDist = 30;
+                        }
+                        var collideData = game_15.game.level.checkCollisionActor(this, 0, yDist);
+                        if (collideData && this.vel.y >= 0) {
+                            this.grounded = true;
+                            this.vel.y = 0;
+                            var yVel = new point_13.Point(0, yDist);
+                            var mtv = game_15.game.level.getMtvDir(this, 0, yDist, yVel, false);
+                            if (mtv) {
+                                this.pos.inc(yVel);
+                                this.pos.inc(mtv.unitInc(0.01));
+                            }
                         }
                         else {
                             this.grounded = false;
@@ -6743,19 +6815,11 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                             this.pos.inc(freeVec.unitInc(0.01));
                         }
                         var inc = amount.clone();
-                        var pushDir = void 0;
                         var incAmount = inc.multiply(times);
+                        var mtv = game_15.game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
                         this.pos.inc(incAmount);
-                        var mtv = game_15.game.level.getMtvDir(this, incAmount.x, incAmount.y, inc);
                         if (mtv) {
                             this.pos.inc(mtv.unitInc(0.01));
-                            if (this.useGravity && this.collider && !this.collider.isTrigger) {
-                                var collideData_2 = game_15.game.level.checkCollisionActor(this, 0, 1);
-                                if (collideData_2) {
-                                    this.grounded = true;
-                                    this.vel.y = 0;
-                                }
-                            }
                         }
                     }
                 };

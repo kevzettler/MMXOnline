@@ -48,4 +48,7 @@ export function cheat(key: string, keycode: number) {
     game.restartLevel("sm_bossroom");
     return;
   }
+  if(keycode === 80) {
+    game.paused = !game.paused;
+  }
 }

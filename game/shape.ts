@@ -10,6 +10,7 @@ export class Line {
     this.point1 = point1;
     this.point2 = point2;
   }
+  
   intersectsLine(other: Line): boolean {
     let a = this.point1.x;
     let b = this.point1.y;
@@ -39,6 +40,7 @@ export class Line {
 
   //@ts-ignore
   checkLineIntersection(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
+
     // if the lines intersect, the result contains the x and y of the intersection (treating the lines as infinite) and booleans for whether line segment 1 or line segment 2 contain the point
     let denominator, a, b, numerator1, numerator2, result = {
         //@ts-ignore
@@ -159,7 +161,7 @@ export class Shape {
   intersectsLine(line: Line) {
     let lines = this.getLines();
     for(let myLine of lines) {
-      if(myLine.intersectsLine(line)) {
+      if(myLine.getIntersectPoint(line)) {
         return true;
       }
     }
@@ -211,7 +213,7 @@ export class Shape {
       let normals = other.getNormals();
       for(let i = 0; i < lines2.length; i++) {
         let line2 = lines2[i];
-        if(line1.intersectsLine(line2)) {
+        if(line1.getIntersectPoint(line2)) {
           if(!vel) {
             return new HitData(normals[i], undefined);
           }
@@ -229,6 +231,9 @@ export class Shape {
       if(ang < 90) {
         return new HitData(normal, undefined);
       }
+    }
+    if(hitNormals.length > 0) {
+      return new HitData(hitNormals[0], undefined);
     }
 
     return undefined;
@@ -291,24 +296,44 @@ export class Shape {
   }
   
   checkNormal(other: Shape, normal: Point) {
-    // project points onto normal to find bounds of shadow on axis
     let aMinMax = this.minMaxDotProd(normal);
     let bMinMax = other.minMaxDotProd(normal);
-    // check for overlap of shadows on axis
+
+    //Containment
+    let overlap = 0;
+    if(aMinMax[0] > bMinMax[0] && aMinMax[1] < bMinMax[1]) {
+      overlap = aMinMax[1] - aMinMax[0];
+    }
+    if(bMinMax[0] > aMinMax[0] && bMinMax[1] < aMinMax[1]) {
+      overlap = bMinMax[1] - bMinMax[0];
+    }
+    if(overlap > 0) {
+      let mins = Math.abs(aMinMax[0] - bMinMax[0]);
+      let maxs = Math.abs(aMinMax[1] - bMinMax[1]);
+      // NOTE: depending on which is smaller you may need to
+      // negate the separating axis!!
+      if (mins < maxs) {
+        overlap += mins;
+      } else {
+        overlap += maxs;
+      }
+      let correction = normal.times(overlap);
+      return correction;
+    }
+
     if (aMinMax[0] <= bMinMax[1] && aMinMax[1] >= bMinMax[0]) {
-      // correction vector is in direction of normal x amount overlapping
       let correction = normal.times(bMinMax[1] - aMinMax[0]);
-      //correction.surface = normal.rightNormal();
       return correction;
     }
     return undefined;
   }
 
   //Get the min trans vector to get this shape out of shape b.
-  getMinTransVector(b: Shape, dir?: Point): Point {
+  getMinTransVector(b: Shape/*, dir?: Point*/): Point {
     let correctionVectors = [];
     let thisNormals: Point[];
     let bNormals: Point[];
+    let dir = undefined;
     if(dir) {
       thisNormals = [dir];
       bNormals = [dir];
@@ -317,19 +342,16 @@ export class Shape {
       thisNormals = this.getNormals();
       bNormals = b.getNormals();
     }
-    // project a&b points on a's normals and check for overlaps
     for (let normal of thisNormals) {
       let result = this.checkNormal(b, normal);
       if (result) correctionVectors.push(result);
       //else return undefined;
     }
-    // project a&b poitns on b's normals and check for overlaps
     for (let normal of bNormals) {
       let result = this.checkNormal(b, normal);
       if (result) correctionVectors.push(result);
       //else return undefined;
     }
-    // if we have any overlaps, return smallest correction vector
     if (correctionVectors.length > 0) {
       //@ts-ignore
       return _.minBy(correctionVectors, (correctionVector) => {
@@ -353,6 +375,21 @@ export class Shape {
           }
         }
       }
+    }
+    for(let point of b.points) {
+      let line = new Line(point, point.add(dir.times(-10000)));
+      for(let myLine of this.getLines()) {
+        let intersectPoint = myLine.getIntersectPoint(line);
+        if(intersectPoint) {
+          mag = point.distanceTo(intersectPoint);
+          if(mag > maxMag) {
+            maxMag = mag;
+          }
+        }
+      }
+    }
+    if(maxMag === 0) {
+      return undefined;
     }
     return dir.times(maxMag);
   }

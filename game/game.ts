@@ -109,6 +109,8 @@ class Game {
   uiCanvas: HTMLCanvasElement;
   uiCtx: CanvasRenderingContext2D;
 
+  paused: boolean = false;
+
   constructor() {
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
     this.uiCanvas = <HTMLCanvasElement>$("#ui-canvas")[0];
@@ -652,9 +654,11 @@ class Game {
     */
     if(!this.options.capTo30FPS || this.timePassed >= 1/60) {
       this.deltaTime = this.timePassed;
-      this.timePassed = 0; 
-      this.level.update();
-      this.level.render();
+      this.timePassed = 0;
+      if(!this.paused) {
+        this.level.update();
+        this.level.render();
+      }
     }
     
     if(this.restartLevelName !== "") {

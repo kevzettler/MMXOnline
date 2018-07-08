@@ -2,9 +2,8 @@
 Features
 ===============
 
--Use mtv for incline slope/fix problems with it
--mtv still has glitch, check slope
--Actors must snap to ground/the thing they are about to hit exactly
+-Incline down snapping: shouldn't be hardcoded to 30
+
 -Profiling/optimization
 
 -A "prod" system/switch
