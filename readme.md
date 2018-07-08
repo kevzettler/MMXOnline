@@ -2,8 +2,6 @@
 Features
 ===============
 
--Incline down snapping: shouldn't be hardcoded to 30
-
 -Profiling/optimization
 
 -A "prod" system/switch

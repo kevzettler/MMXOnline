@@ -5172,7 +5172,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 }
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
-                    this.uiData.selectedArenaMap = "powerplant";
+                    this.uiData.selectedArenaMap = "gallery";
                     this.uiData.selectedGameMode = "team deathmatch";
                     this.uiData.maxPlayers = 0;
                     this.uiData.numBots = 0;
@@ -6764,7 +6764,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     if (this.collider && !this.collider.isTrigger) {
                         var yDist = 1;
                         if (this.grounded) {
-                            yDist = 30;
+                            yDist = 300 * game_15.game.deltaTime;
                         }
                         var collideData = game_15.game.level.checkCollisionActor(this, 0, yDist);
                         if (collideData && this.vel.y >= 0) {

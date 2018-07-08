@@ -117,7 +117,7 @@ export class Actor {
       let yDist = 1;
       //If already grounded, snap to ground further
       if(this.grounded) {
-        yDist = 30;
+        yDist = 300 * game.deltaTime;
       }
 
       let collideData = game.level.checkCollisionActor(this, 0, yDist);
