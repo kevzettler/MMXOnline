@@ -2,6 +2,7 @@ import { Point } from "./point";
 import { Rect } from "./rect";
 import { CollideData, HitData } from "./collider";
 import { GameObject } from "./gameObject";
+import { game } from "./game";
 
 export class Line {
   point1: Point;
@@ -124,9 +125,18 @@ export class IntersectData {
 export class Shape {
 
   points: Point[];
+  normals: Point[];
 
   constructor(points: Point[]) {
     this.points = points;
+    let normals = [];
+    for (let i = 0; i < this.points.length; i++) {
+      let p1 = this.points[i];
+      let p2 = (i == this.points.length - 1 ? this.points[0] : this.points[i + 1]);
+      let v = new Point(p2.x - p1.x, p2.y - p1.y);
+      normals.push(v.leftNormal().normalize());
+    }
+    this.normals = normals;
   }
 
   getRect(): Rect {
@@ -148,14 +158,7 @@ export class Shape {
   }
 
   getNormals(): Point[] {
-    let normals = [];
-    for (let i = 0; i < this.points.length; i++) {
-      let p1 = this.points[i];
-      let p2 = (i == this.points.length - 1 ? this.points[0] : this.points[i + 1]);
-      let v = new Point(p2.x - p1.x, p2.y - p1.y);
-      normals.push(v.leftNormal().normalize());
-    }
-    return normals;
+    return this.normals;
   }
 
   intersectsLine(line: Line) {
@@ -186,7 +189,7 @@ export class Shape {
 
   //IMPORTANT NOTE: When determining normals, it is always off "other".
   intersectsShape(other: Shape, vel?: Point): HitData {
-
+    game.collisionCalls++;
     let pointOutside = false;
     for(let point of this.points) {
       if(!other.containsPoint(point)) {
@@ -330,6 +333,7 @@ export class Shape {
 
   //Get the min trans vector to get this shape out of shape b.
   getMinTransVector(b: Shape/*, dir?: Point*/): Point {
+    game.collisionCalls++;
     let correctionVectors = [];
     let thisNormals: Point[];
     let bNormals: Point[];
@@ -362,6 +366,7 @@ export class Shape {
   }
 
   getMinTransVectorDir(b: Shape, dir: Point) {
+    game.collisionCalls++;
     let mag = 0;
     let maxMag = 0;
     for(let point of this.points) {

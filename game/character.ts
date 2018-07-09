@@ -72,12 +72,12 @@ export class Character extends Actor {
 
   getStandingCollider() {
     let rect = new Rect(0, 0, 18, 34);
-    return new Collider(rect.getPoints(), false, this, false);
+    return new Collider(rect.getPoints(), false, this, false, false);
   }
 
   getDashingCollider() {
     let rect = new Rect(0, 0, 18, 22);
-    return new Collider(rect.getPoints(), false, this, false);
+    return new Collider(rect.getPoints(), false, this, false, false);
   }
 
   preUpdate() {

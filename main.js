@@ -17,534 +17,100 @@ System.register("gameObject", [], function (exports_1, context_1) {
         }
     };
 });
-System.register("shape", ["point", "rect", "collider"], function (exports_2, context_2) {
+System.register("geometry", ["collider", "game", "helpers"], function (exports_2, context_2) {
     "use strict";
     var __moduleName = context_2 && context_2.id;
-    var point_1, rect_1, collider_1, Line, IntersectData, Shape;
+    var collider_1, game_1, Helpers, Geometry;
     return {
         setters: [
-            function (point_1_1) {
-                point_1 = point_1_1;
-            },
-            function (rect_1_1) {
-                rect_1 = rect_1_1;
-            },
             function (collider_1_1) {
                 collider_1 = collider_1_1;
+            },
+            function (game_1_1) {
+                game_1 = game_1_1;
+            },
+            function (Helpers_1) {
+                Helpers = Helpers_1;
             }
         ],
         execute: function () {
-            Line = (function () {
-                function Line(point1, point2) {
-                    this.point1 = point1;
-                    this.point2 = point2;
+            Geometry = (function () {
+                function Geometry(name, points) {
+                    this.name = name;
+                    this.collider = new collider_1.Collider(points, false, undefined, true, true);
                 }
-                Line.prototype.intersectsLine = function (other) {
-                    var a = this.point1.x;
-                    var b = this.point1.y;
-                    var c = this.point2.x;
-                    var d = this.point2.y;
-                    var p = other.point1.x;
-                    var q = other.point1.y;
-                    var r = other.point2.x;
-                    var s = other.point2.y;
-                    var det, gamma, lambda;
-                    det = (c - a) * (s - q) - (r - p) * (d - b);
-                    if (det === 0) {
-                        return false;
-                    }
-                    else {
-                        lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
-                        gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
-                        return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+                Geometry.prototype.preUpdate = function () {
+                };
+                Geometry.prototype.update = function () {
+                };
+                Geometry.prototype.render = function (x, y) {
+                    if (game_1.game.options.showHitboxes) {
+                        Helpers.drawPolygon(game_1.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
                 };
-                Object.defineProperty(Line.prototype, "x1", {
-                    get: function () { return this.point1.x; },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Line.prototype, "y1", {
-                    get: function () { return this.point1.y; },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Line.prototype, "x2", {
-                    get: function () { return this.point2.x; },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Line.prototype, "y2", {
-                    get: function () { return this.point2.y; },
-                    enumerable: true,
-                    configurable: true
-                });
-                Line.prototype.checkLineIntersection = function (line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
-                    var denominator, a, b, numerator1, numerator2, result = {
-                        x: null,
-                        y: null,
-                        onLine1: false,
-                        onLine2: false
-                    };
-                    denominator = ((line2EndY - line2StartY) * (line1EndX - line1StartX)) - ((line2EndX - line2StartX) * (line1EndY - line1StartY));
-                    if (denominator == 0) {
-                        return result;
-                    }
-                    a = line1StartY - line2StartY;
-                    b = line1StartX - line2StartX;
-                    numerator1 = ((line2EndX - line2StartX) * a) - ((line2EndY - line2StartY) * b);
-                    numerator2 = ((line1EndX - line1StartX) * a) - ((line1EndY - line1StartY) * b);
-                    a = numerator1 / denominator;
-                    b = numerator2 / denominator;
-                    result.x = line1StartX + (a * (line1EndX - line1StartX));
-                    result.y = line1StartY + (a * (line1EndY - line1StartY));
-                    if (a > 0 && a < 1) {
-                        result.onLine1 = true;
-                    }
-                    if (b > 0 && b < 1) {
-                        result.onLine2 = true;
-                    }
-                    return result;
+                Geometry.prototype.onCollision = function (other) {
                 };
-                Line.prototype.getIntersectPoint = function (other) {
-                    if (!this.intersectsLine(other))
-                        return undefined;
-                    var intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
-                    if (intersection.x !== null && intersection.y !== null)
-                        return new point_1.Point(intersection.x, intersection.y);
-                    return undefined;
-                };
-                Object.defineProperty(Line.prototype, "slope", {
-                    get: function () {
-                        if (this.x1 == this.x2)
-                            return NaN;
-                        return (this.y1 - this.y2) / (this.x1 - this.x2);
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Line.prototype, "yInt", {
-                    get: function () {
-                        if (this.x1 === this.x2)
-                            return this.y1 === 0 ? 0 : NaN;
-                        if (this.y1 === this.y2)
-                            return this.y1;
-                        return this.y1 - this.slope * this.x1;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Line.prototype, "xInt", {
-                    get: function () {
-                        var slope;
-                        if (this.y1 === this.y2)
-                            return this.x1 == 0 ? 0 : NaN;
-                        if (this.x1 === this.x2)
-                            return this.x1;
-                        return (-1 * ((slope = this.slope * this.x1 - this.y1)) / this.slope);
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                return Line;
+                return Geometry;
             }());
-            exports_2("Line", Line);
-            IntersectData = (function () {
-                function IntersectData(intersectPoint, normal) {
-                    this.intersectPoint = intersectPoint;
-                    this.normal = normal;
-                }
-                return IntersectData;
-            }());
-            exports_2("IntersectData", IntersectData);
-            Shape = (function () {
-                function Shape(points) {
-                    this.points = points;
-                }
-                Shape.prototype.getRect = function () {
-                    if (this.points.length !== 4)
-                        return undefined;
-                    if (this.points[0].ix === this.points[3].ix && this.points[1].ix === this.points[2].ix && this.points[0].iy === this.points[1].iy && this.points[2].iy === this.points[3].iy) {
-                        return rect_1.Rect.Create(this.points[0], this.points[2]);
-                    }
-                    return undefined;
-                };
-                Shape.prototype.getLines = function () {
-                    var lines = [];
-                    for (var i = 0; i < this.points.length; i++) {
-                        var next = i + 1;
-                        if (next >= this.points.length)
-                            next = 0;
-                        lines.push(new Line(this.points[i], this.points[next]));
-                    }
-                    return lines;
-                };
-                Shape.prototype.getNormals = function () {
-                    var normals = [];
-                    for (var i = 0; i < this.points.length; i++) {
-                        var p1 = this.points[i];
-                        var p2 = (i == this.points.length - 1 ? this.points[0] : this.points[i + 1]);
-                        var v = new point_1.Point(p2.x - p1.x, p2.y - p1.y);
-                        normals.push(v.leftNormal().normalize());
-                    }
-                    return normals;
-                };
-                Shape.prototype.intersectsLine = function (line) {
-                    var lines = this.getLines();
-                    for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
-                        var myLine = lines_1[_i];
-                        if (myLine.getIntersectPoint(line)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                };
-                Shape.prototype.getLineIntersectCollisions = function (line) {
-                    var collideDatas = [];
-                    var lines = this.getLines();
-                    var normals = this.getNormals();
-                    for (var i = 0; i < lines.length; i++) {
-                        var myLine = lines[i];
-                        var point = myLine.getIntersectPoint(line);
-                        if (point) {
-                            var normal = normals[i];
-                            var collideData = new collider_1.CollideData(undefined, undefined, false, undefined, new collider_1.HitData(normal, point));
-                            collideDatas.push(collideData);
-                        }
-                    }
-                    return collideDatas;
-                };
-                Shape.prototype.intersectsShape = function (other, vel) {
-                    var pointOutside = false;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        if (!other.containsPoint(point)) {
-                            pointOutside = true;
-                            break;
-                        }
-                    }
-                    var pointOutside2 = false;
-                    for (var _b = 0, _c = other.points; _b < _c.length; _b++) {
-                        var point = _c[_b];
-                        if (!this.containsPoint(point)) {
-                            pointOutside2 = true;
-                            break;
-                        }
-                    }
-                    if (!pointOutside || !pointOutside2) {
-                        return new collider_1.HitData(undefined, undefined);
-                    }
-                    var lines1 = this.getLines();
-                    var lines2 = other.getLines();
-                    var hitNormals = [];
-                    for (var _d = 0, lines1_1 = lines1; _d < lines1_1.length; _d++) {
-                        var line1 = lines1_1[_d];
-                        var normals = other.getNormals();
-                        for (var i = 0; i < lines2.length; i++) {
-                            var line2 = lines2[i];
-                            if (line1.getIntersectPoint(line2)) {
-                                if (!vel) {
-                                    return new collider_1.HitData(normals[i], undefined);
-                                }
-                                else {
-                                    hitNormals.push(normals[i]);
-                                }
-                            }
-                        }
-                    }
-                    if (hitNormals.length === 0) {
-                        return undefined;
-                    }
-                    for (var _e = 0, hitNormals_1 = hitNormals; _e < hitNormals_1.length; _e++) {
-                        var normal = hitNormals_1[_e];
-                        var ang = vel.times(-1).angleWith(normal);
-                        if (ang < 90) {
-                            return new collider_1.HitData(normal, undefined);
-                        }
-                    }
-                    if (hitNormals.length > 0) {
-                        return new collider_1.HitData(hitNormals[0], undefined);
-                    }
-                    return undefined;
-                };
-                Shape.prototype.containsPoint = function (point) {
-                    var x = point.x;
-                    var y = point.y;
-                    var vertices = this.points;
-                    var inside = false;
-                    for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-                        var xi = vertices[i].x, yi = vertices[i].y;
-                        var xj = vertices[j].x, yj = vertices[j].y;
-                        var intersect = ((yi > y) !== (yj > y))
-                            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-                        if (intersect)
-                            inside = !inside;
-                    }
-                    return inside;
-                };
-                Shape.prototype.getIntersectPoint = function (point, dir) {
-                    if (this.containsPoint(point)) {
-                        return point;
-                    }
-                    var intersections = [];
-                    var pointLine = new Line(point, point.add(dir));
-                    for (var _i = 0, _a = this.getLines(); _i < _a.length; _i++) {
-                        var line = _a[_i];
-                        var intersectPoint = line.getIntersectPoint(pointLine);
-                        if (intersectPoint) {
-                            intersections.push(intersectPoint);
-                        }
-                    }
-                    if (intersections.length === 0)
-                        return undefined;
-                    return _.minBy(intersections, function (intersectPoint) {
-                        return intersectPoint.distanceTo(point);
-                    });
-                };
-                Shape.prototype.getClosestPointOnBounds = function (point) {
-                };
-                Shape.prototype.minMaxDotProd = function (normal) {
-                    var min = null, max = null;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        var dp = point.dotProduct(normal);
-                        if (min === null || dp < min)
-                            min = dp;
-                        if (max === null || dp > max)
-                            max = dp;
-                    }
-                    return [min, max];
-                };
-                Shape.prototype.checkNormal = function (other, normal) {
-                    var aMinMax = this.minMaxDotProd(normal);
-                    var bMinMax = other.minMaxDotProd(normal);
-                    var overlap = 0;
-                    if (aMinMax[0] > bMinMax[0] && aMinMax[1] < bMinMax[1]) {
-                        overlap = aMinMax[1] - aMinMax[0];
-                    }
-                    if (bMinMax[0] > aMinMax[0] && bMinMax[1] < aMinMax[1]) {
-                        overlap = bMinMax[1] - bMinMax[0];
-                    }
-                    if (overlap > 0) {
-                        var mins = Math.abs(aMinMax[0] - bMinMax[0]);
-                        var maxs = Math.abs(aMinMax[1] - bMinMax[1]);
-                        if (mins < maxs) {
-                            overlap += mins;
-                        }
-                        else {
-                            overlap += maxs;
-                        }
-                        var correction = normal.times(overlap);
-                        return correction;
-                    }
-                    if (aMinMax[0] <= bMinMax[1] && aMinMax[1] >= bMinMax[0]) {
-                        var correction = normal.times(bMinMax[1] - aMinMax[0]);
-                        return correction;
-                    }
-                    return undefined;
-                };
-                Shape.prototype.getMinTransVector = function (b) {
-                    var correctionVectors = [];
-                    var thisNormals;
-                    var bNormals;
-                    var dir = undefined;
-                    if (dir) {
-                        thisNormals = [dir];
-                        bNormals = [dir];
-                    }
-                    else {
-                        thisNormals = this.getNormals();
-                        bNormals = b.getNormals();
-                    }
-                    for (var _i = 0, thisNormals_1 = thisNormals; _i < thisNormals_1.length; _i++) {
-                        var normal = thisNormals_1[_i];
-                        var result = this.checkNormal(b, normal);
-                        if (result)
-                            correctionVectors.push(result);
-                    }
-                    for (var _a = 0, bNormals_1 = bNormals; _a < bNormals_1.length; _a++) {
-                        var normal = bNormals_1[_a];
-                        var result = this.checkNormal(b, normal);
-                        if (result)
-                            correctionVectors.push(result);
-                    }
-                    if (correctionVectors.length > 0) {
-                        return _.minBy(correctionVectors, function (correctionVector) {
-                            return correctionVector.magnitude;
-                        });
-                    }
-                    return undefined;
-                };
-                Shape.prototype.getMinTransVectorDir = function (b, dir) {
-                    var mag = 0;
-                    var maxMag = 0;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        var line = new Line(point, point.add(dir.times(10000)));
-                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
-                            var bLine = _c[_b];
-                            var intersectPoint = bLine.getIntersectPoint(line);
-                            if (intersectPoint) {
-                                mag = point.distanceTo(intersectPoint);
-                                if (mag > maxMag) {
-                                    maxMag = mag;
-                                }
-                            }
-                        }
-                    }
-                    for (var _d = 0, _e = b.points; _d < _e.length; _d++) {
-                        var point = _e[_d];
-                        var line = new Line(point, point.add(dir.times(-10000)));
-                        for (var _f = 0, _g = this.getLines(); _f < _g.length; _f++) {
-                            var myLine = _g[_f];
-                            var intersectPoint = myLine.getIntersectPoint(line);
-                            if (intersectPoint) {
-                                mag = point.distanceTo(intersectPoint);
-                                if (mag > maxMag) {
-                                    maxMag = mag;
-                                }
-                            }
-                        }
-                    }
-                    if (maxMag === 0) {
-                        return undefined;
-                    }
-                    return dir.times(maxMag);
-                };
-                Shape.prototype.getSnapVector = function (b, dir) {
-                    var mag = 0;
-                    var minMag = Infinity;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        var line = new Line(point, point.add(dir.times(10000)));
-                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
-                            var bLine = _c[_b];
-                            var intersectPoint = bLine.getIntersectPoint(line);
-                            if (intersectPoint) {
-                                mag = point.distanceTo(intersectPoint);
-                                if (mag < minMag) {
-                                    minMag = mag;
-                                }
-                            }
-                        }
-                    }
-                    if (mag === 0) {
-                        return undefined;
-                    }
-                    return dir.times(minMag);
-                };
-                Shape.prototype.clone = function (x, y) {
-                    var points = [];
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        points.push(new point_1.Point(point.x + x, point.y + y));
-                    }
-                    return new Shape(points);
-                };
-                return Shape;
-            }());
-            exports_2("Shape", Shape);
+            exports_2("Geometry", Geometry);
         }
     };
 });
-System.register("rect", ["point", "shape"], function (exports_3, context_3) {
+System.register("wall", ["geometry"], function (exports_3, context_3) {
     "use strict";
     var __moduleName = context_3 && context_3.id;
-    var point_2, shape_1, Rect;
+    var geometry_1, Wall, Ladder;
     return {
         setters: [
-            function (point_2_1) {
-                point_2 = point_2_1;
-            },
-            function (shape_1_1) {
-                shape_1 = shape_1_1;
+            function (geometry_1_1) {
+                geometry_1 = geometry_1_1;
             }
         ],
         execute: function () {
-            Rect = (function () {
-                function Rect(x1, y1, x2, y2) {
-                    this.topLeftPoint = new point_2.Point(x1, y1);
-                    this.botRightPoint = new point_2.Point(x2, y2);
+            Wall = (function (_super) {
+                __extends(Wall, _super);
+                function Wall(name, points) {
+                    var _this = _super.call(this, name, points) || this;
+                    _this.collider.isClimbable = true;
+                    return _this;
                 }
-                Rect.Create = function (topLeftPoint, botRightPoint) {
-                    return new Rect(topLeftPoint.x, topLeftPoint.y, botRightPoint.x, botRightPoint.y);
-                };
-                Rect.prototype.getShape = function () {
-                    return new shape_1.Shape([this.topLeftPoint, new point_2.Point(this.x2, this.y1), this.botRightPoint, new point_2.Point(this.x1, this.y2)]);
-                };
-                Object.defineProperty(Rect.prototype, "midX", {
-                    get: function () {
-                        return (this.topLeftPoint.x + this.botRightPoint.x) * 0.5;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Rect.prototype, "x1", {
-                    get: function () {
-                        return this.topLeftPoint.x;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Rect.prototype, "y1", {
-                    get: function () {
-                        return this.topLeftPoint.y;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Rect.prototype, "x2", {
-                    get: function () {
-                        return this.botRightPoint.x;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Rect.prototype, "y2", {
-                    get: function () {
-                        return this.botRightPoint.y;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Rect.prototype, "w", {
-                    get: function () {
-                        return this.botRightPoint.x - this.topLeftPoint.x;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Object.defineProperty(Rect.prototype, "h", {
-                    get: function () {
-                        return this.botRightPoint.y - this.topLeftPoint.y;
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Rect.prototype.getPoints = function () {
-                    return [
-                        new point_2.Point(this.topLeftPoint.x, this.topLeftPoint.y),
-                        new point_2.Point(this.botRightPoint.x, this.topLeftPoint.y),
-                        new point_2.Point(this.botRightPoint.x, this.botRightPoint.y),
-                        new point_2.Point(this.topLeftPoint.x, this.botRightPoint.y),
-                    ];
-                };
-                Rect.prototype.overlaps = function (other) {
-                    if (this.x1 > other.x2 || other.x1 > this.x2)
-                        return false;
-                    if (this.y1 > other.y2 || other.y1 > this.y2)
-                        return false;
-                    return true;
-                };
-                return Rect;
-            }());
-            exports_3("Rect", Rect);
+                return Wall;
+            }(geometry_1.Geometry));
+            exports_3("Wall", Wall);
+            Ladder = (function (_super) {
+                __extends(Ladder, _super);
+                function Ladder(name, points) {
+                    var _this = _super.call(this, name, points) || this;
+                    _this.collider.isTrigger = true;
+                    return _this;
+                }
+                return Ladder;
+            }(geometry_1.Geometry));
+            exports_3("Ladder", Ladder);
         }
     };
 });
-System.register("color", [], function (exports_4, context_4) {
+System.register("damager", [], function (exports_4, context_4) {
     "use strict";
     var __moduleName = context_4 && context_4.id;
+    var Damager;
+    return {
+        setters: [],
+        execute: function () {
+            Damager = (function () {
+                function Damager(owner, damage) {
+                    this.owner = owner;
+                    this.damage = damage;
+                }
+                return Damager;
+            }());
+            exports_4("Damager", Damager);
+        }
+    };
+});
+System.register("color", [], function (exports_5, context_5) {
+    "use strict";
+    var __moduleName = context_5 && context_5.id;
     var Color, paletteCanvas, paletteCtx, Palette;
     return {
         setters: [],
@@ -565,7 +131,7 @@ System.register("color", [], function (exports_4, context_4) {
                 });
                 return Color;
             }());
-            exports_4("Color", Color);
+            exports_5("Color", Color);
             paletteCanvas = document.createElement("canvas");
             paletteCtx = paletteCanvas.getContext("2d");
             Palette = (function () {
@@ -601,105 +167,14 @@ System.register("color", [], function (exports_4, context_4) {
                 };
                 return Palette;
             }());
-            exports_4("Palette", Palette);
+            exports_5("Palette", Palette);
         }
     };
 });
-System.register("geometry", ["collider", "game", "helpers"], function (exports_5, context_5) {
-    "use strict";
-    var __moduleName = context_5 && context_5.id;
-    var collider_2, game_1, Helpers, Geometry;
-    return {
-        setters: [
-            function (collider_2_1) {
-                collider_2 = collider_2_1;
-            },
-            function (game_1_1) {
-                game_1 = game_1_1;
-            },
-            function (Helpers_1) {
-                Helpers = Helpers_1;
-            }
-        ],
-        execute: function () {
-            Geometry = (function () {
-                function Geometry(name, points) {
-                    this.name = name;
-                    this.collider = new collider_2.Collider(points, false, undefined, true);
-                }
-                Geometry.prototype.preUpdate = function () {
-                };
-                Geometry.prototype.update = function () {
-                };
-                Geometry.prototype.render = function (x, y) {
-                    if (game_1.game.options.showHitboxes) {
-                        Helpers.drawPolygon(game_1.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
-                    }
-                };
-                Geometry.prototype.onCollision = function (other) {
-                };
-                return Geometry;
-            }());
-            exports_5("Geometry", Geometry);
-        }
-    };
-});
-System.register("wall", ["geometry"], function (exports_6, context_6) {
+System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], function (exports_6, context_6) {
     "use strict";
     var __moduleName = context_6 && context_6.id;
-    var geometry_1, Wall, Ladder;
-    return {
-        setters: [
-            function (geometry_1_1) {
-                geometry_1 = geometry_1_1;
-            }
-        ],
-        execute: function () {
-            Wall = (function (_super) {
-                __extends(Wall, _super);
-                function Wall(name, points) {
-                    var _this = _super.call(this, name, points) || this;
-                    _this.collider.isClimbable = true;
-                    return _this;
-                }
-                return Wall;
-            }(geometry_1.Geometry));
-            exports_6("Wall", Wall);
-            Ladder = (function (_super) {
-                __extends(Ladder, _super);
-                function Ladder(name, points) {
-                    var _this = _super.call(this, name, points) || this;
-                    _this.collider.isTrigger = true;
-                    return _this;
-                }
-                return Ladder;
-            }(geometry_1.Geometry));
-            exports_6("Ladder", Ladder);
-        }
-    };
-});
-System.register("damager", [], function (exports_7, context_7) {
-    "use strict";
-    var __moduleName = context_7 && context_7.id;
-    var Damager;
-    return {
-        setters: [],
-        execute: function () {
-            Damager = (function () {
-                function Damager(owner, damage) {
-                    this.owner = owner;
-                    this.damage = damage;
-                }
-                return Damager;
-            }());
-            exports_7("Damager", Damager);
-        }
-    };
-});
-System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], function (exports_8, context_8) {
-    "use strict";
-    var __moduleName = context_8 && context_8.id;
-    var projectile_1, game_2, point_3, Helpers, actor_1, Weapon, Buster, Torpedo, Sting, RollingShield, FireWave, Tornado, ElectricSpark, Boomerang, ShotgunIce;
+    var projectile_1, game_2, point_1, Helpers, actor_1, Weapon, Buster, Torpedo, Sting, RollingShield, FireWave, Tornado, ElectricSpark, Boomerang, ShotgunIce;
     return {
         setters: [
             function (projectile_1_1) {
@@ -708,8 +183,8 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
             function (game_2_1) {
                 game_2 = game_2_1;
             },
-            function (point_3_1) {
-                point_3 = point_3_1;
+            function (point_1_1) {
+                point_1 = point_1_1;
             },
             function (Helpers_2) {
                 Helpers = Helpers_2;
@@ -737,11 +212,11 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                 };
                 Weapon.prototype.createBuster4Line = function (x, y, xDir, player, offsetTime) {
                     var buster4Speed = 350;
-                    new projectile_1.Buster4Proj(this, new point_3.Point(x + xDir, y), new point_3.Point(xDir * buster4Speed, 0), player, 3, 4, offsetTime);
-                    new projectile_1.Buster4Proj(this, new point_3.Point(x + xDir * 8, y), new point_3.Point(xDir * buster4Speed, 0), player, 2, 3, offsetTime);
-                    new projectile_1.Buster4Proj(this, new point_3.Point(x + xDir * 18, y), new point_3.Point(xDir * buster4Speed, 0), player, 2, 2, offsetTime);
-                    new projectile_1.Buster4Proj(this, new point_3.Point(x + xDir * 32, y), new point_3.Point(xDir * buster4Speed, 0), player, 1, 1, offsetTime);
-                    new projectile_1.Buster4Proj(this, new point_3.Point(x + xDir * 46, y), new point_3.Point(xDir * buster4Speed, 0), player, 0, 0, offsetTime);
+                    new projectile_1.Buster4Proj(this, new point_1.Point(x + xDir, y), new point_1.Point(xDir * buster4Speed, 0), player, 3, 4, offsetTime);
+                    new projectile_1.Buster4Proj(this, new point_1.Point(x + xDir * 8, y), new point_1.Point(xDir * buster4Speed, 0), player, 2, 3, offsetTime);
+                    new projectile_1.Buster4Proj(this, new point_1.Point(x + xDir * 18, y), new point_1.Point(xDir * buster4Speed, 0), player, 2, 2, offsetTime);
+                    new projectile_1.Buster4Proj(this, new point_1.Point(x + xDir * 32, y), new point_1.Point(xDir * buster4Speed, 0), player, 1, 1, offsetTime);
+                    new projectile_1.Buster4Proj(this, new point_1.Point(x + xDir * 46, y), new point_1.Point(xDir * buster4Speed, 0), player, 0, 0, offsetTime);
                 };
                 Weapon.prototype.canShoot = function (player) {
                     return true;
@@ -772,7 +247,7 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                 };
                 return Weapon;
             }());
-            exports_8("Weapon", Weapon);
+            exports_6("Weapon", Weapon);
             Buster = (function (_super) {
                 __extends(Buster, _super);
                 function Buster() {
@@ -782,7 +257,7 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 Buster.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     if (chargeLevel === 0)
                         return new projectile_1.BusterProj(this, pos, vel, player);
                     else if (chargeLevel === 1)
@@ -794,7 +269,7 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                 };
                 return Buster;
             }(Weapon));
-            exports_8("Buster", Buster);
+            exports_6("Buster", Buster);
             Torpedo = (function (_super) {
                 __extends(Torpedo, _super);
                 function Torpedo() {
@@ -807,12 +282,12 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 Torpedo.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     return new projectile_1.TorpedoProj(this, pos, vel, player);
                 };
                 return Torpedo;
             }(Weapon));
-            exports_8("Torpedo", Torpedo);
+            exports_6("Torpedo", Torpedo);
             Sting = (function (_super) {
                 __extends(Sting, _super);
                 function Sting() {
@@ -825,12 +300,12 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 Sting.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     return new projectile_1.StingProj(this, pos, vel, player, 0);
                 };
                 return Sting;
             }(Weapon));
-            exports_8("Sting", Sting);
+            exports_6("Sting", Sting);
             RollingShield = (function (_super) {
                 __extends(RollingShield, _super);
                 function RollingShield() {
@@ -843,12 +318,12 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 RollingShield.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     return new projectile_1.RollingShieldProj(this, pos, vel, player);
                 };
                 return RollingShield;
             }(Weapon));
-            exports_8("RollingShield", RollingShield);
+            exports_6("RollingShield", RollingShield);
             FireWave = (function (_super) {
                 __extends(FireWave, _super);
                 function FireWave() {
@@ -861,13 +336,13 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 FireWave.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     vel.inc(player.character.vel.times(-0.5));
                     return new projectile_1.FireWaveProj(this, pos, vel, player);
                 };
                 return FireWave;
             }(Weapon));
-            exports_8("FireWave", FireWave);
+            exports_6("FireWave", FireWave);
             Tornado = (function (_super) {
                 __extends(Tornado, _super);
                 function Tornado() {
@@ -880,12 +355,12 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 Tornado.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     return new projectile_1.TornadoProj(this, pos, vel, player);
                 };
                 return Tornado;
             }(Weapon));
-            exports_8("Tornado", Tornado);
+            exports_6("Tornado", Tornado);
             ElectricSpark = (function (_super) {
                 __extends(ElectricSpark, _super);
                 function ElectricSpark() {
@@ -898,12 +373,12 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 ElectricSpark.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     return new projectile_1.ElectricSparkProj(this, pos, vel, player, 0);
                 };
                 return ElectricSpark;
             }(Weapon));
-            exports_8("ElectricSpark", ElectricSpark);
+            exports_6("ElectricSpark", ElectricSpark);
             Boomerang = (function (_super) {
                 __extends(Boomerang, _super);
                 function Boomerang() {
@@ -916,12 +391,12 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 Boomerang.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     return new projectile_1.BoomerangProj(this, pos, vel, player);
                 };
                 return Boomerang;
             }(Weapon));
-            exports_8("Boomerang", Boomerang);
+            exports_6("Boomerang", Boomerang);
             ShotgunIce = (function (_super) {
                 __extends(ShotgunIce, _super);
                 function ShotgunIce() {
@@ -934,18 +409,18 @@ System.register("weapon", ["projectile", "game", "point", "helpers", "actor"], f
                     return _this;
                 }
                 ShotgunIce.prototype.getProjectile = function (pos, xDir, player, chargeLevel) {
-                    var vel = new point_3.Point(xDir * this.speed, 0);
+                    var vel = new point_1.Point(xDir * this.speed, 0);
                     return new projectile_1.ShotgunIceProj(this, pos, vel, player, 0);
                 };
                 return ShotgunIce;
             }(Weapon));
-            exports_8("ShotgunIce", ShotgunIce);
+            exports_6("ShotgunIce", ShotgunIce);
         }
     };
 });
-System.register("pickup", ["actor", "game", "character"], function (exports_9, context_9) {
+System.register("pickup", ["actor", "game", "character"], function (exports_7, context_7) {
     "use strict";
-    var __moduleName = context_9 && context_9.id;
+    var __moduleName = context_7 && context_7.id;
     var actor_2, game_3, character_1, PickupType, Pickup, LargeHealthPickup, SmallHealthPickup, LargeAmmoPickup, SmallAmmoPickup, PickupSpawner;
     return {
         setters: [
@@ -964,7 +439,7 @@ System.register("pickup", ["actor", "game", "character"], function (exports_9, c
                 PickupType[PickupType["Health"] = 0] = "Health";
                 PickupType[PickupType["Ammo"] = 1] = "Ammo";
             })(PickupType || (PickupType = {}));
-            exports_9("PickupType", PickupType);
+            exports_7("PickupType", PickupType);
             Pickup = (function (_super) {
                 __extends(Pickup, _super);
                 function Pickup(pos, sprite) {
@@ -988,7 +463,7 @@ System.register("pickup", ["actor", "game", "character"], function (exports_9, c
                 };
                 return Pickup;
             }(actor_2.Actor));
-            exports_9("Pickup", Pickup);
+            exports_7("Pickup", Pickup);
             LargeHealthPickup = (function (_super) {
                 __extends(LargeHealthPickup, _super);
                 function LargeHealthPickup(pos) {
@@ -999,7 +474,7 @@ System.register("pickup", ["actor", "game", "character"], function (exports_9, c
                 }
                 return LargeHealthPickup;
             }(Pickup));
-            exports_9("LargeHealthPickup", LargeHealthPickup);
+            exports_7("LargeHealthPickup", LargeHealthPickup);
             SmallHealthPickup = (function (_super) {
                 __extends(SmallHealthPickup, _super);
                 function SmallHealthPickup(pos) {
@@ -1010,7 +485,7 @@ System.register("pickup", ["actor", "game", "character"], function (exports_9, c
                 }
                 return SmallHealthPickup;
             }(Pickup));
-            exports_9("SmallHealthPickup", SmallHealthPickup);
+            exports_7("SmallHealthPickup", SmallHealthPickup);
             LargeAmmoPickup = (function (_super) {
                 __extends(LargeAmmoPickup, _super);
                 function LargeAmmoPickup(pos) {
@@ -1021,7 +496,7 @@ System.register("pickup", ["actor", "game", "character"], function (exports_9, c
                 }
                 return LargeAmmoPickup;
             }(Pickup));
-            exports_9("LargeAmmoPickup", LargeAmmoPickup);
+            exports_7("LargeAmmoPickup", LargeAmmoPickup);
             SmallAmmoPickup = (function (_super) {
                 __extends(SmallAmmoPickup, _super);
                 function SmallAmmoPickup(pos) {
@@ -1032,7 +507,7 @@ System.register("pickup", ["actor", "game", "character"], function (exports_9, c
                 }
                 return SmallAmmoPickup;
             }(Pickup));
-            exports_9("SmallAmmoPickup", SmallAmmoPickup);
+            exports_7("SmallAmmoPickup", SmallAmmoPickup);
             PickupSpawner = (function () {
                 function PickupSpawner(pos, pickupClass) {
                     this.time = 0;
@@ -1053,14 +528,14 @@ System.register("pickup", ["actor", "game", "character"], function (exports_9, c
                 };
                 return PickupSpawner;
             }());
-            exports_9("PickupSpawner", PickupSpawner);
+            exports_7("PickupSpawner", PickupSpawner);
         }
     };
 });
-System.register("projectile", ["actor", "damager", "point", "collider", "character", "wall", "game", "helpers", "rect", "weapon", "pickup"], function (exports_10, context_10) {
+System.register("projectile", ["actor", "damager", "point", "collider", "character", "wall", "game", "helpers", "rect", "weapon", "pickup"], function (exports_8, context_8) {
     "use strict";
-    var __moduleName = context_10 && context_10.id;
-    var actor_3, damager_1, point_4, collider_3, character_2, wall_1, game_4, Helpers, rect_2, weapon_1, pickup_1, Projectile, BusterProj, Buster2Proj, Buster3Proj, Buster4Proj, TorpedoProj, StingProj, RollingShieldProj, FireWaveProj, TornadoProj, ElectricSparkProj, BoomerangProj, ShotgunIceProj;
+    var __moduleName = context_8 && context_8.id;
+    var actor_3, damager_1, point_2, collider_2, character_2, wall_1, game_4, Helpers, rect_1, weapon_1, pickup_1, Projectile, BusterProj, Buster2Proj, Buster3Proj, Buster4Proj, TorpedoProj, StingProj, RollingShieldProj, FireWaveProj, TornadoProj, ElectricSparkProj, BoomerangProj, ShotgunIceProj;
     return {
         setters: [
             function (actor_3_1) {
@@ -1069,11 +544,11 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
             function (damager_1_1) {
                 damager_1 = damager_1_1;
             },
-            function (point_4_1) {
-                point_4 = point_4_1;
+            function (point_2_1) {
+                point_2 = point_2_1;
             },
-            function (collider_3_1) {
-                collider_3 = collider_3_1;
+            function (collider_2_1) {
+                collider_2 = collider_2_1;
             },
             function (character_2_1) {
                 character_2 = character_2_1;
@@ -1087,8 +562,8 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
             function (Helpers_3) {
                 Helpers = Helpers_3;
             },
-            function (rect_2_1) {
-                rect_2 = rect_2_1;
+            function (rect_1_1) {
+                rect_1 = rect_1_1;
             },
             function (weapon_1_1) {
                 weapon_1 = weapon_1_1;
@@ -1207,7 +682,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return Projectile;
             }(actor_3.Actor));
-            exports_10("Projectile", Projectile);
+            exports_8("Projectile", Projectile);
             BusterProj = (function (_super) {
                 __extends(BusterProj, _super);
                 function BusterProj(weapon, pos, vel, player) {
@@ -1217,7 +692,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 }
                 return BusterProj;
             }(Projectile));
-            exports_10("BusterProj", BusterProj);
+            exports_8("BusterProj", BusterProj);
             Buster2Proj = (function (_super) {
                 __extends(Buster2Proj, _super);
                 function Buster2Proj(weapon, pos, vel, player) {
@@ -1228,7 +703,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 }
                 return Buster2Proj;
             }(Projectile));
-            exports_10("Buster2Proj", Buster2Proj);
+            exports_8("Buster2Proj", Buster2Proj);
             Buster3Proj = (function (_super) {
                 __extends(Buster3Proj, _super);
                 function Buster3Proj(weapon, pos, vel, player) {
@@ -1239,7 +714,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 }
                 return Buster3Proj;
             }(Projectile));
-            exports_10("Buster3Proj", Buster3Proj);
+            exports_8("Buster3Proj", Buster3Proj);
             Buster4Proj = (function (_super) {
                 __extends(Buster4Proj, _super);
                 function Buster4Proj(weapon, pos, vel, player, type, num, offsetTime) {
@@ -1264,7 +739,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return Buster4Proj;
             }(Projectile));
-            exports_10("Buster4Proj", Buster4Proj);
+            exports_8("Buster4Proj", Buster4Proj);
             TorpedoProj = (function (_super) {
                 __extends(TorpedoProj, _super);
                 function TorpedoProj(weapon, pos, vel, player) {
@@ -1280,7 +755,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     _super.prototype.update.call(this);
                     if (this.target) {
                         if (this.time < 7.5) {
-                            this.vel = this.vel.add(new point_4.Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.speed * 0.25));
+                            this.vel = this.vel.add(new point_2.Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.speed * 0.25));
                             if (this.vel.magnitude > this.speed) {
                                 this.vel = this.vel.normalize().times(this.speed);
                             }
@@ -1344,7 +819,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return TorpedoProj;
             }(Projectile));
-            exports_10("TorpedoProj", TorpedoProj);
+            exports_8("TorpedoProj", TorpedoProj);
             StingProj = (function (_super) {
                 __extends(StingProj, _super);
                 function StingProj(weapon, pos, vel, player, type) {
@@ -1384,7 +859,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return StingProj;
             }(Projectile));
-            exports_10("StingProj", StingProj);
+            exports_8("StingProj", StingProj);
             RollingShieldProj = (function (_super) {
                 __extends(RollingShieldProj, _super);
                 function RollingShieldProj(weapon, pos, vel, player) {
@@ -1412,7 +887,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return RollingShieldProj;
             }(Projectile));
-            exports_10("RollingShieldProj", RollingShieldProj);
+            exports_8("RollingShieldProj", RollingShieldProj);
             FireWaveProj = (function (_super) {
                 __extends(FireWaveProj, _super);
                 function FireWaveProj(weapon, pos, vel, player) {
@@ -1431,7 +906,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return FireWaveProj;
             }(Projectile));
-            exports_10("FireWaveProj", FireWaveProj);
+            exports_8("FireWaveProj", FireWaveProj);
             TornadoProj = (function (_super) {
                 __extends(TornadoProj, _super);
                 function TornadoProj(weapon, pos, vel, player) {
@@ -1465,8 +940,8 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     var spriteEndLen = this.spriteEnd.frames[this.frameIndex].rect.w;
                     var botX = (this.length * spriteMidLen) + spriteEndLen;
                     var botY = this.spriteStart.frames[0].rect.h * 2;
-                    var rect = new rect_2.Rect(topX, topY, botX, botY);
-                    this.globalCollider = new collider_3.Collider(rect.getPoints(), true, this, false);
+                    var rect = new rect_1.Rect(topX, topY, botX, botY);
+                    this.globalCollider = new collider_2.Collider(rect.getPoints(), true, this, false, false);
                     if (this.time > 0.2) {
                         if (this.length < 6) {
                             this.length++;
@@ -1478,14 +953,14 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     }
                 };
                 TornadoProj.prototype.onHitChar = function (character) {
-                    character.move(new point_4.Point(this.speed * 0.9 * this.xDir, 0));
+                    character.move(new point_2.Point(this.speed * 0.9 * this.xDir, 0));
                     if (character.isClimbingLadder()) {
                         character.setFall();
                     }
                 };
                 return TornadoProj;
             }(Projectile));
-            exports_10("TornadoProj", TornadoProj);
+            exports_8("TornadoProj", TornadoProj);
             ElectricSparkProj = (function (_super) {
                 __extends(ElectricSparkProj, _super);
                 function ElectricSparkProj(weapon, pos, vel, player, type) {
@@ -1502,7 +977,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                             normal = normal.leftNormal();
                         }
                         else {
-                            normal = new point_4.Point(0, 1);
+                            normal = new point_2.Point(0, 1);
                         }
                         normal.multiply(this.speed * 3);
                         this.destroySelf(this.fadeSprite);
@@ -1512,7 +987,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return ElectricSparkProj;
             }(Projectile));
-            exports_10("ElectricSparkProj", ElectricSparkProj);
+            exports_8("ElectricSparkProj", ElectricSparkProj);
             BoomerangProj = (function (_super) {
                 __extends(BoomerangProj, _super);
                 function BoomerangProj(weapon, pos, vel, player) {
@@ -1574,7 +1049,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return BoomerangProj;
             }(Projectile));
-            exports_10("BoomerangProj", BoomerangProj);
+            exports_8("BoomerangProj", BoomerangProj);
             ShotgunIceProj = (function (_super) {
                 __extends(ShotgunIceProj, _super);
                 function ShotgunIceProj(weapon, pos, vel, player, type) {
@@ -1599,11 +1074,11 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 ShotgunIceProj.prototype.onHit = function (other) {
                     if (this.type === 0) {
                         this.destroySelf();
-                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_4.Point(-this.vel.x, -this.speed), this.damager.owner, 1);
-                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_4.Point(-this.vel.x, -this.speed * 0.5), this.damager.owner, 1);
-                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_4.Point(-this.vel.x, 0 * 3), this.damager.owner, 1);
-                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_4.Point(-this.vel.x, this.speed * 0.5), this.damager.owner, 1);
-                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_4.Point(-this.vel.x, this.speed), this.damager.owner, 1);
+                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_2.Point(-this.vel.x, -this.speed), this.damager.owner, 1);
+                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_2.Point(-this.vel.x, -this.speed * 0.5), this.damager.owner, 1);
+                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_2.Point(-this.vel.x, 0 * 3), this.damager.owner, 1);
+                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_2.Point(-this.vel.x, this.speed * 0.5), this.damager.owner, 1);
+                        new ShotgunIceProj(this.weapon, this.pos.clone(), new point_2.Point(-this.vel.x, this.speed), this.damager.owner, 1);
                     }
                 };
                 ShotgunIceProj.prototype.onHitWall = function (other) {
@@ -1614,18 +1089,18 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 };
                 return ShotgunIceProj;
             }(Projectile));
-            exports_10("ShotgunIceProj", ShotgunIceProj);
+            exports_8("ShotgunIceProj", ShotgunIceProj);
         }
     };
 });
-System.register("effects", ["point", "game", "helpers"], function (exports_11, context_11) {
+System.register("effects", ["point", "game", "helpers"], function (exports_9, context_9) {
     "use strict";
-    var __moduleName = context_11 && context_11.id;
-    var point_5, game_5, Helpers, ChargeEffect, DieEffectParticles, Effect, DieEffect;
+    var __moduleName = context_9 && context_9.id;
+    var point_3, game_5, Helpers, ChargeEffect, DieEffectParticles, Effect, DieEffect;
     return {
         setters: [
-            function (point_5_1) {
-                point_5 = point_5_1;
+            function (point_3_1) {
+                point_3 = point_3_1;
             },
             function (game_5_1) {
                 game_5 = game_5_1;
@@ -1640,21 +1115,21 @@ System.register("effects", ["point", "game", "helpers"], function (exports_11, c
                     this.points = [];
                     var radius = 24;
                     var angle = 0;
-                    var point1 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point1 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
-                    var point2 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point2 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
-                    var point3 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point3 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
-                    var point4 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point4 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
-                    var point5 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point5 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
-                    var point6 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point6 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
-                    var point7 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point7 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
-                    var point8 = new point_5.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
+                    var point8 = new point_3.Point(Helpers.sin(angle) * radius, Helpers.cos(angle) * radius);
                     angle += 45;
                     this.origPoints = [
                         point1, point2, point3, point4, point5, point6, point7, point8
@@ -1688,7 +1163,7 @@ System.register("effects", ["point", "game", "helpers"], function (exports_11, c
                 };
                 return ChargeEffect;
             }());
-            exports_11("ChargeEffect", ChargeEffect);
+            exports_9("ChargeEffect", ChargeEffect);
             DieEffectParticles = (function () {
                 function DieEffectParticles(centerPos) {
                     this.time = 0;
@@ -1707,7 +1182,7 @@ System.register("effects", ["point", "game", "helpers"], function (exports_11, c
                 };
                 return DieEffectParticles;
             }());
-            exports_11("DieEffectParticles", DieEffectParticles);
+            exports_9("DieEffectParticles", DieEffectParticles);
             Effect = (function () {
                 function Effect(pos) {
                     this.pos = pos;
@@ -1722,7 +1197,7 @@ System.register("effects", ["point", "game", "helpers"], function (exports_11, c
                 };
                 return Effect;
             }());
-            exports_11("Effect", Effect);
+            exports_9("Effect", Effect);
             DieEffect = (function (_super) {
                 __extends(DieEffect, _super);
                 function DieEffect(centerPos) {
@@ -1758,13 +1233,13 @@ System.register("effects", ["point", "game", "helpers"], function (exports_11, c
                 };
                 return DieEffect;
             }(Effect));
-            exports_11("DieEffect", DieEffect);
+            exports_9("DieEffect", DieEffect);
         }
     };
 });
-System.register("navMesh", ["wall"], function (exports_12, context_12) {
+System.register("navMesh", ["wall"], function (exports_10, context_10) {
     "use strict";
-    var __moduleName = context_12 && context_12.id;
+    var __moduleName = context_10 && context_10.id;
     var wall_2, NavMeshNode, NavMeshNeighbor;
     return {
         setters: [
@@ -1839,7 +1314,7 @@ System.register("navMesh", ["wall"], function (exports_12, context_12) {
                 };
                 return NavMeshNode;
             }());
-            exports_12("NavMeshNode", NavMeshNode);
+            exports_10("NavMeshNode", NavMeshNode);
             NavMeshNeighbor = (function () {
                 function NavMeshNeighbor(node, isJumpNode, isDropNode, ladder) {
                     this.node = node;
@@ -1849,14 +1324,14 @@ System.register("navMesh", ["wall"], function (exports_12, context_12) {
                 }
                 return NavMeshNeighbor;
             }());
-            exports_12("NavMeshNeighbor", NavMeshNeighbor);
+            exports_10("NavMeshNeighbor", NavMeshNeighbor);
         }
     };
 });
-System.register("ai", ["game", "projectile", "point", "helpers"], function (exports_13, context_13) {
+System.register("ai", ["game", "projectile", "point", "helpers"], function (exports_11, context_11) {
     "use strict";
-    var __moduleName = context_13 && context_13.id;
-    var game_6, projectile_2, point_6, Helpers, AI, AIState, MoveTowardsTarget, FindPlayer, MoveToPos, AimAtPlayer, DashToPlayer, JumpToWall, ClimbWall, SlideDownWall;
+    var __moduleName = context_11 && context_11.id;
+    var game_6, projectile_2, point_4, Helpers, AI, AIState, MoveTowardsTarget, FindPlayer, MoveToPos, AimAtPlayer, DashToPlayer, JumpToWall, ClimbWall, SlideDownWall;
     return {
         setters: [
             function (game_6_1) {
@@ -1865,8 +1340,8 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
             function (projectile_2_1) {
                 projectile_2 = projectile_2_1;
             },
-            function (point_6_1) {
-                point_6 = point_6_1;
+            function (point_4_1) {
+                point_4 = point_4_1;
             },
             function (Helpers_5) {
                 Helpers = Helpers_5;
@@ -1984,7 +1459,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                 };
                 return AI;
             }());
-            exports_13("AI", AI);
+            exports_11("AI", AI);
             AIState = (function () {
                 function AIState(character) {
                     this.character = character;
@@ -2075,7 +1550,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                         var dir = 1;
                         if (this.ladderDir === "up")
                             dir = -1;
-                        if (this.character.sweepTest(new point_6.Point(0, dir * 5))) {
+                        if (this.character.sweepTest(new point_4.Point(0, dir * 5))) {
                             this.player.press("jump");
                             this.ai.changeState(new FindPlayer(this.character));
                         }
@@ -2146,7 +1621,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                     else {
                         this.ai.changeState(new AimAtPlayer(this.character));
                     }
-                    if (this.character.sweepTest(new point_6.Point(dir * 5, 0))) {
+                    if (this.character.sweepTest(new point_4.Point(dir * 5, 0))) {
                         this.ai.changeState(new AimAtPlayer(this.character));
                     }
                 };
@@ -2206,9 +1681,9 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
         }
     };
 });
-System.register("killFeedEntry", [], function (exports_14, context_14) {
+System.register("killFeedEntry", [], function (exports_12, context_12) {
     "use strict";
-    var __moduleName = context_14 && context_14.id;
+    var __moduleName = context_12 && context_12.id;
     var KillFeedEntry;
     return {
         setters: [],
@@ -2222,14 +1697,14 @@ System.register("killFeedEntry", [], function (exports_14, context_14) {
                 }
                 return KillFeedEntry;
             }());
-            exports_14("KillFeedEntry", KillFeedEntry);
+            exports_12("KillFeedEntry", KillFeedEntry);
         }
     };
 });
-System.register("gameMode", ["game", "player", "helpers", "rect"], function (exports_15, context_15) {
+System.register("gameMode", ["game", "player", "helpers", "rect"], function (exports_13, context_13) {
     "use strict";
-    var __moduleName = context_15 && context_15.id;
-    var game_7, player_1, Helpers, rect_3, GameMode, Brawl, FFADeathMatch, TeamDeathMatch;
+    var __moduleName = context_13 && context_13.id;
+    var game_7, player_1, Helpers, rect_2, GameMode, Brawl, FFADeathMatch, TeamDeathMatch;
     return {
         setters: [
             function (game_7_1) {
@@ -2241,8 +1716,8 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
             function (Helpers_6) {
                 Helpers = Helpers_6;
             },
-            function (rect_3_1) {
-                rect_3 = rect_3_1;
+            function (rect_2_1) {
+                rect_2 = rect_2_1;
             }
         ],
         execute: function () {
@@ -2377,7 +1852,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         var x = startX + (i * width);
                         var y = startY;
                         if (this.mainPlayer.weaponIndex === i) {
-                            Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
+                            Helpers.drawRect(game_7.game.uiCtx, new rect_2.Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
                         }
                         weaponSprite.draw(game_7.game.uiCtx, i, x, y);
                         Helpers.drawTextMMX(game_7.game.uiCtx, String(i + 1), x, y + 12, 6, "", "");
@@ -2426,7 +1901,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         if (killFeed.killer === this.mainPlayer || killFeed.victim == this.mainPlayer) {
                             var msgLen = game_7.game.uiCtx.measureText(msg).width;
                             var msgHeight = 10;
-                            Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(fromRight - msgLen - 2, fromTop - 2 + (i * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i * yDist)), "black", "white", 1, 0.75);
+                            Helpers.drawRect(game_7.game.uiCtx, new rect_2.Rect(fromRight - msgLen - 2, fromTop - 2 + (i * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i * yDist)), "black", "white", 1, 0.75);
                         }
                         var isKillerRed = killFeed.killer && killFeed.killer.alliance === 1 && this.isTeamMode;
                         var isVictimRed = killFeed.victim.alliance === 1 && this.isTeamMode;
@@ -2446,7 +1921,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 };
                 return GameMode;
             }());
-            exports_15("GameMode", GameMode);
+            exports_13("GameMode", GameMode);
             Brawl = (function (_super) {
                 __extends(Brawl, _super);
                 function Brawl(level, uiData) {
@@ -2512,7 +1987,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 };
                 return Brawl;
             }(GameMode));
-            exports_15("Brawl", Brawl);
+            exports_13("Brawl", Brawl);
             FFADeathMatch = (function (_super) {
                 __extends(FFADeathMatch, _super);
                 function FFADeathMatch(level, uiData) {
@@ -2563,7 +2038,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                     var labelY = lineY + 5;
                     var line2Y = labelY + 10;
                     var topPlayerY = line2Y + 5;
-                    Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
+                    Helpers.drawRect(game_7.game.uiCtx, new rect_2.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
                     Helpers.drawText(game_7.game.uiCtx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
                     Helpers.drawText(game_7.game.uiCtx, "Map: " + this.level.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
                     Helpers.drawText(game_7.game.uiCtx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
@@ -2617,7 +2092,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 };
                 return FFADeathMatch;
             }(GameMode));
-            exports_15("FFADeathMatch", FFADeathMatch);
+            exports_13("FFADeathMatch", FFADeathMatch);
             TeamDeathMatch = (function (_super) {
                 __extends(TeamDeathMatch, _super);
                 function TeamDeathMatch(level, uiData) {
@@ -2698,7 +2173,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                     var bluePlayers = _.filter(this.players, function (player) {
                         return player.alliance === 0;
                     });
-                    Helpers.drawRect(game_7.game.uiCtx, new rect_3.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
+                    Helpers.drawRect(game_7.game.uiCtx, new rect_2.Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
                     Helpers.drawText(game_7.game.uiCtx, "Game Mode: Team Deathmatch", hPadding, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
                     Helpers.drawText(game_7.game.uiCtx, "Map: " + this.level.name, hPadding, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
                     Helpers.drawText(game_7.game.uiCtx, "Playing to: " + String(this.killsToWin), hPadding, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"),
@@ -2782,14 +2257,14 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 };
                 return TeamDeathMatch;
             }(GameMode));
-            exports_15("TeamDeathMatch", TeamDeathMatch);
+            exports_13("TeamDeathMatch", TeamDeathMatch);
         }
     };
 });
-System.register("character", ["actor", "game", "point", "collider", "rect", "helpers", "weapon", "effects", "ai", "wall", "killFeedEntry", "gameMode"], function (exports_16, context_16) {
+System.register("character", ["actor", "game", "point", "collider", "rect", "helpers", "weapon", "effects", "ai", "wall", "killFeedEntry", "gameMode"], function (exports_14, context_14) {
     "use strict";
-    var __moduleName = context_16 && context_16.id;
-    var actor_4, game_8, point_7, collider_4, rect_4, Helpers, weapon_2, effects_1, ai_1, wall_3, killFeedEntry_1, gameMode_1, Character, CharState, Idle, Run, Jump, Fall, Dash, AirDash, WallSlide, WallKick, LadderClimb, LadderEnd, Hurt, Die;
+    var __moduleName = context_14 && context_14.id;
+    var actor_4, game_8, point_5, collider_3, rect_3, Helpers, weapon_2, effects_1, ai_1, wall_3, killFeedEntry_1, gameMode_1, Character, CharState, Idle, Run, Jump, Fall, Dash, AirDash, WallSlide, WallKick, LadderClimb, LadderEnd, Hurt, Die;
     return {
         setters: [
             function (actor_4_1) {
@@ -2798,14 +2273,14 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
             function (game_8_1) {
                 game_8 = game_8_1;
             },
-            function (point_7_1) {
-                point_7 = point_7_1;
+            function (point_5_1) {
+                point_5 = point_5_1;
             },
-            function (collider_4_1) {
-                collider_4 = collider_4_1;
+            function (collider_3_1) {
+                collider_3 = collider_3_1;
             },
-            function (rect_4_1) {
-                rect_4 = rect_4_1;
+            function (rect_3_1) {
+                rect_3 = rect_3_1;
             },
             function (Helpers_7) {
                 Helpers = Helpers_7;
@@ -2864,12 +2339,12 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     return _this;
                 }
                 Character.prototype.getStandingCollider = function () {
-                    var rect = new rect_4.Rect(0, 0, 18, 34);
-                    return new collider_4.Collider(rect.getPoints(), false, this, false);
+                    var rect = new rect_3.Rect(0, 0, 18, 34);
+                    return new collider_3.Collider(rect.getPoints(), false, this, false, false);
                 };
                 Character.prototype.getDashingCollider = function () {
-                    var rect = new rect_4.Rect(0, 0, 18, 22);
-                    return new collider_4.Collider(rect.getPoints(), false, this, false);
+                    var rect = new rect_3.Rect(0, 0, 18, 22);
+                    return new collider_3.Collider(rect.getPoints(), false, this, false, false);
                 };
                 Character.prototype.preUpdate = function () {
                     _super.prototype.preUpdate.call(this);
@@ -3157,7 +2632,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _super.prototype.render.call(this, x, y);
                     window.playerDebug = false;
                     if (this.chargeEffect) {
-                        this.chargeEffect.render(this.getCenterPos().add(new point_7.Point(x, y)), this.getChargeLevel());
+                        this.chargeEffect.render(this.getCenterPos().add(new point_5.Point(x, y)), this.getChargeLevel());
                     }
                 };
                 Character.prototype.applyDamage = function (attacker, weapon, damage) {
@@ -3188,7 +2663,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 };
                 return Character;
             }(actor_4.Actor));
-            exports_16("Character", Character);
+            exports_14("Character", Character);
             CharState = (function () {
                 function CharState(sprite, shootSprite, transitionSprite) {
                     this.framesJumpNotHeld = 0;
@@ -3275,7 +2750,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (game_8.game.level.checkCollisionActor(this.character, 0, -1)) {
                         this.character.vel.y = 0;
                     }
-                    var move = new point_7.Point(0, 0);
+                    var move = new point_5.Point(0, 0);
                     var wallKick = (this instanceof WallKick) ? this : null;
                     if (this.player.isHeld("left")) {
                         if (!wallKick || wallKick.kickSpeed <= 0) {
@@ -3323,7 +2798,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                             var snapX = (rect.x1 + rect.x2) / 2;
                             if (!game_8.game.level.checkCollisionActor(this.character, snapX - this.character.pos.x, 30)) {
                                 this.character.changeState(new LadderClimb(ladders[0].gameObject, snapX));
-                                this.character.move(new point_7.Point(0, 30), false);
+                                this.character.move(new point_5.Point(0, 30), false);
                             }
                         }
                         this.character.checkLadderDown = false;
@@ -3367,7 +2842,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 }
                 Run.prototype.update = function () {
                     _super.prototype.update.call(this);
-                    var move = new point_7.Point(0, 0);
+                    var move = new point_5.Point(0, 0);
                     if (this.player.isHeld("left")) {
                         this.character.xDir = -1;
                         move.x = -this.character.runSpeed;
@@ -3452,7 +2927,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         this.character.changeState(new Idle());
                         return;
                     }
-                    var move = new point_7.Point(0, 0);
+                    var move = new point_5.Point(0, 0);
                     move.x = this.character.runSpeed * this.character.getDashSpeed() * this.character.xDir;
                     this.character.move(move);
                     if (this.stateTime > 0.1) {
@@ -3474,7 +2949,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _super.prototype.onEnter.call(this, oldState);
                     this.character.isDashing = true;
                     this.character.useGravity = false;
-                    this.character.vel = new point_7.Point(0, 0);
+                    this.character.vel = new point_5.Point(0, 0);
                     this.character.dashedInAir = true;
                     this.character.globalCollider = this.character.getDashingCollider();
                     new actor_4.Anim(this.character.pos, game_8.game.sprites["dash_sparks"], this.character.xDir);
@@ -3494,7 +2969,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         this.character.changeState(new Fall());
                         return;
                     }
-                    var move = new point_7.Point(0, 0);
+                    var move = new point_5.Point(0, 0);
                     move.x = this.character.runSpeed * this.character.getDashSpeed() * this.character.xDir;
                     this.character.move(move);
                     if (this.stateTime > 0.1) {
@@ -3538,7 +3013,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         if (!dirHeld || !game_8.game.level.checkCollisionActor(this.character, this.wallDir, 0)) {
                             this.player.character.changeState(new Fall());
                         }
-                        this.character.move(new point_7.Point(0, 100));
+                        this.character.move(new point_5.Point(0, 100));
                     }
                     this.dustTime += game_8.game.deltaTime;
                     if (this.stateTime > 0.2 && this.dustTime > 0.1) {
@@ -3568,7 +3043,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     }
                     if (this.kickSpeed !== 0) {
                         this.kickSpeed = Helpers.toZero(this.kickSpeed, 800 * game_8.game.deltaTime, this.kickDir);
-                        this.character.move(new point_7.Point(this.kickSpeed, 0));
+                        this.character.move(new point_5.Point(this.kickSpeed, 0));
                     }
                     this.airCode();
                     if (this.character.vel.y > 0) {
@@ -3600,7 +3075,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (this.character.player === game_8.game.level.mainPlayer) {
                         game_8.game.level.lerpCamTime = 0.25;
                     }
-                    this.character.vel = new point_7.Point(0, 0);
+                    this.character.vel = new point_5.Point(0, 0);
                     this.character.useGravity = false;
                     this.character.dashedInAir = false;
                 };
@@ -3617,11 +3092,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.character.frameSpeed = 0;
                     if (this.character.shootAnimTime === 0) {
                         if (this.player.isHeld("up")) {
-                            this.character.move(new point_7.Point(0, -100));
+                            this.character.move(new point_5.Point(0, -100));
                             this.character.frameSpeed = 1;
                         }
                         else if (this.player.isHeld("down")) {
-                            this.character.move(new point_7.Point(0, 100));
+                            this.character.move(new point_5.Point(0, 100));
                             this.character.frameSpeed = 1;
                         }
                     }
@@ -3688,7 +3163,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _super.prototype.update.call(this);
                     if (this.hurtSpeed !== 0) {
                         this.hurtSpeed = Helpers.toZero(this.hurtSpeed, 400 * game_8.game.deltaTime, this.hurtDir);
-                        this.character.move(new point_7.Point(this.hurtSpeed, 0));
+                        this.character.move(new point_5.Point(this.hurtSpeed, 0));
                     }
                     if (this.character.isAnimOver()) {
                         this.character.changeState(new Idle());
@@ -3732,9 +3207,9 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
         }
     };
 });
-System.register("cheats", ["game"], function (exports_17, context_17) {
+System.register("cheats", ["game"], function (exports_15, context_15) {
     "use strict";
-    var __moduleName = context_17 && context_17.id;
+    var __moduleName = context_15 && context_15.id;
     function cheat(key, keycode) {
         if (game_9.game.uiData.isProd)
             return false;
@@ -3785,7 +3260,7 @@ System.register("cheats", ["game"], function (exports_17, context_17) {
             game_9.game.paused = !game_9.game.paused;
         }
     }
-    exports_17("cheat", cheat);
+    exports_15("cheat", cheat);
     var game_9;
     return {
         setters: [
@@ -3797,9 +3272,9 @@ System.register("cheats", ["game"], function (exports_17, context_17) {
         }
     };
 });
-System.register("player", ["character", "weapon", "game", "helpers", "cheats"], function (exports_18, context_18) {
+System.register("player", ["character", "weapon", "game", "helpers", "cheats"], function (exports_16, context_16) {
     "use strict";
-    var __moduleName = context_18 && context_18.id;
+    var __moduleName = context_16 && context_16.id;
     var character_4, weapon_3, game_10, Helpers, cheats_1, Player;
     return {
         setters: [
@@ -4014,7 +3489,9 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                     if (!this.input[key])
                         this.inputPressed[key] = true;
                     this.input[key] = true;
-                    cheats_1.cheat(key, keycode);
+                    if (this === game_10.game.level.mainPlayer) {
+                        cheats_1.cheat(key, keycode);
+                    }
                 };
                 Player.prototype.onKeyUp = function (keycode) {
                     if (this.isAI)
@@ -4044,13 +3521,13 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                 };
                 return Player;
             }());
-            exports_18("Player", Player);
+            exports_16("Player", Player);
         }
     };
 });
-System.register("spawnPoint", ["game"], function (exports_19, context_19) {
+System.register("spawnPoint", ["game"], function (exports_17, context_17) {
     "use strict";
-    var __moduleName = context_19 && context_19.id;
+    var __moduleName = context_17 && context_17.id;
     var game_11, SpawnPoint;
     return {
         setters: [
@@ -4073,13 +3550,13 @@ System.register("spawnPoint", ["game"], function (exports_19, context_19) {
                 };
                 return SpawnPoint;
             }());
-            exports_19("SpawnPoint", SpawnPoint);
+            exports_17("SpawnPoint", SpawnPoint);
         }
     };
 });
-System.register("noScroll", [], function (exports_20, context_20) {
+System.register("noScroll", [], function (exports_18, context_18) {
     "use strict";
-    var __moduleName = context_20 && context_20.id;
+    var __moduleName = context_18 && context_18.id;
     var Direction, NoScroll;
     return {
         setters: [],
@@ -4090,7 +3567,7 @@ System.register("noScroll", [], function (exports_20, context_20) {
                 Direction[Direction["Left"] = 2] = "Left";
                 Direction[Direction["Right"] = 3] = "Right";
             })(Direction || (Direction = {}));
-            exports_20("Direction", Direction);
+            exports_18("Direction", Direction);
             NoScroll = (function () {
                 function NoScroll(shape, dir) {
                     this.shape = shape;
@@ -4098,13 +3575,13 @@ System.register("noScroll", [], function (exports_20, context_20) {
                 }
                 return NoScroll;
             }());
-            exports_20("NoScroll", NoScroll);
+            exports_18("NoScroll", NoScroll);
         }
     };
 });
-System.register("killZone", [], function (exports_21, context_21) {
+System.register("killZone", [], function (exports_19, context_19) {
     "use strict";
-    var __moduleName = context_21 && context_21.id;
+    var __moduleName = context_19 && context_19.id;
     var KillZone;
     return {
         setters: [],
@@ -4115,21 +3592,21 @@ System.register("killZone", [], function (exports_21, context_21) {
                 }
                 return KillZone;
             }());
-            exports_21("KillZone", KillZone);
+            exports_19("KillZone", KillZone);
         }
     };
 });
-System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "collider", "character", "spawnPoint", "noScroll", "navMesh", "shape", "pickup", "killZone"], function (exports_22, context_22) {
+System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "collider", "character", "spawnPoint", "noScroll", "navMesh", "shape", "pickup", "killZone"], function (exports_20, context_20) {
     "use strict";
-    var __moduleName = context_22 && context_22.id;
-    var wall_4, point_8, game_12, Helpers, actor_5, rect_5, collider_5, character_5, spawnPoint_1, noScroll_1, navMesh_1, shape_2, pickup_2, killZone_1, Level;
+    var __moduleName = context_20 && context_20.id;
+    var wall_4, point_6, game_12, Helpers, actor_5, rect_4, collider_4, character_5, spawnPoint_1, noScroll_1, navMesh_1, shape_1, pickup_2, killZone_1, Level;
     return {
         setters: [
             function (wall_4_1) {
                 wall_4 = wall_4_1;
             },
-            function (point_8_1) {
-                point_8 = point_8_1;
+            function (point_6_1) {
+                point_6 = point_6_1;
             },
             function (game_12_1) {
                 game_12 = game_12_1;
@@ -4140,11 +3617,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
             function (actor_5_1) {
                 actor_5 = actor_5_1;
             },
-            function (rect_5_1) {
-                rect_5 = rect_5_1;
+            function (rect_4_1) {
+                rect_4 = rect_4_1;
             },
-            function (collider_5_1) {
-                collider_5 = collider_5_1;
+            function (collider_4_1) {
+                collider_4 = collider_4_1;
             },
             function (character_5_1) {
                 character_5 = character_5_1;
@@ -4158,8 +3635,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
             function (navMesh_1_1) {
                 navMesh_1 = navMesh_1_1;
             },
-            function (shape_2_1) {
-                shape_2 = shape_2_1;
+            function (shape_1_1) {
+                shape_1 = shape_1_1;
             },
             function (pickup_2_1) {
                 pickup_2 = pickup_2_1;
@@ -4193,7 +3670,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var points = [];
                             for (var _b = 0, _c = instance.points; _b < _c.length; _b++) {
                                 var point = _c[_b];
-                                points.push(new point_8.Point(point.x, point.y));
+                                points.push(new point_6.Point(point.x, point.y));
                             }
                             var wall = new wall_4.Wall(instance.name, points);
                             wall.collider.isClimbable = (instance.properties && instance.properties.climbable === "false") ? false : true;
@@ -4203,7 +3680,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var points = [];
                             for (var _d = 0, _e = instance.points; _d < _e.length; _d++) {
                                 var point = _e[_d];
-                                points.push(new point_8.Point(point.x, point.y));
+                                points.push(new point_6.Point(point.x, point.y));
                             }
                             this.gameObjects.push(new wall_4.Ladder(instance.name, points));
                         }
@@ -4211,9 +3688,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var points = [];
                             for (var _f = 0, _g = instance.points; _f < _g.length; _f++) {
                                 var point = _g[_f];
-                                points.push(new point_8.Point(point.x, point.y));
+                                points.push(new point_6.Point(point.x, point.y));
                             }
-                            var shape = new shape_2.Shape(points);
+                            var shape = new shape_1.Shape(points);
                             var dir = void 0;
                             if (instance.properties) {
                                 if (instance.properties.freeDir === "up")
@@ -4231,36 +3708,36 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var points = [];
                             for (var _h = 0, _j = instance.points; _h < _j.length; _h++) {
                                 var point = _j[_h];
-                                points.push(new point_8.Point(point.x, point.y));
+                                points.push(new point_6.Point(point.x, point.y));
                             }
-                            var shape = new shape_2.Shape(points);
+                            var shape = new shape_1.Shape(points);
                             this.killZones.push(new killZone_1.KillZone(shape));
                         }
                         else if (instance.objectName === "Spawn Point") {
                             var properties = instance.properties;
-                            this.spawnPoints.push(new spawnPoint_1.SpawnPoint(new point_8.Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
+                            this.spawnPoints.push(new spawnPoint_1.SpawnPoint(new point_6.Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
                         }
                         else if (instance.objectName === "Node") {
                             var name_1 = instance.name;
-                            var pos = new point_8.Point(instance.pos.x, instance.pos.y);
+                            var pos = new point_6.Point(instance.pos.x, instance.pos.y);
                             var node = new navMesh_1.NavMeshNode(name_1, pos, instance.properties);
                             this.navMeshNodes.push(node);
                         }
                         else if (instance.objectName === "Large Health") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_8.Point(instance.pos.x, instance.pos.y), pickup_2.LargeHealthPickup));
+                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.LargeHealthPickup));
                         }
                         else if (instance.objectName === "Small Health") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_8.Point(instance.pos.x, instance.pos.y), pickup_2.SmallHealthPickup));
+                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.SmallHealthPickup));
                         }
                         else if (instance.objectName === "Large Ammo") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_8.Point(instance.pos.x, instance.pos.y), pickup_2.LargeAmmoPickup));
+                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.LargeAmmoPickup));
                         }
                         else if (instance.objectName === "Small Ammo") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_8.Point(instance.pos.x, instance.pos.y), pickup_2.SmallAmmoPickup));
+                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.SmallAmmoPickup));
                         }
                         else {
                             var actor = new actor_5.Actor(game_12.game.sprites[instance.spriteName], true);
-                            actor.pos = new point_8.Point(instance.pos.x, instance.pos.y);
+                            actor.pos = new point_6.Point(instance.pos.x, instance.pos.y);
                             actor.name = instance.name;
                             this.gameObjects.push(actor);
                         }
@@ -4441,7 +3918,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     game_12.game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
                     game_12.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
                     game_12.game.ctx.clearRect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height);
-                    Helpers.drawRect(game_12.game.ctx, new rect_5.Rect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height), "gray");
+                    Helpers.drawRect(game_12.game.ctx, new rect_4.Rect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height), "gray");
                     if (this.parallax)
                         Helpers.drawImage(game_12.game.ctx, this.parallax, this.camX * 0.5, this.camY * 0.5);
                     window.debugBackground = true;
@@ -4584,28 +4061,28 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     if (!dontMoveY) {
                         this.camY += deltaY;
                     }
-                    var camRect = new rect_5.Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
+                    var camRect = new rect_4.Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
                     var camRectShape = camRect.getShape();
                     for (var _i = 0, _a = this.noScrolls; _i < _a.length; _i++) {
                         var noScroll = _a[_i];
                         if (noScroll.shape.intersectsShape(camRectShape)) {
                             if (noScroll.freeDir === noScroll_1.Direction.Left) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(-1, 0));
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(-1, 0));
                                 if (mtv)
                                     this.camX += mtv.x;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Right) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(1, 0));
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(1, 0));
                                 if (mtv)
                                     this.camX += mtv.x;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Up) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(0, -1));
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(0, -1));
                                 if (mtv)
                                     this.camY += mtv.y;
                             }
                             else if (noScroll.freeDir === noScroll_1.Direction.Down) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_8.Point(0, 1));
+                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(0, 1));
                                 if (mtv)
                                     this.camY += mtv.y;
                             }
@@ -4680,11 +4157,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         if (go === actor)
                             continue;
-                        if (this.shouldTrigger(actor, go, new point_8.Point(offsetX, offsetY)))
+                        if (this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY)))
                             continue;
                         var hitData = actorShape.intersectsShape(go.collider.shape, vel);
                         if (hitData) {
-                            var collideData = new collider_5.CollideData(go.collider, vel, false, go, hitData);
+                            var collideData = new collider_4.CollideData(go.collider, vel, false, go, hitData);
                             collideDatas.push(collideData);
                         }
                     }
@@ -4698,7 +4175,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         for (var _i = 0, collideDatas_1 = collideDatas; _i < collideDatas_1.length; _i++) {
                             var collideData = collideDatas_1[_i];
                             if (collideData.hitData && collideData.hitData.normal && collideData.hitData.normal.isAngled() && pushIncline) {
-                                pushDir = new point_8.Point(0, -1);
+                                pushDir = new point_6.Point(0, -1);
                             }
                         }
                     }
@@ -4729,7 +4206,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         var hitData = shape.intersectsShape(go.collider.shape);
                         if (hitData) {
-                            return new collider_5.CollideData(go.collider, undefined, false, go, hitData);
+                            return new collider_4.CollideData(go.collider, undefined, false, go, hitData);
                         }
                     }
                     return undefined;
@@ -4744,12 +4221,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         if (!go.collider)
                             continue;
-                        var isTrigger = this.shouldTrigger(actor, go, new point_8.Point(offsetX, offsetY));
+                        var isTrigger = this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY));
                         if (isTrigger)
                             continue;
                         var hitData = actorShape.intersectsShape(go.collider.shape, vel);
                         if (hitData) {
-                            return new collider_5.CollideData(go.collider, vel, isTrigger, go, hitData);
+                            return new collider_4.CollideData(go.collider, vel, isTrigger, go, hitData);
                         }
                     }
                     return undefined;
@@ -4782,12 +4259,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         }
                         var actorShape = actor.collider.shape.clone(offsetX, offsetY);
-                        var isTrigger = this.shouldTrigger(actor, go, new point_8.Point(offsetX, offsetY));
+                        var isTrigger = this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY));
                         if (!isTrigger)
                             continue;
                         var hitData = actorShape.intersectsShape(go.collider.shape, vel);
                         if (hitData) {
-                            triggers.push(new collider_5.CollideData(go.collider, vel, isTrigger, go, hitData));
+                            triggers.push(new collider_4.CollideData(go.collider, vel, isTrigger, go, hitData));
                         }
                     }
                     return triggers;
@@ -4813,7 +4290,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         if (!this.isOfClass(go, classNames))
                             continue;
-                        var collideDatas = go.collider.shape.getLineIntersectCollisions(new shape_2.Line(pos1, pos2));
+                        var collideDatas = go.collider.shape.getLineIntersectCollisions(new shape_1.Line(pos1, pos2));
                         var closestCollideData = _.minBy(collideDatas, function (collideData) {
                             return collideData.hitData.hitPoint.distanceTo(pos1);
                         });
@@ -4841,7 +4318,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             continue;
                         var snapVector = shape.getSnapVector(go.collider.shape, dir);
                         if (snapVector) {
-                            var collideData = new collider_5.CollideData(go.collider, dir, false, go, undefined);
+                            var collideData = new collider_4.CollideData(go.collider, dir, false, go, undefined);
                             hits.push(collideData);
                         }
                     }
@@ -4907,13 +4384,13 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 };
                 return Level;
             }());
-            exports_22("Level", Level);
+            exports_20("Level", Level);
         }
     };
 });
-System.register("sprites", [], function (exports_23, context_23) {
+System.register("sprites", [], function (exports_21, context_21) {
     "use strict";
-    var __moduleName = context_23 && context_23.id;
+    var __moduleName = context_21 && context_21.id;
     var spriteJsons;
     return {
         setters: [],
@@ -4992,38 +4469,38 @@ System.register("sprites", [], function (exports_23, context_23) {
                     "wrapMode": "once",
                     "spritesheetPath": "assets/spritesheets/MegamanX.png"
                 }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 140, "y": 284 }, "botRightPoint": { "className": "Point", "x": 170, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 170, "y": 279 }, "botRightPoint": { "className": "Point", "x": 197, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_wall_kick", "path": "assets/sprites/mmx_wall_kick.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 309, "y": 284 }, "botRightPoint": { "className": "Point", "x": 340, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 1 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 14.800000000000011, "y": -26.19999999999999 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 342, "y": 283 }, "botRightPoint": { "className": "Point", "x": 375, "y": 322 } }, "duration": 0.1, "offset": { "className": "Point", "x": -1, "y": 1 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 14.600000000000023, "y": -25.80000000000001 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 342, "y": 283 }, "botRightPoint": { "className": "Point", "x": 375, "y": 322 } }, "duration": 0.1, "offset": { "className": "Point", "x": -1, "y": 1 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": 14.800000000000011, "y": -26 }] }], "POIs": [], "name": "mmx_wall_kick_shoot", "path": "assets/sprites/mmx_wall_kick_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 51, "y": 281 }, "botRightPoint": { "className": "Point", "x": 76, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 78, "y": 280 }, "botRightPoint": { "className": "Point", "x": 105, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 107, "y": 281 }, "botRightPoint": { "className": "Point", "x": 135, "y": 323 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_wall_slide", "path": "assets/sprites/mmx_wall_slide.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 235, "y": 281 }, "botRightPoint": { "className": "Point", "x": 267, "y": 324 } }, "duration": 0.1, "offset": { "className": "Point", "x": -4, "y": 1 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": -15.600000000000023, "y": -23.399999999999977 }] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 273, "y": 280 }, "botRightPoint": { "className": "Point", "x": 305, "y": 322 } }, "duration": 0.1, "offset": { "className": "Point", "x": -2, "y": 0 }, "hitboxes": [], "POIs": [{ "className": "POI", "x": -14.199999999999989, "y": -21.600000000000023 }] }], "POIs": [], "name": "mmx_wall_slide_shoot", "path": "assets/sprites/mmx_wall_slide_shoot.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 124, "y": 449 }, "botRightPoint": { "className": "Point", "x": 152, "y": 494 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 155, "y": 449 }, "botRightPoint": { "className": "Point", "x": 184, "y": 494 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 186, "y": 446 }, "botRightPoint": { "className": "Point", "x": 217, "y": 494 } }, "duration": 0.03, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 224, "y": 449 }, "botRightPoint": { "className": "Point", "x": 253, "y": 494 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 255, "y": 449 }, "botRightPoint": { "className": "Point", "x": 286, "y": 494 } }, "duration": 0.03, "offset": { "className": "Point", "x": 1, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "mmx_win", "path": "assets/sprites/mmx_win.json", "alignment": "botmid", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/MegamanX.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 14, "height": 14, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 343, "y": 293 }, "botRightPoint": { "className": "Point", "x": 357, "y": 307 } }, "isTrigger": false }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 81, "y": 148 }, "botRightPoint": { "className": "Point", "x": 95, "y": 162 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 97, "y": 148 }, "botRightPoint": { "className": "Point", "x": 111, "y": 162 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 113, "y": 148 }, "botRightPoint": { "className": "Point", "x": 127, "y": 162 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "pickup_ammo_large", "path": "assets/sprites/pickup_ammo_large.json", "alignment": "center", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 8, "height": 8, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346, "y": 296 }, "botRightPoint": { "className": "Point", "x": 354, "y": 304 } }, "isTrigger": false }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 84, "y": 138 }, "botRightPoint": { "className": "Point", "x": 92, "y": 146 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 100, "y": 138 }, "botRightPoint": { "className": "Point", "x": 108, "y": 146 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 116, "y": 138 }, "botRightPoint": { "className": "Point", "x": 124, "y": 146 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "pickup_ammo_small", "path": "assets/sprites/pickup_ammo_small.json", "alignment": "center", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 14, "height": 12, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 343, "y": 294 }, "botRightPoint": { "className": "Point", "x": 357, "y": 306 } }, "isTrigger": false }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 3, "y": 150 }, "botRightPoint": { "className": "Point", "x": 17, "y": 162 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 19, "y": 150 }, "botRightPoint": { "className": "Point", "x": 35, "y": 162 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 37, "y": 150 }, "botRightPoint": { "className": "Point", "x": 53, "y": 162 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 55, "y": 150 }, "botRightPoint": { "className": "Point", "x": 71, "y": 162 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 37, "y": 150 }, "botRightPoint": { "className": "Point", "x": 53, "y": 162 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 19, "y": 150 }, "botRightPoint": { "className": "Point", "x": 35, "y": 162 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 3, "y": 150 }, "botRightPoint": { "className": "Point", "x": 17, "y": 162 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "pickup_health_large", "path": "assets/sprites/pickup_health_large.json", "alignment": "center", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 8, "height": 8, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346, "y": 296 }, "botRightPoint": { "className": "Point", "x": 354, "y": 304 } }, "isTrigger": false }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 6, "y": 138 }, "botRightPoint": { "className": "Point", "x": 14, "y": 146 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 22, "y": 138 }, "botRightPoint": { "className": "Point", "x": 32, "y": 146 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 40, "y": 138 }, "botRightPoint": { "className": "Point", "x": 50, "y": 146 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 58, "y": 138 }, "botRightPoint": { "className": "Point", "x": 68, "y": 146 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 40, "y": 138 }, "botRightPoint": { "className": "Point", "x": 50, "y": 146 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 22, "y": 138 }, "botRightPoint": { "className": "Point", "x": 32, "y": 146 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 6, "y": 138 }, "botRightPoint": { "className": "Point", "x": 14, "y": 146 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "pickup_health_small", "path": "assets/sprites/pickup_health_small.json", "alignment": "center", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 31, "height": 30, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 334.5, "y": 285 }, "botRightPoint": { "className": "Point", "x": 365.5, "y": 315 } } }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 159, "y": 842 }, "botRightPoint": { "className": "Point", "x": 190, "y": 872 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 126, "y": 842 }, "botRightPoint": { "className": "Point", "x": 157, "y": 872 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 93, "y": 842 }, "botRightPoint": { "className": "Point", "x": 124, "y": 872 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 60, "y": 842 }, "botRightPoint": { "className": "Point", "x": 91, "y": 872 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "rolling_shield", "path": "assets/sprites/rolling_shield.json", "alignment": "center", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 194, "y": 849 }, "botRightPoint": { "className": "Point", "x": 209, "y": 865 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 213, "y": 855 }, "botRightPoint": { "className": "Point", "x": 217, "y": 859 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "rolling_shield_muzzle", "path": "assets/sprites/rolling_shield_muzzle.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 13, "height": 13, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 343.5, "y": 293.5 }, "botRightPoint": { "className": "Point", "x": 356.5, "y": 306.5 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 368, "y": 958 }, "botRightPoint": { "className": "Point", "x": 381, "y": 971 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "shotgun_ice", "path": "assets/sprites/shotgun_ice.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 7, "height": 7, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346.5, "y": 296.5 }, "botRightPoint": { "className": "Point", "x": 353.5, "y": 303.5 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 426, "y": 961 }, "botRightPoint": { "className": "Point", "x": 433, "y": 968 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "shotgun_ice_piece", "path": "assets/sprites/shotgun_ice_piece.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 385, "y": 961 }, "botRightPoint": { "className": "Point", "x": 393, "y": 968 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 395, "y": 962 }, "botRightPoint": { "className": "Point", "x": 403, "y": 969 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 405, "y": 963 }, "botRightPoint": { "className": "Point", "x": 413, "y": 968 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 415, "y": 963 }, "botRightPoint": { "className": "Point", "x": 422, "y": 968 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "shotgun_ice_sparkles", "path": "assets/sprites/shotgun_ice_sparkles.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 32, "height": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 334, "y": 297.5 }, "botRightPoint": { "className": "Point", "x": 366, "y": 302.5 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 415, "y": 796 }, "botRightPoint": { "className": "Point", "x": 447, "y": 801 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "sting_flat", "path": "assets/sprites/sting_flat.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 20, "height": 5, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 340, "y": 297.5 }, "botRightPoint": { "className": "Point", "x": 360, "y": 302.5 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 415, "y": 796 }, "botRightPoint": { "className": "Point", "x": 447, "y": 801 } }, "duration": 0.1, "offset": { "className": "Point", "x": -1, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 451, "y": 783 }, "botRightPoint": { "className": "Point", "x": 483, "y": 815 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 487, "y": 785 }, "botRightPoint": { "className": "Point", "x": 515, "y": 813 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 519, "y": 791 }, "botRightPoint": { "className": "Point", "x": 535, "y": 807 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 539, "y": 792 }, "botRightPoint": { "className": "Point", "x": 553, "y": 806 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 557, "y": 794 }, "botRightPoint": { "className": "Point", "x": 567, "y": 804 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "sting_start", "path": "assets/sprites/sting_start.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 28, "height": 15, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 336, "y": 292.5 }, "botRightPoint": { "className": "Point", "x": 364, "y": 307.5 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 383, "y": 791 }, "botRightPoint": { "className": "Point", "x": 411, "y": 806 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "sting_up", "path": "assets/sprites/sting_up.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 359, "y": 904 }, "botRightPoint": { "className": "Point", "x": 373, "y": 921 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 435, "y": 898 }, "botRightPoint": { "className": "Point", "x": 449, "y": 927 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 509, "y": 897 }, "botRightPoint": { "className": "Point", "x": 524, "y": 928 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 597, "y": 903 }, "botRightPoint": { "className": "Point", "x": 621, "y": 919 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "tornado_end", "path": "assets/sprites/tornado_end.json", "alignment": "midleft", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 334, "y": 904 }, "botRightPoint": { "className": "Point", "x": 350, "y": 921 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 409, "y": 898 }, "botRightPoint": { "className": "Point", "x": 425, "y": 926 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 477, "y": 897 }, "botRightPoint": { "className": "Point", "x": 493, "y": 928 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 563, "y": 903 }, "botRightPoint": { "className": "Point", "x": 579, "y": 919 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "tornado_mid", "path": "assets/sprites/tornado_mid.json", "alignment": "midleft", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 313, "y": 904 }, "botRightPoint": { "className": "Point", "x": 325, "y": 920 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 388, "y": 899 }, "botRightPoint": { "className": "Point", "x": 396, "y": 925 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 462, "y": 898 }, "botRightPoint": { "className": "Point", "x": 468, "y": 928 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 544, "y": 903 }, "botRightPoint": { "className": "Point", "x": 551, "y": 919 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "tornado_start", "path": "assets/sprites/tornado_start.json", "alignment": "midright", "wrapMode": "loop", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [{ "className": "Hitbox", "tags": "", "width": 12, "height": 12, "offset": { "className": "Point", "x": 0, "y": 0 }, "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 344, "y": 294 }, "botRightPoint": { "className": "Point", "x": 356, "y": 306 } }, "isTrigger": true }], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 217, "y": 794 }, "botRightPoint": { "className": "Point", "x": 233, "y": 804 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 235, "y": 793 }, "botRightPoint": { "className": "Point", "x": 251, "y": 806 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 253, "y": 792 }, "botRightPoint": { "className": "Point", "x": 268, "y": 807 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 272, "y": 791 }, "botRightPoint": { "className": "Point", "x": 285, "y": 807 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 292, "y": 791 }, "botRightPoint": { "className": "Point", "x": 302, "y": 807 } }, "duration": 0.066, "offset": { "className": "Point", "x": 0, "y": -1 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "torpedo", "path": "assets/sprites/torpedo.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 317, "y": 815 }, "botRightPoint": { "className": "Point", "x": 325, "y": 823 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 332, "y": 815 }, "botRightPoint": { "className": "Point", "x": 339, "y": 823 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 346, "y": 815 }, "botRightPoint": { "className": "Point", "x": 352, "y": 822 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }, { "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 356, "y": 816 }, "botRightPoint": { "className": "Point", "x": 360, "y": 821 } }, "duration": 0.03, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "torpedo_smoke", "path": "assets/sprites/torpedo_smoke.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }, { "className": "Sprite", "hitboxes": [], "frames": [{ "className": "Frame", "rect": { "className": "Rect", "topLeftPoint": { "className": "Point", "x": 137, "y": 250 }, "botRightPoint": { "className": "Point", "x": 149, "y": 262 } }, "duration": 0.1, "offset": { "className": "Point", "x": 0, "y": 0 }, "hitboxes": [], "POIs": [] }], "POIs": [], "name": "wall_sparks", "path": "assets/sprites/wall_sparks.json", "alignment": "center", "wrapMode": "once", "spritesheetPath": "assets/spritesheets/effects.png" }];
-            exports_23("spriteJsons", spriteJsons);
+            exports_21("spriteJsons", spriteJsons);
         }
     };
 });
-System.register("levels", [], function (exports_24, context_24) {
+System.register("levels", [], function (exports_22, context_22) {
     "use strict";
-    var __moduleName = context_24 && context_24.id;
+    var __moduleName = context_22 && context_22.id;
     var levelJsons;
     return {
         setters: [],
         execute: function () {
             levelJsons = [{ "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 642, "y": 112, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 734, "y": 112, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 734, "y": 143, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 642, "y": 143, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3, "y": 136, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3, "y": 511, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 288, "y": 511, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 288, "y": 136, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 420, "y": 172, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 928, "y": 419, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 927, "y": 510, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 419, "y": 510, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 927, "y": 419, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1825, "y": 419, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1825, "y": 512, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 927, "y": 512, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1888, "y": 449, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1952, "y": 449, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1952, "y": 511, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1888, "y": 511, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1985, "y": 417, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2015, "y": 417, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2015, "y": 512, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1985, "y": 512, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2080, "y": 449, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2241, "y": 449, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2241, "y": 512, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2080, "y": 512, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2240, "y": 417, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2369, "y": 417, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2369, "y": 515, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2240, "y": 515, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2369, "y": 369, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2527, "y": 369, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2527, "y": 523, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2369, "y": 523, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2528, "y": 419, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2736, "y": 419, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2736, "y": 640, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2528, "y": 640, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2785, "y": 255, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4001, "y": 255, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4001, "y": 577, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2785, "y": 577, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2944, "y": 572, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3070, "y": 572, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3070, "y": 610, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2944, "y": 610, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3999, "y": 510, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4064, "y": 510, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4064, "y": 707, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3999, "y": 707, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "climbable": "false" } }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3905, "y": 705, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3905, "y": 767, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 4066, "y": 767, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 4066, "y": 705, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3647, "y": 706, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3647, "y": 767, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3839, "y": 767, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3839, "y": 706, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3489, "y": 641, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3648, "y": 641, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3648, "y": 768, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3489, "y": 768, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3263, "y": 571, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3394, "y": 571, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3394, "y": 640, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3263, "y": 640, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3200, "y": 705, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3200, "y": 766, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3489, "y": 766, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3489, "y": 705, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2880, "y": 673, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3199, "y": 673, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3199, "y": 777, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2880, "y": 777, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2557, "y": 641, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2880, "y": 641, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2880, "y": 765, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2557, "y": 765, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2624, "y": 254, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2783, "y": 254, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2783, "y": 320, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2624, "y": 320, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2301, "y": 253, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2301, "y": 269, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2624, "y": 269, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2624, "y": 253, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 897, "y": 242, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 897, "y": 289, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2302, "y": 289, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2302, "y": 242, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 800, "y": 158, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 902, "y": 158, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 902, "y": 254, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 800, "y": 254, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 734, "y": 146, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 808, "y": 146, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 808, "y": 191, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 734, "y": 191, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 288, "y": 136, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 420, "y": 172, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 420, "y": 513, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 288, "y": 513, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 607, "y": 59, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 641, "y": 59, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 641, "y": 129, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 607, "y": 129, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 479, "y": 44, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 542, "y": 44, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 542, "y": 95, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 479, "y": 95, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 321, "y": 22, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 479, "y": 22, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 479, "y": 61, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 321, "y": 61, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 256, "y": 4, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 256, "y": 29, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 347, "y": 29, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 347, "y": 4, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "climbable": "false" } }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 539, "y": 52, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 613, "y": 52, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 613, "y": 80, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 539, "y": 80, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 671, "y": 142, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 734, "y": 142, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 734, "y": 159, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 671, "y": 159, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3837, "y": 743, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3908, "y": 743, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3908, "y": 767, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3837, "y": 767, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Kill Zone", "objectName": "Kill Zone", "points": [{ "className": "Point", "x": 1621, "y": 572, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2339, "y": 572, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2339, "y": 763, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1621, "y": 763, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Kill Zone", "objectName": "Kill Zone", "points": [{ "className": "Point", "x": 3840, "y": 728, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3902, "y": 728, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3902, "y": 750, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3840, "y": 750, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 4001, "y": 492, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4084, "y": 492, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4084, "y": 711, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 4001, "y": 711, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "freeDir": "left" } }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 2560, "y": 768, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4096, "y": 768, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4096, "y": 861, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2560, "y": 861, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "freeDir": "up" } }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 743, "y": 2, "perc_from_left": 0.0004952947003467063, "perc_from_right": 0.9995047052996533, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1021, "y": 258, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3042, "y": 258, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3042, "y": 2, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": { "freeDir": "down" } }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 2883, "y": 244, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4000, "y": 244, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 4000, "y": 515, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3072, "y": 515, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "freeDir": "down" } }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 2, "y": 510, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2305, "y": 510, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2305, "y": 676, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2, "y": 676, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "freeDir": "up" } }, { "className": "Instance", "name": "Spawn Point1", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 3941, "y": 688 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point2", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 3568, "y": 626 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point2", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 52, "y": 112 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point3", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 3333, "y": 690 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point4", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 3016, "y": 659 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point5", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 2631, "y": 402 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point6", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 2442, "y": 354 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point7", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 2165, "y": 434 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point8", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 1750, "y": 402 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point9", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 1038, "y": 396 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point10", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 1411, "y": 398 }, "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3775, "y": 576, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3967, "y": 576, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3967, "y": 610, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3775, "y": 610, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 3776, "y": 609, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3807, "y": 609, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 3807, "y": 642, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3776, "y": 642, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2240, "y": 289, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2271, "y": 289, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2271, "y": 303, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2240, "y": 303, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2111, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2144, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2144, "y": 303, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2111, "y": 303, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1856, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1951, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1951, "y": 304, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1856, "y": 304, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1889, "y": 303, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1920, "y": 303, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1920, "y": 318, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1889, "y": 318, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 959, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1023, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1023, "y": 302, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 959, "y": 302, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": -63, "y": 0, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": -63, "y": 236, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 5, "y": 236, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 5, "y": 0, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": { "climbable": "false" } }], "name": "gallery", "path": "assets/levels/gallery.json", "backgroundPath": "assets/backgrounds/gallery.png" }, { "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 0, "y": 1, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 47, "y": 1, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 47, "y": 225, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 0, "y": 225, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "climbable": "false" } }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 41, "y": 127, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 804, "y": 127, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 804, "y": 180, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 41, "y": 180, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 827, "y": 95, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1318, "y": 95, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1318, "y": 144, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 827, "y": 144, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 861, "y": 141, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 896, "y": 141, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 896, "y": 227, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 861, "y": 227, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 733, "y": 178, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 767, "y": 178, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 767, "y": 228, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 733, "y": 228, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1247, "y": 141, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1279, "y": 141, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1279, "y": 228, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1247, "y": 228, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1374, "y": 161, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1405, "y": 161, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1405, "y": 230, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1374, "y": 230, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1337, "y": 111, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2338, "y": 111, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2338, "y": 162, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1337, "y": 162, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2271, "y": 154, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2303, "y": 154, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2303, "y": 229, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2271, "y": 229, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2378, "y": 111, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2560, "y": 111, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2560, "y": 165, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2378, "y": 165, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2397, "y": 162, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2431, "y": 162, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2431, "y": 227, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2397, "y": 227, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": {} }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 2562, "y": 5, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2562, "y": 110, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2630, "y": 110, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2630, "y": 5, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "climbable": "false" } }, { "className": "Instance", "name": "Spawn Point1", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 150, "y": 108 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point2", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 572, "y": 108 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point3", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 886, "y": 79 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point4", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 2473, "y": 96 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point5", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 2165, "y": 90 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point6", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 1878, "y": 91 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point7", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 1436, "y": 88 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point8", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 1218, "y": 77 }, "properties": {} }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 32, "y": 224, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2587, "y": 224, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2587, "y": 466, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 32, "y": 466, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "freeDir": "up" } }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 2563, "y": 5, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2728, "y": 5, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 2728, "y": 254, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 2563, "y": 254, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }], "properties": { "freeDir": "left" } }], "name": "highway", "path": "assets/levels/highway.json", "backgroundPath": "assets/backgrounds/highway.png" }, { "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": -40, "y": 56, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 5, "y": 56, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 5, "y": 445, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": -40, "y": 445, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": -11, "y": 417, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1141, "y": 417, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1141, "y": 432, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": -11, "y": 432, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 256, "y": 64, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 288, "y": 64, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 288, "y": 300, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 256, "y": 300, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 448, "y": 296, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 480, "y": 296, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 480, "y": 425, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 448, "y": 425, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 678, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 763, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 763, "y": 176, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 678, "y": 176, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1183, "y": 28, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1312, "y": 28, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1312, "y": 129, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1183, "y": 129, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 832, "y": 174, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 864, "y": 174, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 864, "y": 297, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 832, "y": 297, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 704, "y": 55, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 736, "y": 55, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 736, "y": 170, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 704, "y": 170, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 960, "y": 302, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 992, "y": 302, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 992, "y": 429, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 960, "y": 429, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1152, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1306, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1306, "y": 512, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1152, "y": 512, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 608, "y": 171, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 640, "y": 171, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 640, "y": 300, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 608, "y": 300, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1, "y": 33, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1185, "y": 33, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1185, "y": 64, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1, "y": 64, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 933, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1151, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1151, "y": 304, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 933, "y": 304, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 791, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1152, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1152, "y": 177, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 791, "y": 177, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 566, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 907, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 907, "y": 304, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 566, "y": 304, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 1, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 362, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 362, "y": 304, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1, "y": 304, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 582, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 650, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 650, "y": 176, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 582, "y": 176, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 0, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 554, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 554, "y": 177, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 0, "y": 177, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 390, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 538, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 538, "y": 304, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 390, "y": 304, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Ladder1", "objectName": "Ladder", "points": [{ "className": "Point", "x": 363, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 389, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 389, "y": 352, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 363, "y": 352, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Ladder2", "objectName": "Ladder", "points": [{ "className": "Point", "x": 554, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 581, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 581, "y": 223, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 554, "y": 223, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Ladder3", "objectName": "Ladder", "points": [{ "className": "Point", "x": 650, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 678, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 678, "y": 225, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 650, "y": 225, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Ladder4", "objectName": "Ladder", "points": [{ "className": "Point", "x": 538, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 566, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 566, "y": 352, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 538, "y": 352, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Ladder5", "objectName": "Ladder", "points": [{ "className": "Point", "x": 760, "y": 160, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 791, "y": 160, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 791, "y": 224, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 760, "y": 224, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Ladder6", "objectName": "Ladder", "points": [{ "className": "Point", "x": 906, "y": 288, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 934, "y": 288, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 934, "y": 368, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 906, "y": 368, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 1183, "y": 11, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1394, "y": 11, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1394, "y": 504, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 1183, "y": 504, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "freeDir": "left" } }, { "className": "ShapeInstance", "name": "No Scroll", "objectName": "No Scroll", "points": [{ "className": "Point", "x": 3, "y": 479, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1154, "y": 479, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 1154, "y": 586, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 3, "y": 586, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }], "properties": { "freeDir": "up" } }, { "className": "Instance", "name": "Node1", "objectName": "Node", "pos": { "className": "Point", "x": 377, "y": 404 }, "properties": { "neighbors": [{ "nodeName": "Node2", "ladderName": "Ladder1", "isJumpNode": true }] } }, { "className": "Instance", "name": "Node2", "objectName": "Node", "pos": { "className": "Point", "x": 376, "y": 275 }, "properties": { "neighbors": [{ "nodeName": "Node1", "ladderName": "Ladder1", "isDropNode": true }, { "nodeName": "Node3" }] } }, { "className": "Instance", "name": "Node3", "objectName": "Node", "pos": { "className": "Point", "x": 550, "y": 276 }, "properties": { "neighbors": [{ "nodeName": "Node2" }, { "nodeName": "Node6", "ladderName": "Ladder4", "isDropNode": true }, { "nodeName": "Node5" }] } }, { "className": "Instance", "name": "Node4", "objectName": "Node", "pos": { "className": "Point", "x": 568, "y": 146 }, "properties": { "neighbors": [{ "nodeName": "Node5", "ladderName": "Ladder2", "isDropNode": true }, { "nodeName": "Node9" }] } }, { "className": "Instance", "name": "Node5", "objectName": "Node", "pos": { "className": "Point", "x": 571, "y": 276 }, "properties": { "neighbors": [{ "nodeName": "Node3" }, { "nodeName": "Node4", "ladderName": "Ladder2", "isJumpNode": true }] } }, { "className": "Instance", "name": "Node6", "objectName": "Node", "pos": { "className": "Point", "x": 552, "y": 403 }, "properties": { "neighbors": [{ "nodeName": "Node3", "isJumpNode": true, "ladderName": "Ladder4" }, { "nodeName": "Node7" }] } }, { "className": "Instance", "name": "Node7", "objectName": "Node", "pos": { "className": "Point", "x": 919, "y": 402 }, "properties": { "neighbors": [{ "nodeName": "Node6" }, { "nodeName": "Node8", "ladderName": "Ladder6", "isJumpNode": true }] } }, { "className": "Instance", "name": "Node8", "objectName": "Node", "pos": { "className": "Point", "x": 921, "y": 274 }, "properties": { "neighbors": [{ "nodeName": "Node7", "isDropNode": true, "ladderName": "Ladder6" }] } }, { "className": "Instance", "name": "Node9", "objectName": "Node", "pos": { "className": "Point", "x": 666, "y": 146 }, "properties": { "neighbors": [{ "nodeName": "Node4" }, { "nodeName": "Node10", "ladderName": "Ladder3", "isDropNode": true }] } }, { "className": "Instance", "name": "Node10", "objectName": "Node", "pos": { "className": "Point", "x": 665, "y": 274 }, "properties": { "neighbors": [{ "nodeName": "Node9", "ladderName": "Ladder3", "isJumpNode": true }, { "nodeName": "Node11" }] } }, { "className": "Instance", "name": "Node11", "objectName": "Node", "pos": { "className": "Point", "x": 776, "y": 273 }, "properties": { "neighbors": [{ "nodeName": "Node10" }, { "nodeName": "Node12", "ladderName": "Ladder5", "isJumpNode": true }] } }, { "className": "Instance", "name": "Node12", "objectName": "Node", "pos": { "className": "Point", "x": 776, "y": 146 }, "properties": { "neighbors": [{ "nodeName": "Node11", "ladderName": "Ladder5", "isDropNode": true }] } }, { "className": "Instance", "name": "Spawn Point1", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 465, "y": 277 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point2", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 409, "y": 149 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point3", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 723, "y": 278 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point4", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 998, "y": 147 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point5", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 611, "y": 403 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point6", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 1078, "y": 276 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point7", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 185, "y": 405 }, "properties": {} }, { "className": "Instance", "name": "Spawn Point8", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 833, "y": 405 }, "properties": {} }, { "className": "Instance", "name": "Large Health1", "objectName": "Large Health", "pos": { "className": "Point", "x": 188, "y": 280 }, "properties": {}, "spriteName": "pickup_health_large" }, { "className": "Instance", "name": "Large Health2", "objectName": "Large Health", "pos": { "className": "Point", "x": 1065, "y": 407 }, "properties": {}, "spriteName": "pickup_health_large" }, { "className": "Instance", "name": "Large Health3", "objectName": "Large Health", "pos": { "className": "Point", "x": 191, "y": 152 }, "properties": {}, "spriteName": "pickup_health_large" }, { "className": "Instance", "name": "Small Health1", "objectName": "Small Health", "pos": { "className": "Point", "x": 19, "y": 403 }, "properties": {}, "spriteName": "pickup_health_small" }, { "className": "Instance", "name": "Small Health2", "objectName": "Small Health", "pos": { "className": "Point", "x": 724, "y": 410 }, "properties": {}, "spriteName": "pickup_health_small" }, { "className": "Instance", "name": "Small Ammo1", "objectName": "Small Ammo", "pos": { "className": "Point", "x": 1155, "y": 151 }, "properties": {}, "spriteName": "pickup_ammo_small" }], "name": "powerplant", "path": "assets/levels/powerplant.json", "backgroundPath": "assets/backgrounds/powerplant.png" }, { "className": "Level", "instances": [{ "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 22, "y": 194, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 271, "y": 194, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 271, "y": 210, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 22, "y": 210, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 22, "y": 0, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 37, "y": 0, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 37, "y": 196, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 22, "y": 196, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 263, "y": 4, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 279, "y": 4, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 279, "y": 195, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 263, "y": 195, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }, { "className": "Instance", "name": "Spawn Point", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 56, "y": 178 }, "properties": { "xDir": 1, "num": 0 } }, { "className": "Instance", "name": "Spawn Point", "objectName": "Spawn Point", "pos": { "className": "Point", "x": 240, "y": 177 }, "properties": { "xDir": -1, "num": 1 } }, { "className": "ShapeInstance", "name": "Collision Shape", "objectName": "Collision Shape", "points": [{ "className": "Point", "x": 37, "y": 4, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 265, "y": 4, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 0, "perc_from_bottom": 1 }, { "className": "Point", "x": 265, "y": 28, "perc_from_left": 1, "perc_from_right": 0, "perc_from_top": 1, "perc_from_bottom": 0 }, { "className": "Point", "x": 37, "y": 28, "perc_from_left": 0, "perc_from_right": 1, "perc_from_top": 1, "perc_from_bottom": 0 }] }], "name": "sm_bossroom", "path": "assets/levels/sm_bossroom.json", "backgroundPath": "assets/backgrounds/sm_bossroom.png" }];
-            exports_24("levelJsons", levelJsons);
+            exports_22("levelJsons", levelJsons);
         }
     };
 });
-System.register("tests", ["shape", "point"], function (exports_25, context_25) {
+System.register("tests", ["shape", "point"], function (exports_23, context_23) {
     "use strict";
-    var __moduleName = context_25 && context_25.id;
+    var __moduleName = context_23 && context_23.id;
     function runAllTests() {
         testGetIntersectPoint();
     }
-    exports_25("runAllTests", runAllTests);
+    exports_23("runAllTests", runAllTests);
     function testGetIntersectPoint() {
-        var shape = new shape_3.Shape([
-            new point_9.Point(123.39407376319954, 159.66765581794917),
-            new point_9.Point(141.39407376319954, 159.66765581794917),
-            new point_9.Point(141.39407376319954, 193.66765581794917),
-            new point_9.Point(123.39407376319954, 193.66765581794917)
+        var shape = new shape_2.Shape([
+            new point_7.Point(123.39407376319954, 159.66765581794917),
+            new point_7.Point(141.39407376319954, 159.66765581794917),
+            new point_7.Point(141.39407376319954, 193.66765581794917),
+            new point_7.Point(123.39407376319954, 193.66765581794917)
         ]);
-        var pos = new point_9.Point(119.4554509905969, 175.1802743786446);
-        var vel = new point_9.Point(149.92618433007218, 4.705236681105004);
+        var pos = new point_7.Point(119.4554509905969, 175.1802743786446);
+        var vel = new point_7.Point(149.92618433007218, 4.705236681105004);
         var point = shape.getIntersectPoint(pos, vel);
         assertEquals(Math.round(point.x), Math.round(123));
         assertEquals(Math.round(point.y), Math.round(175));
@@ -5033,23 +4510,23 @@ System.register("tests", ["shape", "point"], function (exports_25, context_25) {
             console.error(val1 + " is not equal to " + val2);
         }
     }
-    var shape_3, point_9;
+    var shape_2, point_7;
     return {
         setters: [
-            function (shape_3_1) {
-                shape_3 = shape_3_1;
+            function (shape_2_1) {
+                shape_2 = shape_2_1;
             },
-            function (point_9_1) {
-                point_9 = point_9_1;
+            function (point_7_1) {
+                point_7 = point_7_1;
             }
         ],
         execute: function () {
         }
     };
 });
-System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "tests", "gameMode"], function (exports_26, context_26) {
+System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "tests", "gameMode"], function (exports_24, context_24) {
     "use strict";
-    var __moduleName = context_26 && context_26.id;
+    var __moduleName = context_24 && context_24.id;
     var sprite_1, level_1, sprites_1, levels_1, color_1, Helpers, Tests, gameMode_2, Options, Menu, UIData, Game, game;
     return {
         setters: [
@@ -5106,7 +4583,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Menu[Menu["OptionsMenu"] = 8] = "OptionsMenu";
                 Menu[Menu["BadBrowserMenu"] = 9] = "BadBrowserMenu";
             })(Menu || (Menu = {}));
-            exports_26("Menu", Menu);
+            exports_24("Menu", Menu);
             UIData = (function () {
                 function UIData() {
                     this.isProd = false;
@@ -5136,7 +4613,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 };
                 return UIData;
             }());
-            exports_26("UIData", UIData);
+            exports_24("UIData", UIData);
             Game = (function () {
                 function Game() {
                     this.sprites = {};
@@ -5155,6 +4632,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.requestId = 0;
                     this.soundSheetLoaded = false;
                     this.paused = false;
+                    this.collisionCalls = 0;
                     this.doQuickStart = true;
                     this.restartLevelName = "";
                     this.timePassed = 0;
@@ -5620,8 +5098,10 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         this.timePassed = 0;
                         if (!this.paused) {
                             this.level.update();
-                            this.level.render();
+                            console.log(this.collisionCalls);
+                            this.collisionCalls = 0;
                         }
+                        this.level.render();
                     }
                     if (this.restartLevelName !== "") {
                         this.doRestart();
@@ -5704,7 +5184,539 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 return Game;
             }());
             game = new Game();
-            exports_26("game", game);
+            exports_24("game", game);
+        }
+    };
+});
+System.register("shape", ["point", "rect", "collider", "game"], function (exports_25, context_25) {
+    "use strict";
+    var __moduleName = context_25 && context_25.id;
+    var point_8, rect_5, collider_5, game_13, Line, IntersectData, Shape;
+    return {
+        setters: [
+            function (point_8_1) {
+                point_8 = point_8_1;
+            },
+            function (rect_5_1) {
+                rect_5 = rect_5_1;
+            },
+            function (collider_5_1) {
+                collider_5 = collider_5_1;
+            },
+            function (game_13_1) {
+                game_13 = game_13_1;
+            }
+        ],
+        execute: function () {
+            Line = (function () {
+                function Line(point1, point2) {
+                    this.point1 = point1;
+                    this.point2 = point2;
+                }
+                Line.prototype.intersectsLine = function (other) {
+                    var a = this.point1.x;
+                    var b = this.point1.y;
+                    var c = this.point2.x;
+                    var d = this.point2.y;
+                    var p = other.point1.x;
+                    var q = other.point1.y;
+                    var r = other.point2.x;
+                    var s = other.point2.y;
+                    var det, gamma, lambda;
+                    det = (c - a) * (s - q) - (r - p) * (d - b);
+                    if (det === 0) {
+                        return false;
+                    }
+                    else {
+                        lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
+                        gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+                        return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+                    }
+                };
+                Object.defineProperty(Line.prototype, "x1", {
+                    get: function () { return this.point1.x; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "y1", {
+                    get: function () { return this.point1.y; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "x2", {
+                    get: function () { return this.point2.x; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "y2", {
+                    get: function () { return this.point2.y; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Line.prototype.checkLineIntersection = function (line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
+                    var denominator, a, b, numerator1, numerator2, result = {
+                        x: null,
+                        y: null,
+                        onLine1: false,
+                        onLine2: false
+                    };
+                    denominator = ((line2EndY - line2StartY) * (line1EndX - line1StartX)) - ((line2EndX - line2StartX) * (line1EndY - line1StartY));
+                    if (denominator == 0) {
+                        return result;
+                    }
+                    a = line1StartY - line2StartY;
+                    b = line1StartX - line2StartX;
+                    numerator1 = ((line2EndX - line2StartX) * a) - ((line2EndY - line2StartY) * b);
+                    numerator2 = ((line1EndX - line1StartX) * a) - ((line1EndY - line1StartY) * b);
+                    a = numerator1 / denominator;
+                    b = numerator2 / denominator;
+                    result.x = line1StartX + (a * (line1EndX - line1StartX));
+                    result.y = line1StartY + (a * (line1EndY - line1StartY));
+                    if (a > 0 && a < 1) {
+                        result.onLine1 = true;
+                    }
+                    if (b > 0 && b < 1) {
+                        result.onLine2 = true;
+                    }
+                    return result;
+                };
+                Line.prototype.getIntersectPoint = function (other) {
+                    if (!this.intersectsLine(other))
+                        return undefined;
+                    var intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
+                    if (intersection.x !== null && intersection.y !== null)
+                        return new point_8.Point(intersection.x, intersection.y);
+                    return undefined;
+                };
+                Object.defineProperty(Line.prototype, "slope", {
+                    get: function () {
+                        if (this.x1 == this.x2)
+                            return NaN;
+                        return (this.y1 - this.y2) / (this.x1 - this.x2);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "yInt", {
+                    get: function () {
+                        if (this.x1 === this.x2)
+                            return this.y1 === 0 ? 0 : NaN;
+                        if (this.y1 === this.y2)
+                            return this.y1;
+                        return this.y1 - this.slope * this.x1;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Line.prototype, "xInt", {
+                    get: function () {
+                        var slope;
+                        if (this.y1 === this.y2)
+                            return this.x1 == 0 ? 0 : NaN;
+                        if (this.x1 === this.x2)
+                            return this.x1;
+                        return (-1 * ((slope = this.slope * this.x1 - this.y1)) / this.slope);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                return Line;
+            }());
+            exports_25("Line", Line);
+            IntersectData = (function () {
+                function IntersectData(intersectPoint, normal) {
+                    this.intersectPoint = intersectPoint;
+                    this.normal = normal;
+                }
+                return IntersectData;
+            }());
+            exports_25("IntersectData", IntersectData);
+            Shape = (function () {
+                function Shape(points) {
+                    this.points = points;
+                    var normals = [];
+                    for (var i = 0; i < this.points.length; i++) {
+                        var p1 = this.points[i];
+                        var p2 = (i == this.points.length - 1 ? this.points[0] : this.points[i + 1]);
+                        var v = new point_8.Point(p2.x - p1.x, p2.y - p1.y);
+                        normals.push(v.leftNormal().normalize());
+                    }
+                    this.normals = normals;
+                }
+                Shape.prototype.getRect = function () {
+                    if (this.points.length !== 4)
+                        return undefined;
+                    if (this.points[0].ix === this.points[3].ix && this.points[1].ix === this.points[2].ix && this.points[0].iy === this.points[1].iy && this.points[2].iy === this.points[3].iy) {
+                        return rect_5.Rect.Create(this.points[0], this.points[2]);
+                    }
+                    return undefined;
+                };
+                Shape.prototype.getLines = function () {
+                    var lines = [];
+                    for (var i = 0; i < this.points.length; i++) {
+                        var next = i + 1;
+                        if (next >= this.points.length)
+                            next = 0;
+                        lines.push(new Line(this.points[i], this.points[next]));
+                    }
+                    return lines;
+                };
+                Shape.prototype.getNormals = function () {
+                    return this.normals;
+                };
+                Shape.prototype.intersectsLine = function (line) {
+                    var lines = this.getLines();
+                    for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
+                        var myLine = lines_1[_i];
+                        if (myLine.getIntersectPoint(line)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+                Shape.prototype.getLineIntersectCollisions = function (line) {
+                    var collideDatas = [];
+                    var lines = this.getLines();
+                    var normals = this.getNormals();
+                    for (var i = 0; i < lines.length; i++) {
+                        var myLine = lines[i];
+                        var point = myLine.getIntersectPoint(line);
+                        if (point) {
+                            var normal = normals[i];
+                            var collideData = new collider_5.CollideData(undefined, undefined, false, undefined, new collider_5.HitData(normal, point));
+                            collideDatas.push(collideData);
+                        }
+                    }
+                    return collideDatas;
+                };
+                Shape.prototype.intersectsShape = function (other, vel) {
+                    game_13.game.collisionCalls++;
+                    var pointOutside = false;
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        if (!other.containsPoint(point)) {
+                            pointOutside = true;
+                            break;
+                        }
+                    }
+                    var pointOutside2 = false;
+                    for (var _b = 0, _c = other.points; _b < _c.length; _b++) {
+                        var point = _c[_b];
+                        if (!this.containsPoint(point)) {
+                            pointOutside2 = true;
+                            break;
+                        }
+                    }
+                    if (!pointOutside || !pointOutside2) {
+                        return new collider_5.HitData(undefined, undefined);
+                    }
+                    var lines1 = this.getLines();
+                    var lines2 = other.getLines();
+                    var hitNormals = [];
+                    for (var _d = 0, lines1_1 = lines1; _d < lines1_1.length; _d++) {
+                        var line1 = lines1_1[_d];
+                        var normals = other.getNormals();
+                        for (var i = 0; i < lines2.length; i++) {
+                            var line2 = lines2[i];
+                            if (line1.getIntersectPoint(line2)) {
+                                if (!vel) {
+                                    return new collider_5.HitData(normals[i], undefined);
+                                }
+                                else {
+                                    hitNormals.push(normals[i]);
+                                }
+                            }
+                        }
+                    }
+                    if (hitNormals.length === 0) {
+                        return undefined;
+                    }
+                    for (var _e = 0, hitNormals_1 = hitNormals; _e < hitNormals_1.length; _e++) {
+                        var normal = hitNormals_1[_e];
+                        var ang = vel.times(-1).angleWith(normal);
+                        if (ang < 90) {
+                            return new collider_5.HitData(normal, undefined);
+                        }
+                    }
+                    if (hitNormals.length > 0) {
+                        return new collider_5.HitData(hitNormals[0], undefined);
+                    }
+                    return undefined;
+                };
+                Shape.prototype.containsPoint = function (point) {
+                    var x = point.x;
+                    var y = point.y;
+                    var vertices = this.points;
+                    var inside = false;
+                    for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+                        var xi = vertices[i].x, yi = vertices[i].y;
+                        var xj = vertices[j].x, yj = vertices[j].y;
+                        var intersect = ((yi > y) !== (yj > y))
+                            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                        if (intersect)
+                            inside = !inside;
+                    }
+                    return inside;
+                };
+                Shape.prototype.getIntersectPoint = function (point, dir) {
+                    if (this.containsPoint(point)) {
+                        return point;
+                    }
+                    var intersections = [];
+                    var pointLine = new Line(point, point.add(dir));
+                    for (var _i = 0, _a = this.getLines(); _i < _a.length; _i++) {
+                        var line = _a[_i];
+                        var intersectPoint = line.getIntersectPoint(pointLine);
+                        if (intersectPoint) {
+                            intersections.push(intersectPoint);
+                        }
+                    }
+                    if (intersections.length === 0)
+                        return undefined;
+                    return _.minBy(intersections, function (intersectPoint) {
+                        return intersectPoint.distanceTo(point);
+                    });
+                };
+                Shape.prototype.getClosestPointOnBounds = function (point) {
+                };
+                Shape.prototype.minMaxDotProd = function (normal) {
+                    var min = null, max = null;
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        var dp = point.dotProduct(normal);
+                        if (min === null || dp < min)
+                            min = dp;
+                        if (max === null || dp > max)
+                            max = dp;
+                    }
+                    return [min, max];
+                };
+                Shape.prototype.checkNormal = function (other, normal) {
+                    var aMinMax = this.minMaxDotProd(normal);
+                    var bMinMax = other.minMaxDotProd(normal);
+                    var overlap = 0;
+                    if (aMinMax[0] > bMinMax[0] && aMinMax[1] < bMinMax[1]) {
+                        overlap = aMinMax[1] - aMinMax[0];
+                    }
+                    if (bMinMax[0] > aMinMax[0] && bMinMax[1] < aMinMax[1]) {
+                        overlap = bMinMax[1] - bMinMax[0];
+                    }
+                    if (overlap > 0) {
+                        var mins = Math.abs(aMinMax[0] - bMinMax[0]);
+                        var maxs = Math.abs(aMinMax[1] - bMinMax[1]);
+                        if (mins < maxs) {
+                            overlap += mins;
+                        }
+                        else {
+                            overlap += maxs;
+                        }
+                        var correction = normal.times(overlap);
+                        return correction;
+                    }
+                    if (aMinMax[0] <= bMinMax[1] && aMinMax[1] >= bMinMax[0]) {
+                        var correction = normal.times(bMinMax[1] - aMinMax[0]);
+                        return correction;
+                    }
+                    return undefined;
+                };
+                Shape.prototype.getMinTransVector = function (b) {
+                    game_13.game.collisionCalls++;
+                    var correctionVectors = [];
+                    var thisNormals;
+                    var bNormals;
+                    var dir = undefined;
+                    if (dir) {
+                        thisNormals = [dir];
+                        bNormals = [dir];
+                    }
+                    else {
+                        thisNormals = this.getNormals();
+                        bNormals = b.getNormals();
+                    }
+                    for (var _i = 0, thisNormals_1 = thisNormals; _i < thisNormals_1.length; _i++) {
+                        var normal = thisNormals_1[_i];
+                        var result = this.checkNormal(b, normal);
+                        if (result)
+                            correctionVectors.push(result);
+                    }
+                    for (var _a = 0, bNormals_1 = bNormals; _a < bNormals_1.length; _a++) {
+                        var normal = bNormals_1[_a];
+                        var result = this.checkNormal(b, normal);
+                        if (result)
+                            correctionVectors.push(result);
+                    }
+                    if (correctionVectors.length > 0) {
+                        return _.minBy(correctionVectors, function (correctionVector) {
+                            return correctionVector.magnitude;
+                        });
+                    }
+                    return undefined;
+                };
+                Shape.prototype.getMinTransVectorDir = function (b, dir) {
+                    game_13.game.collisionCalls++;
+                    var mag = 0;
+                    var maxMag = 0;
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        var line = new Line(point, point.add(dir.times(10000)));
+                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
+                            var bLine = _c[_b];
+                            var intersectPoint = bLine.getIntersectPoint(line);
+                            if (intersectPoint) {
+                                mag = point.distanceTo(intersectPoint);
+                                if (mag > maxMag) {
+                                    maxMag = mag;
+                                }
+                            }
+                        }
+                    }
+                    for (var _d = 0, _e = b.points; _d < _e.length; _d++) {
+                        var point = _e[_d];
+                        var line = new Line(point, point.add(dir.times(-10000)));
+                        for (var _f = 0, _g = this.getLines(); _f < _g.length; _f++) {
+                            var myLine = _g[_f];
+                            var intersectPoint = myLine.getIntersectPoint(line);
+                            if (intersectPoint) {
+                                mag = point.distanceTo(intersectPoint);
+                                if (mag > maxMag) {
+                                    maxMag = mag;
+                                }
+                            }
+                        }
+                    }
+                    if (maxMag === 0) {
+                        return undefined;
+                    }
+                    return dir.times(maxMag);
+                };
+                Shape.prototype.getSnapVector = function (b, dir) {
+                    var mag = 0;
+                    var minMag = Infinity;
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        var line = new Line(point, point.add(dir.times(10000)));
+                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
+                            var bLine = _c[_b];
+                            var intersectPoint = bLine.getIntersectPoint(line);
+                            if (intersectPoint) {
+                                mag = point.distanceTo(intersectPoint);
+                                if (mag < minMag) {
+                                    minMag = mag;
+                                }
+                            }
+                        }
+                    }
+                    if (mag === 0) {
+                        return undefined;
+                    }
+                    return dir.times(minMag);
+                };
+                Shape.prototype.clone = function (x, y) {
+                    var points = [];
+                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
+                        var point = _a[_i];
+                        points.push(new point_8.Point(point.x + x, point.y + y));
+                    }
+                    return new Shape(points);
+                };
+                return Shape;
+            }());
+            exports_25("Shape", Shape);
+        }
+    };
+});
+System.register("rect", ["point", "shape"], function (exports_26, context_26) {
+    "use strict";
+    var __moduleName = context_26 && context_26.id;
+    var point_9, shape_3, Rect;
+    return {
+        setters: [
+            function (point_9_1) {
+                point_9 = point_9_1;
+            },
+            function (shape_3_1) {
+                shape_3 = shape_3_1;
+            }
+        ],
+        execute: function () {
+            Rect = (function () {
+                function Rect(x1, y1, x2, y2) {
+                    this.topLeftPoint = new point_9.Point(x1, y1);
+                    this.botRightPoint = new point_9.Point(x2, y2);
+                }
+                Rect.Create = function (topLeftPoint, botRightPoint) {
+                    return new Rect(topLeftPoint.x, topLeftPoint.y, botRightPoint.x, botRightPoint.y);
+                };
+                Rect.prototype.getShape = function () {
+                    return new shape_3.Shape([this.topLeftPoint, new point_9.Point(this.x2, this.y1), this.botRightPoint, new point_9.Point(this.x1, this.y2)]);
+                };
+                Object.defineProperty(Rect.prototype, "midX", {
+                    get: function () {
+                        return (this.topLeftPoint.x + this.botRightPoint.x) * 0.5;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Rect.prototype, "x1", {
+                    get: function () {
+                        return this.topLeftPoint.x;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Rect.prototype, "y1", {
+                    get: function () {
+                        return this.topLeftPoint.y;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Rect.prototype, "x2", {
+                    get: function () {
+                        return this.botRightPoint.x;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Rect.prototype, "y2", {
+                    get: function () {
+                        return this.botRightPoint.y;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Rect.prototype, "w", {
+                    get: function () {
+                        return this.botRightPoint.x - this.topLeftPoint.x;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Rect.prototype, "h", {
+                    get: function () {
+                        return this.botRightPoint.y - this.topLeftPoint.y;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Rect.prototype.getPoints = function () {
+                    return [
+                        new point_9.Point(this.topLeftPoint.x, this.topLeftPoint.y),
+                        new point_9.Point(this.botRightPoint.x, this.topLeftPoint.y),
+                        new point_9.Point(this.botRightPoint.x, this.botRightPoint.y),
+                        new point_9.Point(this.topLeftPoint.x, this.botRightPoint.y),
+                    ];
+                };
+                Rect.prototype.overlaps = function (other) {
+                    if (this.x1 > other.x2 || other.x1 > this.x2)
+                        return false;
+                    if (this.y1 > other.y2 || other.y1 > this.y2)
+                        return false;
+                    return true;
+                };
+                return Rect;
+            }());
+            exports_26("Rect", Rect);
         }
     };
 });
@@ -5931,7 +5943,7 @@ System.register("helpers", ["point", "game"], function (exports_27, context_27) 
             helperCtx.putImageData(imageData, 0, 0);
         }
         if (window.playerDebug)
-            game_13.game.level.debugString = "y: " + y;
+            game_14.game.level.debugString = "y: " + y;
         ctx.drawImage(helperCanvas, x, y);
         ctx.globalAlpha = 1;
         helperCtx.restore();
@@ -6262,14 +6274,14 @@ System.register("helpers", ["point", "game"], function (exports_27, context_27) 
         return String.fromCharCode(charCode);
     }
     exports_27("keyCodeToString", keyCodeToString);
-    var point_10, game_13, autoInc, helperCanvas, helperCtx, helperCanvas2, helperCtx2, helperCanvas3, helperCtx3;
+    var point_10, game_14, autoInc, helperCanvas, helperCtx, helperCanvas2, helperCtx2, helperCanvas3, helperCtx3;
     return {
         setters: [
             function (point_10_1) {
                 point_10 = point_10_1;
             },
-            function (game_13_1) {
-                game_13 = game_13_1;
+            function (game_14_1) {
+                game_14 = game_14_1;
             }
         ],
         execute: function () {
@@ -6326,7 +6338,7 @@ System.register("point", ["helpers"], function (exports_28, context_28) {
                     if (this.x === 0 && this.y === 0)
                         return new Point(0, 0);
                     var mag = this.magnitude;
-                    var point = new Point(this.x / this.magnitude, this.y / this.magnitude);
+                    var point = new Point(this.x / mag, this.y / mag);
                     if (isNaN(point.x) || isNaN(point.y)) {
                         throw "NAN!";
                     }
@@ -6439,13 +6451,15 @@ System.register("collider", ["point", "shape"], function (exports_29, context_29
         ],
         execute: function () {
             Collider = (function () {
-                function Collider(points, isTrigger, actor, isClimbable) {
+                function Collider(points, isTrigger, actor, isClimbable, isStatic) {
                     this.wallOnly = false;
                     this.isClimbable = true;
+                    this.isStatic = false;
                     this._shape = new shape_4.Shape(points);
                     this.isTrigger = isTrigger;
                     this.actor = actor;
                     this.isClimbable = isClimbable;
+                    this.isStatic = isStatic;
                 }
                 Collider.prototype.getWorldCollider = function (actor) {
                 };
@@ -6522,7 +6536,7 @@ System.register("frame", [], function (exports_30, context_30) {
 System.register("sprite", ["collider", "frame", "point", "rect", "game", "helpers"], function (exports_31, context_31) {
     "use strict";
     var __moduleName = context_31 && context_31.id;
-    var collider_6, frame_1, point_12, rect_6, game_14, Helpers, Sprite;
+    var collider_6, frame_1, point_12, rect_6, game_15, Helpers, Sprite;
     return {
         setters: [
             function (collider_6_1) {
@@ -6537,8 +6551,8 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
             function (rect_6_1) {
                 rect_6 = rect_6_1;
             },
-            function (game_14_1) {
-                game_14 = game_14_1;
+            function (game_15_1) {
+                game_15 = game_15_1;
             },
             function (Helpers_12) {
                 Helpers = Helpers_12;
@@ -6557,7 +6571,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     }
                     this.frames = [];
                     this.hitboxes = [];
-                    game_14.game.getSpritesheet(spriteJson.spritesheetPath);
+                    game_15.game.getSpritesheet(spriteJson.spritesheetPath);
                     for (var _i = 0, _a = spriteJson.hitboxes; _i < _a.length; _i++) {
                         var hitboxJson = _a[_i];
                         var hitbox = new collider_6.Collider([
@@ -6565,7 +6579,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                             new point_12.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
                             new point_12.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
                             new point_12.Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
-                        ], hitboxJson.isTrigger ? true : false, undefined, false);
+                        ], hitboxJson.isTrigger ? true : false, undefined, false, false);
                         this.hitboxes.push(hitbox);
                     }
                     for (var _b = 0, _c = spriteJson.frames; _b < _c.length; _b++) {
@@ -6582,7 +6596,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                 }
                 Object.defineProperty(Sprite.prototype, "spritesheet", {
                     get: function () {
-                        return game_14.game.getSpritesheet(this.spritesheetPath);
+                        return game_15.game.getSpritesheet(this.spritesheetPath);
                     },
                     enumerable: true,
                     configurable: true
@@ -6665,14 +6679,14 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
 System.register("actor", ["point", "game", "helpers"], function (exports_32, context_32) {
     "use strict";
     var __moduleName = context_32 && context_32.id;
-    var point_13, game_15, Helpers, Actor, Anim;
+    var point_13, game_16, Helpers, Actor, Anim;
     return {
         setters: [
             function (point_13_1) {
                 point_13 = point_13_1;
             },
-            function (game_15_1) {
-                game_15 = game_15_1;
+            function (game_16_1) {
+                game_16 = game_16_1;
             },
             function (Helpers_13) {
                 Helpers = Helpers_13;
@@ -6693,7 +6707,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     this.yDir = 1;
                     this.grounded = false;
                     if (!dontAddToLevel) {
-                        game_15.game.level.addGameObject(this);
+                        game_16.game.level.addGameObject(this);
                     }
                     this.collidedInFrame = new Set();
                     this.renderEffect = "";
@@ -6737,11 +6751,11 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     configurable: true
                 });
                 Actor.prototype.update = function () {
-                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_15.game.deltaTime);
+                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_16.game.deltaTime);
                     if (this.renderEffectTime <= 0) {
                         this.renderEffect = "";
                     }
-                    this.frameTime += game_15.game.deltaTime * this.frameSpeed;
+                    this.frameTime += game_16.game.deltaTime * this.frameSpeed;
                     if (this.frameTime >= this.currentFrame.duration) {
                         var onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
                         if (!onceEnd) {
@@ -6752,7 +6766,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         }
                     }
                     if (this.useGravity && !this.grounded) {
-                        this.vel.y += game_15.game.level.gravity * game_15.game.deltaTime;
+                        this.vel.y += game_16.game.level.gravity * game_16.game.deltaTime;
                         if (this.vel.y > 1000) {
                             this.vel.y = 1000;
                         }
@@ -6764,14 +6778,14 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     if (this.collider && !this.collider.isTrigger) {
                         var yDist = 1;
                         if (this.grounded) {
-                            yDist = 300 * game_15.game.deltaTime;
+                            yDist = 300 * game_16.game.deltaTime;
                         }
-                        var collideData = game_15.game.level.checkCollisionActor(this, 0, yDist);
+                        var collideData = game_16.game.level.checkCollisionActor(this, 0, yDist);
                         if (collideData && this.vel.y >= 0) {
                             this.grounded = true;
                             this.vel.y = 0;
                             var yVel = new point_13.Point(0, yDist);
-                            var mtv = game_15.game.level.getMtvDir(this, 0, yDist, yVel, false);
+                            var mtv = game_16.game.level.getMtvDir(this, 0, yDist, yVel, false);
                             if (mtv) {
                                 this.pos.inc(yVel);
                                 this.pos.inc(mtv.unitInc(0.01));
@@ -6781,7 +6795,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                             this.grounded = false;
                         }
                     }
-                    var triggerList = game_15.game.level.getTriggerList(this, 0, 0);
+                    var triggerList = game_16.game.level.getTriggerList(this, 0, 0);
                     for (var _i = 0, triggerList_1 = triggerList; _i < triggerList_1.length; _i++) {
                         var trigger = triggerList_1[_i];
                         this.registerCollision(trigger);
@@ -6792,7 +6806,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                 };
                 Actor.prototype.sweepTest = function (offset) {
                     var inc = offset.clone();
-                    var collideData = game_15.game.level.checkCollisionActor(this, inc.x, inc.y);
+                    var collideData = game_16.game.level.checkCollisionActor(this, inc.x, inc.y);
                     if (collideData) {
                         return true;
                     }
@@ -6802,13 +6816,13 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     if (useDeltaTime === void 0) { useDeltaTime = true; }
                     if (pushIncline === void 0) { pushIncline = true; }
                     if (snapInclineGravity === void 0) { snapInclineGravity = true; }
-                    var times = useDeltaTime ? game_15.game.deltaTime : 1;
+                    var times = useDeltaTime ? game_16.game.deltaTime : 1;
                     var collideData;
                     if (!this.collider) {
                         this.pos.inc(amount.times(times));
                     }
                     else {
-                        var currentCollideDatas = game_15.game.level.getAllCollideDatas(this, 0, 0, undefined);
+                        var currentCollideDatas = game_16.game.level.getAllCollideDatas(this, 0, 0, undefined);
                         for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
                             var collideData_1 = currentCollideDatas_1[_i];
                             var freeVec = this.collider.shape.getMinTransVector(collideData_1.collider.shape);
@@ -6816,7 +6830,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         }
                         var inc = amount.clone();
                         var incAmount = inc.multiply(times);
-                        var mtv = game_15.game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
+                        var mtv = game_16.game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
                         this.pos.inc(incAmount);
                         if (mtv) {
                             this.pos.inc(mtv.unitInc(0.01));
@@ -6828,18 +6842,18 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                 };
                 Actor.prototype.render = function (x, y) {
                     if (this.angle === undefined) {
-                        this.sprite.draw(game_15.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                        this.sprite.draw(game_16.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     }
                     else {
                         this.renderFromAngle(x, y);
                     }
-                    if (game_15.game.options.showHitboxes && this.collider) {
-                        Helpers.drawPolygon(game_15.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
-                        Helpers.drawCircle(game_15.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
+                    if (game_16.game.options.showHitboxes && this.collider) {
+                        Helpers.drawPolygon(game_16.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                        Helpers.drawCircle(game_16.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
                     }
                 };
                 Actor.prototype.renderFromAngle = function (x, y) {
-                    this.sprite.draw(game_15.game.ctx, 0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(game_16.game.ctx, 0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
                 };
                 Actor.prototype.registerCollision = function (other) {
                     if (!this.collidedInFrame.has(other.collider)) {
@@ -6873,7 +6887,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     return this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration;
                 };
                 Actor.prototype.destroySelf = function (sprite, fadeSound) {
-                    game_15.game.level.gameObjects.splice(game_15.game.level.gameObjects.indexOf(this), 1);
+                    game_16.game.level.gameObjects.splice(game_16.game.level.gameObjects.indexOf(this), 1);
                     if (sprite) {
                         var anim = new Anim(this.pos, sprite, this.xDir);
                     }
@@ -6882,8 +6896,8 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     }
                 };
                 Actor.prototype.getSoundVolume = function () {
-                    var dist = new point_13.Point(game_15.game.level.camCenterX, game_15.game.level.camCenterY).distanceTo(this.pos);
-                    var volume = 1 - (dist / (game_15.game.level.screenWidth));
+                    var dist = new point_13.Point(game_16.game.level.camCenterX, game_16.game.level.camCenterY).distanceTo(this.pos);
+                    var volume = 1 - (dist / (game_16.game.level.screenWidth));
                     volume = Helpers.clampMin0(volume);
                     return volume;
                 };
@@ -6892,7 +6906,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     if (overrideVolume !== undefined)
                         volume = overrideVolume;
                     volume = Helpers.clampMin0(volume);
-                    game_15.game.playSound(soundName, volume);
+                    game_16.game.playSound(soundName, volume);
                 };
                 Actor.prototype.withinX = function (other, amount) {
                     return Math.abs(this.pos.x - other.pos.x) <= amount;

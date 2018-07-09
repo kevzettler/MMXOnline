@@ -110,6 +110,7 @@ class Game {
   uiCtx: CanvasRenderingContext2D;
 
   paused: boolean = false;
+  collisionCalls: number = 0;
 
   constructor() {
     this.canvas = <HTMLCanvasElement>$("#canvas")[0];
@@ -657,8 +658,10 @@ class Game {
       this.timePassed = 0;
       if(!this.paused) {
         this.level.update();
-        this.level.render();
+        console.log(this.collisionCalls);
+        this.collisionCalls = 0;
       }
+      this.level.render();
     }
     
     if(this.restartLevelName !== "") {

@@ -215,7 +215,9 @@ export class Player {
     let key = this.inputMapping[keycode];
     if(!this.input[key]) this.inputPressed[key] = true;
     this.input[key] = true;
-    cheat(key, keycode);
+    if(this === game.level.mainPlayer) {
+      cheat(key, keycode);
+    }
   }
 
   onKeyUp(keycode: number) {

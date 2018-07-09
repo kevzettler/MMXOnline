@@ -2,6 +2,9 @@
 Features
 ===============
 
+-Profile measuring system
+  -Measure number of collision checks per frame
+  -
 -Profiling/optimization
 
 -A "prod" system/switch

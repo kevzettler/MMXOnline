@@ -24,7 +24,7 @@ export class Point {
     this.y = Helpers.roundEpsilon(this.y);
     if(this.x === 0 && this.y === 0) return new Point(0, 0);
     let mag = this.magnitude;
-    let point = new Point(this.x / this.magnitude, this.y / this.magnitude);
+    let point = new Point(this.x / mag, this.y / mag);
     if(isNaN(point.x) || isNaN(point.y)) 
     {
       throw "NAN!";
