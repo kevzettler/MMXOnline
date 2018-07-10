@@ -46,9 +46,7 @@ export class Character extends Actor {
   weaponHealTime: number = 0;
 
   constructor(player: Player, x: number, y: number) {
-    super(undefined);
-    this.pos.x = x;
-    this.pos.y = y;
+    super(undefined, new Point(x, y), true);
     this.player = player;
     this.isDashing = false;
 
@@ -68,6 +66,8 @@ export class Character extends Actor {
     this.chargeSound = game.sounds["charge_start"];
     this.chargeLoopSound = game.sounds["charge_loop"];
     this.chargeLoopSound.loop(true);
+
+    game.level.addGameObject(this);
   }
 
   getStandingCollider() {
@@ -87,7 +87,7 @@ export class Character extends Actor {
 
   update() {
 
-    if(game.level.killY !== undefined && this.pos.y > game.level.killY) {
+    if(game.level.levelData.killY !== undefined && this.pos.y > game.level.levelData.killY) {
       this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
     }
     else if(game.level.isInKillZone(this)) {

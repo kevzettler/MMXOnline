@@ -31,8 +31,8 @@ export class Actor {
   palette: Palette;
   renderEffectTime: number = 0;
 
-  constructor(sprite: Sprite, dontAddToLevel?: boolean) {
-    this.pos = new Point(0, 0);
+  constructor(sprite: Sprite, pos: Point, dontAddToLevel?: boolean) {
+    this.pos = pos;
     this.vel = new Point(0, 0);
     this.useGravity = true;
     this.frameIndex = 0;
@@ -42,12 +42,13 @@ export class Actor {
     this.xDir = 1;
     this.yDir = 1;
     this.grounded = false;
-    if(!dontAddToLevel) {
-      game.level.addGameObject(this);
-    }
     this.collidedInFrame = new Set<Collider>();
     this.renderEffect = "";
     this.changeSprite(sprite, true);
+
+    if(!dontAddToLevel) {
+      game.level.addGameObject(this);
+    }
   }
 
   changeSprite(sprite: Sprite, resetFrame: boolean) {
@@ -129,8 +130,8 @@ export class Actor {
         let yVel = new Point(0, yDist);
         let mtv = game.level.getMtvDir(this, 0, yDist, yVel, false);
         if(mtv) {
-          this.pos.inc(yVel);
-          this.pos.inc(mtv.unitInc(0.01));
+          this.incPos(yVel);
+          this.incPos(mtv.unitInc(0.01));
         }
       }
       else {
@@ -146,6 +147,12 @@ export class Actor {
 
   }
 
+  incPos(amount: Point) {
+    game.level.removeFromGrid(this);
+    this.pos.inc(amount);
+    game.level.addGameObjectToGrid(this);
+  }
+
   preUpdate() {
     this.collidedInFrame.clear();
   }
@@ -159,11 +166,9 @@ export class Actor {
     return false;
   }
 
-
   move(amount: Point, useDeltaTime: boolean = true, pushIncline: boolean = true, snapInclineGravity: boolean = true) {
 
     let times = useDeltaTime ? game.deltaTime : 1;
-    let collideData: CollideData;
 
     //No collider: just move
     if(!this.collider) {
@@ -177,19 +182,19 @@ export class Actor {
       for(let collideData of currentCollideDatas) {
         //console.log("ALREADY COLLIDING")
         let freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
-        this.pos.inc(freeVec.unitInc(0.01));
+        this.incPos(freeVec.unitInc(0.01));
       }
 
       let inc: Point = amount.clone();
       let incAmount = inc.multiply(times);
 
       let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
-      this.pos.inc(incAmount);
+      this.incPos(incAmount);
       if(mtv) {
         //if(mtv.magnitude > 50) {
         //  mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
         //}
-        this.pos.inc(mtv.unitInc(0.01));
+        this.incPos(mtv.unitInc(0.01));
       }
 
     }
@@ -253,7 +258,7 @@ export class Actor {
 
   //Optionally take in a sprite to draw when destroyed
   destroySelf(sprite?: Sprite, fadeSound?: string) {
-    game.level.gameObjects.splice(game.level.gameObjects.indexOf(this), 1);
+    game.level.removeGameObject(this);
     if(sprite) {
       let anim = new Anim(this.pos, sprite, this.xDir);
     }
@@ -306,9 +311,7 @@ export class Actor {
 export class Anim extends Actor {
 
   constructor(pos: Point, sprite: Sprite, xDir: number) {
-    super(sprite);
-    this.pos.x = pos.x;
-    this.pos.y = pos.y;
+    super(sprite, new Point(pos.x, pos.y), undefined);
     this.useGravity = false;
     this.xDir = xDir;
     

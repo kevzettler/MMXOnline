@@ -26,11 +26,10 @@ export class Projectile extends Actor {
   weapon: Weapon;
 
   constructor(weapon: Weapon, pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
-    super(sprite);
+    super(sprite, pos);
     this.weapon = weapon;
     this.vel = vel;
     this.speed = this.vel.magnitude;
-    this.pos = pos;
     this.useGravity = false;
     this.flinch = false;
     this.damager = new Damager(player, damage);
@@ -285,12 +284,9 @@ export class StingProj extends Projectile {
   type: number = 0; //0 = initial proj, 1 = horiz, 2 = up, 3 = down
   origVel: Point;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number) {
-    super(weapon, pos, vel, 2, player, undefined);
+    super(weapon, pos, vel, 2, player, game.sprites["sting_start"]);
     this.origVel = vel.clone();
-    if(type === 0) {
-      this.sprite = game.sprites["sting_start"];
-    }
-    else if(type === 1) {
+    if(type === 1) {
       this.sprite = game.sprites["sting_flat"];
     }
     else if(type === 2 || type === 3) {

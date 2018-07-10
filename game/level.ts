@@ -19,9 +19,64 @@ import { GameMode, FFADeathMatch } from "./gameMode";
 import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, SmallHealthPickup } from "./pickup";
 import { KillZone } from "./killZone";
 
+export class LevelData {
+  levelJson: any;
+  name: string;
+  fixedCam: boolean;
+  musicLoopStart: number;
+  musicLoopEnd: number;
+  parallax: string = "";
+  foreground: string = "";
+  levelMusic: string = "";
+  killY: number;
+  maxPlayers: number = 0;
+
+  constructor(levelJson: any) {
+    this.levelJson = levelJson;
+    this.name = levelJson.name;
+    
+    if(this.name === "sm_bossroom") {
+      this.fixedCam = true;
+      this.levelMusic = "BossBattle.mp3";
+      this.musicLoopStart = 1500;
+      this.musicLoopEnd = 29664;
+      this.maxPlayers = 2;
+    }
+    else if(this.name === "powerplant") {
+      this.fixedCam = false;
+      this.levelMusic = "PowerPlant.mp3";
+      this.parallax = "powerplant_parallex.png";
+      this.musicLoopStart = 51040;
+      this.musicLoopEnd = 101116;
+      this.maxPlayers = 8;
+    }
+    else if(this.name === "highway") {
+      this.fixedCam = false;
+      this.levelMusic = "highway.mp3";
+      this.parallax = "highway_parallax.png";
+      this.musicLoopStart = 44440;
+      this.musicLoopEnd = 87463;
+      this.killY = 300;
+      this.foreground = "highway_foreground.png";
+      this.maxPlayers = 8;
+    }
+    else if(this.name === "gallery") {
+      this.fixedCam = false;
+      this.levelMusic = "gallery.mp3";
+      this.parallax = "gallery_parallax.png";
+      this.musicLoopStart = 0;
+      this.musicLoopEnd = 110687;
+      this.killY = 1034;
+      this.foreground = "gallery_foreground.png";
+      this.maxPlayers = 10;
+    }
+
+  }
+
+}
+
 export class Level {
 
-  name: string;
   gameObjects: GameObject[];
   effects: Effect[] = [];
   background: HTMLImageElement;
@@ -30,15 +85,11 @@ export class Level {
   gravity: number;
   camX: number;
   camY: number;
-  fixedCam: boolean;
   zoomScale: number;
   frameCount: number;
   twoFrameCycle: number;
-  levelMusic: string;
   spawnPoints: SpawnPoint[] = [];
   noScrolls: NoScroll[] = [];
-  musicLoopStart: number;
-  musicLoopEnd: number;
   debugString: string = "";
   debugString2: string = "";
   lerpCamTime: number = 0;
@@ -46,22 +97,32 @@ export class Level {
   gameMode: GameMode;
   pickupSpawners: PickupSpawner[] = [];
   killZones: KillZone[] = [];
-  killY: number;
-  maxPlayers: number = 0;
+  grid: Set<GameObject>[][] = [];
+  cellWidth: number;
+  levelData: LevelData;
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
   get mainPlayer() { return this.gameMode.mainPlayer; }
 
-  constructor(levelJson: any) {
+  constructor(levelData: LevelData) {
+    this.levelData = levelData;
     this.zoomScale = 3;
     this.gravity = 550;
-    this.name = levelJson.name;
-    this.background = game.getBackground(levelJson.backgroundPath);
     this.frameCount = 0;
+    this.background = game.getBackground(levelData.levelJson.backgroundPath);
+    if(levelData.parallax) {
+      this.parallax = game.getBackground("assets/backgrounds/" + levelData.parallax);
+    }
+    if(levelData.foreground) {
+      this.foreground = game.getBackground("assets/backgrounds/" + levelData.foreground);
+    }
+  }
 
+  startLevel(gameMode: GameMode) {
     this.gameObjects = [];
-    for(var instance of levelJson.instances) {
+    this.setupGrid(50);
+    for(var instance of this.levelData.levelJson.instances) {
       if(instance.objectName === "Collision Shape") {
         let points: Point[] = [];
         for(var point of instance.points) {
@@ -69,14 +130,14 @@ export class Level {
         }
         let wall = new Wall(instance.name, points);
         wall.collider.isClimbable = (instance.properties && instance.properties.climbable === "false") ? false : true;
-        this.gameObjects.push(wall);
+        this.addGameObject(wall);
       }
       else if(instance.objectName === "Ladder") {
         let points: Point[] = [];
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        this.gameObjects.push(new Ladder(instance.name, points));
+        this.addGameObject(new Ladder(instance.name, points));
       }
       else if(instance.objectName === "No Scroll") {
         let points: Point[] = [];
@@ -124,10 +185,9 @@ export class Level {
         this.pickupSpawners.push(new PickupSpawner(new Point(instance.pos.x, instance.pos.y), SmallAmmoPickup));
       }
       else {
-        let actor: Actor = new Actor(game.sprites[instance.spriteName], true);
-        actor.pos = new Point(instance.pos.x, instance.pos.y);
+        let actor: Actor = new Actor(game.sprites[instance.spriteName], new Point(instance.pos.x, instance.pos.y));
         actor.name = instance.name;
-        this.gameObjects.push(actor);
+        this.addGameObject(actor);
       }
     }
 
@@ -138,66 +198,17 @@ export class Level {
 
     this.twoFrameCycle = 0;
 
-    let parallax = "";
-    let foreground = "";
-
-    if(this.name === "sm_bossroom") {
-      this.fixedCam = true;
-      this.levelMusic = "BossBattle.mp3";
-      this.musicLoopStart = 1500;
-      this.musicLoopEnd = 29664;
-      this.maxPlayers = 2;
-    }
-    else if(this.name === "powerplant") {
-      this.fixedCam = false;
-      this.levelMusic = "PowerPlant.mp3";
-      parallax = "powerplant_parallex.png";
-      this.musicLoopStart = 51040;
-      this.musicLoopEnd = 101116;
-      this.maxPlayers = 8;
-    }
-    else if(this.name === "highway") {
-      this.fixedCam = false;
-      this.levelMusic = "highway.mp3";
-      parallax = "highway_parallax.png";
-      this.musicLoopStart = 44440;
-      this.musicLoopEnd = 87463;
-      this.killY = 300;
-      foreground = "highway_foreground.png";
-      this.maxPlayers = 8;
-    }
-    else if(this.name === "gallery") {
-      this.fixedCam = false;
-      this.levelMusic = "gallery.mp3";
-      parallax = "gallery_parallax.png";
-      this.musicLoopStart = 0;
-      this.musicLoopEnd = 110687;
-      this.killY = 1034;
-      foreground = "gallery_foreground.png";
-      this.maxPlayers = 10;
-    }
-
-    if(parallax) {
-      this.parallax = game.getBackground("assets/backgrounds/" + parallax);
-    }
-    if(foreground) {
-      this.foreground = game.getBackground("assets/backgrounds/" + foreground);
-    }
-  }
-
-  startLevel(gameMode: GameMode) {
-    
     this.gameMode = gameMode;
 
-    if(this.levelMusic) {
+    if(this.levelData.levelMusic) {
       if(game.music) {
         game.music.stop();
       }
       let music = new Howl({
-        src: ["assets/music/" + this.levelMusic],
+        src: ["assets/music/" + this.levelData.levelMusic],
         sprite: {
-          musicStart: [0, this.musicLoopStart],
-          musicLoop: [this.musicLoopStart, this.musicLoopEnd - this.musicLoopStart]
+          musicStart: [0, this.levelData.musicLoopStart],
+          musicLoop: [this.levelData.musicLoopStart, this.levelData.musicLoopEnd - this.levelData.musicLoopStart]
         },
         onload: () => {
         }
@@ -299,7 +310,7 @@ export class Level {
 
   render() {
     
-    if(this.fixedCam) {
+    if(this.levelData.fixedCam) {
       game.canvas.width = Math.round(this.background.width * this.zoomScale);
       game.canvas.height = Math.round(this.background.height * this.zoomScale);
     }
@@ -352,7 +363,7 @@ export class Level {
   drawHUD() {
     let player1 = this.localPlayers[0];
     this.drawPlayerHUD(player1, 1);
-    if(this.localPlayers.length > 1 && this.fixedCam) {      
+    if(this.localPlayers.length > 1 && this.levelData.fixedCam) {      
       let player2 = this.localPlayers[1];
       this.drawPlayerHUD(player2, 2);
     }
@@ -508,8 +519,76 @@ export class Level {
 
   }
   
+  setupGrid(cellWidth: number) {
+    this.cellWidth = cellWidth;
+    let width = this.width;
+    let height = this.height;
+    let hCellCount = Math.ceil(width / cellWidth);
+    let vCellCount = Math.ceil(height / cellWidth);
+    console.log("Creating grid with width " + hCellCount + " and height " + vCellCount);
+    for(let i = 0; i < vCellCount; i++) {
+      let curRow: Set<GameObject>[] = [];
+      this.grid.push(curRow);
+      for(let j = 0; j < hCellCount; j++) {
+        curRow.push(new Set<GameObject>());
+      }
+    }
+  }
+  
+  //Optimize this function, it will be called a lot
+  getGridCells(shape: Shape, offsetX: number, offsetY: number): Cell[] {
+
+    let minI = Math.floor((shape.minY / this.height) * this.grid.length);
+    let minJ = Math.floor((shape.minX / this.width) * this.grid[0].length);
+    let maxI = Math.floor((shape.maxY / this.height) * this.grid.length);
+    let maxJ = Math.floor((shape.maxX / this.width) * this.grid[0].length);
+
+    let cells = [];
+    for(let i = minI; i <= maxI; i++) {
+      for(let j = minJ; j <= maxJ; j++) {
+        if(i < 0 || j < 0 || i >= this.grid.length || j >= this.grid[0].length) continue;
+        cells.push(new Cell(i, j, this.grid[i][j]));
+      }
+    }
+    return cells;
+  }
+
+  getGameObjectsInSameCell(shape: Shape, offsetX: number, offsetY: number) {
+    let cells = this.getGridCells(shape, offsetX, offsetY);
+    let gameObjects : Set<GameObject> = new Set();
+    for(let cell of cells) {
+      if(!cell.gameobjects) continue;
+      for (var it = cell.gameobjects.values(), cell2 = undefined; cell2 = it.next().value; ) {
+        gameObjects.add(cell2);
+      }
+    }
+    return Array.from(gameObjects);
+  }
+
   addGameObject(go: GameObject) {
+    this.addGameObjectToGrid(go);
     this.gameObjects.push(go);
+  }
+
+  removeGameObject(go: GameObject) {
+    this.removeFromGrid(go);
+    this.gameObjects.splice(this.gameObjects.indexOf(go), 1);
+  }
+
+  removeFromGrid(go: GameObject) {
+    if(!go.collider) return;
+    let cells = this.getGridCells(go.collider.shape, 0, 0);
+    for(let cell of cells) {
+      cell.gameobjects.delete(go);
+    }
+  }
+
+  addGameObjectToGrid(go: GameObject) {
+    if(!go.collider) return;
+    let cells = this.getGridCells(go.collider.shape, 0, 0);
+    for(let cell of cells) {
+      this.grid[cell.i][cell.j].add(go);
+    }
   }
 
   hasGameObject(go: GameObject) {
@@ -558,7 +637,8 @@ export class Level {
   getAllCollideDatas(actor: Actor, offsetX: number, offsetY: number, vel: Point): CollideData[] {
     let actorShape = actor.collider.shape.clone(offsetX, offsetY);
     let collideDatas = [];
-    for(let go of this.gameObjects) {
+    let gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
+    for(let go of gameObjects) {
       if(!go.collider) continue;
       if(go === actor) continue;
       if(this.shouldTrigger(actor, go, new Point(offsetX, offsetY))) continue;
@@ -603,7 +683,8 @@ export class Level {
   }
 
   checkCollisionShape(shape: Shape, exclusions: GameObject[]) : CollideData {
-    for(let go of this.gameObjects) {
+    let gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
+    for(let go of gameObjects) {
       if(!go.collider) continue;
       if(exclusions.indexOf(go) !== -1) continue;
       let hitData = shape.intersectsShape(go.collider.shape);
@@ -618,7 +699,8 @@ export class Level {
   checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
     if(!actor.collider || actor.collider.isTrigger) return undefined;
     let actorShape = actor.collider.shape.clone(offsetX, offsetY);
-    for(let go of this.gameObjects) {
+    let gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
+    for(let go of gameObjects) {
       if(go === actor) continue;
       if(!go.collider) continue;
       let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
@@ -646,13 +728,14 @@ export class Level {
   getTriggerList(actor: Actor, offsetX: number, offsetY: number, vel?: Point, classType?: any): CollideData[] {
     let triggers: CollideData[] = [];
     if(!actor.collider) return triggers;
-    for(let go of this.gameObjects) {
+    let actorShape = actor.collider.shape.clone(offsetX, offsetY);
+    let gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
+    for(let go of gameObjects) {
       if(go === actor) continue;
       if(!go.collider) continue;
       if(classType && !(go instanceof classType)) {
         continue;
       }
-      let actorShape = actor.collider.shape.clone(offsetX, offsetY);
       let isTrigger = this.shouldTrigger(actor, go, new Point(offsetX, offsetY));
       if(!isTrigger) continue;
       let hitData = actorShape.intersectsShape(go.collider.shape, vel);
@@ -677,7 +760,9 @@ export class Level {
 
   raycastAll(pos1: Point, pos2: Point, classNames: string[]): CollideData[] {
     let hits: CollideData[] = [];
-    for(let go of this.gameObjects) {
+    let shape = new Shape([pos1, pos2]);
+    let gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
+    for(let go of gameObjects) {
       if(!go.collider) continue;
       if(!this.isOfClass(go, classNames)) continue;
       let collideDatas = go.collider.shape.getLineIntersectCollisions(new Line(pos1, pos2));
@@ -694,6 +779,7 @@ export class Level {
     return hits;
   }
 
+  /*
   raycast(pos1: Point, pos2: Point, classNames: string[]): CollideData {
     let hits = this.raycastAll(pos1, pos2, classNames);
     //@ts-ignore
@@ -724,6 +810,7 @@ export class Level {
       return collideData.hitData.hitPoint.distanceTo(origin);
     });
   }
+  */
 
   getClosestTarget(pos: Point, alliance: number) {
     //@ts-ignore
@@ -773,7 +860,7 @@ export class Level {
     let unoccupied = _.filter(this.spawnPoints, (spawnPoint) => {
       return !spawnPoint.occupied();
     });
-    if(game.level.fixedCam) {
+    if(game.level.levelData.fixedCam) {
       //@ts-ignore
       return _.find(unoccupied, (spawnPoint) => {
         return spawnPoint.num === player.alliance;
@@ -783,4 +870,15 @@ export class Level {
     return _.sample(unoccupied);
   }
 
+}
+
+export class Cell {
+  i: number = 0;
+  j: number = 0;
+  gameobjects: Set<GameObject>;
+  constructor(i: number, j: number, gameobjects: Set<GameObject>) {
+    this.i = i;
+    this.j = j;
+    this.gameobjects = gameobjects;
+  }
 }

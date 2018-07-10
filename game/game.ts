@@ -1,5 +1,5 @@
 import { Sprite } from "./sprite";
-import { Level } from "./level";
+import { Level, LevelData } from "./level";
 import { spriteJsons } from "./sprites";
 import { levelJsons } from "./levels";
 import { Player } from "./player";
@@ -59,10 +59,10 @@ export class UIData {
 
   getSelectedMapMaxPlayers() {
     if(this.isBrawl) {
-      return game.levels[this.selectedBrawlMap].maxPlayers;
+      return game.levelDatas[this.selectedBrawlMap].maxPlayers;
     }
     else {
-      return game.levels[this.selectedArenaMap].maxPlayers;
+      return game.levelDatas[this.selectedArenaMap].maxPlayers;
     }
   }
 }
@@ -70,7 +70,7 @@ export class UIData {
 class Game {
 
   sprites: { [name: string]: Sprite; } = {};
-  levels: { [name: string]: Level } = {};
+  levelDatas: { [name: string]: LevelData } = {};
   level: Level;
 
   spritesheets: { [path: string]: HTMLImageElement } = {};
@@ -93,7 +93,8 @@ class Game {
   previousTime: number = 0;
   deltaTime: number = 0;
   time: number = 0;
-  interval: number = 0;
+  appLoadInterval: number = 0;
+  levelLoadInterval: number = 0;
 
   requestId: number = 0;
 
@@ -133,9 +134,9 @@ class Game {
     
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
-    this.uiData.selectedGameMode = "team deathmatch";
-    this.uiData.maxPlayers = 0;
-    this.uiData.numBots = 0;
+    this.uiData.selectedGameMode = "deathmatch";
+    this.uiData.maxPlayers = 10;
+    this.uiData.numBots = 9;
     this.uiData.playTo = 20;
     $("#options").show();
     $("#dev-options").show();
@@ -213,7 +214,7 @@ class Game {
           }
         },
         onArenaMapChange: function() {
-          this.uiData.numBots = game.levels[this.uiData.selectedArenaMap].maxPlayers - 1;
+          this.uiData.numBots = game.levelDatas[this.uiData.selectedArenaMap].maxPlayers - 1;
         },
         mapImage: function(selectedMap: any) {
           if(selectedMap === "sm_bossroom") return "sm_bossroom.png";
@@ -432,16 +433,14 @@ class Game {
     });
 
     if(this.uiData.menu !== Menu.BadBrowserMenu) {
-      this.interval = window.setInterval(() => this.onLoad(), 1);
+      this.appLoadInterval = window.setInterval(() => this.onLoad(), 1);
     }
   }
 
   onLoad() {
     if(this.isLoaded()) {
       //console.log("LOADED");
-      window.clearInterval(this.interval);
-      
-      //this.loadLevel("powerplant");
+      window.clearInterval(this.appLoadInterval);
       
       this.startMenuMusic();
 
@@ -520,33 +519,40 @@ class Game {
 
   loadLevel(name: string) {
 
-    let prototypeLevel = this.levels[name];
+    let levelData = this.levelDatas[name];
 
-    if(!prototypeLevel) {
+    if(!levelData) {
       throw "Bad level";
     }
 
-    ///@ts-ignore
-    this.level = _.cloneDeep(prototypeLevel);
-    this.level.background = prototypeLevel.background;
+    this.level = new Level(levelData);
 
-    $(this.canvas).show();
-    $(this.uiCanvas).show();
-    
-    let gameMode : GameMode;
+    this.levelLoadInterval = window.setInterval(() => this.startLevel(), 1);
+  }
 
-    if(this.uiData.isBrawl) {
-      gameMode = new Brawl(this.level, this.uiData);
-    }
-    else if(this.uiData.selectedGameMode === "deathmatch") {
-      gameMode = new FFADeathMatch(this.level, this.uiData);
-    }
-    else if(this.uiData.selectedGameMode === "team deathmatch") {
-      gameMode = new TeamDeathMatch(this.level, this.uiData);
-    }
-    this.level.startLevel(gameMode);
+  startLevel() {
+    if((!this.level.background || this.level.background.complete) && 
+       (!this.level.parallax || this.level.parallax.complete) && 
+       (!this.level.foreground || this.level.foreground.complete)) {
+      window.clearInterval(this.levelLoadInterval);
+      
+      $(this.canvas).show();
+      $(this.uiCanvas).show();
+      
+      let gameMode : GameMode;
 
-    this.gameLoop(0);
+      if(this.uiData.isBrawl) {
+        gameMode = new Brawl(this.level, this.uiData);
+      }
+      else if(this.uiData.selectedGameMode === "deathmatch") {
+        gameMode = new FFADeathMatch(this.level, this.uiData);
+      }
+      else if(this.uiData.selectedGameMode === "team deathmatch") {
+        gameMode = new TeamDeathMatch(this.level, this.uiData);
+      }
+      this.level.startLevel(gameMode);
+      this.gameLoop(0);
+    }
   }
 
   getSpritesheet(path: string) {
@@ -574,8 +580,8 @@ class Game {
 
   loadLevels() {
     for(var levelJson of levelJsons) {
-      let level: Level = new Level(levelJson);
-      this.levels[level.name] = level;
+      let levelData = new LevelData(levelJson);
+      this.levelDatas[levelJson.name] = levelData;
     }
   }
 
@@ -597,11 +603,6 @@ class Game {
         return false;
       }
     }
-    for(let name in this.levels) {
-      if(!this.levels[name].background.complete) {
-        return false;
-      }
-    }
     for(let name in this.palettes) {
       if(!this.palettes[name].imageEl.complete) {
         return false;
@@ -613,6 +614,10 @@ class Game {
     }
     if(!this.soundSheetLoaded) return false;
     return true;
+  }
+
+  isLevelLoaded(level: Level) {
+    return level.background.complete && level.parallax.complete && level.foreground.complete;
   }
 
   timePassed: number = 0;
@@ -658,7 +663,7 @@ class Game {
       this.timePassed = 0;
       if(!this.paused) {
         this.level.update();
-        console.log(this.collisionCalls);
+        //console.log(this.collisionCalls);
         this.collisionCalls = 0;
       }
       this.level.render();

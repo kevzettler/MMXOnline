@@ -126,6 +126,10 @@ export class Shape {
 
   points: Point[];
   normals: Point[];
+  minX: number = Infinity;
+  minY: number = Infinity;
+  maxX: number = -Infinity;
+  maxY: number = -Infinity;
 
   constructor(points: Point[]) {
     this.points = points;
@@ -135,6 +139,11 @@ export class Shape {
       let p2 = (i == this.points.length - 1 ? this.points[0] : this.points[i + 1]);
       let v = new Point(p2.x - p1.x, p2.y - p1.y);
       normals.push(v.leftNormal().normalize());
+
+      if(p1.x < this.minX) this.minX = p1.x;
+      if(p1.y < this.minY) this.minY = p1.y;
+      if(p1.x > this.maxX) this.maxX = p1.x;
+      if(p1.y > this.maxY) this.maxY = p1.y;
     }
     this.normals = normals;
   }

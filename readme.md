@@ -2,10 +2,15 @@
 Features
 ===============
 
--Profile measuring system
-  -Measure number of collision checks per frame
-  -
--Profiling/optimization
+-Occasional stack overflow error with lodash
+-Characters sometimes mtv out of each other, test collision
+-Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
+-getHex is called many times and should be optimized
+-Optimize drawing ideas:
+  -Only draw things on-screen
+  -Only draw things that actually moved
+  -For very large backgrounds, only draw part of it
+  -For static backgrounds draw a canvas of it not the whole thing
 
 -A "prod" system/switch
   -Hook up google analytics if it's on
@@ -13,6 +18,9 @@ Features
 
 -Remove special weapon charge
 -Remove "switch" button
+
+Collision Engine rules:
+  -An actor must never have its pos modified manually. Always use incPos() or move() function
 
 ===============
 Post-V1 Features
@@ -60,6 +68,8 @@ Bugs/improvements
 -Collision system
   -Ability for "soft collision"
   -Need matrix collision system / way for 2 non-triggers to avoid collision
+
+-Refactor sprite system; don't use prototype, use "SpriteData'
 
 ========================
 Useful optimizations and fixes

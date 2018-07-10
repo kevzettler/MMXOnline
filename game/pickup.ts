@@ -15,8 +15,7 @@ export class Pickup extends Actor {
   healAmount: number = 0;
   pickupType: PickupType;
   constructor(pos: Point, sprite: Sprite) {
-    super(sprite);
-    this.pos = pos;
+    super(sprite, pos);
     this.collider.wallOnly = true;
   }
 

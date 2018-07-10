@@ -278,7 +278,7 @@ export class Brawl extends GameMode {
     else {
       this.overTime += game.deltaTime;
       if(this.overTime > 10) {
-        game.restartLevel(this.level.name);
+        game.restartLevel(this.level.levelData.name);
       }
     }
 
@@ -348,7 +348,7 @@ export class FFADeathMatch extends GameMode {
     let topPlayerY = line2Y + 5;
     Helpers.drawRect(game.uiCtx, new Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
     Helpers.drawText(game.uiCtx, "Game Mode: FFA Deathmatch", padding + 10, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
-    Helpers.drawText(game.uiCtx, "Map: " + this.level.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
+    Helpers.drawText(game.uiCtx, "Map: " + this.level.levelData.name, padding + 10, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
     Helpers.drawText(game.uiCtx, "Playing to: " + String(this.killsToWin), padding + 10, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"), 
     Helpers.drawLine(game.uiCtx, padding + 10, lineY, this.screenWidth - padding - 10, lineY, "white", 1);
     Helpers.drawText(game.uiCtx, "Player", col1x, labelY, "white", "", fontSize, "left", "top", "mmx_font");
@@ -394,7 +394,7 @@ export class FFADeathMatch extends GameMode {
     else {
       this.overTime += game.deltaTime;
       if(this.overTime > 10) {
-        game.restartLevel(this.level.name);
+        game.restartLevel(this.level.levelData.name);
       }
     }
 
@@ -493,7 +493,7 @@ export class TeamDeathMatch extends GameMode {
 
     Helpers.drawRect(game.uiCtx, new Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), "black", "", undefined, 0.75);
     Helpers.drawText(game.uiCtx, "Game Mode: Team Deathmatch", hPadding, padding + 10, "white", "", fontSize, "left", "Top", "mmx_font");
-    Helpers.drawText(game.uiCtx, "Map: " + this.level.name, hPadding, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
+    Helpers.drawText(game.uiCtx, "Map: " + this.level.levelData.name, hPadding, padding + 20, "white", "", fontSize, "left", "Top", "mmx_font");
     Helpers.drawText(game.uiCtx, "Playing to: " + String(this.killsToWin), hPadding, padding + 30, "white", "", fontSize, "left", "Top", "mmx_font"), 
     Helpers.drawLine(game.uiCtx, hPadding, lineY, this.screenWidth - hPadding, lineY, "white", 1);
 
@@ -583,7 +583,7 @@ export class TeamDeathMatch extends GameMode {
     else {
       this.overTime += game.deltaTime;
       if(this.overTime > 10) {
-        game.restartLevel(this.level.name);
+        game.restartLevel(this.level.levelData.name);
       }
     }
 
