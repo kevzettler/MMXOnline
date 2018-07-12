@@ -26,7 +26,7 @@ export class AI {
 
   update() {
 
-    if(game.level.gameObjects.indexOf(this.target) === -1) {
+    if(!game.level.gameObjects.has(this.target)) {
       this.target = undefined;
     }
 
@@ -73,7 +73,7 @@ export class AI {
       }
     }
     if(this.aiState.shouldDodge) {
-      for(let proj of game.level.gameObjects) {
+      for(let proj of game.level.getGameObjectArray()) {
         if(proj instanceof Projectile && !(proj instanceof BusterProj)) {
           if(proj.isFacing(this.character) && this.character.withinX(proj, 100) && this.character.withinY(proj, 30) && proj.damager.owner.alliance !== this.player.alliance) {
             this.player.press("jump");

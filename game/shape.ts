@@ -13,6 +13,7 @@ export class Line {
   }
   
   intersectsLine(other: Line): boolean {
+    /*
     let a = this.point1.x;
     let b = this.point1.y;
     let c = this.point2.x;
@@ -32,8 +33,64 @@ export class Line {
       gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
       return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
     }
+    */
+    let p1 = this.point1;
+    let q1 = this.point2;
+    let p2 = other.point1;
+    let q2 = other.point2;
+    // Find the four orientations needed for general and
+    // special cases
+    let o1 = this.orientation(p1, q1, p2);
+    let o2 = this.orientation(p1, q1, q2);
+    let o3 = this.orientation(p2, q2, p1);
+    let o4 = this.orientation(p2, q2, q1);
+
+    // General case
+    if (o1 != o2 && o3 != o4)
+        return true;
+
+    // Special Cases
+    // p1, q1 and p2 are colinear and p2 lies on segment p1q1
+    if (o1 == 0 && this.onSegment(p1, p2, q1)) return true;
+
+    // p1, q1 and q2 are colinear and q2 lies on segment p1q1
+    if (o2 == 0 && this.onSegment(p1, q2, q1)) return true;
+
+    // p2, q2 and p1 are colinear and p1 lies on segment p2q2
+    if (o3 == 0 && this.onSegment(p2, p1, q2)) return true;
+
+    // p2, q2 and q1 are colinear and q1 lies on segment p2q2
+    if (o4 == 0 && this.onSegment(p2, q1, q2)) return true;
+  
+    return false; // Doesn't fall in any of the above cases
   }
 
+  // Given three colinear points p, q, r, the function checks if
+  // point q lies on line segment 'pr'
+  onSegment(p: Point, q: Point, r: Point)
+  {
+    if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+        q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y))
+      return true;
+    return false;
+  }
+ 
+  // To find orientation of ordered triplet (p, q, r).
+  // The function returns following values
+  // 0 --> p, q and r are colinear
+  // 1 --> Clockwise
+  // 2 --> Counterclockwise
+  orientation(p: Point, q: Point, r: Point)
+  {
+    // See https://www.geeksforgeeks.org/orientation-3-ordered-points/
+    // for details of below formula.
+    let val = (q.y - p.y) * (r.x - q.x) -
+              (q.x - p.x) * (r.y - q.y);
+
+    if (val == 0) return 0;  // colinear
+    return (val > 0)? 1: 2; // clock or counterclock wise
+  }
+  
   get x1() { return this.point1.x; }
   get y1() { return this.point1.y; }
   get x2() { return this.point2.x; }
@@ -87,7 +144,7 @@ export class Line {
     let intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
     if(intersection.x !== null && intersection.y !== null)
       return new Point(intersection.x, intersection.y);
-    return undefined;
+    return new Point((this.x1 + this.x2) / 2, (this.y1 + this.y2) / 2);
   }
 
   get slope() {

@@ -2,8 +2,27 @@ import { linepointNearestMouse } from "./helpers";
 import { Line, Shape } from "./shape";
 import { Point } from "./point";
 
+//@ts-ignore
+window.runAllTests = runAllTests;
+
 export function runAllTests() {
   testGetIntersectPoint();
+  testLinesSameY();
+}
+
+function testLinesSameY() {
+  let line1 = new Line(new Point(0, 0), new Point(10, 0));
+  let line2 = new Line(new Point(0, 0), new Point(10, 0));
+  console.log(line1.intersectsLine(line2));
+  console.log(line1.getIntersectPoint(line2));
+  let line3 = new Line(new Point(0, 0), new Point(10, 0));
+  let line4 = new Line(new Point(5, 0), new Point(15, 0));
+  console.log(line3.intersectsLine(line4));
+  console.log(line3.getIntersectPoint(line4));
+  let line5 = new Line(new Point(0, 0), new Point(10, 0));
+  let line6 = new Line(new Point(0, 0), new Point(15, 0));
+  console.log(line5.intersectsLine(line6));
+  console.log(line5.getIntersectPoint(line6));
 }
 
 function testGetIntersectPoint() {

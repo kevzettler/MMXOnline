@@ -55,7 +55,7 @@ export class Actor {
     if(!sprite) return;
 
     ///@ts-ignoretsignore
-    this.sprite = _.cloneDeep(sprite);
+    this.sprite = new Sprite(sprite.spriteJson);
 
     for(let hitbox of this.sprite.hitboxes) {
       hitbox.actor = this;
@@ -128,7 +128,7 @@ export class Actor {
         this.grounded = true;
         this.vel.y = 0;
         let yVel = new Point(0, yDist);
-        let mtv = game.level.getMtvDir(this, 0, yDist, yVel, false);
+        let mtv = game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
         if(mtv) {
           this.incPos(yVel);
           this.incPos(mtv.unitInc(0.01));
@@ -148,9 +148,15 @@ export class Actor {
   }
 
   incPos(amount: Point) {
-    game.level.removeFromGrid(this);
+    if(this.collider) game.level.removeFromGrid(this);
     this.pos.inc(amount);
-    game.level.addGameObjectToGrid(this);
+    if(this.collider) game.level.addGameObjectToGrid(this);
+  }
+
+  changePos(newPos: Point) {
+    if(this.collider) game.level.removeFromGrid(this);
+    this.pos = newPos;
+    if(this.collider) game.level.addGameObjectToGrid(this);
   }
 
   preUpdate() {
@@ -188,7 +194,7 @@ export class Actor {
       let inc: Point = amount.clone();
       let incAmount = inc.multiply(times);
 
-      let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
+      let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
       this.incPos(incAmount);
       if(mtv) {
         //if(mtv.magnitude > 50) {

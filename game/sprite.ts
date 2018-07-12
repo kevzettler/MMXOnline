@@ -15,8 +15,10 @@ export class Sprite {
   alignment: string;
   spritesheetPath: string;
   wrapMode: string; //Can be "once", "loop" or "pingpong"
+  spriteJson: string;
 
   constructor(spriteJson: any) {
+    this.spriteJson = spriteJson;
     this.name = spriteJson.name;
     this.alignment = spriteJson.alignment;
     this.wrapMode = spriteJson.wrapMode;

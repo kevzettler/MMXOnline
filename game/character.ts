@@ -1012,6 +1012,7 @@ class Die extends CharState {
     this.character.useGravity = false;
     this.character.vel.x = 0;
     this.character.vel.y = 0;
+    game.level.removeFromGrid(this.character);
     this.character.globalCollider = undefined;
     this.character.stopCharge();
     new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"], 1);

@@ -613,7 +613,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     if (character instanceof character_2.Character && character.player.alliance !== this.damager.owner.alliance) {
                         var pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
                         if (pos)
-                            this.pos = pos.clone();
+                            this.changePos(pos.clone());
                         var character_3 = other.gameObject;
                         if (character_3 instanceof character_2.Character) {
                             var key = this.constructor.toString() + this.damager.owner.id.toString();
@@ -1360,7 +1360,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                     configurable: true
                 });
                 AI.prototype.update = function () {
-                    if (game_6.game.level.gameObjects.indexOf(this.target) === -1) {
+                    if (!game_6.game.level.gameObjects.has(this.target)) {
                         this.target = undefined;
                     }
                     this.target = game_6.game.level.getClosestTarget(this.character.pos, this.player.alliance);
@@ -1402,7 +1402,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                         }
                     }
                     if (this.aiState.shouldDodge) {
-                        for (var _i = 0, _a = game_6.game.level.gameObjects; _i < _a.length; _i++) {
+                        for (var _i = 0, _a = game_6.game.level.getGameObjectArray(); _i < _a.length; _i++) {
                             var proj = _a[_i];
                             if (proj instanceof projectile_2.Projectile && !(proj instanceof projectile_2.BusterProj)) {
                                 if (proj.isFacing(this.character) && this.character.withinX(proj, 100) && this.character.withinY(proj, 30) && proj.damager.owner.alliance !== this.player.alliance) {
@@ -3175,6 +3175,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.character.useGravity = false;
                     this.character.vel.x = 0;
                     this.character.vel.y = 0;
+                    game_8.game.level.removeFromGrid(this.character);
                     this.character.globalCollider = undefined;
                     this.character.stopCharge();
                     new actor_4.Anim(this.character.pos.addxy(0, -12), game_8.game.sprites["die_sparks"], 1);
@@ -3727,7 +3728,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     configurable: true
                 });
                 Level.prototype.startLevel = function (gameMode) {
-                    this.gameObjects = [];
+                    this.gameObjects = new Set();
                     this.setupGrid(50);
                     for (var _i = 0, _a = this.levelData.levelJson.instances; _i < _a.length; _i++) {
                         var instance = _a[_i];
@@ -3808,7 +3809,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     for (var _k = 0, _l = this.navMeshNodes; _k < _l.length; _k++) {
                         var navMeshNode = _l[_k];
-                        navMeshNode.setNeighbors(this.navMeshNodes, this.gameObjects);
+                        navMeshNode.setNeighbors(this.navMeshNodes, this.getGameObjectArray());
                     }
                     this.twoFrameCycle = 0;
                     this.gameMode = gameMode;
@@ -3834,6 +3835,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         }, 1000);
                         game_12.game.music = music_1;
                     }
+                };
+                Level.prototype.getGameObjectArray = function () {
+                    return Array.from(this.gameObjects);
                 };
                 Level.prototype.input = function () {
                     var gamepads = navigator.getGamepads();
@@ -3869,8 +3873,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         playerX = this.mainPlayer.character.pos.x;
                         playerY = this.mainPlayer.character.pos.y;
                     }
-                    for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
-                        var go = _a[_i];
+                    var gameObjects = this.getGameObjectArray();
+                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
+                        var go = gameObjects_1[_i];
                         go.preUpdate();
                         go.update();
                     }
@@ -3879,23 +3884,23 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         var deltaY = this.mainPlayer.character.pos.y - playerY;
                         this.updateCamPos(deltaX, deltaY);
                     }
-                    for (var _b = 0, _c = this.effects; _b < _c.length; _b++) {
-                        var effect = _c[_b];
+                    for (var _a = 0, _b = this.effects; _a < _b.length; _a++) {
+                        var effect = _b[_a];
                         effect.update();
                     }
-                    for (var _d = 0, _e = this.localPlayers; _d < _e.length; _d++) {
-                        var player = _e[_d];
+                    for (var _c = 0, _d = this.localPlayers; _c < _d.length; _c++) {
+                        var player = _d[_c];
                         player.clearInputPressed();
                         if (player.isAI) {
                             player.clearAiInput();
                         }
                     }
-                    for (var _f = 0, _g = this.players; _f < _g.length; _f++) {
-                        var player = _g[_f];
+                    for (var _e = 0, _f = this.players; _e < _f.length; _e++) {
+                        var player = _f[_e];
                         player.update();
                     }
-                    for (var _h = 0, _j = this.pickupSpawners; _h < _j.length; _h++) {
-                        var pickupSpawner = _j[_h];
+                    for (var _g = 0, _h = this.pickupSpawners; _g < _h.length; _g++) {
+                        var pickupSpawner = _h[_g];
                         pickupSpawner.update();
                     }
                     this.frameCount++;
@@ -3928,12 +3933,13 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     window.debugBackground = true;
                     Helpers.drawImage(game_12.game.ctx, this.background, 0, 0);
                     window.debugBackground = false;
-                    for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
-                        var go = _a[_i];
+                    var gameObjectsArray = this.getGameObjectArray();
+                    for (var _i = 0, gameObjectsArray_1 = gameObjectsArray; _i < gameObjectsArray_1.length; _i++) {
+                        var go = gameObjectsArray_1[_i];
                         go.render(0, 0);
                     }
-                    for (var _b = 0, _c = this.effects; _b < _c.length; _b++) {
-                        var effect = _c[_b];
+                    for (var _a = 0, _b = this.effects; _a < _b.length; _a++) {
+                        var effect = _b[_a];
                         effect.render(0, 0);
                     }
                     if (this.foreground)
@@ -4143,24 +4149,29 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 };
                 Level.prototype.getGameObjectsInSameCell = function (shape, offsetX, offsetY) {
                     var cells = this.getGridCells(shape, offsetX, offsetY);
-                    var gameObjects = new Set();
+                    var retGameobjects = new Set();
                     for (var _i = 0, cells_1 = cells; _i < cells_1.length; _i++) {
                         var cell = cells_1[_i];
                         if (!cell.gameobjects)
                             continue;
                         for (var it = cell.gameobjects.values(), cell2 = undefined; cell2 = it.next().value;) {
-                            gameObjects.add(cell2);
+                            if (this.gameObjects.has(cell2)) {
+                                retGameobjects.add(cell2);
+                            }
+                            else {
+                                this.gameObjects.delete(cell2);
+                            }
                         }
                     }
-                    return Array.from(gameObjects);
+                    return Array.from(retGameobjects);
                 };
                 Level.prototype.addGameObject = function (go) {
                     this.addGameObjectToGrid(go);
-                    this.gameObjects.push(go);
+                    this.gameObjects.add(go);
                 };
                 Level.prototype.removeGameObject = function (go) {
                     this.removeFromGrid(go);
-                    this.gameObjects.splice(this.gameObjects.indexOf(go), 1);
+                    this.gameObjects.delete(go);
                 };
                 Level.prototype.removeFromGrid = function (go) {
                     if (!go.collider)
@@ -4181,7 +4192,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                 };
                 Level.prototype.hasGameObject = function (go) {
-                    return this.gameObjects.includes(go);
+                    return this.gameObjects.has(go);
                 };
                 Level.prototype.addEffect = function (effect) {
                     this.effects.push(effect);
@@ -4222,8 +4233,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var collideDatas = [];
                     var gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
-                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
-                        var go = gameObjects_1[_i];
+                    for (var _i = 0, gameObjects_2 = gameObjects; _i < gameObjects_2.length; _i++) {
+                        var go = gameObjects_2[_i];
                         if (!go.collider)
                             continue;
                         if (go === actor)
@@ -4238,8 +4249,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     return collideDatas;
                 };
-                Level.prototype.getMtvDir = function (actor, offsetX, offsetY, vel, pushIncline) {
-                    var collideDatas = game_12.game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
+                Level.prototype.getMtvDir = function (actor, offsetX, offsetY, vel, pushIncline, overrideCollideDatas) {
+                    var collideDatas = overrideCollideDatas;
+                    if (!collideDatas) {
+                        collideDatas = game_12.game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
+                    }
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var pushDir = vel.times(-1).normalize();
                     if (collideDatas.length > 0) {
@@ -4257,7 +4271,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var collideData = collideDatas_2[_a];
                             actor.registerCollision(collideData);
                             var mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
-                            if (mtv.magnitude >= maxMag) {
+                            if (mtv && mtv.magnitude >= maxMag) {
                                 maxMag = mtv.magnitude;
                                 maxMtv = mtv;
                             }
@@ -4270,8 +4284,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 };
                 Level.prototype.checkCollisionShape = function (shape, exclusions) {
                     var gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
-                    for (var _i = 0, gameObjects_2 = gameObjects; _i < gameObjects_2.length; _i++) {
-                        var go = gameObjects_2[_i];
+                    for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
+                        var go = gameObjects_3[_i];
                         if (!go.collider)
                             continue;
                         if (exclusions.indexOf(go) !== -1)
@@ -4288,8 +4302,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         return undefined;
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
-                    for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
-                        var go = gameObjects_3[_i];
+                    for (var _i = 0, gameObjects_4 = gameObjects; _i < gameObjects_4.length; _i++) {
+                        var go = gameObjects_4[_i];
                         if (go === actor)
                             continue;
                         if (!go.collider)
@@ -4306,8 +4320,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 };
                 Level.prototype.getActorsInRadius = function (pos, radius, classNames) {
                     var actors = [];
-                    for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
-                        var go = _a[_i];
+                    var gameObjects = this.getGameObjectArray();
+                    for (var _i = 0, gameObjects_5 = gameObjects; _i < gameObjects_5.length; _i++) {
+                        var go = gameObjects_5[_i];
                         if (!(go instanceof actor_5.Actor))
                             continue;
                         if (!this.isOfClass(go, classNames))
@@ -4324,8 +4339,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         return triggers;
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
-                    for (var _i = 0, gameObjects_4 = gameObjects; _i < gameObjects_4.length; _i++) {
-                        var go = gameObjects_4[_i];
+                    for (var _i = 0, gameObjects_6 = gameObjects; _i < gameObjects_6.length; _i++) {
+                        var go = gameObjects_6[_i];
                         if (go === actor)
                             continue;
                         if (!go.collider)
@@ -4360,8 +4375,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     var hits = [];
                     var shape = new shape_1.Shape([pos1, pos2]);
                     var gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
-                    for (var _i = 0, gameObjects_5 = gameObjects; _i < gameObjects_5.length; _i++) {
-                        var go = gameObjects_5[_i];
+                    for (var _i = 0, gameObjects_7 = gameObjects; _i < gameObjects_7.length; _i++) {
+                        var go = gameObjects_7[_i];
                         if (!go.collider)
                             continue;
                         if (!this.isOfClass(go, classNames))
@@ -4549,8 +4564,23 @@ System.register("tests", ["shape", "point"], function (exports_23, context_23) {
     var __moduleName = context_23 && context_23.id;
     function runAllTests() {
         testGetIntersectPoint();
+        testLinesSameY();
     }
     exports_23("runAllTests", runAllTests);
+    function testLinesSameY() {
+        var line1 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
+        var line2 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
+        console.log(line1.intersectsLine(line2));
+        console.log(line1.getIntersectPoint(line2));
+        var line3 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
+        var line4 = new shape_2.Line(new point_7.Point(5, 0), new point_7.Point(15, 0));
+        console.log(line3.intersectsLine(line4));
+        console.log(line3.getIntersectPoint(line4));
+        var line5 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
+        var line6 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(15, 0));
+        console.log(line5.intersectsLine(line6));
+        console.log(line5.getIntersectPoint(line6));
+    }
     function testGetIntersectPoint() {
         var shape = new shape_2.Shape([
             new point_7.Point(123.39407376319954, 159.66765581794917),
@@ -4580,6 +4610,7 @@ System.register("tests", ["shape", "point"], function (exports_23, context_23) {
             }
         ],
         execute: function () {
+            window.runAllTests = runAllTests;
         }
     };
 });
@@ -4710,14 +4741,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 }
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
-                    this.uiData.selectedArenaMap = "gallery";
-                    this.uiData.selectedGameMode = "deathmatch";
-                    this.uiData.maxPlayers = 10;
-                    this.uiData.numBots = 9;
-                    this.uiData.playTo = 20;
+                    this.uiData.isBrawl = true;
+                    this.uiData.maxPlayers = 1;
+                    this.uiData.isPlayer2CPU = false;
+                    this.uiData.maxPlayers = 0;
+                    this.uiData.numBots = 0;
                     $("#options").show();
                     $("#dev-options").show();
-                    game.loadLevel(this.uiData.selectedArenaMap);
+                    game.loadLevel("sm_bossroom");
                 };
                 Game.prototype.getMusicVolume01 = function () {
                     return Number(this.options.musicVolume) / 100;
@@ -5279,24 +5310,38 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                     this.point2 = point2;
                 }
                 Line.prototype.intersectsLine = function (other) {
-                    var a = this.point1.x;
-                    var b = this.point1.y;
-                    var c = this.point2.x;
-                    var d = this.point2.y;
-                    var p = other.point1.x;
-                    var q = other.point1.y;
-                    var r = other.point2.x;
-                    var s = other.point2.y;
-                    var det, gamma, lambda;
-                    det = (c - a) * (s - q) - (r - p) * (d - b);
-                    if (det === 0) {
-                        return false;
-                    }
-                    else {
-                        lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
-                        gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
-                        return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
-                    }
+                    var p1 = this.point1;
+                    var q1 = this.point2;
+                    var p2 = other.point1;
+                    var q2 = other.point2;
+                    var o1 = this.orientation(p1, q1, p2);
+                    var o2 = this.orientation(p1, q1, q2);
+                    var o3 = this.orientation(p2, q2, p1);
+                    var o4 = this.orientation(p2, q2, q1);
+                    if (o1 != o2 && o3 != o4)
+                        return true;
+                    if (o1 == 0 && this.onSegment(p1, p2, q1))
+                        return true;
+                    if (o2 == 0 && this.onSegment(p1, q2, q1))
+                        return true;
+                    if (o3 == 0 && this.onSegment(p2, p1, q2))
+                        return true;
+                    if (o4 == 0 && this.onSegment(p2, q1, q2))
+                        return true;
+                    return false;
+                };
+                Line.prototype.onSegment = function (p, q, r) {
+                    if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+                        q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y))
+                        return true;
+                    return false;
+                };
+                Line.prototype.orientation = function (p, q, r) {
+                    var val = (q.y - p.y) * (r.x - q.x) -
+                        (q.x - p.x) * (r.y - q.y);
+                    if (val == 0)
+                        return 0;
+                    return (val > 0) ? 1 : 2;
                 };
                 Object.defineProperty(Line.prototype, "x1", {
                     get: function () { return this.point1.x; },
@@ -5351,7 +5396,7 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                     var intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
                     if (intersection.x !== null && intersection.y !== null)
                         return new point_8.Point(intersection.x, intersection.y);
-                    return undefined;
+                    return new point_8.Point((this.x1 + this.x2) / 2, (this.y1 + this.y2) / 2);
                 };
                 Object.defineProperty(Line.prototype, "slope", {
                     get: function () {
@@ -6638,6 +6683,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
         execute: function () {
             Sprite = (function () {
                 function Sprite(spriteJson) {
+                    this.spriteJson = spriteJson;
                     this.name = spriteJson.name;
                     this.alignment = spriteJson.alignment;
                     this.wrapMode = spriteJson.wrapMode;
@@ -6753,12 +6799,15 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
         }
     };
 });
-System.register("actor", ["point", "game", "helpers"], function (exports_32, context_32) {
+System.register("actor", ["sprite", "point", "game", "helpers"], function (exports_32, context_32) {
     "use strict";
     var __moduleName = context_32 && context_32.id;
-    var point_13, game_16, Helpers, Actor, Anim;
+    var sprite_2, point_13, game_16, Helpers, Actor, Anim;
     return {
         setters: [
+            function (sprite_2_1) {
+                sprite_2 = sprite_2_1;
+            },
             function (point_13_1) {
                 point_13 = point_13_1;
             },
@@ -6793,7 +6842,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                 Actor.prototype.changeSprite = function (sprite, resetFrame) {
                     if (!sprite)
                         return;
-                    this.sprite = _.cloneDeep(sprite);
+                    this.sprite = new sprite_2.Sprite(sprite.spriteJson);
                     for (var _i = 0, _a = this.sprite.hitboxes; _i < _a.length; _i++) {
                         var hitbox = _a[_i];
                         hitbox.actor = this;
@@ -6862,7 +6911,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                             this.grounded = true;
                             this.vel.y = 0;
                             var yVel = new point_13.Point(0, yDist);
-                            var mtv = game_16.game.level.getMtvDir(this, 0, yDist, yVel, false);
+                            var mtv = game_16.game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
                             if (mtv) {
                                 this.incPos(yVel);
                                 this.incPos(mtv.unitInc(0.01));
@@ -6879,9 +6928,18 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                     }
                 };
                 Actor.prototype.incPos = function (amount) {
-                    game_16.game.level.removeFromGrid(this);
+                    if (this.collider)
+                        game_16.game.level.removeFromGrid(this);
                     this.pos.inc(amount);
-                    game_16.game.level.addGameObjectToGrid(this);
+                    if (this.collider)
+                        game_16.game.level.addGameObjectToGrid(this);
+                };
+                Actor.prototype.changePos = function (newPos) {
+                    if (this.collider)
+                        game_16.game.level.removeFromGrid(this);
+                    this.pos = newPos;
+                    if (this.collider)
+                        game_16.game.level.addGameObjectToGrid(this);
                 };
                 Actor.prototype.preUpdate = function () {
                     this.collidedInFrame.clear();
@@ -6911,7 +6969,7 @@ System.register("actor", ["point", "game", "helpers"], function (exports_32, con
                         }
                         var inc = amount.clone();
                         var incAmount = inc.multiply(times);
-                        var mtv = game_16.game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
+                        var mtv = game_16.game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
                         this.incPos(incAmount);
                         if (mtv) {
                             this.incPos(mtv.unitInc(0.01));

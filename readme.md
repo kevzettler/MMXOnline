@@ -2,8 +2,8 @@
 Features
 ===============
 
--Occasional stack overflow error with lodash
 -Characters sometimes mtv out of each other, test collision
+-Debug Memory Usage
 -Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
 -getHex is called many times and should be optimized
 -Optimize drawing ideas:

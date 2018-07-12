@@ -77,7 +77,7 @@ export class LevelData {
 
 export class Level {
 
-  gameObjects: GameObject[];
+  gameObjects: Set<GameObject>;
   effects: Effect[] = [];
   background: HTMLImageElement;
   parallax: HTMLImageElement;
@@ -120,7 +120,7 @@ export class Level {
   }
 
   startLevel(gameMode: GameMode) {
-    this.gameObjects = [];
+    this.gameObjects = new Set<GameObject>();
     this.setupGrid(50);
     for(var instance of this.levelData.levelJson.instances) {
       if(instance.objectName === "Collision Shape") {
@@ -192,7 +192,7 @@ export class Level {
     }
 
     for(let navMeshNode of this.navMeshNodes) {
-      navMeshNode.setNeighbors(this.navMeshNodes, this.gameObjects);
+      navMeshNode.setNeighbors(this.navMeshNodes, this.getGameObjectArray());
     }
     //console.log(this.navMeshNodes);
 
@@ -228,6 +228,10 @@ export class Level {
     }
   }
   
+  getGameObjectArray() {
+    return Array.from(this.gameObjects);
+  }
+
   input() {
     
     let gamepads = navigator.getGamepads();
@@ -268,7 +272,8 @@ export class Level {
       playerY = this.mainPlayer.character.pos.y;
     }
     
-    for(let go of this.gameObjects) {
+    let gameObjects = this.getGameObjectArray();
+    for(let go of gameObjects) {
       go.preUpdate();
       go.update();
     }
@@ -340,7 +345,8 @@ export class Level {
     //@ts-ignore
     window.debugBackground = false;
 
-    for(let go of this.gameObjects) {
+    let gameObjectsArray = this.getGameObjectArray();
+    for(let go of gameObjectsArray) {
       go.render(0, 0);
     }
 
@@ -555,24 +561,31 @@ export class Level {
 
   getGameObjectsInSameCell(shape: Shape, offsetX: number, offsetY: number) {
     let cells = this.getGridCells(shape, offsetX, offsetY);
-    let gameObjects : Set<GameObject> = new Set();
+    let retGameobjects : Set<GameObject> = new Set();
     for(let cell of cells) {
       if(!cell.gameobjects) continue;
       for (var it = cell.gameobjects.values(), cell2 = undefined; cell2 = it.next().value; ) {
-        gameObjects.add(cell2);
+        if(this.gameObjects.has(cell2)) {
+          retGameobjects.add(cell2);
+        }
+        else {
+          this.gameObjects.delete(cell2);
+          //console.log(cell2);
+          //throw "A gameobject was found in a cell but no longer exists in the map";
+        }
       }
     }
-    return Array.from(gameObjects);
+    return Array.from(retGameobjects);
   }
 
   addGameObject(go: GameObject) {
     this.addGameObjectToGrid(go);
-    this.gameObjects.push(go);
+    this.gameObjects.add(go);
   }
 
   removeGameObject(go: GameObject) {
     this.removeFromGrid(go);
-    this.gameObjects.splice(this.gameObjects.indexOf(go), 1);
+    this.gameObjects.delete(go);
   }
 
   removeFromGrid(go: GameObject) {
@@ -592,7 +605,7 @@ export class Level {
   }
 
   hasGameObject(go: GameObject) {
-    return this.gameObjects.includes(go);
+    return this.gameObjects.has(go);
   }
 
   addEffect(effect: Effect) {
@@ -651,8 +664,11 @@ export class Level {
     return collideDatas;
   }
 
-  getMtvDir(actor: Actor, offsetX: number, offsetY: number, vel: Point, pushIncline: boolean): Point {
-    let collideDatas = game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
+  getMtvDir(actor: Actor, offsetX: number, offsetY: number, vel: Point, pushIncline: boolean, overrideCollideDatas?: CollideData[]): Point {
+    let collideDatas = overrideCollideDatas;
+    if(!collideDatas) {
+      collideDatas = game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
+    }
     let actorShape = actor.collider.shape.clone(offsetX, offsetY);
     let pushDir: Point = vel.times(-1).normalize();
 
@@ -670,7 +686,7 @@ export class Level {
       for(let collideData of collideDatas) {
         actor.registerCollision(collideData);
         let mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
-        if(mtv.magnitude >= maxMag) {
+        if(mtv && mtv.magnitude >= maxMag) {
           maxMag = mtv.magnitude;
           maxMtv = mtv;
         }
@@ -715,7 +731,8 @@ export class Level {
 
   getActorsInRadius(pos: Point, radius: number, classNames?: string[]) {
     let actors: Actor[] = [];
-    for(let go of this.gameObjects) {
+    let gameObjects = this.getGameObjectArray();
+    for(let go of gameObjects) {
       if(!(go instanceof Actor)) continue;
       if(!this.isOfClass(go, classNames)) continue;
       if(go.pos.distanceTo(pos) < radius) {
