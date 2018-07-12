@@ -12,59 +12,6 @@ export class Line {
     this.point2 = point2;
   }
   
-  intersectsLine(other: Line): boolean {
-    /*
-    let a = this.point1.x;
-    let b = this.point1.y;
-    let c = this.point2.x;
-    let d = this.point2.y;
-
-    let p = other.point1.x;
-    let q = other.point1.y;
-    let r = other.point2.x;
-    let s = other.point2.y;
-
-    let det, gamma, lambda;
-    det = (c - a) * (s - q) - (r - p) * (d - b);
-    if (det === 0) {
-      return false;
-    } else {
-      lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
-      gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
-      return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
-    }
-    */
-    let p1 = this.point1;
-    let q1 = this.point2;
-    let p2 = other.point1;
-    let q2 = other.point2;
-    // Find the four orientations needed for general and
-    // special cases
-    let o1 = this.orientation(p1, q1, p2);
-    let o2 = this.orientation(p1, q1, q2);
-    let o3 = this.orientation(p2, q2, p1);
-    let o4 = this.orientation(p2, q2, q1);
-
-    // General case
-    if (o1 != o2 && o3 != o4)
-        return true;
-
-    // Special Cases
-    // p1, q1 and p2 are colinear and p2 lies on segment p1q1
-    if (o1 == 0 && this.onSegment(p1, p2, q1)) return true;
-
-    // p1, q1 and q2 are colinear and q2 lies on segment p1q1
-    if (o2 == 0 && this.onSegment(p1, q2, q1)) return true;
-
-    // p2, q2 and p1 are colinear and p1 lies on segment p2q2
-    if (o3 == 0 && this.onSegment(p2, p1, q2)) return true;
-
-    // p2, q2 and q1 are colinear and q1 lies on segment p2q2
-    if (o4 == 0 && this.onSegment(p2, q1, q2)) return true;
-  
-    return false; // Doesn't fall in any of the above cases
-  }
-
   // Given three colinear points p, q, r, the function checks if
   // point q lies on line segment 'pr'
   onSegment(p: Point, q: Point, r: Point)
@@ -140,7 +87,47 @@ export class Line {
   }
 
   getIntersectPoint(other: Line): Point {
-    if(!this.intersectsLine(other)) return undefined;
+    //https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+    let doesIntersect = false;
+    let coincidePoint: Point;
+    let p1 = this.point1;
+    let q1 = this.point2;
+    let p2 = other.point1;
+    let q2 = other.point2;
+    // Find the four orientations needed for general and
+    // special cases
+    let o1 = this.orientation(p1, q1, p2);
+    let o2 = this.orientation(p1, q1, q2);
+    let o3 = this.orientation(p2, q2, p1);
+    let o4 = this.orientation(p2, q2, q1);
+
+    // General case
+    if (o1 != o2 && o3 != o4) {
+      doesIntersect = true;
+    }
+
+    // Special Cases
+    // p1, q1 and p2 are colinear and p2 lies on segment p1q1
+    if (o1 == 0 && this.onSegment(p1, p2, q1)) {
+      coincidePoint = p2;
+    }
+    // p1, q1 and q2 are colinear and q2 lies on segment p1q1
+    else if (o2 == 0 && this.onSegment(p1, q2, q1)) {
+      coincidePoint = q2;
+    }
+    // p2, q2 and p1 are colinear and p1 lies on segment p2q2
+    else if (o3 == 0 && this.onSegment(p2, p1, q2)) {
+      coincidePoint = p1;
+    }
+    // p2, q2 and q1 are colinear and q1 lies on segment p2q2
+    else if (o4 == 0 && this.onSegment(p2, q1, q2)) {
+      coincidePoint = q1;
+    }
+    
+    if(coincidePoint) doesIntersect = true;
+    if(!doesIntersect) return undefined;
+
+    if(coincidePoint) return coincidePoint;
     let intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
     if(intersection.x !== null && intersection.y !== null)
       return new Point(intersection.x, intersection.y);

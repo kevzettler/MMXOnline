@@ -4568,18 +4568,6 @@ System.register("tests", ["shape", "point"], function (exports_23, context_23) {
     }
     exports_23("runAllTests", runAllTests);
     function testLinesSameY() {
-        var line1 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
-        var line2 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
-        console.log(line1.intersectsLine(line2));
-        console.log(line1.getIntersectPoint(line2));
-        var line3 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
-        var line4 = new shape_2.Line(new point_7.Point(5, 0), new point_7.Point(15, 0));
-        console.log(line3.intersectsLine(line4));
-        console.log(line3.getIntersectPoint(line4));
-        var line5 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(10, 0));
-        var line6 = new shape_2.Line(new point_7.Point(0, 0), new point_7.Point(15, 0));
-        console.log(line5.intersectsLine(line6));
-        console.log(line5.getIntersectPoint(line6));
     }
     function testGetIntersectPoint() {
         var shape = new shape_2.Shape([
@@ -5309,27 +5297,6 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                     this.point1 = point1;
                     this.point2 = point2;
                 }
-                Line.prototype.intersectsLine = function (other) {
-                    var p1 = this.point1;
-                    var q1 = this.point2;
-                    var p2 = other.point1;
-                    var q2 = other.point2;
-                    var o1 = this.orientation(p1, q1, p2);
-                    var o2 = this.orientation(p1, q1, q2);
-                    var o3 = this.orientation(p2, q2, p1);
-                    var o4 = this.orientation(p2, q2, q1);
-                    if (o1 != o2 && o3 != o4)
-                        return true;
-                    if (o1 == 0 && this.onSegment(p1, p2, q1))
-                        return true;
-                    if (o2 == 0 && this.onSegment(p1, q2, q1))
-                        return true;
-                    if (o3 == 0 && this.onSegment(p2, p1, q2))
-                        return true;
-                    if (o4 == 0 && this.onSegment(p2, q1, q2))
-                        return true;
-                    return false;
-                };
                 Line.prototype.onSegment = function (p, q, r) {
                     if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
                         q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y))
@@ -5391,8 +5358,37 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                     return result;
                 };
                 Line.prototype.getIntersectPoint = function (other) {
-                    if (!this.intersectsLine(other))
+                    var doesIntersect = false;
+                    var coincidePoint;
+                    var p1 = this.point1;
+                    var q1 = this.point2;
+                    var p2 = other.point1;
+                    var q2 = other.point2;
+                    var o1 = this.orientation(p1, q1, p2);
+                    var o2 = this.orientation(p1, q1, q2);
+                    var o3 = this.orientation(p2, q2, p1);
+                    var o4 = this.orientation(p2, q2, q1);
+                    if (o1 != o2 && o3 != o4) {
+                        doesIntersect = true;
+                    }
+                    if (o1 == 0 && this.onSegment(p1, p2, q1)) {
+                        coincidePoint = p2;
+                    }
+                    else if (o2 == 0 && this.onSegment(p1, q2, q1)) {
+                        coincidePoint = q2;
+                    }
+                    else if (o3 == 0 && this.onSegment(p2, p1, q2)) {
+                        coincidePoint = p1;
+                    }
+                    else if (o4 == 0 && this.onSegment(p2, q1, q2)) {
+                        coincidePoint = q1;
+                    }
+                    if (coincidePoint)
+                        doesIntersect = true;
+                    if (!doesIntersect)
                         return undefined;
+                    if (coincidePoint)
+                        return coincidePoint;
                     var intersection = this.checkLineIntersection(this.x1, this.y1, this.x2, this.y2, other.x1, other.y1, other.x2, other.y2);
                     if (intersection.x !== null && intersection.y !== null)
                         return new point_8.Point(intersection.x, intersection.y);
@@ -6964,6 +6960,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         var currentCollideDatas = game_16.game.level.getAllCollideDatas(this, 0, 0, undefined);
                         for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
                             var collideData = currentCollideDatas_1[_i];
+                            console.log("ALREADY COLLIDING");
                             var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
                             this.incPos(freeVec.unitInc(0.01));
                         }

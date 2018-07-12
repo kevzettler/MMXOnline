@@ -11,6 +11,7 @@ export function runAllTests() {
 }
 
 function testLinesSameY() {
+  /*
   let line1 = new Line(new Point(0, 0), new Point(10, 0));
   let line2 = new Line(new Point(0, 0), new Point(10, 0));
   console.log(line1.intersectsLine(line2));
@@ -23,6 +24,7 @@ function testLinesSameY() {
   let line6 = new Line(new Point(0, 0), new Point(15, 0));
   console.log(line5.intersectsLine(line6));
   console.log(line5.getIntersectPoint(line6));
+  */
 }
 
 function testGetIntersectPoint() {

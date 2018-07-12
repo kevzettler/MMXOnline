@@ -186,7 +186,7 @@ export class Actor {
       //Already were colliding in first place: free with path of least resistance
       let currentCollideDatas = game.level.getAllCollideDatas(this, 0, 0, undefined);
       for(let collideData of currentCollideDatas) {
-        //console.log("ALREADY COLLIDING")
+        console.log("ALREADY COLLIDING")
         let freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
         this.incPos(freeVec.unitInc(0.01));
       }
