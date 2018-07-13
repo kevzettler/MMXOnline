@@ -419,6 +419,7 @@ export class Shape {
   }
 
   getMinTransVectorDir(b: Shape, dir: Point) {
+    dir = dir.normalize();
     game.collisionCalls++;
     let mag = 0;
     let maxMag = 0;

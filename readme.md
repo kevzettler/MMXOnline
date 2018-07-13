@@ -2,6 +2,9 @@
 Features
 ===============
 
+-Draw Grid Debug
+-Corner case: if rolling shield corner hits wall corner
+
 -Characters sometimes mtv out of each other, test collision
 -Debug Memory Usage
 -Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only

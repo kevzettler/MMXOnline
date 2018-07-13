@@ -867,7 +867,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 }
                 RollingShieldProj.prototype.update = function () {
                     if (!game_4.game.level.checkCollisionActor(this, 0, 0)) {
-                        var collideData = game_4.game.level.checkCollisionActor(this, this.xDir, -1, this.vel);
+                        var collideData = game_4.game.level.checkCollisionActor(this, this.xDir, 0, this.vel);
                         if (collideData && collideData.hitData && !collideData.hitData.normal.isAngled()) {
                             this.vel.x *= -1;
                             this.xDir *= -1;
@@ -3532,12 +3532,15 @@ System.register("spawnPoint", ["game"], function (exports_17, context_17) {
         ],
         execute: function () {
             SpawnPoint = (function () {
-                function SpawnPoint(point, xDir, num) {
+                function SpawnPoint(name, point, xDir, num) {
+                    this.name = name;
                     this.pos = point;
                     this.xDir = xDir || 1;
                     this.num = num || 0;
                 }
                 SpawnPoint.prototype.occupied = function () {
+                    if (this.name !== "Spawn Point5")
+                        return true;
                     var nearbyChars = game_11.game.level.getActorsInRadius(this.pos, 30, ["Character"]);
                     if (nearbyChars.length > 0)
                         return true;
@@ -3781,7 +3784,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         }
                         else if (instance.objectName === "Spawn Point") {
                             var properties = instance.properties;
-                            this.spawnPoints.push(new spawnPoint_1.SpawnPoint(new point_6.Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
+                            this.spawnPoints.push(new spawnPoint_1.SpawnPoint(instance.name, new point_6.Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
                         }
                         else if (instance.objectName === "Node") {
                             var name_1 = instance.name;
@@ -4271,7 +4274,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var collideData = collideDatas_2[_a];
                             actor.registerCollision(collideData);
                             var mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
-                            if (mtv && mtv.magnitude >= maxMag) {
+                            if (mtv.magnitude >= maxMag) {
                                 maxMag = mtv.magnitude;
                                 maxMtv = mtv;
                             }
@@ -4568,6 +4571,9 @@ System.register("tests", ["shape", "point"], function (exports_23, context_23) {
     }
     exports_23("runAllTests", runAllTests);
     function testLinesSameY() {
+        var shape1 = new shape_2.Shape([new point_7.Point(2748.9925035070223, 613.8087362355162), new point_7.Point(2779.9925035070223, 613.8087362355162), new point_7.Point(2779.9925035070223, 643.8087362355162), new point_7.Point(2748.9925035070223, 643.8087362355162)]);
+        var shape2 = new shape_2.Shape([new point_7.Point(2557, 641), new point_7.Point(2880, 641), new point_7.Point(2880, 765), new point_7.Point(2557, 765)]);
+        console.log(shape1.getMinTransVectorDir(shape2, (new point_7.Point(200, 495.09845000000007))).normalize());
     }
     function testGetIntersectPoint() {
         var shape = new shape_2.Shape([
@@ -4729,14 +4735,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 }
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
-                    this.uiData.isBrawl = true;
-                    this.uiData.maxPlayers = 1;
-                    this.uiData.isPlayer2CPU = false;
+                    this.uiData.selectedArenaMap = "gallery";
+                    this.uiData.selectedGameMode = "deathmatch";
                     this.uiData.maxPlayers = 0;
                     this.uiData.numBots = 0;
+                    this.uiData.playTo = 20;
                     $("#options").show();
                     $("#dev-options").show();
-                    game.loadLevel("sm_bossroom");
+                    game.loadLevel(this.uiData.selectedArenaMap);
                 };
                 Game.prototype.getMusicVolume01 = function () {
                     return Number(this.options.musicVolume) / 100;
@@ -5671,6 +5677,7 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                     return undefined;
                 };
                 Shape.prototype.getMinTransVectorDir = function (b, dir) {
+                    dir = dir.normalize();
                     game_13.game.collisionCalls++;
                     var mag = 0;
                     var maxMag = 0;
@@ -6957,13 +6964,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         this.pos.inc(amount.times(times));
                     }
                     else {
-                        var currentCollideDatas = game_16.game.level.getAllCollideDatas(this, 0, 0, undefined);
-                        for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
-                            var collideData = currentCollideDatas_1[_i];
-                            console.log("ALREADY COLLIDING");
-                            var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
-                            this.incPos(freeVec.unitInc(0.01));
-                        }
+                        this.freeFromCollision();
                         var inc = amount.clone();
                         var incAmount = inc.multiply(times);
                         var mtv = game_16.game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
@@ -6971,6 +6972,16 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         if (mtv) {
                             this.incPos(mtv.unitInc(0.01));
                         }
+                        this.freeFromCollision();
+                    }
+                };
+                Actor.prototype.freeFromCollision = function () {
+                    var currentCollideDatas = game_16.game.level.getAllCollideDatas(this, 0, 0, undefined);
+                    for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
+                        var collideData = currentCollideDatas_1[_i];
+                        console.log("ALREADY COLLIDING");
+                        var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
+                        this.incPos(freeVec.unitInc(0.01));
                     }
                 };
                 Actor.prototype.isRollingShield = function () {

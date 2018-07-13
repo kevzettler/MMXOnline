@@ -330,7 +330,7 @@ export class RollingShieldProj extends Projectile {
   update() {
     
     if(!game.level.checkCollisionActor(this, 0, 0)) {
-      let collideData = game.level.checkCollisionActor(this, this.xDir, -1, this.vel);
+      let collideData = game.level.checkCollisionActor(this, this.xDir, 0, this.vel);
       if(collideData && collideData.hitData && !collideData.hitData.normal.isAngled()) {
         this.vel.x *= -1;
         this.xDir *= -1;

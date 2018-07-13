@@ -164,7 +164,7 @@ export class Level {
       }
       else if(instance.objectName === "Spawn Point") {
         let properties = instance.properties;
-        this.spawnPoints.push(new SpawnPoint(new Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
+        this.spawnPoints.push(new SpawnPoint(instance.name, new Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
       }
       else if(instance.objectName === "Node") {
         let name = instance.name;
@@ -362,6 +362,15 @@ export class Level {
       Helpers.drawText(game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
       Helpers.drawText(game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
     }
+
+    /*
+    for(let i = 0; i < this.grid.length; i++) {
+      Helpers.drawLine(game.ctx, 0, i * this.cellWidth, this.width, i * this.cellWidth, "red", 1);
+    }
+    for(let j = 0; j < this.grid[0].length; j++) {
+      Helpers.drawLine(game.ctx, j * this.cellWidth, 0, j * this.cellWidth, this.height, "red", 1);
+    }
+    */
 
     //game.ctx.drawImage(game.uiCanvas, this.camX, this.camY);
   }
@@ -686,7 +695,7 @@ export class Level {
       for(let collideData of collideDatas) {
         actor.registerCollision(collideData);
         let mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
-        if(mtv && mtv.magnitude >= maxMag) {
+        if(mtv.magnitude >= maxMag) {
           maxMag = mtv.magnitude;
           maxMtv = mtv;
         }

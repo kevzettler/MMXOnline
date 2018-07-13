@@ -130,6 +130,13 @@ export class Actor {
         let yVel = new Point(0, yDist);
         let mtv = game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
         if(mtv) {
+          /*
+          if(mtv.magnitude > 10) {
+            let shape1 = this.collider.shape.clone(0, yDist);
+            let shape2 = collideData.collider.shape;
+            console.log(mtv);
+          }
+          */
           this.incPos(yVel);
           this.incPos(mtv.unitInc(0.01));
         }
@@ -167,7 +174,7 @@ export class Actor {
     let inc: Point = offset.clone();
     let collideData = game.level.checkCollisionActor(this, inc.x, inc.y);
     if(collideData) {
-      return true; 
+      return true;
     }
     return false;
   }
@@ -183,13 +190,7 @@ export class Actor {
     //Regular collider: need to detect collision incrementally and stop moving past a collider if that's the case
     else {
 
-      //Already were colliding in first place: free with path of least resistance
-      let currentCollideDatas = game.level.getAllCollideDatas(this, 0, 0, undefined);
-      for(let collideData of currentCollideDatas) {
-        console.log("ALREADY COLLIDING")
-        let freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
-        this.incPos(freeVec.unitInc(0.01));
-      }
+      this.freeFromCollision();
 
       let inc: Point = amount.clone();
       let incAmount = inc.multiply(times);
@@ -197,12 +198,38 @@ export class Actor {
       let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
       this.incPos(incAmount);
       if(mtv) {
-        //if(mtv.magnitude > 50) {
-        //  mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
-        //}
+        /*
+        if(mtv.magnitude > 5) {
+          console.log(mtv);
+          mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, inc, pushIncline);
+        }
+        */
         this.incPos(mtv.unitInc(0.01));
       }
 
+      /*
+      //Debugging code
+      let hit = game.level.checkCollisionActor(this, 0, 0);
+      if(this.isRollingShield() && hit) {
+        let shape1 = this.collider.shape.clone(-incAmount.x, -incAmount.y);
+        let shape2 = hit.collider.shape;
+        console.log("Bad MTV in Move()");
+      }
+      */
+
+      //This shouldn't be needed, but sometimes getMtvDir doesn't free properly or isn't returned
+      this.freeFromCollision();
+
+    }
+  }
+
+  freeFromCollision() {
+    //Already were colliding in first place: free with path of least resistance
+    let currentCollideDatas = game.level.getAllCollideDatas(this, 0, 0, undefined);
+    for(let collideData of currentCollideDatas) {
+      console.log("ALREADY COLLIDING")
+      let freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
+      this.incPos(freeVec.unitInc(0.01));
     }
   }
 

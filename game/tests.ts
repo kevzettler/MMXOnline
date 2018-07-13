@@ -25,6 +25,9 @@ function testLinesSameY() {
   console.log(line5.intersectsLine(line6));
   console.log(line5.getIntersectPoint(line6));
   */
+ let shape1 = new Shape([new Point(2748.9925035070223, 613.8087362355162), new Point(2779.9925035070223, 613.8087362355162), new Point(2779.9925035070223,643.8087362355162), new Point(2748.9925035070223,643.8087362355162)]);
+ let shape2 = new Shape([new Point(2557, 641), new Point(2880, 641), new Point(2880, 765), new Point(2557, 765)]);
+ console.log(shape1.getMinTransVectorDir(shape2, (new Point(200, 495.09845000000007))).normalize() );
 }
 
 function testGetIntersectPoint() {
