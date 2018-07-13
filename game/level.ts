@@ -695,7 +695,7 @@ export class Level {
       for(let collideData of collideDatas) {
         actor.registerCollision(collideData);
         let mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
-        if(mtv.magnitude >= maxMag) {
+        if(mtv && mtv.magnitude >= maxMag) {
           maxMag = mtv.magnitude;
           maxMtv = mtv;
         }

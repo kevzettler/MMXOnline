@@ -3539,8 +3539,6 @@ System.register("spawnPoint", ["game"], function (exports_17, context_17) {
                     this.num = num || 0;
                 }
                 SpawnPoint.prototype.occupied = function () {
-                    if (this.name !== "Spawn Point5")
-                        return true;
                     var nearbyChars = game_11.game.level.getActorsInRadius(this.pos, 30, ["Character"]);
                     if (nearbyChars.length > 0)
                         return true;
@@ -4274,7 +4272,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             var collideData = collideDatas_2[_a];
                             actor.registerCollision(collideData);
                             var mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
-                            if (mtv.magnitude >= maxMag) {
+                            if (mtv && mtv.magnitude >= maxMag) {
                                 maxMag = mtv.magnitude;
                                 maxMtv = mtv;
                             }
@@ -4738,7 +4736,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.uiData.selectedArenaMap = "gallery";
                     this.uiData.selectedGameMode = "deathmatch";
                     this.uiData.maxPlayers = 0;
-                    this.uiData.numBots = 0;
+                    this.uiData.numBots = 9;
                     this.uiData.playTo = 20;
                     $("#options").show();
                     $("#dev-options").show();
@@ -5275,6 +5273,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
             }());
             game = new Game();
             exports_24("game", game);
+            window.game = game;
         }
     };
 });
@@ -6979,7 +6978,6 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     var currentCollideDatas = game_16.game.level.getAllCollideDatas(this, 0, 0, undefined);
                     for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
                         var collideData = currentCollideDatas_1[_i];
-                        console.log("ALREADY COLLIDING");
                         var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
                         this.incPos(freeVec.unitInc(0.01));
                     }

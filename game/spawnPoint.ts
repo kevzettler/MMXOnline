@@ -15,7 +15,7 @@ export class SpawnPoint {
   }
 
   occupied() {
-    if(this.name !== "Spawn Point5") return true;
+    //if(this.name !== "Spawn Point5") return true;
     let nearbyChars = game.level.getActorsInRadius(this.pos, 30, ["Character"]);
     if(nearbyChars.length > 0) return true;
     return false;
