@@ -522,7 +522,7 @@ class CharState {
       }
     }
 
-    if(game.level.checkCollisionActor(this.character, 0, -1)) {
+    if(game.level.checkCollisionActor(this.character, 0, -1) && this.character.vel.y < 0) {
       this.character.vel.y = 0;
     }
 
