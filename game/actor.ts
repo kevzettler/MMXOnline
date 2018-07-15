@@ -54,8 +54,11 @@ export class Actor {
   changeSprite(sprite: Sprite, resetFrame: boolean) {
     if(!sprite) return;
 
-    ///@ts-ignoretsignore
-    this.sprite = new Sprite(sprite.spriteJson);
+    if(this.sprite && this.sprite.pixiSprite) {
+      game.level.gameContainer.removeChild(this.sprite.pixiSprite);
+    }
+
+    this.sprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
 
     for(let hitbox of this.sprite.hitboxes) {
       hitbox.actor = this;
@@ -240,21 +243,24 @@ export class Actor {
   render(x: number, y: number) {
     //console.log(this.pos.x + "," + this.pos.y);
     
+    let offsetX = this.xDir * this.currentFrame.offset.x;
+    let offsetY = this.yDir * this.currentFrame.offset.y;
+
     if(this.angle === undefined) {
-      this.sprite.draw(game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+      this.sprite.draw(this.frameIndex, this.pos.x + x + offsetX, this.pos.y + y + offsetY, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     }
     else {
       this.renderFromAngle(x, y);
     }
     
     if(game.options.showHitboxes && this.collider) {
-      Helpers.drawPolygon(game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
-      Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
+      Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+      Helpers.drawCircle(game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
     }
   }
 
   renderFromAngle(x: number, y: number) {
-    this.sprite.draw(game.ctx, 0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
   }
 
   registerCollision(other: CollideData) {
@@ -298,6 +304,7 @@ export class Actor {
     if(fadeSound) {
       this.playSound(fadeSound);
     }
+    game.level.gameContainer.removeChild(this.sprite.pixiSprite);
   }
 
   getSoundVolume() {

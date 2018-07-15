@@ -13,6 +13,7 @@
     "game/**/*",
     "node_modules/@types/jquery/index.d.ts",
     "node_modules/@types/lodash/index.d.ts",
-    "node_modules/@types/howler/index.d.ts"
+    "node_modules/@types/howler/index.d.ts",
+    "node_modules/@types/pixi.js/index.d.ts",
   ]
 }

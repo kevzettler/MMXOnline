@@ -11,9 +11,10 @@
   </div>
   <div id="content">
     <img id="logo" src="assets/images/logo.png" />
-    <!--256-->
-    <canvas id="canvas" tabindex="0" width="298" height="224" style="display:none"></canvas>
-    <canvas id="ui-canvas" tabindex="0" width="298" height="224" style="display:none"></canvas>
+    <div id="canvas-wrapper">
+      <canvas id="canvas" width="298" height="222"></canvas>
+      <canvas id="ui-canvas" width="298" height="222"></canvas>
+    </div>
     <div id="ui" v-cloak>
       <img src="assets/images/bg4.png" id="ui-background" />
       <!--Browser not supported menu-->
@@ -235,6 +236,7 @@
 <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.0"></script>
 <script src="node_modules/howler/dist/howler.min.js"></script>
 <script src="node_modules/systemjs/dist/system.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
 <script src="main.js"></script>
 <script>
   SystemJS.import("game").then(function(game) {

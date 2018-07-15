@@ -44,18 +44,18 @@ export class GameMode {
       }
     }
 
-    game.canvas.onmousedown = (e) => {
+    game.uiCanvas.onmousedown = (e) => {
       for(let player of this.localPlayers) {
         player.onKeyDown(e.button);
       }
       e.preventDefault();
     }
 
-    game.canvas.oncontextmenu = (e) => {
+    game.uiCanvas.oncontextmenu = (e) => {
       e.preventDefault();
     }
 
-    game.canvas.onmouseup = (e) => {
+    game.uiCanvas.onmouseup = (e) => {
       for(let player of this.localPlayers) {
         player.onKeyUp(e.button);
       }
@@ -141,7 +141,7 @@ export class GameMode {
       if(this.mainPlayer.weaponIndex === i) {
         Helpers.drawRect(game.uiCtx, new Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
       }
-      weaponSprite.draw(game.uiCtx, i, x, y);
+      weaponSprite.drawCanvas(game.uiCtx, i, x, y);
       Helpers.drawTextMMX(game.uiCtx, String(i+1), x, y + 12, 6, "", "");
     }
   }
@@ -198,7 +198,7 @@ export class GameMode {
         let firstPartWidth = game.uiCtx.measureText(killFeed.killer.name + "    ").width;
           
         let weaponIndex = killFeed.weapon.index;
-        game.sprites["hud_killfeed_weapon"].draw(game.uiCtx, weaponIndex, fromRight - nameLen - 13, fromTop + (i*yDist) - 2, undefined, undefined, undefined, undefined, undefined);
+        game.sprites["hud_killfeed_weapon"].drawCanvas(game.uiCtx, weaponIndex, fromRight - nameLen - 13, fromTop + (i*yDist) - 2, undefined, undefined, undefined, undefined, undefined);
       }
       else {
         Helpers.drawTextMMX(game.uiCtx, msg, fromRight, fromTop + (i*yDist), 6, "right", "Top", isVictimRed);

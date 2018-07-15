@@ -2,14 +2,13 @@
 Features
 ===============
 
--Draw Grid Debug
--Corner case: if rolling shield corner hits wall corner
-
--Characters sometimes mtv out of each other, test collision
+-Fix Edge bleeding
+-When restarting, clear the Pixi stage of objects
 -Debug Memory Usage
 -Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
 -getHex is called many times and should be optimized
 -Optimize drawing ideas:
+  -Use pixijs
   -Only draw things on-screen
   -Only draw things that actually moved
   -For very large backgrounds, only draw part of it

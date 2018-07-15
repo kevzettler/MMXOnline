@@ -79,9 +79,9 @@ export class Level {
 
   gameObjects: Set<GameObject>;
   effects: Effect[] = [];
-  background: HTMLImageElement;
-  parallax: HTMLImageElement;
-  foreground: HTMLImageElement;
+  backgroundPath: string;
+  parallaxPath: string;
+  foregroundPath: string;
   gravity: number;
   camX: number;
   camY: number;
@@ -110,16 +110,23 @@ export class Level {
     this.zoomScale = 3;
     this.gravity = 550;
     this.frameCount = 0;
-    this.background = game.getBackground(levelData.levelJson.backgroundPath);
-    if(levelData.parallax) {
-      this.parallax = game.getBackground("assets/backgrounds/" + levelData.parallax);
+    this.backgroundPath = levelData.levelJson.backgroundPath;
+    this.parallaxPath = "assets/backgrounds/" + levelData.parallax;
+    this.foregroundPath = "assets/backgrounds/" + levelData.foreground;
+
+    let imagesToLoad = [this.backgroundPath];
+    if(this.parallaxPath) {
+      imagesToLoad.push(this.parallaxPath);
     }
-    if(levelData.foreground) {
-      this.foreground = game.getBackground("assets/backgrounds/" + levelData.foreground);
+    if(this.foregroundPath) {
+      imagesToLoad.push(this.foregroundPath);
     }
+    game.loadImages(imagesToLoad);
+    
   }
 
   startLevel(gameMode: GameMode) {
+    this.renderSetup();
     this.gameObjects = new Set<GameObject>();
     this.setupGrid(50);
     for(var instance of this.levelData.levelJson.instances) {
@@ -185,7 +192,7 @@ export class Level {
         this.pickupSpawners.push(new PickupSpawner(new Point(instance.pos.x, instance.pos.y), SmallAmmoPickup));
       }
       else {
-        let actor: Actor = new Actor(game.sprites[instance.spriteName], new Point(instance.pos.x, instance.pos.y));
+        let actor: Actor = new Actor(instance.spriteName, new Point(instance.pos.x, instance.pos.y));
         actor.name = instance.name;
         this.addGameObject(actor);
       }
@@ -313,37 +320,77 @@ export class Level {
     this.gameMode.update();
   }
 
-  render() {
-    
+  backgroundSprite: PIXI.Sprite;
+  parallaxSprite: PIXI.Sprite;
+  foregroundSprite: PIXI.Sprite;
+  gameContainer: PIXI.Container;
+  uiContainer: PIXI.Container;
+  renderSetup() {
+
+    if(this.parallaxPath) {
+      this.parallaxSprite = new PIXI.Sprite(PIXI.loader.resources[this.parallaxPath].texture);
+      game.pixiApp.stage.addChild(this.parallaxSprite);
+    }
+
+    this.gameContainer = new PIXI.Container();
+    game.pixiApp.stage.addChild(this.gameContainer);
+
+    if(this.backgroundPath) {
+      this.backgroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.backgroundPath].texture);
+      this.gameContainer.addChild(this.backgroundSprite);
+    }
+    if(this.foregroundPath) {
+      this.foregroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.foregroundPath].texture);
+      game.pixiApp.stage.addChild(this.foregroundSprite);
+    }
+
+    this.uiContainer = new PIXI.Container();
+    game.pixiApp.stage.addChild(this.uiContainer);
+
     if(this.levelData.fixedCam) {
-      game.canvas.width = Math.round(this.background.width * this.zoomScale);
-      game.canvas.height = Math.round(this.background.height * this.zoomScale);
+      let w = this.backgroundSprite.width * this.zoomScale;
+      let h = this.backgroundSprite.height * this.zoomScale;
+      game.pixiApp.renderer.resize(w, h);
+      game.uiCanvas.width = w;
+      game.uiCanvas.height = h;
+
+      game.pixiApp.renderer.view.style.width = `${w}px`;
+      game.pixiApp.renderer.view.style.height = `${h}px`;
+      game.pixiApp.renderer.resize(w, h);
+      game.pixiApp.stage.scale.set(this.zoomScale); 
+
     }
     else {
-      game.canvas.width = Math.min(game.defaultCanvasWidth * this.zoomScale, Math.round(this.background.width * this.zoomScale));
-      game.canvas.height = Math.min(game.defaultCanvasHeight * this.zoomScale, Math.round(this.background.height * this.zoomScale));
-    }
-    game.uiCanvas.width = game.canvas.width;
-    game.uiCanvas.height = game.canvas.height;
+      let w = Math.min(game.defaultCanvasWidth * this.zoomScale, Math.round(this.backgroundSprite.width * this.zoomScale));
+      let h = Math.min(game.defaultCanvasHeight * this.zoomScale, Math.round(this.backgroundSprite.height * this.zoomScale));
+      game.pixiApp.renderer.resize(w, h);
+      game.uiCanvas.width = w;
+      game.uiCanvas.height = h;
 
-    if(!game.options.antiAlias) {
-      Helpers.noCanvasSmoothing(game.ctx);
-      Helpers.noCanvasSmoothing(game.uiCtx);
+      game.pixiApp.renderer.view.style.width = `${w}px`;
+      game.pixiApp.renderer.view.style.height = `${h}px`;
+      game.pixiApp.renderer.resize(w, h);
+      game.pixiApp.stage.scale.set(this.zoomScale);
     }
 
-    game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+    /*
     game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
     Helpers.drawRect(game.ctx, new Rect(0, 0, game.canvas.width, game.canvas.height), "gray");
     if(this.parallax) Helpers.drawImage(game.ctx, this.parallax, this.camX * 0.5, this.camY * 0.5);
-    
-    //@ts-ignore
-    window.debugBackground = true;
-
     Helpers.drawImage(game.ctx, this.background, 0, 0);
+    */
+
+  }
+
+  render() {
     
-    //@ts-ignore
-    window.debugBackground = false;
+    this.gameContainer.x = -this.camX;// * this.zoomScale;
+    this.gameContainer.y = -this.camY;// * this.zoomScale;
+    this.parallaxSprite.x = -this.camX * 0.5;
+    this.parallaxSprite.y = -this.camY * 0.5;
+    this.foregroundSprite.x = -this.camX;
+    this.foregroundSprite.y = -this.camY;
 
     let gameObjectsArray = this.getGameObjectArray();
     for(let go of gameObjectsArray) {
@@ -354,28 +401,19 @@ export class Level {
       effect.render(0, 0);
     }
 
-    if(this.foreground) Helpers.drawImage(game.ctx, this.foreground, 0, 0);
-
     this.drawHUD();
-
-    if(!game.uiData.isProd) {
-      Helpers.drawText(game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
-      Helpers.drawText(game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
-    }
-
-    /*
-    for(let i = 0; i < this.grid.length; i++) {
-      Helpers.drawLine(game.ctx, 0, i * this.cellWidth, this.width, i * this.cellWidth, "red", 1);
-    }
-    for(let j = 0; j < this.grid[0].length; j++) {
-      Helpers.drawLine(game.ctx, j * this.cellWidth, 0, j * this.cellWidth, this.height, "red", 1);
-    }
-    */
-
-    //game.ctx.drawImage(game.uiCanvas, this.camX, this.camY);
   }
 
   drawHUD() {
+    //console.log("DRAWING HUD");
+    Helpers.noCanvasSmoothing(game.uiCtx);
+    
+    //game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
+    game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+    //console.log(this.screenWidth + "," + this.screenHeight)
+    game.uiCtx.clearRect(0, 0, this.screenWidth, this.screenHeight);
+
+
     let player1 = this.localPlayers[0];
     this.drawPlayerHUD(player1, 1);
     if(this.localPlayers.length > 1 && this.levelData.fixedCam) {      
@@ -384,61 +422,77 @@ export class Level {
     }
 
     this.gameMode.drawHUD();
+
+    if(!game.uiData.isProd) {
+      Helpers.drawText(game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
+      Helpers.drawText(game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
+    }
+
+    /*
+    for(let i = 0; i < this.grid.length; i++) {
+      Helpers.drawLine(game.uiCtx, 0, i * this.cellWidth, this.width, i * this.cellWidth, "red", 1);
+    }
+    for(let j = 0; j < this.grid[0].length; j++) {
+      Helpers.drawLine(game.uiCtx, j * this.cellWidth, 0, j * this.cellWidth, this.height, "red", 1);
+    }
+    */
+
+    //game.ctx.drawImage(game.uiCanvas, this.camX, this.camY);
   }
   
   drawPlayerHUD(player: Player, playerNum: number) {
     
     //Health
     let baseX = 10;
-    if(playerNum === 2) baseX = game.canvas.width/this.zoomScale - 4 - baseX;
+    if(playerNum === 2) baseX = this.screenWidth - 4 - baseX;
     
-    let baseY = game.canvas.height/this.zoomScale/2;
+    let baseY = this.screenHeight/2;
     baseY += 25;
-    game.sprites["hud_health_base"].draw(game.uiCtx, 0, baseX, baseY, 1, 1, "", 1, player.palette);
+    game.sprites["hud_health_base"].drawCanvas(game.uiCtx, 0, baseX, baseY, 1, 1, "", 1, player.palette);
     baseY -= 16;
     for(let i = 0; i < Math.ceil(player.health); i++) {
-      game.sprites["hud_health_full"].draw(game.uiCtx, 0, baseX, baseY);
+      game.sprites["hud_health_full"].drawCanvas(game.uiCtx, 0, baseX, baseY);
       baseY -= 2;
     }
     for(let i = 0; i < player.maxHealth - Math.ceil(player.health); i++) {
-      game.sprites["hud_health_empty"].draw(game.uiCtx, 0, baseX, baseY);
+      game.sprites["hud_health_empty"].drawCanvas(game.uiCtx, 0, baseX, baseY);
       baseY -= 2;
     }
-    game.sprites["hud_health_top"].draw(game.uiCtx, 0, baseX, baseY);
+    game.sprites["hud_health_top"].drawCanvas(game.uiCtx, 0, baseX, baseY);
 
     //Weapon
     if(player.weaponIndex !== 0) {
       baseX = 25;
-      if(playerNum === 2) baseX = game.canvas.width/this.zoomScale - 4 - baseX;
+      if(playerNum === 2) baseX = this.screenWidth - 4 - baseX;
       
-      baseY = game.canvas.height/this.zoomScale/2;
+      baseY = this.screenHeight/2;
       baseY += 25;
-      game.sprites["hud_weapon_base"].draw(game.uiCtx, player.weapon.index - 1, baseX, baseY);
+      game.sprites["hud_weapon_base"].drawCanvas(game.uiCtx, player.weapon.index - 1, baseX, baseY);
       baseY -= 16;
       for(let i = 0; i < Math.ceil(player.weapon.ammo); i++) {
-        game.sprites["hud_weapon_full"].draw(game.uiCtx, player.weapon.index - 1, baseX, baseY);
+        game.sprites["hud_weapon_full"].drawCanvas(game.uiCtx, player.weapon.index - 1, baseX, baseY);
         baseY -= 2;
       }
       for(let i = 0; i < player.weapon.maxAmmo - Math.ceil(player.weapon.ammo); i++) {
-        game.sprites["hud_health_empty"].draw(game.uiCtx, 0, baseX, baseY);
+        game.sprites["hud_health_empty"].drawCanvas(game.uiCtx, 0, baseX, baseY);
         baseY -= 2;
       }
-      game.sprites["hud_health_top"].draw(game.uiCtx, 0, baseX, baseY);
+      game.sprites["hud_health_top"].drawCanvas(game.uiCtx, 0, baseX, baseY);
     }
 
   }
 
-  get width() { return this.background.width; }
-  get height() { return this.background.height; }
+  get width() { return this.backgroundSprite.width; }
+  get height() { return this.backgroundSprite.height; }
 
-  get screenWidth() { return game.canvas.width / this.zoomScale; }
-  get screenHeight() { return game.canvas.height / this.zoomScale; }
+  get screenWidth() { return game.pixiApp.renderer.width / this.zoomScale; }
+  get screenHeight() { return game.pixiApp.renderer.height / this.zoomScale; }
 
   get camCenterX() { return this.camX + this.screenWidth/2; }
   get camCenterY() { return this.camY + this.screenHeight/2; }
 
   get halfScreenWidth() {
-    return (game.canvas.width / this.zoomScale) * 0.375;
+    return (game.pixiApp.stage.width / this.zoomScale) * 0.375;
   }
 
   updateCamPos(deltaX: number, deltaY: number) {
@@ -452,8 +506,8 @@ export class Level {
     let scaledCanvasW = game.defaultCanvasWidth;
     let scaledCanvasH = game.defaultCanvasHeight;
     
-    let maxX = this.background.width - scaledCanvasW/2;
-    let maxY = this.background.height - scaledCanvasH/2;
+    let maxX = this.width - scaledCanvasW/2;
+    let maxY = this.height - scaledCanvasH/2;
 
     if(playerX < scaledCanvasW/2) {
       dontMoveX = true;
@@ -523,8 +577,8 @@ export class Level {
     if(camX < 0) camX = 0;
     if(camY < 0) camY = 0;
 
-    let maxX = this.background.width - scaledCanvasW;
-    let maxY = this.background.height - scaledCanvasH;
+    let maxX = this.width - scaledCanvasW;
+    let maxY = this.height - scaledCanvasH;
 
     if(camX > maxX) camX = maxX;
     if(camY > maxY) camY = maxY;

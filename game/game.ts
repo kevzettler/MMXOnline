@@ -73,10 +73,7 @@ class Game {
   levelDatas: { [name: string]: LevelData } = {};
   level: Level;
 
-  spritesheets: { [path: string]: HTMLImageElement } = {};
-  backgrounds: { [path: string]: HTMLImageElement } = {};
   sounds: { [path: string]: Howl } = {};
-  soundLoadCount: number = 0;
   palettes: { [path: string]: Palette } = {};
 
   music: Howl;
@@ -87,9 +84,6 @@ class Game {
   options: Options;
   uiData: UIData;
 
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-
   previousTime: number = 0;
   deltaTime: number = 0;
   time: number = 0;
@@ -99,50 +93,57 @@ class Game {
   requestId: number = 0;
 
   soundSheet: Howl;
-  soundSheetLoaded: boolean = false;
 
   defaultCanvasWidth: number;
   defaultCanvasHeight: number;
 
   uiEl: HTMLDivElement;
   ui: any;
-
+  canvas: HTMLCanvasElement;
   uiCanvas: HTMLCanvasElement;
   uiCtx: CanvasRenderingContext2D;
 
   paused: boolean = false;
   collisionCalls: number = 0;
 
-  constructor() {
-    this.canvas = <HTMLCanvasElement>$("#canvas")[0];
-    this.uiCanvas = <HTMLCanvasElement>$("#ui-canvas")[0];
-    this.uiCtx = this.uiCanvas.getContext("2d");
+  pixiApp: PIXI.Application;
+  canvasWrapper: HTMLElement;
 
-    this.ctx = this.canvas.getContext("2d");
+  loadCount: number = 0;
+  maxLoadCount: number = 0;
+
+  restartLevelName: string = "";
+
+  constructor() {
+
+    this.defaultCanvasWidth = 298;
+    this.defaultCanvasHeight = 224;
+    this.canvas = <HTMLCanvasElement>document.getElementById("canvas");    
+    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas,  });
+    //this.pixiApp.view.id = "canvas";
+    //this.canvas = this.pixiApp.view;
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
     this.uiEl = <HTMLDivElement>$("#ui")[0];
 
-    this.defaultCanvasWidth = this.canvas.width;
-    this.defaultCanvasHeight = this.canvas.height;
-
-    Helpers.noCanvasSmoothing(this.ctx);
-    Helpers.noCanvasSmoothing(this.uiCtx);
+    this.uiCanvas = <HTMLCanvasElement>document.getElementById("ui-canvas");
+    this.uiCtx = this.uiCanvas.getContext("2d");
   }
   
   doQuickStart: boolean = true;
   quickStart() {
-    /*
+    
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
     this.uiData.selectedGameMode = "deathmatch";
     this.uiData.maxPlayers = 0;
-    this.uiData.numBots = 9;
+    this.uiData.numBots = 0;
     this.uiData.playTo = 20;
     $("#options").show();
     $("#dev-options").show();
     game.loadLevel(this.uiData.selectedArenaMap);
-    */
-    ///*
+    
+    /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
     this.uiData.maxPlayers = 1;
@@ -152,7 +153,7 @@ class Game {
     $("#options").show();
     $("#dev-options").show();
     game.loadLevel("sm_bossroom");
-    //*/
+    */
   }
 
   getMusicVolume01() {
@@ -359,8 +360,8 @@ class Game {
             game.level = undefined;
             if(game.music) game.music.stop();
             game.uiData.menu = Menu.MainMenu;
-            $(game.canvas).hide();
-            $(game.uiCanvas).hide();
+            $(game.canvasWrapper).hide();
+            $("#ui-canvas").hide();
             $("#options").hide();
           }
           else {
@@ -400,51 +401,26 @@ class Game {
       }
     });
 
-    this.loadSprites();
-    this.loadLevels();
-    this.loadPalettes();
-    
-    for(let soundFile of soundFiles) {
-      let sound = new Howl({
-        src: ["assets/sounds/" + soundFile],
-        onload: () => {
-          //console.log("LOADED SOUND");
-          this.soundLoadCount++;
-        }
-      });
-      this.sounds[soundFile.split(".")[0]] = sound;
-    }
-
-    this.soundSheet = new Howl({
-      src: ["assets/soundsheets/mmx_sfx.mp3"],
-      sprite: {
-        buster: [900,1425-900],
-        buster2: [17461,18220-17461],
-        buster3: [4761,5950-4761],
-        buster4: [19429,20423-19429],
-        rollingShield: [180000 + 12411, 394],
-        electricSpark: [180000 + 16554, 919],
-        tornado: [180000 + 7359, 2962],
-        boomerang: [180000 + 5766, 1190],
-        fireWave: [180000 + 4404, 478]
-      },
-      onload: () => {
-        this.soundSheetLoaded = true;
+    this.loadImages([
+      "assets/spritesheets/effects.png",
+      "assets/spritesheets/MegamanX.png"
+    ], () => {
+      this.loadSprites();
+      this.loadLevels();
+      this.loadPalettes();
+      this.loadSounds();
+      if(this.uiData.menu !== Menu.BadBrowserMenu) {
+        this.appLoadInterval = window.setInterval(() => this.onLoad(), 1);
       }
     });
 
-    if(this.uiData.menu !== Menu.BadBrowserMenu) {
-      this.appLoadInterval = window.setInterval(() => this.onLoad(), 1);
-    }
   }
 
   onLoad() {
     if(this.isLoaded()) {
       //console.log("LOADED");
       window.clearInterval(this.appLoadInterval);
-      
       this.startMenuMusic();
-
       let name = "Player 1";// localStorage.getItem("playerName");
       if(!name) {
         this.uiData.menu = Menu.NameSelect;
@@ -498,16 +474,10 @@ class Game {
     this.ui.$forceUpdate();
   }
 
-  test() {
-    Tests.runAllTests();
-  }
-
-  restartLevelName: string = "";
   restartLevel(name: string) {
     if(this.music) {
       this.music.stop();
     }
-    console.log("RESET");
     this.restartLevelName = name;
   }
 
@@ -519,29 +489,22 @@ class Game {
   }
 
   loadLevel(name: string) {
-
     let levelData = this.levelDatas[name];
-
     if(!levelData) {
       throw "Bad level";
     }
-
     this.level = new Level(levelData);
-
     this.levelLoadInterval = window.setInterval(() => this.startLevel(), 1);
   }
 
   startLevel() {
-    if((!this.level.background || this.level.background.complete) && 
-       (!this.level.parallax || this.level.parallax.complete) && 
-       (!this.level.foreground || this.level.foreground.complete)) {
+    if(this.isLoaded()) {
       window.clearInterval(this.levelLoadInterval);
       
-      $(this.canvas).show();
-      $(this.uiCanvas).show();
+      $(this.canvasWrapper).show();
+      $("#ui-canvas").show();
       
       let gameMode : GameMode;
-
       if(this.uiData.isBrawl) {
         gameMode = new Brawl(this.level, this.uiData);
       }
@@ -556,6 +519,7 @@ class Game {
     }
   }
 
+  /*
   getSpritesheet(path: string) {
     if(!this.spritesheets[path]) {
       this.spritesheets[path] = document.createElement("img");
@@ -563,18 +527,25 @@ class Game {
     }
     return this.spritesheets[path];
   }
+  */
 
-  getBackground(path: string) {
-    if(!this.backgrounds[path]) {
-      this.backgrounds[path] = document.createElement("img");
-      this.backgrounds[path].src = path;
+  loadImages(paths: string[], callback?: Function) {
+    for(let i = paths.length - 1; i >= 0; i--) {
+      let path = paths[i];
+      if(PIXI.utils.TextureCache[path]) {
+        paths.splice(i, 1);
+      }
     }
-    return this.backgrounds[path];
+    this.maxLoadCount++;
+    PIXI.loader.add(paths).load(() => {
+      this.loadCount++;
+      if(callback) callback();
+    });
   }
 
   loadSprites() {
     for(var spriteJson of spriteJsons) {
-      let sprite: Sprite = new Sprite(spriteJson);
+      let sprite: Sprite = new Sprite(spriteJson, false, undefined);
       this.sprites[sprite.name] = sprite;
     }
   }
@@ -598,27 +569,42 @@ class Game {
     this.palettes["torpedo"] = new Palette("assets/palettes/torpedo.png");
   }
 
-  isLoaded() {
-    for(let name in this.sprites) {
-      if(!this.sprites[name].spritesheet.complete) {
-        return false;
+  loadSounds() {
+    for(let soundFile of soundFiles) {
+      this.maxLoadCount++;
+      let sound = new Howl({
+        src: ["assets/sounds/" + soundFile],
+        onload: () => {
+          //console.log("LOADED SOUND");
+          this.loadCount++;
+        }
+      });
+      this.sounds[soundFile.split(".")[0]] = sound;
+    }
+
+    this.maxLoadCount++;
+    this.soundSheet = new Howl({
+      src: ["assets/soundsheets/mmx_sfx.mp3"],
+      sprite: {
+        buster: [900,1425-900],
+        buster2: [17461,18220-17461],
+        buster3: [4761,5950-4761],
+        buster4: [19429,20423-19429],
+        rollingShield: [180000 + 12411, 394],
+        electricSpark: [180000 + 16554, 919],
+        tornado: [180000 + 7359, 2962],
+        boomerang: [180000 + 5766, 1190],
+        fireWave: [180000 + 4404, 478]
+      },
+      onload: () => {
+        this.loadCount++;
       }
-    }
-    for(let name in this.palettes) {
-      if(!this.palettes[name].imageEl.complete) {
-        return false;
-      }
-    }
-    var keys = Object.getOwnPropertyNames(this.sounds);
-    if(keys.length !== this.soundLoadCount) {
-      return false;
-    }
-    if(!this.soundSheetLoaded) return false;
-    return true;
+    });
+
   }
 
-  isLevelLoaded(level: Level) {
-    return level.background.complete && level.parallax.complete && level.foreground.complete;
+  isLoaded() {
+    return this.loadCount >= this.maxLoadCount;
   }
 
   timePassed: number = 0;

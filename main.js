@@ -45,7 +45,7 @@ System.register("geometry", ["collider", "game", "helpers"], function (exports_2
                 };
                 Geometry.prototype.render = function (x, y) {
                     if (game_1.game.options.showHitboxes) {
-                        Helpers.drawPolygon(game_1.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                        Helpers.drawPolygon(game_1.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
                 };
                 Geometry.prototype.onCollision = function (other) {
@@ -813,7 +813,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                         frameIndex = 3;
                     else if (normAngle >= 72 && normAngle < 90)
                         frameIndex = 4;
-                    this.sprite.draw(game_4.game.ctx, frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
                 };
                 return TorpedoProj;
             }(Projectile));
@@ -915,16 +915,16 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     return _this;
                 }
                 TornadoProj.prototype.render = function (x, y) {
-                    this.spriteStart.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     var i = 0;
                     var spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
                     for (i; i < this.length; i++) {
-                        this.spriteMid.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                        this.spriteMid.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     }
-                    this.spriteEnd.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     this.renderEffect = "";
                     if (game_4.game.options.showHitboxes && this.collider) {
-                        Helpers.drawPolygon(game_4.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                        Helpers.drawPolygon(game_4.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
                 };
                 TornadoProj.prototype.update = function () {
@@ -1017,7 +1017,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     }
                 };
                 BoomerangProj.prototype.renderFromAngle = function (x, y) {
-                    this.sprite.draw(game_4.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
                 };
                 BoomerangProj.prototype.update = function () {
                     _super.prototype.update.call(this);
@@ -1148,13 +1148,6 @@ System.register("effects", ["point", "game", "helpers"], function (exports_9, co
                     }
                 };
                 ChargeEffect.prototype.render = function (centerPos, chargeLevel) {
-                    for (var i = 0; i < this.points.length; i++) {
-                        var point = this.points[i];
-                        var chargePart = game_5.game.sprites["charge_part_" + String(chargeLevel)];
-                        if (this.pointTimes[i] > 0) {
-                            chargePart.draw(game_5.game.ctx, Math.round(this.pointTimes[i]), centerPos.x + point.x, centerPos.y + point.y);
-                        }
-                    }
                 };
                 return ChargeEffect;
             }());
@@ -1166,14 +1159,6 @@ System.register("effects", ["point", "game", "helpers"], function (exports_9, co
                     this.centerPos = centerPos;
                 }
                 DieEffectParticles.prototype.render = function (offsetX, offsetY) {
-                    this.time += game_5.game.deltaTime;
-                    for (var i = this.ang; i < this.ang + 360; i += 22.5) {
-                        var x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
-                        var y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
-                        var diePartSprite = game_5.game.sprites["die_particle"];
-                        diePartSprite.draw(game_5.game.ctx, Math.round(this.time * 20) % diePartSprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", Helpers.clamp01(1 - this.time * 0.5));
-                    }
-                    this.ang += game_5.game.deltaTime * 100;
                 };
                 return DieEffectParticles;
             }());
@@ -1761,17 +1746,17 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             e.preventDefault();
                         }
                     };
-                    game_7.game.canvas.onmousedown = function (e) {
+                    game_7.game.uiCanvas.onmousedown = function (e) {
                         for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
                             var player = _a[_i];
                             player.onKeyDown(e.button);
                         }
                         e.preventDefault();
                     };
-                    game_7.game.canvas.oncontextmenu = function (e) {
+                    game_7.game.uiCanvas.oncontextmenu = function (e) {
                         e.preventDefault();
                     };
-                    game_7.game.canvas.onmouseup = function (e) {
+                    game_7.game.uiCanvas.onmouseup = function (e) {
                         for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
                             var player = _a[_i];
                             player.onKeyUp(e.button);
@@ -1849,7 +1834,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         if (this.mainPlayer.weaponIndex === i) {
                             Helpers.drawRect(game_7.game.uiCtx, new rect_2.Rect(x - iconW, y - iconH, x + iconW, y + iconH), "", "lightgreen", 1);
                         }
-                        weaponSprite.draw(game_7.game.uiCtx, i, x, y);
+                        weaponSprite.drawCanvas(game_7.game.uiCtx, i, x, y);
                         Helpers.drawTextMMX(game_7.game.uiCtx, String(i + 1), x, y + 12, 6, "", "");
                     }
                 };
@@ -1907,7 +1892,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             Helpers.drawTextMMX(game_7.game.uiCtx, killFeed.killer.name + "    ", fromRight - victimNameWidth, fromTop + (i * yDist), 6, "right", "Top", isKillerRed);
                             var firstPartWidth = game_7.game.uiCtx.measureText(killFeed.killer.name + "    ").width;
                             var weaponIndex = killFeed.weapon.index;
-                            game_7.game.sprites["hud_killfeed_weapon"].draw(game_7.game.uiCtx, weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
+                            game_7.game.sprites["hud_killfeed_weapon"].drawCanvas(game_7.game.uiCtx, weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
                         }
                         else {
                             Helpers.drawTextMMX(game_7.game.uiCtx, msg, fromRight, fromTop + (i * yDist), 6, "right", "Top", isVictimRed);
@@ -3705,13 +3690,17 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     this.zoomScale = 3;
                     this.gravity = 550;
                     this.frameCount = 0;
-                    this.background = game_12.game.getBackground(levelData.levelJson.backgroundPath);
-                    if (levelData.parallax) {
-                        this.parallax = game_12.game.getBackground("assets/backgrounds/" + levelData.parallax);
+                    this.backgroundPath = levelData.levelJson.backgroundPath;
+                    this.parallaxPath = "assets/backgrounds/" + levelData.parallax;
+                    this.foregroundPath = "assets/backgrounds/" + levelData.foreground;
+                    var imagesToLoad = [this.backgroundPath];
+                    if (this.parallaxPath) {
+                        imagesToLoad.push(this.parallaxPath);
                     }
-                    if (levelData.foreground) {
-                        this.foreground = game_12.game.getBackground("assets/backgrounds/" + levelData.foreground);
+                    if (this.foregroundPath) {
+                        imagesToLoad.push(this.foregroundPath);
                     }
+                    game_12.game.loadImages(imagesToLoad);
                 }
                 Object.defineProperty(Level.prototype, "localPlayers", {
                     get: function () { return this.gameMode.localPlayers; },
@@ -3729,6 +3718,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     configurable: true
                 });
                 Level.prototype.startLevel = function (gameMode) {
+                    this.renderSetup();
                     this.gameObjects = new Set();
                     this.setupGrid(50);
                     for (var _i = 0, _a = this.levelData.levelJson.instances; _i < _a.length; _i++) {
@@ -3803,7 +3793,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.SmallAmmoPickup));
                         }
                         else {
-                            var actor = new actor_5.Actor(game_12.game.sprites[instance.spriteName], new point_6.Point(instance.pos.x, instance.pos.y));
+                            var actor = new actor_5.Actor(instance.spriteName, new point_6.Point(instance.pos.x, instance.pos.y));
                             actor.name = instance.name;
                             this.addGameObject(actor);
                         }
@@ -3910,30 +3900,53 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.twoFrameCycle = -2;
                     this.gameMode.update();
                 };
-                Level.prototype.render = function () {
+                Level.prototype.renderSetup = function () {
+                    if (this.parallaxPath) {
+                        this.parallaxSprite = new PIXI.Sprite(PIXI.loader.resources[this.parallaxPath].texture);
+                        game_12.game.pixiApp.stage.addChild(this.parallaxSprite);
+                    }
+                    this.gameContainer = new PIXI.Container();
+                    game_12.game.pixiApp.stage.addChild(this.gameContainer);
+                    if (this.backgroundPath) {
+                        this.backgroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.backgroundPath].texture);
+                        this.gameContainer.addChild(this.backgroundSprite);
+                    }
+                    if (this.foregroundPath) {
+                        this.foregroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.foregroundPath].texture);
+                        game_12.game.pixiApp.stage.addChild(this.foregroundSprite);
+                    }
+                    this.uiContainer = new PIXI.Container();
+                    game_12.game.pixiApp.stage.addChild(this.uiContainer);
                     if (this.levelData.fixedCam) {
-                        game_12.game.canvas.width = Math.round(this.background.width * this.zoomScale);
-                        game_12.game.canvas.height = Math.round(this.background.height * this.zoomScale);
+                        var w = this.backgroundSprite.width * this.zoomScale;
+                        var h = this.backgroundSprite.height * this.zoomScale;
+                        game_12.game.pixiApp.renderer.resize(w, h);
+                        game_12.game.uiCanvas.width = w;
+                        game_12.game.uiCanvas.height = h;
+                        game_12.game.pixiApp.renderer.view.style.width = w + "px";
+                        game_12.game.pixiApp.renderer.view.style.height = h + "px";
+                        game_12.game.pixiApp.renderer.resize(w, h);
+                        game_12.game.pixiApp.stage.scale.set(this.zoomScale);
                     }
                     else {
-                        game_12.game.canvas.width = Math.min(game_12.game.defaultCanvasWidth * this.zoomScale, Math.round(this.background.width * this.zoomScale));
-                        game_12.game.canvas.height = Math.min(game_12.game.defaultCanvasHeight * this.zoomScale, Math.round(this.background.height * this.zoomScale));
+                        var w = Math.min(game_12.game.defaultCanvasWidth * this.zoomScale, Math.round(this.backgroundSprite.width * this.zoomScale));
+                        var h = Math.min(game_12.game.defaultCanvasHeight * this.zoomScale, Math.round(this.backgroundSprite.height * this.zoomScale));
+                        game_12.game.pixiApp.renderer.resize(w, h);
+                        game_12.game.uiCanvas.width = w;
+                        game_12.game.uiCanvas.height = h;
+                        game_12.game.pixiApp.renderer.view.style.width = w + "px";
+                        game_12.game.pixiApp.renderer.view.style.height = h + "px";
+                        game_12.game.pixiApp.renderer.resize(w, h);
+                        game_12.game.pixiApp.stage.scale.set(this.zoomScale);
                     }
-                    game_12.game.uiCanvas.width = game_12.game.canvas.width;
-                    game_12.game.uiCanvas.height = game_12.game.canvas.height;
-                    if (!game_12.game.options.antiAlias) {
-                        Helpers.noCanvasSmoothing(game_12.game.ctx);
-                        Helpers.noCanvasSmoothing(game_12.game.uiCtx);
-                    }
-                    game_12.game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
-                    game_12.game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
-                    game_12.game.ctx.clearRect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height);
-                    Helpers.drawRect(game_12.game.ctx, new rect_4.Rect(0, 0, game_12.game.canvas.width, game_12.game.canvas.height), "gray");
-                    if (this.parallax)
-                        Helpers.drawImage(game_12.game.ctx, this.parallax, this.camX * 0.5, this.camY * 0.5);
-                    window.debugBackground = true;
-                    Helpers.drawImage(game_12.game.ctx, this.background, 0, 0);
-                    window.debugBackground = false;
+                };
+                Level.prototype.render = function () {
+                    this.gameContainer.x = -this.camX;
+                    this.gameContainer.y = -this.camY;
+                    this.parallaxSprite.x = -this.camX * 0.5;
+                    this.parallaxSprite.y = -this.camY * 0.5;
+                    this.foregroundSprite.x = -this.camX;
+                    this.foregroundSprite.y = -this.camY;
                     var gameObjectsArray = this.getGameObjectArray();
                     for (var _i = 0, gameObjectsArray_1 = gameObjectsArray; _i < gameObjectsArray_1.length; _i++) {
                         var go = gameObjectsArray_1[_i];
@@ -3943,15 +3956,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         var effect = _b[_a];
                         effect.render(0, 0);
                     }
-                    if (this.foreground)
-                        Helpers.drawImage(game_12.game.ctx, this.foreground, 0, 0);
                     this.drawHUD();
-                    if (!game_12.game.uiData.isProd) {
-                        Helpers.drawText(game_12.game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
-                        Helpers.drawText(game_12.game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
-                    }
                 };
                 Level.prototype.drawHUD = function () {
+                    Helpers.noCanvasSmoothing(game_12.game.uiCtx);
+                    game_12.game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+                    game_12.game.uiCtx.clearRect(0, 0, this.screenWidth, this.screenHeight);
                     var player1 = this.localPlayers[0];
                     this.drawPlayerHUD(player1, 1);
                     if (this.localPlayers.length > 1 && this.levelData.fixedCam) {
@@ -3959,60 +3969,64 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.drawPlayerHUD(player2, 2);
                     }
                     this.gameMode.drawHUD();
+                    if (!game_12.game.uiData.isProd) {
+                        Helpers.drawText(game_12.game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
+                        Helpers.drawText(game_12.game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
+                    }
                 };
                 Level.prototype.drawPlayerHUD = function (player, playerNum) {
                     var baseX = 10;
                     if (playerNum === 2)
-                        baseX = game_12.game.canvas.width / this.zoomScale - 4 - baseX;
-                    var baseY = game_12.game.canvas.height / this.zoomScale / 2;
+                        baseX = this.screenWidth - 4 - baseX;
+                    var baseY = this.screenHeight / 2;
                     baseY += 25;
-                    game_12.game.sprites["hud_health_base"].draw(game_12.game.uiCtx, 0, baseX, baseY, 1, 1, "", 1, player.palette);
+                    game_12.game.sprites["hud_health_base"].drawCanvas(game_12.game.uiCtx, 0, baseX, baseY, 1, 1, "", 1, player.palette);
                     baseY -= 16;
                     for (var i = 0; i < Math.ceil(player.health); i++) {
-                        game_12.game.sprites["hud_health_full"].draw(game_12.game.uiCtx, 0, baseX, baseY);
+                        game_12.game.sprites["hud_health_full"].drawCanvas(game_12.game.uiCtx, 0, baseX, baseY);
                         baseY -= 2;
                     }
                     for (var i = 0; i < player.maxHealth - Math.ceil(player.health); i++) {
-                        game_12.game.sprites["hud_health_empty"].draw(game_12.game.uiCtx, 0, baseX, baseY);
+                        game_12.game.sprites["hud_health_empty"].drawCanvas(game_12.game.uiCtx, 0, baseX, baseY);
                         baseY -= 2;
                     }
-                    game_12.game.sprites["hud_health_top"].draw(game_12.game.uiCtx, 0, baseX, baseY);
+                    game_12.game.sprites["hud_health_top"].drawCanvas(game_12.game.uiCtx, 0, baseX, baseY);
                     if (player.weaponIndex !== 0) {
                         baseX = 25;
                         if (playerNum === 2)
-                            baseX = game_12.game.canvas.width / this.zoomScale - 4 - baseX;
-                        baseY = game_12.game.canvas.height / this.zoomScale / 2;
+                            baseX = this.screenWidth - 4 - baseX;
+                        baseY = this.screenHeight / 2;
                         baseY += 25;
-                        game_12.game.sprites["hud_weapon_base"].draw(game_12.game.uiCtx, player.weapon.index - 1, baseX, baseY);
+                        game_12.game.sprites["hud_weapon_base"].drawCanvas(game_12.game.uiCtx, player.weapon.index - 1, baseX, baseY);
                         baseY -= 16;
                         for (var i = 0; i < Math.ceil(player.weapon.ammo); i++) {
-                            game_12.game.sprites["hud_weapon_full"].draw(game_12.game.uiCtx, player.weapon.index - 1, baseX, baseY);
+                            game_12.game.sprites["hud_weapon_full"].drawCanvas(game_12.game.uiCtx, player.weapon.index - 1, baseX, baseY);
                             baseY -= 2;
                         }
                         for (var i = 0; i < player.weapon.maxAmmo - Math.ceil(player.weapon.ammo); i++) {
-                            game_12.game.sprites["hud_health_empty"].draw(game_12.game.uiCtx, 0, baseX, baseY);
+                            game_12.game.sprites["hud_health_empty"].drawCanvas(game_12.game.uiCtx, 0, baseX, baseY);
                             baseY -= 2;
                         }
-                        game_12.game.sprites["hud_health_top"].draw(game_12.game.uiCtx, 0, baseX, baseY);
+                        game_12.game.sprites["hud_health_top"].drawCanvas(game_12.game.uiCtx, 0, baseX, baseY);
                     }
                 };
                 Object.defineProperty(Level.prototype, "width", {
-                    get: function () { return this.background.width; },
+                    get: function () { return this.backgroundSprite.width; },
                     enumerable: true,
                     configurable: true
                 });
                 Object.defineProperty(Level.prototype, "height", {
-                    get: function () { return this.background.height; },
+                    get: function () { return this.backgroundSprite.height; },
                     enumerable: true,
                     configurable: true
                 });
                 Object.defineProperty(Level.prototype, "screenWidth", {
-                    get: function () { return game_12.game.canvas.width / this.zoomScale; },
+                    get: function () { return game_12.game.pixiApp.renderer.width / this.zoomScale; },
                     enumerable: true,
                     configurable: true
                 });
                 Object.defineProperty(Level.prototype, "screenHeight", {
-                    get: function () { return game_12.game.canvas.height / this.zoomScale; },
+                    get: function () { return game_12.game.pixiApp.renderer.height / this.zoomScale; },
                     enumerable: true,
                     configurable: true
                 });
@@ -4028,7 +4042,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 });
                 Object.defineProperty(Level.prototype, "halfScreenWidth", {
                     get: function () {
-                        return (game_12.game.canvas.width / this.zoomScale) * 0.375;
+                        return (game_12.game.pixiApp.stage.width / this.zoomScale) * 0.375;
                     },
                     enumerable: true,
                     configurable: true
@@ -4040,8 +4054,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     var dontMoveY = false;
                     var scaledCanvasW = game_12.game.defaultCanvasWidth;
                     var scaledCanvasH = game_12.game.defaultCanvasHeight;
-                    var maxX = this.background.width - scaledCanvasW / 2;
-                    var maxY = this.background.height - scaledCanvasH / 2;
+                    var maxX = this.width - scaledCanvasW / 2;
+                    var maxY = this.height - scaledCanvasH / 2;
                     if (playerX < scaledCanvasW / 2) {
                         dontMoveX = true;
                     }
@@ -4109,8 +4123,8 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         camX = 0;
                     if (camY < 0)
                         camY = 0;
-                    var maxX = this.background.width - scaledCanvasW;
-                    var maxY = this.background.height - scaledCanvasH;
+                    var maxX = this.width - scaledCanvasW;
+                    var maxY = this.height - scaledCanvasH;
                     if (camX > maxX)
                         camX = maxX;
                     if (camY > maxY)
@@ -4606,10 +4620,10 @@ System.register("tests", ["shape", "point"], function (exports_23, context_23) {
         }
     };
 });
-System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "tests", "gameMode"], function (exports_24, context_24) {
+System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "gameMode"], function (exports_24, context_24) {
     "use strict";
     var __moduleName = context_24 && context_24.id;
-    var sprite_1, level_1, sprites_1, levels_1, color_1, Helpers, Tests, gameMode_2, Options, Menu, UIData, Game, game;
+    var sprite_1, level_1, sprites_1, levels_1, color_1, Helpers, gameMode_2, Options, Menu, UIData, Game, game;
     return {
         setters: [
             function (sprite_1_1) {
@@ -4629,9 +4643,6 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
             },
             function (Helpers_10) {
                 Helpers = Helpers_10;
-            },
-            function (Tests_1) {
-                Tests = Tests_1;
             },
             function (gameMode_2_1) {
                 gameMode_2 = gameMode_2_1;
@@ -4700,10 +4711,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 function Game() {
                     this.sprites = {};
                     this.levelDatas = {};
-                    this.spritesheets = {};
-                    this.backgrounds = {};
                     this.sounds = {};
-                    this.soundLoadCount = 0;
                     this.palettes = {};
                     this.isServer = false;
                     this.isClient = true;
@@ -4713,34 +4721,34 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.appLoadInterval = 0;
                     this.levelLoadInterval = 0;
                     this.requestId = 0;
-                    this.soundSheetLoaded = false;
                     this.paused = false;
                     this.collisionCalls = 0;
-                    this.doQuickStart = true;
+                    this.loadCount = 0;
+                    this.maxLoadCount = 0;
                     this.restartLevelName = "";
+                    this.doQuickStart = true;
                     this.timePassed = 0;
                     this.lag = 0;
                     this.MS_PER_UPDATE = 16.6666;
-                    this.canvas = $("#canvas")[0];
-                    this.uiCanvas = $("#ui-canvas")[0];
-                    this.uiCtx = this.uiCanvas.getContext("2d");
-                    this.ctx = this.canvas.getContext("2d");
+                    this.defaultCanvasWidth = 298;
+                    this.defaultCanvasHeight = 224;
+                    this.canvas = document.getElementById("canvas");
+                    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas, });
+                    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
                     this.uiEl = $("#ui")[0];
-                    this.defaultCanvasWidth = this.canvas.width;
-                    this.defaultCanvasHeight = this.canvas.height;
-                    Helpers.noCanvasSmoothing(this.ctx);
-                    Helpers.noCanvasSmoothing(this.uiCtx);
+                    this.uiCanvas = document.getElementById("ui-canvas");
+                    this.uiCtx = this.uiCanvas.getContext("2d");
                 }
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
-                    this.uiData.isBrawl = true;
-                    this.uiData.maxPlayers = 1;
-                    this.uiData.isPlayer2CPU = false;
+                    this.uiData.selectedArenaMap = "gallery";
+                    this.uiData.selectedGameMode = "deathmatch";
                     this.uiData.maxPlayers = 0;
                     this.uiData.numBots = 0;
+                    this.uiData.playTo = 20;
                     $("#options").show();
                     $("#dev-options").show();
-                    game.loadLevel("sm_bossroom");
+                    game.loadLevel(this.uiData.selectedArenaMap);
                 };
                 Game.prototype.getMusicVolume01 = function () {
                     return Number(this.options.musicVolume) / 100;
@@ -4942,8 +4950,8 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                                     if (game.music)
                                         game.music.stop();
                                     game.uiData.menu = Menu.MainMenu;
-                                    $(game.canvas).hide();
-                                    $(game.uiCanvas).hide();
+                                    $(game.canvasWrapper).hide();
+                                    $("#ui-canvas").hide();
                                     $("#options").hide();
                                 }
                                 else {
@@ -4979,39 +4987,18 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             }
                         }
                     });
-                    this.loadSprites();
-                    this.loadLevels();
-                    this.loadPalettes();
-                    for (var _i = 0, soundFiles_1 = soundFiles; _i < soundFiles_1.length; _i++) {
-                        var soundFile = soundFiles_1[_i];
-                        var sound = new Howl({
-                            src: ["assets/sounds/" + soundFile],
-                            onload: function () {
-                                _this.soundLoadCount++;
-                            }
-                        });
-                        this.sounds[soundFile.split(".")[0]] = sound;
-                    }
-                    this.soundSheet = new Howl({
-                        src: ["assets/soundsheets/mmx_sfx.mp3"],
-                        sprite: {
-                            buster: [900, 1425 - 900],
-                            buster2: [17461, 18220 - 17461],
-                            buster3: [4761, 5950 - 4761],
-                            buster4: [19429, 20423 - 19429],
-                            rollingShield: [180000 + 12411, 394],
-                            electricSpark: [180000 + 16554, 919],
-                            tornado: [180000 + 7359, 2962],
-                            boomerang: [180000 + 5766, 1190],
-                            fireWave: [180000 + 4404, 478]
-                        },
-                        onload: function () {
-                            _this.soundSheetLoaded = true;
+                    this.loadImages([
+                        "assets/spritesheets/effects.png",
+                        "assets/spritesheets/MegamanX.png"
+                    ], function () {
+                        _this.loadSprites();
+                        _this.loadLevels();
+                        _this.loadPalettes();
+                        _this.loadSounds();
+                        if (_this.uiData.menu !== Menu.BadBrowserMenu) {
+                            _this.appLoadInterval = window.setInterval(function () { return _this.onLoad(); }, 1);
                         }
                     });
-                    if (this.uiData.menu !== Menu.BadBrowserMenu) {
-                        this.appLoadInterval = window.setInterval(function () { return _this.onLoad(); }, 1);
-                    }
                 };
                 Game.prototype.onLoad = function () {
                     if (this.isLoaded()) {
@@ -5060,14 +5047,10 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Game.prototype.refreshUI = function () {
                     this.ui.$forceUpdate();
                 };
-                Game.prototype.test = function () {
-                    Tests.runAllTests();
-                };
                 Game.prototype.restartLevel = function (name) {
                     if (this.music) {
                         this.music.stop();
                     }
-                    console.log("RESET");
                     this.restartLevelName = name;
                 };
                 Game.prototype.doRestart = function () {
@@ -5085,12 +5068,10 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.levelLoadInterval = window.setInterval(function () { return _this.startLevel(); }, 1);
                 };
                 Game.prototype.startLevel = function () {
-                    if ((!this.level.background || this.level.background.complete) &&
-                        (!this.level.parallax || this.level.parallax.complete) &&
-                        (!this.level.foreground || this.level.foreground.complete)) {
+                    if (this.isLoaded()) {
                         window.clearInterval(this.levelLoadInterval);
-                        $(this.canvas).show();
-                        $(this.uiCanvas).show();
+                        $(this.canvasWrapper).show();
+                        $("#ui-canvas").show();
                         var gameMode = void 0;
                         if (this.uiData.isBrawl) {
                             gameMode = new gameMode_2.Brawl(this.level, this.uiData);
@@ -5105,24 +5086,25 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         this.gameLoop(0);
                     }
                 };
-                Game.prototype.getSpritesheet = function (path) {
-                    if (!this.spritesheets[path]) {
-                        this.spritesheets[path] = document.createElement("img");
-                        this.spritesheets[path].src = path;
+                Game.prototype.loadImages = function (paths, callback) {
+                    var _this = this;
+                    for (var i = paths.length - 1; i >= 0; i--) {
+                        var path = paths[i];
+                        if (PIXI.utils.TextureCache[path]) {
+                            paths.splice(i, 1);
+                        }
                     }
-                    return this.spritesheets[path];
-                };
-                Game.prototype.getBackground = function (path) {
-                    if (!this.backgrounds[path]) {
-                        this.backgrounds[path] = document.createElement("img");
-                        this.backgrounds[path].src = path;
-                    }
-                    return this.backgrounds[path];
+                    this.maxLoadCount++;
+                    PIXI.loader.add(paths).load(function () {
+                        _this.loadCount++;
+                        if (callback)
+                            callback();
+                    });
                 };
                 Game.prototype.loadSprites = function () {
                     for (var _i = 0, spriteJsons_1 = sprites_1.spriteJsons; _i < spriteJsons_1.length; _i++) {
                         var spriteJson = spriteJsons_1[_i];
-                        var sprite = new sprite_1.Sprite(spriteJson);
+                        var sprite = new sprite_1.Sprite(spriteJson, false, undefined);
                         this.sprites[sprite.name] = sprite;
                     }
                 };
@@ -5144,27 +5126,40 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.palettes["tornado"] = new color_1.Palette("assets/palettes/tornado.png");
                     this.palettes["torpedo"] = new color_1.Palette("assets/palettes/torpedo.png");
                 };
-                Game.prototype.isLoaded = function () {
-                    for (var name_3 in this.sprites) {
-                        if (!this.sprites[name_3].spritesheet.complete) {
-                            return false;
+                Game.prototype.loadSounds = function () {
+                    var _this = this;
+                    for (var _i = 0, soundFiles_1 = soundFiles; _i < soundFiles_1.length; _i++) {
+                        var soundFile = soundFiles_1[_i];
+                        this.maxLoadCount++;
+                        var sound = new Howl({
+                            src: ["assets/sounds/" + soundFile],
+                            onload: function () {
+                                _this.loadCount++;
+                            }
+                        });
+                        this.sounds[soundFile.split(".")[0]] = sound;
+                    }
+                    this.maxLoadCount++;
+                    this.soundSheet = new Howl({
+                        src: ["assets/soundsheets/mmx_sfx.mp3"],
+                        sprite: {
+                            buster: [900, 1425 - 900],
+                            buster2: [17461, 18220 - 17461],
+                            buster3: [4761, 5950 - 4761],
+                            buster4: [19429, 20423 - 19429],
+                            rollingShield: [180000 + 12411, 394],
+                            electricSpark: [180000 + 16554, 919],
+                            tornado: [180000 + 7359, 2962],
+                            boomerang: [180000 + 5766, 1190],
+                            fireWave: [180000 + 4404, 478]
+                        },
+                        onload: function () {
+                            _this.loadCount++;
                         }
-                    }
-                    for (var name_4 in this.palettes) {
-                        if (!this.palettes[name_4].imageEl.complete) {
-                            return false;
-                        }
-                    }
-                    var keys = Object.getOwnPropertyNames(this.sounds);
-                    if (keys.length !== this.soundLoadCount) {
-                        return false;
-                    }
-                    if (!this.soundSheetLoaded)
-                        return false;
-                    return true;
+                    });
                 };
-                Game.prototype.isLevelLoaded = function (level) {
-                    return level.background.complete && level.parallax.complete && level.foreground.complete;
+                Game.prototype.isLoaded = function () {
+                    return this.loadCount >= this.maxLoadCount;
                 };
                 Game.prototype.gameLoop = function (currentTime) {
                     var _this = this;
@@ -6657,10 +6652,10 @@ System.register("frame", [], function (exports_30, context_30) {
         }
     };
 });
-System.register("sprite", ["collider", "frame", "point", "rect", "game", "helpers"], function (exports_31, context_31) {
+System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], function (exports_31, context_31) {
     "use strict";
     var __moduleName = context_31 && context_31.id;
-    var collider_6, frame_1, point_12, rect_6, game_15, Helpers, Sprite;
+    var collider_6, frame_1, point_12, rect_6, Helpers, Sprite;
     return {
         setters: [
             function (collider_6_1) {
@@ -6675,16 +6670,13 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
             function (rect_6_1) {
                 rect_6 = rect_6_1;
             },
-            function (game_15_1) {
-                game_15 = game_15_1;
-            },
             function (Helpers_12) {
                 Helpers = Helpers_12;
             }
         ],
         execute: function () {
             Sprite = (function () {
-                function Sprite(spriteJson) {
+                function Sprite(spriteJson, shouldInit, container) {
                     this.spriteJson = spriteJson;
                     this.name = spriteJson.name;
                     this.alignment = spriteJson.alignment;
@@ -6696,7 +6688,6 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     }
                     this.frames = [];
                     this.hitboxes = [];
-                    game_15.game.getSpritesheet(spriteJson.spritesheetPath);
                     for (var _i = 0, _a = spriteJson.hitboxes; _i < _a.length; _i++) {
                         var hitboxJson = _a[_i];
                         var hitbox = new collider_6.Collider([
@@ -6718,14 +6709,92 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                         }
                         this.frames.push(frame);
                     }
+                    if (shouldInit) {
+                        this.initSprite(container);
+                    }
                 }
                 Object.defineProperty(Sprite.prototype, "spritesheet", {
                     get: function () {
-                        return game_15.game.getSpritesheet(this.spritesheetPath);
+                        return PIXI.loader.resources[this.spritesheetPath].texture.baseTexture.source;
                     },
                     enumerable: true,
                     configurable: true
                 });
+                Sprite.prototype.initSprite = function (container) {
+                    var textureArray = [];
+                    for (var _i = 0, _a = this.frames; _i < _a.length; _i++) {
+                        var frame = _a[_i];
+                        var texture = new PIXI.Texture(PIXI.loader.resources[this.spritesheetPath].texture.baseTexture);
+                        texture.frame = new PIXI.Rectangle(frame.rect.x1, frame.rect.y1, frame.rect.w, frame.rect.h);
+                        textureArray.push(texture);
+                    }
+                    this.pixiSprite = new PIXI.extras.AnimatedSprite(textureArray);
+                    var anchor = this.getAnchor();
+                    this.pixiSprite.anchor.x = anchor.x;
+                    this.pixiSprite.anchor.y = anchor.y;
+                    this.pixiSprite.animationSpeed = 0;
+                    container.addChild(this.pixiSprite);
+                };
+                Sprite.prototype.getAnchor = function () {
+                    var x, y;
+                    if (this.alignment === "topleft") {
+                        x = 0;
+                        y = 0;
+                    }
+                    else if (this.alignment === "topmid") {
+                        x = 0.5;
+                        y = 0;
+                    }
+                    else if (this.alignment === "topright") {
+                        x = 1;
+                        y = 0;
+                    }
+                    else if (this.alignment === "midleft") {
+                        x = 0;
+                        y = 0.5;
+                    }
+                    else if (this.alignment === "center") {
+                        x = 0.5;
+                        y = 0.5;
+                    }
+                    else if (this.alignment === "midright") {
+                        x = 1;
+                        y = 0.5;
+                    }
+                    else if (this.alignment === "botleft") {
+                        x = 0;
+                        y = 1;
+                    }
+                    else if (this.alignment === "botmid") {
+                        x = 0.5;
+                        y = 1;
+                    }
+                    else if (this.alignment === "botright") {
+                        x = 1;
+                        y = 1;
+                    }
+                    return new point_12.Point(x, y);
+                };
+                Sprite.prototype.draw = function (frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
+                    this.pixiSprite.gotoAndStop(frameIndex);
+                    this.pixiSprite.x = x;
+                    this.pixiSprite.y = y;
+                    this.pixiSprite.scale.x = flipX;
+                    this.pixiSprite.scale.y = flipY;
+                };
+                Sprite.prototype.createAndDraw = function (container, frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
+                    var sprite = new Sprite(this.spriteJson, true, container);
+                    sprite.draw(frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
+                    return sprite;
+                };
+                Sprite.prototype.drawCanvas = function (ctx, frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
+                    flipX = flipX || 1;
+                    flipY = flipY || 1;
+                    var frame = this.frames[frameIndex];
+                    var rect = frame.rect;
+                    var offset = this.getAlignOffset(frameIndex, flipX, flipY);
+                    Helpers.drawImage(ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
+                };
                 Sprite.prototype.getAlignOffset = function (frameIndex, flipX, flipY) {
                     var frame = this.frames[frameIndex];
                     var rect = frame.rect;
@@ -6787,14 +6856,6 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     }
                     return new point_12.Point(x + offset.x * flipX, y + offset.y * flipY);
                 };
-                Sprite.prototype.draw = function (ctx, frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
-                    flipX = flipX || 1;
-                    flipY = flipY || 1;
-                    var frame = this.frames[frameIndex];
-                    var rect = frame.rect;
-                    var offset = this.getAlignOffset(frameIndex, flipX, flipY);
-                    Helpers.drawImage(ctx, this.spritesheet, rect.x1, rect.y1, rect.w, rect.h, x + offset.x, y + offset.y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
-                };
                 return Sprite;
             }());
             exports_31("Sprite", Sprite);
@@ -6804,7 +6865,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
 System.register("actor", ["sprite", "point", "game", "helpers"], function (exports_32, context_32) {
     "use strict";
     var __moduleName = context_32 && context_32.id;
-    var sprite_2, point_13, game_16, Helpers, Actor, Anim;
+    var sprite_2, point_13, game_15, Helpers, Actor, Anim;
     return {
         setters: [
             function (sprite_2_1) {
@@ -6813,8 +6874,8 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
             function (point_13_1) {
                 point_13 = point_13_1;
             },
-            function (game_16_1) {
-                game_16 = game_16_1;
+            function (game_15_1) {
+                game_15 = game_15_1;
             },
             function (Helpers_13) {
                 Helpers = Helpers_13;
@@ -6838,13 +6899,16 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     this.renderEffect = "";
                     this.changeSprite(sprite, true);
                     if (!dontAddToLevel) {
-                        game_16.game.level.addGameObject(this);
+                        game_15.game.level.addGameObject(this);
                     }
                 }
                 Actor.prototype.changeSprite = function (sprite, resetFrame) {
                     if (!sprite)
                         return;
-                    this.sprite = new sprite_2.Sprite(sprite.spriteJson);
+                    if (this.sprite && this.sprite.pixiSprite) {
+                        game_15.game.level.gameContainer.removeChild(this.sprite.pixiSprite);
+                    }
+                    this.sprite = new sprite_2.Sprite(sprite.spriteJson, true, game_15.game.level.gameContainer);
                     for (var _i = 0, _a = this.sprite.hitboxes; _i < _a.length; _i++) {
                         var hitbox = _a[_i];
                         hitbox.actor = this;
@@ -6879,11 +6943,11 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     configurable: true
                 });
                 Actor.prototype.update = function () {
-                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_16.game.deltaTime);
+                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_15.game.deltaTime);
                     if (this.renderEffectTime <= 0) {
                         this.renderEffect = "";
                     }
-                    this.frameTime += game_16.game.deltaTime * this.frameSpeed;
+                    this.frameTime += game_15.game.deltaTime * this.frameSpeed;
                     if (this.frameTime >= this.currentFrame.duration) {
                         var onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
                         if (!onceEnd) {
@@ -6894,7 +6958,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         }
                     }
                     if (this.useGravity && !this.grounded) {
-                        this.vel.y += game_16.game.level.gravity * game_16.game.deltaTime;
+                        this.vel.y += game_15.game.level.gravity * game_15.game.deltaTime;
                         if (this.vel.y > 1000) {
                             this.vel.y = 1000;
                         }
@@ -6906,14 +6970,14 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     if (this.collider && !this.collider.isTrigger) {
                         var yDist = 1;
                         if (this.grounded) {
-                            yDist = 300 * game_16.game.deltaTime;
+                            yDist = 300 * game_15.game.deltaTime;
                         }
-                        var collideData = game_16.game.level.checkCollisionActor(this, 0, yDist);
+                        var collideData = game_15.game.level.checkCollisionActor(this, 0, yDist);
                         if (collideData && this.vel.y >= 0) {
                             this.grounded = true;
                             this.vel.y = 0;
                             var yVel = new point_13.Point(0, yDist);
-                            var mtv = game_16.game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
+                            var mtv = game_15.game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
                             if (mtv) {
                                 this.incPos(yVel);
                                 this.incPos(mtv.unitInc(0.01));
@@ -6923,7 +6987,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                             this.grounded = false;
                         }
                     }
-                    var triggerList = game_16.game.level.getTriggerList(this, 0, 0);
+                    var triggerList = game_15.game.level.getTriggerList(this, 0, 0);
                     for (var _i = 0, triggerList_1 = triggerList; _i < triggerList_1.length; _i++) {
                         var trigger = triggerList_1[_i];
                         this.registerCollision(trigger);
@@ -6931,24 +6995,24 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 };
                 Actor.prototype.incPos = function (amount) {
                     if (this.collider)
-                        game_16.game.level.removeFromGrid(this);
+                        game_15.game.level.removeFromGrid(this);
                     this.pos.inc(amount);
                     if (this.collider)
-                        game_16.game.level.addGameObjectToGrid(this);
+                        game_15.game.level.addGameObjectToGrid(this);
                 };
                 Actor.prototype.changePos = function (newPos) {
                     if (this.collider)
-                        game_16.game.level.removeFromGrid(this);
+                        game_15.game.level.removeFromGrid(this);
                     this.pos = newPos;
                     if (this.collider)
-                        game_16.game.level.addGameObjectToGrid(this);
+                        game_15.game.level.addGameObjectToGrid(this);
                 };
                 Actor.prototype.preUpdate = function () {
                     this.collidedInFrame.clear();
                 };
                 Actor.prototype.sweepTest = function (offset) {
                     var inc = offset.clone();
-                    var collideData = game_16.game.level.checkCollisionActor(this, inc.x, inc.y);
+                    var collideData = game_15.game.level.checkCollisionActor(this, inc.x, inc.y);
                     if (collideData) {
                         return true;
                     }
@@ -6958,7 +7022,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     if (useDeltaTime === void 0) { useDeltaTime = true; }
                     if (pushIncline === void 0) { pushIncline = true; }
                     if (snapInclineGravity === void 0) { snapInclineGravity = true; }
-                    var times = useDeltaTime ? game_16.game.deltaTime : 1;
+                    var times = useDeltaTime ? game_15.game.deltaTime : 1;
                     if (!this.collider) {
                         this.pos.inc(amount.times(times));
                     }
@@ -6966,7 +7030,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         this.freeFromCollision();
                         var inc = amount.clone();
                         var incAmount = inc.multiply(times);
-                        var mtv = game_16.game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
+                        var mtv = game_15.game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
                         this.incPos(incAmount);
                         if (mtv) {
                             this.incPos(mtv.unitInc(0.01));
@@ -6975,7 +7039,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     }
                 };
                 Actor.prototype.freeFromCollision = function () {
-                    var currentCollideDatas = game_16.game.level.getAllCollideDatas(this, 0, 0, undefined);
+                    var currentCollideDatas = game_15.game.level.getAllCollideDatas(this, 0, 0, undefined);
                     for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
                         var collideData = currentCollideDatas_1[_i];
                         var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
@@ -6986,19 +7050,21 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     return this.constructor.name === "RollingShieldProj";
                 };
                 Actor.prototype.render = function (x, y) {
+                    var offsetX = this.xDir * this.currentFrame.offset.x;
+                    var offsetY = this.yDir * this.currentFrame.offset.y;
                     if (this.angle === undefined) {
-                        this.sprite.draw(game_16.game.ctx, this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                        this.sprite.draw(this.frameIndex, this.pos.x + x + offsetX, this.pos.y + y + offsetY, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
                     }
                     else {
                         this.renderFromAngle(x, y);
                     }
-                    if (game_16.game.options.showHitboxes && this.collider) {
-                        Helpers.drawPolygon(game_16.game.ctx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
-                        Helpers.drawCircle(game_16.game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
+                    if (game_15.game.options.showHitboxes && this.collider) {
+                        Helpers.drawPolygon(game_15.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                        Helpers.drawCircle(game_15.game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
                     }
                 };
                 Actor.prototype.renderFromAngle = function (x, y) {
-                    this.sprite.draw(game_16.game.ctx, 0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
                 };
                 Actor.prototype.registerCollision = function (other) {
                     if (!this.collidedInFrame.has(other.collider)) {
@@ -7032,17 +7098,18 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     return this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration;
                 };
                 Actor.prototype.destroySelf = function (sprite, fadeSound) {
-                    game_16.game.level.removeGameObject(this);
+                    game_15.game.level.removeGameObject(this);
                     if (sprite) {
                         var anim = new Anim(this.pos, sprite, this.xDir);
                     }
                     if (fadeSound) {
                         this.playSound(fadeSound);
                     }
+                    game_15.game.level.gameContainer.removeChild(this.sprite.pixiSprite);
                 };
                 Actor.prototype.getSoundVolume = function () {
-                    var dist = new point_13.Point(game_16.game.level.camCenterX, game_16.game.level.camCenterY).distanceTo(this.pos);
-                    var volume = 1 - (dist / (game_16.game.level.screenWidth));
+                    var dist = new point_13.Point(game_15.game.level.camCenterX, game_15.game.level.camCenterY).distanceTo(this.pos);
+                    var volume = 1 - (dist / (game_15.game.level.screenWidth));
                     volume = Helpers.clampMin0(volume);
                     return volume;
                 };
@@ -7051,7 +7118,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     if (overrideVolume !== undefined)
                         volume = overrideVolume;
                     volume = Helpers.clampMin0(volume);
-                    game_16.game.playSound(soundName, volume);
+                    game_15.game.playSound(soundName, volume);
                 };
                 Actor.prototype.withinX = function (other, amount) {
                     return Math.abs(this.pos.x - other.pos.x) <= amount;
