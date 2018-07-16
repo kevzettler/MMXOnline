@@ -18,6 +18,7 @@ import { KillFeedEntry } from "./killFeedEntry";
 import { GameMode, FFADeathMatch } from "./gameMode";
 import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, SmallHealthPickup } from "./pickup";
 import { KillZone } from "./killZone";
+import { HUD } from "./hud";
 
 export class LevelData {
   levelJson: any;
@@ -100,6 +101,7 @@ export class Level {
   grid: Set<GameObject>[][] = [];
   cellWidth: number;
   levelData: LevelData;
+  hud: HUD;
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
@@ -233,6 +235,9 @@ export class Level {
 
       game.music = music;
     }
+
+    this.hud = new HUD(this);
+    this.gameMode.createHUD();
   }
   
   getGameObjectArray() {
@@ -325,6 +330,7 @@ export class Level {
   foregroundSprite: PIXI.Sprite;
   gameContainer: PIXI.Container;
   uiContainer: PIXI.Container;
+  textContainer: PIXI.Container;
   renderSetup() {
 
     if(this.parallaxPath) {
@@ -401,27 +407,15 @@ export class Level {
       effect.render(0, 0);
     }
 
-    this.drawHUD();
-  }
-
-  drawHUD() {
-    //console.log("DRAWING HUD");
+    this.hud.updateHUD();
+    this.gameMode.drawHUD();
+    
     Helpers.noCanvasSmoothing(game.uiCtx);
     
     //game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
     game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
     //console.log(this.screenWidth + "," + this.screenHeight)
     game.uiCtx.clearRect(0, 0, this.screenWidth, this.screenHeight);
-
-
-    let player1 = this.localPlayers[0];
-    this.drawPlayerHUD(player1, 1);
-    if(this.localPlayers.length > 1 && this.levelData.fixedCam) {      
-      let player2 = this.localPlayers[1];
-      this.drawPlayerHUD(player2, 2);
-    }
-
-    this.gameMode.drawHUD();
 
     if(!game.uiData.isProd) {
       Helpers.drawText(game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
@@ -438,48 +432,6 @@ export class Level {
     */
 
     //game.ctx.drawImage(game.uiCanvas, this.camX, this.camY);
-  }
-  
-  drawPlayerHUD(player: Player, playerNum: number) {
-    
-    //Health
-    let baseX = 10;
-    if(playerNum === 2) baseX = this.screenWidth - 4 - baseX;
-    
-    let baseY = this.screenHeight/2;
-    baseY += 25;
-    game.sprites["hud_health_base"].drawCanvas(game.uiCtx, 0, baseX, baseY, 1, 1, "", 1, player.palette);
-    baseY -= 16;
-    for(let i = 0; i < Math.ceil(player.health); i++) {
-      game.sprites["hud_health_full"].drawCanvas(game.uiCtx, 0, baseX, baseY);
-      baseY -= 2;
-    }
-    for(let i = 0; i < player.maxHealth - Math.ceil(player.health); i++) {
-      game.sprites["hud_health_empty"].drawCanvas(game.uiCtx, 0, baseX, baseY);
-      baseY -= 2;
-    }
-    game.sprites["hud_health_top"].drawCanvas(game.uiCtx, 0, baseX, baseY);
-
-    //Weapon
-    if(player.weaponIndex !== 0) {
-      baseX = 25;
-      if(playerNum === 2) baseX = this.screenWidth - 4 - baseX;
-      
-      baseY = this.screenHeight/2;
-      baseY += 25;
-      game.sprites["hud_weapon_base"].drawCanvas(game.uiCtx, player.weapon.index - 1, baseX, baseY);
-      baseY -= 16;
-      for(let i = 0; i < Math.ceil(player.weapon.ammo); i++) {
-        game.sprites["hud_weapon_full"].drawCanvas(game.uiCtx, player.weapon.index - 1, baseX, baseY);
-        baseY -= 2;
-      }
-      for(let i = 0; i < player.weapon.maxAmmo - Math.ceil(player.weapon.ammo); i++) {
-        game.sprites["hud_health_empty"].drawCanvas(game.uiCtx, 0, baseX, baseY);
-        baseY -= 2;
-      }
-      game.sprites["hud_health_top"].drawCanvas(game.uiCtx, 0, baseX, baseY);
-    }
-
   }
 
   get width() { return this.backgroundSprite.width; }

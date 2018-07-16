@@ -388,7 +388,7 @@ export class TornadoProj extends Projectile {
   }
   
   render(x: number, y: number) {
-    
+    /*
     this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     let i = 0;
     let spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
@@ -398,6 +398,7 @@ export class TornadoProj extends Projectile {
     this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
 
     this.renderEffect = "";
+    */
     if(game.options.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       //Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");

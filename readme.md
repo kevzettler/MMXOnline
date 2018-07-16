@@ -2,17 +2,20 @@
 Features
 ===============
 
+-Flashing and effects
+-Use particle containers for:
+  -HUD stuff
+  -Backgrounds
+  -Effects
+-HUD System/framework
 -Fix Edge bleeding
 -When restarting, clear the Pixi stage of objects
 -Debug Memory Usage
+-Memory optimization: avoid new's
 -Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
 -getHex is called many times and should be optimized
--Optimize drawing ideas:
-  -Use pixijs
-  -Only draw things on-screen
-  -Only draw things that actually moved
-  -For very large backgrounds, only draw part of it
-  -For static backgrounds draw a canvas of it not the whole thing
+-Only draw things on-screen
+-Make sure each sprite isn't creating a new image in memory
 
 -A "prod" system/switch
   -Hook up google analytics if it's on

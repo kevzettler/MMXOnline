@@ -272,6 +272,26 @@ export function drawImage(ctx: CanvasRenderingContext2D, imgEl: HTMLImageElement
   helperCtx.restore();
 }
 
+export function createAndDrawRect(container: PIXI.Container, rect: Rect, fillColor?: number, strokeColor?: number, strokeWidth?: number, fillAlpha?: number): PIXI.Graphics {
+  let rectangle = new PIXI.Graphics();
+  if(fillAlpha === undefined) fillAlpha = 1;
+  //if(!fillColor) fillColor = 0x00FF00;
+
+  if(strokeColor) {
+    rectangle.lineStyle(strokeWidth, strokeColor, fillAlpha);
+  }
+
+  if(fillColor !== undefined) 
+    rectangle.beginFill(fillColor, fillAlpha);
+  
+  rectangle.drawRect(rect.x1, rect.y1, rect.w, rect.h);
+  if(fillColor !== undefined)
+    rectangle.endFill();
+  
+  container.addChild(rectangle);
+  return rectangle;
+}
+
 export function drawRect(ctx: CanvasRenderingContext2D, rect: Rect, fillColor?: string, strokeColor?: string, strokeWidth?: number, fillAlpha?: number): void {
   let rx: number = Math.round(rect.x1);
   let ry: number = Math.round(rect.y1);
@@ -362,6 +382,60 @@ export function isSupportedBrowser() {
     return false;
 }
 
+export function createAndDrawText(container: PIXI.Container, text: string, x: number, y: number, size: number, hAlign: string, vAlign: string, isRed?: boolean, overrideColor?: string) {
+  let message = new PIXI.Text(text);
+
+  size = size || 14;
+  hAlign = hAlign || "center";  //start,end,left,center,right
+  vAlign = vAlign || "middle";  //Top,Bottom,Middle,Alphabetic,Hanging
+
+  let alignX = 1;
+  let alignY = 1;
+  if(hAlign === "left") alignX = 0;
+  if(hAlign === "center") alignX = 0.5;
+  if(hAlign === "right") alignX = 1;
+  if(vAlign === "top") alignY = 0;
+  if(vAlign === "middle") alignY = 0.5;
+  if(vAlign === "bottom") alignY = 1;
+  message.anchor.set(alignX, alignY);
+
+  let style = new PIXI.TextStyle({
+    fontFamily: "mmx_font",
+    dropShadow: true,
+    dropShadowColor: "#000000",
+    dropShadowBlur: 0,
+    dropShadowDistance: size/2,
+  });
+
+
+  if(!overrideColor) {
+    /*
+    let gradient = ctx.createLinearGradient(x, y - size/2, x, y);
+    let col = "#6090D0";
+    if(isRed) col = "#f44256";
+    gradient.addColorStop(0, col);
+    gradient.addColorStop(0.5, "#C8D8E8");
+    gradient.addColorStop(1.0, col);
+    ctx.fillStyle = gradient;
+    */
+    let col = "#6090D0";
+    if(isRed) col = "#f44256";
+    style.fill = [col, "#C8D8E8", col];
+    style.fillGradientType = 	PIXI.TEXT_GRADIENT.LINEAR_VERTICAL;
+    style.fillGradientStops = [0, 0.5, 1];
+  }
+  else {
+    style.fill = overrideColor;
+  }
+
+  style.fontSize = size * 3;
+  message.style = style;
+  message.position.set(x, y);
+  message.scale.set(1/3, 1/3);
+  container.addChild(message);
+  return message;
+}
+
 export function drawTextMMX(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, hAlign: string, vAlign: string, isRed?: boolean, overrideColor?: string) {
   ctx.save();
   
@@ -435,6 +509,19 @@ export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, 
       ctx.stroke();
   }
 
+}
+
+export function createAndDrawLine(container: PIXI.Container, x: number, y: number, x2: number, y2: number, color?: number, thickness?: number) {
+  let line = new PIXI.Graphics();
+  if(!thickness) thickness = 1;
+  if(!color) color = 0x000000;
+  line.lineStyle(thickness, color, 1);
+  line.moveTo(x, y);
+  line.lineTo(x2, y2);
+  line.x = 0;
+  line.y = 0;
+  container.addChild(line);
+  return line;
 }
 
 export function drawLine(ctx: CanvasRenderingContext2D, x: number, y: number, x2: number, y2: number, color?: string, thickness?: number) {

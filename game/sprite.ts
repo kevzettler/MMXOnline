@@ -115,10 +115,12 @@ export class Sprite {
     return new Point(x, y);
   }
 
-  draw(frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
+  draw(frameIndex: number, x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
+    flipX = flipX || 1;
+    flipY = flipY || 1;
     this.pixiSprite.gotoAndStop(frameIndex);
-    this.pixiSprite.x = x;
-    this.pixiSprite.y = y;
+    if(x !== undefined) this.pixiSprite.x = x;
+    if(y !== undefined) this.pixiSprite.y = y;
     this.pixiSprite.scale.x = flipX;
     this.pixiSprite.scale.y = flipY;
   }

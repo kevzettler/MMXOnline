@@ -61,5 +61,9 @@ export class Rect {
       return false;
     return true;
   }
+
+  clone(x: number, y: number) {
+    return new Rect(this.x1 + x, this.y1 + y, this.x2 + x, this.y2 + y);
+  }
   
 }

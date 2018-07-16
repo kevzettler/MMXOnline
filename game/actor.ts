@@ -8,6 +8,7 @@ import { Shape } from "./shape";
 import { Character } from "./character";
 import { RollingShield } from "./weapon";
 import { RollingShieldProj } from "./projectile";
+import { Rect } from "./rect";
 
 //Anything that has: a position, rotation, name and sprite. Can also have an optional collider
 //This MUST have a sprite. There is too much maintenance effort to support a sprite-less actor class
@@ -59,6 +60,7 @@ export class Actor {
     }
 
     this.sprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
+    this.sprite.pixiSprite.visible = false;
 
     for(let hitbox of this.sprite.hitboxes) {
       hitbox.actor = this;
@@ -242,7 +244,7 @@ export class Actor {
 
   render(x: number, y: number) {
     //console.log(this.pos.x + "," + this.pos.y);
-    
+
     let offsetX = this.xDir * this.currentFrame.offset.x;
     let offsetY = this.yDir * this.currentFrame.offset.y;
 
@@ -257,6 +259,18 @@ export class Actor {
       Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
     }
+    this.sprite.pixiSprite.visible = true;
+    /*
+    let rect = this.currentFrame.rect.clone(this.pos.x + x + offsetX, this.pos.y + y + offsetY);
+    let camRect = new Rect(game.level.camX, game.level.camY, game.level.camX + game.defaultCanvasWidth, game.level.camY + game.defaultCanvasHeight);
+    if(!rect.overlaps(camRect)) {
+      this.sprite.pixiSprite.visible = false;
+    }
+    else {
+      this.sprite.pixiSprite.visible = true;
+    }
+    */
+      
   }
 
   renderFromAngle(x: number, y: number) {
