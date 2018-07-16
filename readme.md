@@ -1,15 +1,21 @@
+-Fix Edge bleeding
+
 ===============
-Features
+Abstraction
+===============
+-Flashing and effects
+-Z-Index problem: projectiles are behind players, etc.
+-When restarting, clear the Pixi stage of objects
+-HUD System/framework
+-Effect system
+===============
+Optimization
 ===============
 
--Flashing and effects
 -Use particle containers for:
   -HUD stuff
   -Backgrounds
   -Effects
--HUD System/framework
--Fix Edge bleeding
--When restarting, clear the Pixi stage of objects
 -Debug Memory Usage
 -Memory optimization: avoid new's
 -Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
@@ -17,19 +23,19 @@ Features
 -Only draw things on-screen
 -Make sure each sprite isn't creating a new image in memory
 
--A "prod" system/switch
-  -Hook up google analytics if it's on
-  -A telemetry system: send error logs to Azure; build some authentication app for this to view the logs
-
--Remove special weapon charge
--Remove "switch" button
-
 Collision Engine rules:
   -An actor must never have its pos modified manually. Always use incPos() or move() function
 
 ===============
 Post-V1 Features
 ===============
+
+-A "prod" system/switch
+  -Hook up google analytics if it's on
+  -A telemetry system: send error logs to Azure; build some authentication app for this to view the logs
+
+-Remove special weapon charge
+-Remove "switch" button
 
 -All the special weapon charges
 -Play as Zero

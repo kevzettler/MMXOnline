@@ -531,10 +531,10 @@ System.register("pickup", ["actor", "game", "character"], function (exports_7, c
         }
     };
 });
-System.register("projectile", ["actor", "damager", "point", "collider", "character", "wall", "game", "helpers", "rect", "weapon", "pickup"], function (exports_8, context_8) {
+System.register("projectile", ["actor", "damager", "point", "sprite", "collider", "character", "wall", "game", "helpers", "rect", "weapon", "pickup"], function (exports_8, context_8) {
     "use strict";
     var __moduleName = context_8 && context_8.id;
-    var actor_3, damager_1, point_2, collider_2, character_2, wall_1, game_4, Helpers, rect_1, weapon_1, pickup_1, Projectile, BusterProj, Buster2Proj, Buster3Proj, Buster4Proj, TorpedoProj, StingProj, RollingShieldProj, FireWaveProj, TornadoProj, ElectricSparkProj, BoomerangProj, ShotgunIceProj;
+    var actor_3, damager_1, point_2, sprite_1, collider_2, character_2, wall_1, game_4, Helpers, rect_1, weapon_1, pickup_1, Projectile, BusterProj, Buster2Proj, Buster3Proj, Buster4Proj, TorpedoProj, StingProj, RollingShieldProj, FireWaveProj, TornadoProj, ElectricSparkProj, BoomerangProj, ShotgunIceProj;
     return {
         setters: [
             function (actor_3_1) {
@@ -545,6 +545,9 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
             },
             function (point_2_1) {
                 point_2 = point_2_1;
+            },
+            function (sprite_1_1) {
+                sprite_1 = sprite_1_1;
             },
             function (collider_2_1) {
                 collider_2 = collider_2_1;
@@ -906,15 +909,30 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                 __extends(TornadoProj, _super);
                 function TornadoProj(weapon, pos, vel, player) {
                     var _this = _super.call(this, weapon, pos, vel, 1, player, game_4.game.sprites["tornado_mid"]) || this;
+                    _this.spriteMids = [];
                     _this.length = 1;
-                    _this.spriteStart = game_4.game.sprites["tornado_start"];
-                    _this.spriteMid = game_4.game.sprites["tornado_mid"];
-                    _this.spriteEnd = game_4.game.sprites["tornado_end"];
+                    _this.sprite.pixiSprite.visible = false;
+                    _this.spriteStart = new sprite_1.Sprite(game_4.game.sprites["tornado_start"].spriteJson, true, game_4.game.level.gameContainer);
+                    for (var i = 0; i < 6; i++) {
+                        var midSprite = new sprite_1.Sprite(game_4.game.sprites["tornado_mid"].spriteJson, true, game_4.game.level.gameContainer);
+                        midSprite.pixiSprite.visible = false;
+                        _this.spriteMids.push(midSprite);
+                    }
+                    _this.spriteEnd = new sprite_1.Sprite(game_4.game.sprites["tornado_end"].spriteJson, true, game_4.game.level.gameContainer);
                     _this.vel.x = 0;
                     _this.hitCooldown = 0.3;
                     return _this;
                 }
                 TornadoProj.prototype.render = function (x, y) {
+                    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    var i = 0;
+                    var spriteMidLen = this.spriteMids[0].frames[this.frameIndex].rect.w;
+                    for (i; i < this.length; i++) {
+                        this.spriteMids[i].pixiSprite.visible = true;
+                        this.spriteMids[i].draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    }
+                    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    this.renderEffect = "";
                     if (game_4.game.options.showHitboxes && this.collider) {
                         Helpers.drawPolygon(game_4.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
@@ -923,7 +941,7 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     _super.prototype.update.call(this);
                     var topX = 0;
                     var topY = 0;
-                    var spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
+                    var spriteMidLen = this.spriteMids[0].frames[this.frameIndex].rect.w;
                     var spriteEndLen = this.spriteEnd.frames[this.frameIndex].rect.w;
                     var botX = (this.length * spriteMidLen) + spriteEndLen;
                     var botY = this.spriteStart.frames[0].rect.h * 2;
@@ -943,6 +961,16 @@ System.register("projectile", ["actor", "damager", "point", "collider", "charact
                     character.move(new point_2.Point(this.speed * 0.9 * this.xDir, 0));
                     if (character.isClimbingLadder()) {
                         character.setFall();
+                    }
+                };
+                TornadoProj.prototype.destroySelf = function (sprite, fadeSound) {
+                    console.log("DESTROYING TORNADO");
+                    _super.prototype.destroySelf.call(this, sprite, fadeSound);
+                    game_4.game.level.gameContainer.removeChild(this.spriteStart.pixiSprite);
+                    game_4.game.level.gameContainer.removeChild(this.spriteEnd.pixiSprite);
+                    for (var _i = 0, _a = this.spriteMids; _i < _a.length; _i++) {
+                        var sprite_2 = _a[_i];
+                        game_4.game.level.gameContainer.removeChild(sprite_2.pixiSprite);
                     }
                 };
                 return TornadoProj;
@@ -4756,11 +4784,11 @@ System.register("tests", ["shape", "point"], function (exports_24, context_24) {
 System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "gameMode"], function (exports_25, context_25) {
     "use strict";
     var __moduleName = context_25 && context_25.id;
-    var sprite_1, level_1, sprites_1, levels_1, color_1, Helpers, gameMode_2, Options, Menu, UIData, Game, game;
+    var sprite_3, level_1, sprites_1, levels_1, color_1, Helpers, gameMode_2, Options, Menu, UIData, Game, game;
     return {
         setters: [
-            function (sprite_1_1) {
-                sprite_1 = sprite_1_1;
+            function (sprite_3_1) {
+                sprite_3 = sprite_3_1;
             },
             function (level_1_1) {
                 level_1 = level_1_1;
@@ -4877,7 +4905,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.uiData.selectedArenaMap = "gallery";
                     this.uiData.selectedGameMode = "deathmatch";
                     this.uiData.maxPlayers = 0;
-                    this.uiData.numBots = 9;
+                    this.uiData.numBots = 0;
                     this.uiData.playTo = 20;
                     $("#options").show();
                     $("#dev-options").show();
@@ -5237,7 +5265,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Game.prototype.loadSprites = function () {
                     for (var _i = 0, spriteJsons_1 = sprites_1.spriteJsons; _i < spriteJsons_1.length; _i++) {
                         var spriteJson = spriteJsons_1[_i];
-                        var sprite = new sprite_1.Sprite(spriteJson, false, undefined);
+                        var sprite = new sprite_3.Sprite(spriteJson, false, undefined);
                         this.sprites[sprite.name] = sprite;
                     }
                 };
@@ -7082,11 +7110,11 @@ System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], fun
 System.register("actor", ["sprite", "point", "game", "helpers"], function (exports_33, context_33) {
     "use strict";
     var __moduleName = context_33 && context_33.id;
-    var sprite_2, point_13, game_16, Helpers, Actor, Anim;
+    var sprite_4, point_13, game_16, Helpers, Actor, Anim;
     return {
         setters: [
-            function (sprite_2_1) {
-                sprite_2 = sprite_2_1;
+            function (sprite_4_1) {
+                sprite_4 = sprite_4_1;
             },
             function (point_13_1) {
                 point_13 = point_13_1;
@@ -7125,8 +7153,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     if (this.sprite && this.sprite.pixiSprite) {
                         game_16.game.level.gameContainer.removeChild(this.sprite.pixiSprite);
                     }
-                    this.sprite = new sprite_2.Sprite(sprite.spriteJson, true, game_16.game.level.gameContainer);
-                    this.sprite.pixiSprite.visible = false;
+                    this.sprite = new sprite_4.Sprite(sprite.spriteJson, true, game_16.game.level.gameContainer);
                     for (var _i = 0, _a = this.sprite.hitboxes; _i < _a.length; _i++) {
                         var hitbox = _a[_i];
                         hitbox.actor = this;
@@ -7280,7 +7307,6 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         Helpers.drawPolygon(game_16.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                         Helpers.drawCircle(game_16.game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
                     }
-                    this.sprite.pixiSprite.visible = true;
                 };
                 Actor.prototype.renderFromAngle = function (x, y) {
                     this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);

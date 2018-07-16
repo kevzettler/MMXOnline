@@ -60,7 +60,7 @@ export class Actor {
     }
 
     this.sprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
-    this.sprite.pixiSprite.visible = false;
+    //this.sprite.pixiSprite.visible = false;
 
     for(let hitbox of this.sprite.hitboxes) {
       hitbox.actor = this;
@@ -259,8 +259,8 @@ export class Actor {
       Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
     }
-    this.sprite.pixiSprite.visible = true;
     /*
+    this.sprite.pixiSprite.visible = true;
     let rect = this.currentFrame.rect.clone(this.pos.x + x + offsetX, this.pos.y + y + offsetY);
     let camRect = new Rect(game.level.camX, game.level.camY, game.level.camX + game.defaultCanvasWidth, game.level.camY + game.defaultCanvasHeight);
     if(!rect.overlaps(camRect)) {

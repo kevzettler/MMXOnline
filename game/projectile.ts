@@ -372,33 +372,34 @@ export class FireWaveProj extends Projectile {
 export class TornadoProj extends Projectile {
  
   spriteStart: Sprite;
-  spriteMid: Sprite;
+  spriteMids: Sprite[] = [];
   spriteEnd: Sprite;
   length: number = 1;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
     super(weapon, pos, vel, 1, player, game.sprites["tornado_mid"]);
-    //this.fadeSprite = game.sprites["electric_spark_fade"];
-    //this.fadeSound = "explosion";
-    this.spriteStart = game.sprites["tornado_start"];
-    this.spriteMid = game.sprites["tornado_mid"];
-    this.spriteEnd = game.sprites["tornado_end"];
+    this.sprite.pixiSprite.visible = false;
+    this.spriteStart = new Sprite(game.sprites["tornado_start"].spriteJson, true, game.level.gameContainer);
+    for(let i = 0; i < 6; i++) {
+      let midSprite = new Sprite(game.sprites["tornado_mid"].spriteJson, true, game.level.gameContainer);
+      midSprite.pixiSprite.visible = false;
+      this.spriteMids.push(midSprite);
+    }
+    this.spriteEnd = new Sprite(game.sprites["tornado_end"].spriteJson, true, game.level.gameContainer);
     this.vel.x = 0;
     this.hitCooldown = 0.3;
-    //this.globalCollider = new Collider([], true, this);
   }
   
   render(x: number, y: number) {
-    /*
     this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     let i = 0;
-    let spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
+    let spriteMidLen = this.spriteMids[0].frames[this.frameIndex].rect.w;
     for(i; i < this.length; i++) {
-      this.spriteMid.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+      this.spriteMids[i].pixiSprite.visible = true;
+      this.spriteMids[i].draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
     }
     this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
 
     this.renderEffect = "";
-    */
     if(game.options.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       //Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
@@ -411,7 +412,7 @@ export class TornadoProj extends Projectile {
     let topX = 0;
     let topY = 0;
     
-    let spriteMidLen = this.spriteMid.frames[this.frameIndex].rect.w;
+    let spriteMidLen = this.spriteMids[0].frames[this.frameIndex].rect.w;
     let spriteEndLen = this.spriteEnd.frames[this.frameIndex].rect.w;
 
     let botX = (this.length*spriteMidLen) + spriteEndLen;
@@ -438,6 +439,15 @@ export class TornadoProj extends Projectile {
     }
   }
 
+  destroySelf(sprite?: Sprite, fadeSound?: string) {
+    console.log("DESTROYING TORNADO");
+    super.destroySelf(sprite, fadeSound);
+    game.level.gameContainer.removeChild(this.spriteStart.pixiSprite);
+    game.level.gameContainer.removeChild(this.spriteEnd.pixiSprite);
+    for(let sprite of this.spriteMids) {
+      game.level.gameContainer.removeChild(sprite.pixiSprite);
+    }
+  }
 }
 
 export class ElectricSparkProj extends Projectile {
