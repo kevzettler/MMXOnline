@@ -57,6 +57,7 @@ export class Actor {
 
     if(this.sprite && this.sprite.pixiSprite) {
       game.level.gameContainer.removeChild(this.sprite.pixiSprite);
+      this.sprite.pixiSprite.destroy();
     }
 
     this.sprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
@@ -311,6 +312,7 @@ export class Actor {
 
   //Optionally take in a sprite to draw when destroyed
   destroySelf(sprite?: Sprite, fadeSound?: string) {
+    console.log("DESTROYING")
     game.level.removeGameObject(this);
     if(sprite) {
       let anim = new Anim(this.pos, sprite, this.xDir);
@@ -319,6 +321,7 @@ export class Actor {
       this.playSound(fadeSound);
     }
     game.level.gameContainer.removeChild(this.sprite.pixiSprite);
+    this.sprite.pixiSprite.destroy();
   }
 
   getSoundVolume() {

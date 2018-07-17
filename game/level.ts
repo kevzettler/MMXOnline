@@ -20,62 +20,6 @@ import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, Sma
 import { KillZone } from "./killZone";
 import { HUD } from "./hud";
 
-export class LevelData {
-  levelJson: any;
-  name: string;
-  fixedCam: boolean;
-  musicLoopStart: number;
-  musicLoopEnd: number;
-  parallax: string = "";
-  foreground: string = "";
-  levelMusic: string = "";
-  killY: number;
-  maxPlayers: number = 0;
-
-  constructor(levelJson: any) {
-    this.levelJson = levelJson;
-    this.name = levelJson.name;
-    
-    if(this.name === "sm_bossroom") {
-      this.fixedCam = true;
-      this.levelMusic = "BossBattle.mp3";
-      this.musicLoopStart = 1500;
-      this.musicLoopEnd = 29664;
-      this.maxPlayers = 2;
-    }
-    else if(this.name === "powerplant") {
-      this.fixedCam = false;
-      this.levelMusic = "PowerPlant.mp3";
-      this.parallax = "powerplant_parallex.png";
-      this.musicLoopStart = 51040;
-      this.musicLoopEnd = 101116;
-      this.maxPlayers = 8;
-    }
-    else if(this.name === "highway") {
-      this.fixedCam = false;
-      this.levelMusic = "highway.mp3";
-      this.parallax = "highway_parallax.png";
-      this.musicLoopStart = 44440;
-      this.musicLoopEnd = 87463;
-      this.killY = 300;
-      this.foreground = "highway_foreground.png";
-      this.maxPlayers = 8;
-    }
-    else if(this.name === "gallery") {
-      this.fixedCam = false;
-      this.levelMusic = "gallery.mp3";
-      this.parallax = "gallery_parallax.png";
-      this.musicLoopStart = 0;
-      this.musicLoopEnd = 110687;
-      this.killY = 1034;
-      this.foreground = "gallery_foreground.png";
-      this.maxPlayers = 10;
-    }
-
-  }
-
-}
-
 export class Level {
 
   gameObjects: Set<GameObject>;
@@ -227,7 +171,7 @@ export class Level {
         () => {
           music.play("musicStart");
           music.on("end", function() {
-            console.log("Loop");
+            //console.log("Loop");
             music.play("musicLoop");
           });
         },
@@ -323,6 +267,8 @@ export class Level {
     if(this.twoFrameCycle > 2) this.twoFrameCycle = -2;
 
     this.gameMode.update();
+
+    this.debugString = String(this.getTotalCountInGrid());
   }
 
   backgroundSprite: PIXI.Sprite;
@@ -539,14 +485,28 @@ export class Level {
     this.camY = camY;
 
   }
-  
+
+  getTotalCountInGrid() {
+    let count = 0;
+    let width = this.width;
+    let height = this.height;
+    let hCellCount = Math.ceil(width / this.cellWidth);
+    let vCellCount = Math.ceil(height / this.cellWidth);
+    for(let i = 0; i < vCellCount; i++) {
+      for(let j = 0; j < hCellCount; j++) {
+        count += this.grid[i][j].size;
+      }
+    }
+    return count;
+  }
+
   setupGrid(cellWidth: number) {
     this.cellWidth = cellWidth;
     let width = this.width;
     let height = this.height;
     let hCellCount = Math.ceil(width / cellWidth);
     let vCellCount = Math.ceil(height / cellWidth);
-    console.log("Creating grid with width " + hCellCount + " and height " + vCellCount);
+    //console.log("Creating grid with width " + hCellCount + " and height " + vCellCount);
     for(let i = 0; i < vCellCount; i++) {
       let curRow: Set<GameObject>[] = [];
       this.grid.push(curRow);
@@ -607,7 +567,9 @@ export class Level {
     if(!go.collider) return;
     let cells = this.getGridCells(go.collider.shape, 0, 0);
     for(let cell of cells) {
-      cell.gameobjects.delete(go);
+      if(this.grid[cell.i][cell.j].has(go)) {
+        cell.gameobjects.delete(go);
+      }
     }
   }
 
@@ -615,7 +577,9 @@ export class Level {
     if(!go.collider) return;
     let cells = this.getGridCells(go.collider.shape, 0, 0);
     for(let cell of cells) {
-      this.grid[cell.i][cell.j].add(go);
+      if(!this.grid[cell.i][cell.j].has(go)) {
+        this.grid[cell.i][cell.j].add(go);
+      }
     }
   }
 
@@ -913,4 +877,61 @@ export class Cell {
     this.j = j;
     this.gameobjects = gameobjects;
   }
+}
+
+
+export class LevelData {
+  levelJson: any;
+  name: string;
+  fixedCam: boolean;
+  musicLoopStart: number;
+  musicLoopEnd: number;
+  parallax: string = "";
+  foreground: string = "";
+  levelMusic: string = "";
+  killY: number;
+  maxPlayers: number = 0;
+
+  constructor(levelJson: any) {
+    this.levelJson = levelJson;
+    this.name = levelJson.name;
+    
+    if(this.name === "sm_bossroom") {
+      this.fixedCam = true;
+      this.levelMusic = "BossBattle.mp3";
+      this.musicLoopStart = 1500;
+      this.musicLoopEnd = 29664;
+      this.maxPlayers = 2;
+    }
+    else if(this.name === "powerplant") {
+      this.fixedCam = false;
+      this.levelMusic = "PowerPlant.mp3";
+      this.parallax = "powerplant_parallex.png";
+      this.musicLoopStart = 51040;
+      this.musicLoopEnd = 101116;
+      this.maxPlayers = 8;
+    }
+    else if(this.name === "highway") {
+      this.fixedCam = false;
+      this.levelMusic = "highway.mp3";
+      this.parallax = "highway_parallax.png";
+      this.musicLoopStart = 44440;
+      this.musicLoopEnd = 87463;
+      this.killY = 300;
+      this.foreground = "highway_foreground.png";
+      this.maxPlayers = 8;
+    }
+    else if(this.name === "gallery") {
+      this.fixedCam = false;
+      this.levelMusic = "gallery.mp3";
+      this.parallax = "gallery_parallax.png";
+      this.musicLoopStart = 0;
+      this.musicLoopEnd = 110687;
+      this.killY = 1034;
+      this.foreground = "gallery_foreground.png";
+      this.maxPlayers = 10;
+    }
+
+  }
+
 }

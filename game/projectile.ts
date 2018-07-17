@@ -287,15 +287,16 @@ export class StingProj extends Projectile {
     super(weapon, pos, vel, 2, player, game.sprites["sting_start"]);
     this.origVel = vel.clone();
     if(type === 1) {
-      this.sprite = game.sprites["sting_flat"];
+      let sprite = game.sprites["sting_flat"];
+      this.changeSprite(sprite, false);
     }
     else if(type === 2 || type === 3) {
-      this.sprite = game.sprites["sting_up"];
+      let sprite = game.sprites["sting_up"];
       if(type === 3) {
         this.yDir = -1;
       }
+      this.changeSprite(sprite, false);
     }
-    this.changeSprite(this.sprite, false);
     this.fadeSprite = game.sprites["buster1_fade"];
     this.type = type;
   }
@@ -440,12 +441,14 @@ export class TornadoProj extends Projectile {
   }
 
   destroySelf(sprite?: Sprite, fadeSound?: string) {
-    console.log("DESTROYING TORNADO");
     super.destroySelf(sprite, fadeSound);
     game.level.gameContainer.removeChild(this.spriteStart.pixiSprite);
+    this.spriteStart.pixiSprite.destroy();
     game.level.gameContainer.removeChild(this.spriteEnd.pixiSprite);
+    this.spriteEnd.pixiSprite.destroy();
     for(let sprite of this.spriteMids) {
       game.level.gameContainer.removeChild(sprite.pixiSprite);
+      sprite.pixiSprite.destroy();
     }
   }
 }

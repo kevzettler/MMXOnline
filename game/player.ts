@@ -91,7 +91,7 @@ export class Player {
       
       if(this === game.level.mainPlayer) {
         game.level.computeCamPos(this.character);
-        console.log(game.level.camX + "," + game.level.camY);
+        //console.log(game.level.camX + "," + game.level.camY);
       }
 
     }
