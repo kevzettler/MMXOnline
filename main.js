@@ -736,7 +736,8 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                 Buster4Proj.prototype.update = function () {
                     _super.prototype.update.call(this);
                     this.frameIndex = this.type;
-                    this.pos.y = this.initY + Math.sin(game_4.game.time * 18 - this.num * 0.5 + this.offsetTime * 2.09) * 15;
+                    var y = this.initY + Math.sin(game_4.game.time * 18 - this.num * 0.5 + this.offsetTime * 2.09) * 15;
+                    this.changePos(new point_2.Point(this.pos.x, y));
                 };
                 return Buster4Proj;
             }(Projectile));
@@ -1401,8 +1402,8 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                     }
                     if (this.aiState.shouldAttack) {
                         if (this.shootTime === 0) {
-                            if (this.character.isFacing(this.target))
-                                this.player.press("shoot");
+                            if (this.character.isFacing(this.target)) {
+                            }
                         }
                         this.shootTime += game_6.game.deltaTime;
                         if (this.shootTime > 0.1) {
@@ -3621,8 +3622,6 @@ System.register("spawnPoint", ["game"], function (exports_17, context_17) {
                     this.num = num || 0;
                 }
                 SpawnPoint.prototype.occupied = function () {
-                    if (this.name !== "Spawn Point2")
-                        return true;
                     var nearbyChars = game_11.game.level.getActorsInRadius(this.pos, 30, ["Character"]);
                     if (nearbyChars.length > 0)
                         return true;
@@ -3846,13 +3845,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     this.pickupSpawners = [];
                     this.killZones = [];
                     this.grid = [];
+                    this.occupiedGridSets = new Set();
                     this.levelData = levelData;
                     this.zoomScale = 3;
                     this.gravity = 550;
                     this.frameCount = 0;
                     this.backgroundPath = levelData.levelJson.backgroundPath;
-                    this.parallaxPath = "assets/backgrounds/" + levelData.parallax;
-                    this.foregroundPath = "assets/backgrounds/" + levelData.foreground;
+                    this.parallaxPath = levelData.parallax ? "assets/backgrounds/" + levelData.parallax : "";
+                    this.foregroundPath = levelData.foreground ? "assets/backgrounds/" + levelData.foreground : "";
                     var imagesToLoad = [this.backgroundPath];
                     if (this.parallaxPath) {
                         imagesToLoad.push(this.parallaxPath);
@@ -4060,7 +4060,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     if (this.twoFrameCycle > 2)
                         this.twoFrameCycle = -2;
                     this.gameMode.update();
-                    this.debugString = String(this.getTotalCountInGrid());
+                    this.getTotalCountInGrid();
                 };
                 Level.prototype.renderSetup = function () {
                     if (this.parallaxPath) {
@@ -4105,10 +4105,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.render = function () {
                     this.gameContainer.x = -this.camX;
                     this.gameContainer.y = -this.camY;
-                    this.parallaxSprite.x = -this.camX * 0.5;
-                    this.parallaxSprite.y = -this.camY * 0.5;
-                    this.foregroundSprite.x = -this.camX;
-                    this.foregroundSprite.y = -this.camY;
+                    if (this.parallaxSprite) {
+                        this.parallaxSprite.x = -this.camX * 0.5;
+                        this.parallaxSprite.y = -this.camY * 0.5;
+                    }
+                    if (this.foregroundSprite) {
+                        this.foregroundSprite.x = -this.camX;
+                        this.foregroundSprite.y = -this.camY;
+                    }
                     var gameObjectsArray = this.getGameObjectArray();
                     for (var _i = 0, gameObjectsArray_1 = gameObjectsArray; _i < gameObjectsArray_1.length; _i++) {
                         var go = gameObjectsArray_1[_i];
@@ -4252,6 +4256,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 };
                 Level.prototype.getTotalCountInGrid = function () {
                     var count = 0;
+                    var orphanedCount = 0;
                     var width = this.width;
                     var height = this.height;
                     var hCellCount = Math.ceil(width / this.cellWidth);
@@ -4259,9 +4264,17 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     for (var i = 0; i < vCellCount; i++) {
                         for (var j = 0; j < hCellCount; j++) {
                             count += this.grid[i][j].size;
+                            var arr = Array.from(this.grid[i][j]);
+                            for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
+                                var go = arr_1[_i];
+                                if (!this.gameObjects.has(go)) {
+                                    orphanedCount++;
+                                }
+                            }
                         }
                     }
-                    return count;
+                    this.debugString = String(count);
+                    this.debugString2 = String(orphanedCount);
                 };
                 Level.prototype.setupGrid = function (cellWidth) {
                     this.cellWidth = cellWidth;
@@ -4311,32 +4324,34 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     return Array.from(retGameobjects);
                 };
                 Level.prototype.addGameObject = function (go) {
-                    this.addGameObjectToGrid(go);
                     this.gameObjects.add(go);
+                    this.addGameObjectToGrid(go);
                 };
                 Level.prototype.removeGameObject = function (go) {
                     this.removeFromGrid(go);
                     this.gameObjects.delete(go);
                 };
                 Level.prototype.removeFromGrid = function (go) {
-                    if (!go.collider)
-                        return;
-                    var cells = this.getGridCells(go.collider.shape, 0, 0);
-                    for (var _i = 0, cells_2 = cells; _i < cells_2.length; _i++) {
-                        var cell = cells_2[_i];
-                        if (this.grid[cell.i][cell.j].has(go)) {
-                            cell.gameobjects.delete(go);
+                    for (var it = this.occupiedGridSets.values(), gridSet = undefined; gridSet = it.next().value;) {
+                        if (gridSet.has(go)) {
+                            gridSet.delete(go);
+                        }
+                        if (gridSet.size === 0) {
+                            this.occupiedGridSets.delete(gridSet);
                         }
                     }
                 };
                 Level.prototype.addGameObjectToGrid = function (go) {
                     if (!go.collider)
                         return;
+                    if (!this.gameObjects.has(go))
+                        return;
                     var cells = this.getGridCells(go.collider.shape, 0, 0);
-                    for (var _i = 0, cells_3 = cells; _i < cells_3.length; _i++) {
-                        var cell = cells_3[_i];
+                    for (var _i = 0, cells_2 = cells; _i < cells_2.length; _i++) {
+                        var cell = cells_2[_i];
                         if (!this.grid[cell.i][cell.j].has(go)) {
                             this.grid[cell.i][cell.j].add(go);
+                            this.occupiedGridSets.add(this.grid[cell.i][cell.j]);
                         }
                     }
                 };
@@ -4925,7 +4940,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.uiData.selectedArenaMap = "gallery";
                     this.uiData.selectedGameMode = "deathmatch";
                     this.uiData.maxPlayers = 0;
-                    this.uiData.numBots = 0;
+                    this.uiData.numBots = 9;
                     this.uiData.playTo = 20;
                     $("#options").show();
                     $("#dev-options").show();
@@ -7357,7 +7372,6 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     return this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration;
                 };
                 Actor.prototype.destroySelf = function (sprite, fadeSound) {
-                    console.log("DESTROYING");
                     game_15.game.level.removeGameObject(this);
                     if (sprite) {
                         var anim = new Anim(this.pos, sprite, this.xDir);

@@ -43,6 +43,7 @@ export class Level {
   pickupSpawners: PickupSpawner[] = [];
   killZones: KillZone[] = [];
   grid: Set<GameObject>[][] = [];
+  occupiedGridSets: Set<Set<GameObject>> = new Set();
   cellWidth: number;
   levelData: LevelData;
   hud: HUD;
@@ -57,8 +58,8 @@ export class Level {
     this.gravity = 550;
     this.frameCount = 0;
     this.backgroundPath = levelData.levelJson.backgroundPath;
-    this.parallaxPath = "assets/backgrounds/" + levelData.parallax;
-    this.foregroundPath = "assets/backgrounds/" + levelData.foreground;
+    this.parallaxPath = levelData.parallax ? "assets/backgrounds/" + levelData.parallax : "";
+    this.foregroundPath = levelData.foreground ? "assets/backgrounds/" + levelData.foreground : "";
 
     let imagesToLoad = [this.backgroundPath];
     if(this.parallaxPath) {
@@ -268,7 +269,7 @@ export class Level {
 
     this.gameMode.update();
 
-    this.debugString = String(this.getTotalCountInGrid());
+    this.getTotalCountInGrid();
   }
 
   backgroundSprite: PIXI.Sprite;
@@ -339,10 +340,14 @@ export class Level {
     
     this.gameContainer.x = -this.camX;// * this.zoomScale;
     this.gameContainer.y = -this.camY;// * this.zoomScale;
-    this.parallaxSprite.x = -this.camX * 0.5;
-    this.parallaxSprite.y = -this.camY * 0.5;
-    this.foregroundSprite.x = -this.camX;
-    this.foregroundSprite.y = -this.camY;
+    if(this.parallaxSprite) {
+      this.parallaxSprite.x = -this.camX * 0.5;
+      this.parallaxSprite.y = -this.camY * 0.5;
+    }
+    if(this.foregroundSprite) {
+      this.foregroundSprite.x = -this.camX;
+      this.foregroundSprite.y = -this.camY;
+    }
 
     let gameObjectsArray = this.getGameObjectArray();
     for(let go of gameObjectsArray) {
@@ -488,6 +493,7 @@ export class Level {
 
   getTotalCountInGrid() {
     let count = 0;
+    let orphanedCount = 0;
     let width = this.width;
     let height = this.height;
     let hCellCount = Math.ceil(width / this.cellWidth);
@@ -495,9 +501,17 @@ export class Level {
     for(let i = 0; i < vCellCount; i++) {
       for(let j = 0; j < hCellCount; j++) {
         count += this.grid[i][j].size;
+        let arr = Array.from(this.grid[i][j]);
+        for(let go of arr) {
+          if(!this.gameObjects.has(go)) {
+            //this.grid[i][j].delete(go);
+            orphanedCount++;
+          }
+        }
       }
     }
-    return count;
+    this.debugString = String(count);
+    this.debugString2 = String(orphanedCount);
   }
 
   setupGrid(cellWidth: number) {
@@ -554,8 +568,8 @@ export class Level {
   }
 
   addGameObject(go: GameObject) {
-    this.addGameObjectToGrid(go);
     this.gameObjects.add(go);
+    this.addGameObjectToGrid(go);
   }
 
   removeGameObject(go: GameObject) {
@@ -564,21 +578,24 @@ export class Level {
   }
 
   removeFromGrid(go: GameObject) {
-    if(!go.collider) return;
-    let cells = this.getGridCells(go.collider.shape, 0, 0);
-    for(let cell of cells) {
-      if(this.grid[cell.i][cell.j].has(go)) {
-        cell.gameobjects.delete(go);
+    for (var it = this.occupiedGridSets.values(), gridSet = undefined; gridSet = it.next().value; ) {
+      if(gridSet.has(go)) {
+        gridSet.delete(go);
+      }
+      if(gridSet.size === 0) {
+        this.occupiedGridSets.delete(gridSet);
       }
     }
   }
 
   addGameObjectToGrid(go: GameObject) {
     if(!go.collider) return;
+    if(!this.gameObjects.has(go)) return;
     let cells = this.getGridCells(go.collider.shape, 0, 0);
     for(let cell of cells) {
       if(!this.grid[cell.i][cell.j].has(go)) {
         this.grid[cell.i][cell.j].add(go);
+        this.occupiedGridSets.add(this.grid[cell.i][cell.j]);
       }
     }
   }

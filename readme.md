@@ -1,5 +1,3 @@
--Fully charged x-buster: memory leak (doesn't clean up grid)
-  -Figure out a system for the grid to self-clean itself
 -Fix Edge bleeding
 -Jerky walking animation again
 -Popping sounds when distant sounds are muted
@@ -7,6 +5,7 @@
 ===============
 Abstraction
 ===============
+-Press button to stop all AI in tracks
 -Flashing and effects, palettes
 -Z-Index problem: projectiles are behind players, etc.
 -When restarting, clear the Pixi stage of objects

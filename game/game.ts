@@ -132,17 +132,15 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
     this.uiData.selectedGameMode = "deathmatch";
     this.uiData.maxPlayers = 0;
-    this.uiData.numBots = 0;
+    this.uiData.numBots = 9;
     this.uiData.playTo = 20;
     $("#options").show();
     $("#dev-options").show();
     game.loadLevel(this.uiData.selectedArenaMap);
-    
     /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;

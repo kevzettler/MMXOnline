@@ -188,7 +188,8 @@ export class Buster4Proj extends Projectile {
   update() {
     super.update();
     this.frameIndex = this.type;
-    this.pos.y = this.initY + Math.sin(game.time*18 - this.num * 0.5 + this.offsetTime * 2.09) * 15;
+    let y = this.initY + Math.sin(game.time*18 - this.num * 0.5 + this.offsetTime * 2.09) * 15;
+    this.changePos(new Point(this.pos.x, y))
   }
 
 }

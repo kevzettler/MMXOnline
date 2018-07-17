@@ -312,7 +312,7 @@ export class Actor {
 
   //Optionally take in a sprite to draw when destroyed
   destroySelf(sprite?: Sprite, fadeSound?: string) {
-    console.log("DESTROYING")
+    //console.log("DESTROYING")
     game.level.removeGameObject(this);
     if(sprite) {
       let anim = new Anim(this.pos, sprite, this.xDir);

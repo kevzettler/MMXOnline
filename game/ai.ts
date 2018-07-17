@@ -63,8 +63,9 @@ export class AI {
     if(this.aiState.shouldAttack) {
       if(this.shootTime === 0) {
         //if(this.character.withinY(this.target, 25)) {
-        if(this.character.isFacing(this.target))
-            this.player.press("shoot");
+        if(this.character.isFacing(this.target)) {
+          //this.player.press("shoot");
+        }
         //}
       }
       this.shootTime += game.deltaTime;
