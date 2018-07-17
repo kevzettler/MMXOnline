@@ -1,4 +1,6 @@
 import { game } from "./game";
+import { Anim } from "./actor";
+import { Point } from "./point";
 
 export function cheat(key: string, keycode: number) {
 
@@ -23,9 +25,11 @@ export function cheat(key: string, keycode: number) {
       } 
     }
   }
+  //F3
   if(keycode === 114) {
     game.level.mainPlayer.kills = 19;
   }
+  //F4
   if(keycode === 115) {
     //@ts-ignore
     let cpu = _.find(game.level.players, (player) => {
@@ -33,6 +37,14 @@ export function cheat(key: string, keycode: number) {
     });
     cpu.kills = 19;
   }
+  //F5
+  if(keycode === 116) {
+    for(let i = 0; i < 10000; i++) {
+      let test = new Anim(new Point(0, 0), game.sprites["buster1_fade"], 1);
+      test.destroySelf();
+    }
+  }
+
   if(keycode === 75) {
     game.level.mainPlayer.character.applyDamage(undefined, undefined, 100);
   }

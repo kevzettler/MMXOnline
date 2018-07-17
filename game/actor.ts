@@ -55,10 +55,7 @@ export class Actor {
   changeSprite(sprite: Sprite, resetFrame: boolean) {
     if(!sprite) return;
 
-    if(this.sprite && this.sprite.pixiSprite) {
-      game.level.gameContainer.removeChild(this.sprite.pixiSprite);
-      this.sprite.pixiSprite.destroy();
-    }
+    this.destroySprite();
 
     this.sprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
     //this.sprite.pixiSprite.visible = false;
@@ -320,8 +317,14 @@ export class Actor {
     if(fadeSound) {
       this.playSound(fadeSound);
     }
-    game.level.gameContainer.removeChild(this.sprite.pixiSprite);
-    this.sprite.pixiSprite.destroy();
+    this.destroySprite();
+  }
+
+  destroySprite() {
+    if(this.sprite && this.sprite.pixiSprite) {
+      game.level.gameContainer.removeChild(this.sprite.pixiSprite);
+      this.sprite.pixiSprite.destroy({ texture: true });
+    }
   }
 
   getSoundVolume() {
