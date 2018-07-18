@@ -269,7 +269,7 @@ export class Level {
 
     this.gameMode.update();
 
-    this.getTotalCountInGrid();
+    //this.getTotalCountInGrid();
   }
 
   backgroundSprite: PIXI.Sprite;

@@ -1,6 +1,7 @@
 import { game } from "./game";
 import { Anim } from "./actor";
 import { Point } from "./point";
+import { KillFeedEntry } from "./killFeedEntry";
 
 export function cheat(key: string, keycode: number) {
 
@@ -39,10 +40,13 @@ export function cheat(key: string, keycode: number) {
   }
   //F5
   if(keycode === 116) {
+    /*
     for(let i = 0; i < 10000; i++) {
       let test = new Anim(new Point(0, 0), game.sprites["buster1_fade"], 1);
       test.destroySelf();
     }
+    */
+   game.level.gameMode.addKillFeedEntry(new KillFeedEntry(undefined, game.level.mainPlayer, undefined));
   }
 
   if(keycode === 75) {

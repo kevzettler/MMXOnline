@@ -221,7 +221,7 @@ export class GameMode {
     for (var i = this.killFeedContainer.children.length - 1; i >= 0; i--) {	
       let child = this.killFeedContainer.children[i];
       this.killFeedContainer.removeChild(child);
-      child.destroy();
+      child.destroy();  //KZTODO there may be a memory leak here, should I destroy textures too?
     };
     let fromRight = this.screenWidth - 10;
     let fromTop = 10;

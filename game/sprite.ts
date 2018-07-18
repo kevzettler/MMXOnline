@@ -70,7 +70,7 @@ export class Sprite {
   initSprite(container: PIXI.Container) {
     let textureArray = [];
     for(let frame of this.frames) {
-      let texture = new PIXI.Texture(PIXI.loader.resources[this.spritesheetPath].texture.baseTexture);
+      let texture = PIXI.loader.resources[this.spritesheetPath].texture.clone();
       texture.frame = new PIXI.Rectangle(frame.rect.x1, frame.rect.y1, frame.rect.w, frame.rect.h);
       textureArray.push(texture);
     }
