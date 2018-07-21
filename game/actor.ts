@@ -164,13 +164,13 @@ export class Actor {
   }
 
   incPos(amount: Point) {
-    if(this.collider) game.level.removeFromGrid(this);
+    if(this.collider) game.level.removeFromGridFast(this);
     this.pos.inc(amount);
     if(this.collider) game.level.addGameObjectToGrid(this);
   }
 
   changePos(newPos: Point) {
-    if(this.collider) game.level.removeFromGrid(this);
+    if(this.collider) game.level.removeFromGridFast(this);
     this.pos = newPos;
     if(this.collider) game.level.addGameObjectToGrid(this);
   }

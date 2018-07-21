@@ -410,7 +410,7 @@ export class Level {
   get camCenterY() { return this.camY + this.screenHeight/2; }
 
   get halfScreenWidth() {
-    return (game.pixiApp.stage.width / this.zoomScale) * 0.375;
+    return this.screenWidth / 2;
   }
 
   updateCamPos(deltaX: number, deltaY: number) {
@@ -548,12 +548,38 @@ export class Level {
   //Optimize this function, it will be called a lot
   getGridCells(shape: Shape, offsetX: number, offsetY: number): Cell[] {
 
+    let cells = [];
+
+    //Line case
+    if(shape.points.length === 2) {
+      let point1 = shape.points[0];
+      let point2 = shape.points[1];
+      let dir = point1.directionTo(point2);
+      let curX = point1.x;
+      let curY = point1.y;
+      let dist = 0;
+      let maxDist = point1.distanceTo(point2);
+      let mag = maxDist / (this.cellWidth/2);
+      let usedCoords: Set<string> = new Set();
+      while(dist < maxDist) {
+        curX += dir.x * mag;
+        curY += dir.y * mag;
+        let i = Math.floor((curY / this.height) * this.grid.length);
+        let j = Math.floor((curX / this.width) * this.grid[0].length);
+        dist += mag;
+        if(i < 0 || j < 0 || i >= this.grid.length || j >= this.grid[0].length) continue;
+        if(usedCoords.has(String(i) + String(j))) continue;
+        usedCoords.add(String(i) + String(j));
+        cells.push(new Cell(i, j, this.grid[i][j]))
+      }
+      return cells;
+    }
+
     let minI = Math.floor((shape.minY / this.height) * this.grid.length);
     let minJ = Math.floor((shape.minX / this.width) * this.grid[0].length);
     let maxI = Math.floor((shape.maxY / this.height) * this.grid.length);
     let maxJ = Math.floor((shape.maxX / this.width) * this.grid[0].length);
 
-    let cells = [];
     for(let i = minI; i <= maxI; i++) {
       for(let j = minJ; j <= maxJ; j++) {
         if(i < 0 || j < 0 || i >= this.grid.length || j >= this.grid[0].length) continue;
@@ -599,6 +625,16 @@ export class Level {
       }
       if(gridSet.size === 0) {
         this.occupiedGridSets.delete(gridSet);
+      }
+    }
+  }
+
+  removeFromGridFast(go: GameObject) {
+    if(!go.collider) return;
+    let cells = this.getGridCells(go.collider.shape, 0, 0);
+    for(let cell of cells) {
+      if(cell.gameobjects.has(go)) {
+        cell.gameobjects.delete(go);
       }
     }
   }

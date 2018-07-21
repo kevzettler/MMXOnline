@@ -8,6 +8,16 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 System.register("gameObject", [], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
@@ -971,11 +981,21 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                     this.spriteStart.pixiSprite.destroy();
                     game_4.game.level.gameContainer.removeChild(this.spriteEnd.pixiSprite);
                     this.spriteEnd.pixiSprite.destroy();
-                    for (var _i = 0, _a = this.spriteMids; _i < _a.length; _i++) {
-                        var sprite_2 = _a[_i];
-                        game_4.game.level.gameContainer.removeChild(sprite_2.pixiSprite);
-                        sprite_2.pixiSprite.destroy();
+                    try {
+                        for (var _a = __values(this.spriteMids), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var sprite_2 = _b.value;
+                            game_4.game.level.gameContainer.removeChild(sprite_2.pixiSprite);
+                            sprite_2.pixiSprite.destroy();
+                        }
                     }
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                    }
+                    var e_1, _c;
                 };
                 return TornadoProj;
             }(Projectile));
@@ -1230,10 +1250,20 @@ System.register("effects", ["point", "game", "helpers"], function (exports_9, co
                     }
                 };
                 DieEffect.prototype.render = function (offsetX, offsetY) {
-                    for (var _i = 0, _a = this.dieEffects; _i < _a.length; _i++) {
-                        var dieEffect = _a[_i];
-                        dieEffect.render(offsetX, offsetY);
+                    try {
+                        for (var _a = __values(this.dieEffects), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var dieEffect = _b.value;
+                            dieEffect.render(offsetX, offsetY);
+                        }
                     }
+                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                    }
+                    var e_2, _c;
                 };
                 return DieEffect;
             }(Effect));
@@ -1272,10 +1302,20 @@ System.register("navMesh", ["wall"], function (exports_10, context_10) {
                         this_1.neighbors.push(navMeshNeighbor);
                     };
                     var this_1 = this;
-                    for (var _i = 0, _a = properties.neighbors; _i < _a.length; _i++) {
-                        var jsonNeighbor = _a[_i];
-                        _loop_1(jsonNeighbor);
+                    try {
+                        for (var _a = __values(properties.neighbors), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var jsonNeighbor = _b.value;
+                            _loop_1(jsonNeighbor);
+                        }
                     }
+                    catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_3) throw e_3.error; }
+                    }
+                    var e_3, _c;
                 };
                 NavMeshNode.prototype.getNeighbor = function (neighborNode) {
                     var node = _.find(this.neighbors, function (neighbor) {
@@ -1302,12 +1342,22 @@ System.register("navMesh", ["wall"], function (exports_10, context_10) {
                             foundPath = _.clone(pathToNode);
                             return;
                         }
-                        for (var _i = 0, _a = curNode.neighbors; _i < _a.length; _i++) {
-                            var neighbor = _a[_i];
-                            pathToNode.push(neighbor.node);
-                            getNextNodeDfs(neighbor.node);
-                            pathToNode.pop();
+                        try {
+                            for (var _a = __values(curNode.neighbors), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var neighbor = _b.value;
+                                pathToNode.push(neighbor.node);
+                                getNextNodeDfs(neighbor.node);
+                                pathToNode.pop();
+                            }
                         }
+                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_4) throw e_4.error; }
+                        }
+                        var e_4, _c;
                     }
                     getNextNodeDfs(this);
                     if (foundPath.length > 0)
@@ -1412,13 +1462,22 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                         }
                     }
                     if (this.aiState.shouldDodge) {
-                        for (var _i = 0, _a = game_6.game.level.getGameObjectArray(); _i < _a.length; _i++) {
-                            var proj = _a[_i];
-                            if (proj instanceof projectile_2.Projectile && !(proj instanceof projectile_2.BusterProj)) {
-                                if (proj.isFacing(this.character) && this.character.withinX(proj, 100) && this.character.withinY(proj, 30) && proj.damager.owner.alliance !== this.player.alliance) {
-                                    this.player.press("jump");
+                        try {
+                            for (var _a = __values(game_6.game.level.getGameObjectArray()), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var proj = _b.value;
+                                if (proj instanceof projectile_2.Projectile && !(proj instanceof projectile_2.BusterProj)) {
+                                    if (proj.isFacing(this.character) && this.character.withinX(proj, 100) && this.character.withinY(proj, 30) && proj.damager.owner.alliance !== this.player.alliance) {
+                                        this.player.press("jump");
+                                    }
                                 }
                             }
+                        }
+                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_5) throw e_5.error; }
                         }
                     }
                     if (this.aiState.randomlyChangeState) {
@@ -1458,6 +1517,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                         }
                     }
                     this.aiState.update();
+                    var e_5, _c;
                 };
                 AI.prototype.changeState = function (newState) {
                     this.aiState = newState;
@@ -1757,55 +1817,114 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 GameMode.prototype.setupPlayers = function () {
                     var _this = this;
                     document.onkeydown = function (e) {
-                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            player.onKeyDown(e.keyCode);
+                        try {
+                            for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var player = _b.value;
+                                player.onKeyDown(e.keyCode);
+                            }
+                        }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_6) throw e_6.error; }
                         }
                         if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
                             e.preventDefault();
                         }
+                        var e_6, _c;
                     };
                     document.onkeyup = function (e) {
-                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            player.onKeyUp(e.keyCode);
+                        try {
+                            for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var player = _b.value;
+                                player.onKeyUp(e.keyCode);
+                            }
+                        }
+                        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_7) throw e_7.error; }
                         }
                         if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
                             e.preventDefault();
                         }
+                        var e_7, _c;
                     };
                     game_7.game.uiCanvas.onmousedown = function (e) {
-                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            player.onKeyDown(e.button);
+                        try {
+                            for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var player = _b.value;
+                                player.onKeyDown(e.button);
+                            }
+                        }
+                        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_8) throw e_8.error; }
                         }
                         e.preventDefault();
+                        var e_8, _c;
                     };
                     game_7.game.uiCanvas.oncontextmenu = function (e) {
                         e.preventDefault();
                     };
                     game_7.game.uiCanvas.onmouseup = function (e) {
-                        for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            player.onKeyUp(e.button);
+                        try {
+                            for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var player = _b.value;
+                                player.onKeyUp(e.button);
+                            }
+                        }
+                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_9) throw e_9.error; }
                         }
                         e.preventDefault();
+                        var e_9, _c;
                     };
                     document.onwheel = function (e) {
                         if (e.deltaY < 0) {
-                            for (var _i = 0, _a = _this.localPlayers; _i < _a.length; _i++) {
-                                var player = _a[_i];
-                                console.log("MOUSEHWEELUP");
-                                player.onKeyDown(3);
+                            try {
+                                for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                    var player = _b.value;
+                                    console.log("MOUSEHWEELUP");
+                                    player.onKeyDown(3);
+                                }
+                            }
+                            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+                            finally {
+                                try {
+                                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                }
+                                finally { if (e_10) throw e_10.error; }
                             }
                         }
                         else if (e.deltaY > 0) {
-                            for (var _b = 0, _c = _this.localPlayers; _b < _c.length; _b++) {
-                                var player = _c[_b];
-                                console.log("MOUSEHWEELDOWN");
-                                player.onKeyDown(4);
+                            try {
+                                for (var _d = __values(_this.localPlayers), _e = _d.next(); !_e.done; _e = _d.next()) {
+                                    var player = _e.value;
+                                    console.log("MOUSEHWEELDOWN");
+                                    player.onKeyDown(4);
+                                }
+                            }
+                            catch (e_11_1) { e_11 = { error: e_11_1 }; }
+                            finally {
+                                try {
+                                    if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
+                                }
+                                finally { if (e_11) throw e_11.error; }
                             }
                         }
+                        var e_10, _c, e_11, _f;
                     };
                 };
                 GameMode.prototype.update = function () {
@@ -2008,12 +2127,21 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             return !player.character;
                         });
                         if (deadPlayer) {
-                            for (var _i = 0, _a = this.level.players; _i < _a.length; _i++) {
-                                var player = _a[_i];
-                                if (player.character) {
-                                    this.isOver = true;
-                                    player.won = true;
+                            try {
+                                for (var _a = __values(this.level.players), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                    var player = _b.value;
+                                    if (player.character) {
+                                        this.isOver = true;
+                                        player.won = true;
+                                    }
                                 }
+                            }
+                            catch (e_12_1) { e_12 = { error: e_12_1 }; }
+                            finally {
+                                try {
+                                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                }
+                                finally { if (e_12) throw e_12.error; }
                             }
                         }
                         if (this.isOver) {
@@ -2032,6 +2160,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             game_7.game.restartLevel(this.level.levelData.name);
                         }
                     }
+                    var e_12, _c;
                 };
                 return Brawl;
             }(GameMode));
@@ -2122,10 +2251,19 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         if (i < this.players.length) {
                             var player = this.players[i];
                             var color = (player === this.mainPlayer) ? "lightgreen" : "white";
-                            for (var _i = 0, row_1 = row; _i < row_1.length; _i++) {
-                                var text = row_1[_i];
-                                text.visible = true;
-                                text.style.fill = color;
+                            try {
+                                for (var row_1 = __values(row), row_1_1 = row_1.next(); !row_1_1.done; row_1_1 = row_1.next()) {
+                                    var text = row_1_1.value;
+                                    text.visible = true;
+                                    text.style.fill = color;
+                                }
+                            }
+                            catch (e_13_1) { e_13 = { error: e_13_1 }; }
+                            finally {
+                                try {
+                                    if (row_1_1 && !row_1_1.done && (_a = row_1.return)) _a.call(row_1);
+                                }
+                                finally { if (e_13) throw e_13.error; }
                             }
                             row[0].text = player.name;
                             row[1].text = String(player.kills);
@@ -2137,15 +2275,25 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             row[2].visible = false;
                         }
                     }
+                    var e_13, _a;
                 };
                 FFADeathMatch.prototype.checkIfWin = function () {
                     if (!this.isOver) {
-                        for (var _i = 0, _a = this.level.players; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            if (player.kills >= this.killsToWin) {
-                                this.isOver = true;
-                                player.won = true;
+                        try {
+                            for (var _a = __values(this.level.players), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var player = _b.value;
+                                if (player.kills >= this.killsToWin) {
+                                    this.isOver = true;
+                                    player.won = true;
+                                }
                             }
+                        }
+                        catch (e_14_1) { e_14 = { error: e_14_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_14) throw e_14.error; }
                         }
                         if (this.isOver) {
                             if (game_7.game.music) {
@@ -2171,6 +2319,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             game_7.game.restartLevel(this.level.levelData.name);
                         }
                     }
+                    var e_14, _c;
                 };
                 return FFADeathMatch;
             }(GameMode));
@@ -2206,15 +2355,25 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 TeamDeathMatch.prototype.drawTopHUD = function () {
                     var blueKills = 0;
                     var redKills = 0;
-                    for (var _i = 0, _a = this.level.players; _i < _a.length; _i++) {
-                        var player = _a[_i];
-                        if (player.alliance === 0)
-                            blueKills += player.kills;
-                        else
-                            redKills += player.kills;
+                    try {
+                        for (var _a = __values(this.level.players), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var player = _b.value;
+                            if (player.alliance === 0)
+                                blueKills += player.kills;
+                            else
+                                redKills += player.kills;
+                        }
+                    }
+                    catch (e_15_1) { e_15 = { error: e_15_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_15) throw e_15.error; }
                     }
                     Helpers.drawTextMMX(game_7.game.uiCtx, "Red: " + String(redKills), 5, 10, 8, "left", "Top");
                     Helpers.drawTextMMX(game_7.game.uiCtx, "Blue: " + String(blueKills), 5, 20, 8, "left", "Top");
+                    var e_15, _c;
                 };
                 TeamDeathMatch.prototype.drawWinScreen = function () {
                     var team;
@@ -2240,12 +2399,21 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                     var topPlayerY = line2Y + 5;
                     var blueKills = 0;
                     var redKills = 0;
-                    for (var _i = 0, _a = this.level.players; _i < _a.length; _i++) {
-                        var player = _a[_i];
-                        if (player.alliance === 0)
-                            blueKills += player.kills;
-                        else
-                            redKills += player.kills;
+                    try {
+                        for (var _a = __values(this.level.players), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var player = _b.value;
+                            if (player.alliance === 0)
+                                blueKills += player.kills;
+                            else
+                                redKills += player.kills;
+                        }
+                    }
+                    catch (e_16_1) { e_16 = { error: e_16_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_16) throw e_16.error; }
                     }
                     var redPlayers = _.filter(this.players, function (player) {
                         return player.alliance === 1;
@@ -2282,17 +2450,27 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         Helpers.drawTextMMX(game_7.game.uiCtx, String(player.kills), this.screenWidth * 0.5 + col2x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
                         Helpers.drawTextMMX(game_7.game.uiCtx, String(player.deaths), this.screenWidth * 0.5 + col3x, topPlayerY + (i) * rowH, fontSize, "left", "top", true, color);
                     }
+                    var e_16, _c;
                 };
                 TeamDeathMatch.prototype.checkIfWin = function () {
                     if (!this.isOver) {
                         var blueKills = 0;
                         var redKills = 0;
-                        for (var _i = 0, _a = this.level.players; _i < _a.length; _i++) {
-                            var player = _a[_i];
-                            if (player.alliance === 0)
-                                blueKills += player.kills;
-                            else
-                                redKills += player.kills;
+                        try {
+                            for (var _a = __values(this.level.players), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var player = _b.value;
+                                if (player.alliance === 0)
+                                    blueKills += player.kills;
+                                else
+                                    redKills += player.kills;
+                            }
+                        }
+                        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_17) throw e_17.error; }
                         }
                         if (blueKills >= this.killsToWin) {
                             this.isOver = true;
@@ -2334,6 +2512,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             game_7.game.restartLevel(this.level.levelData.name);
                         }
                     }
+                    var e_17, _c;
                 };
                 return TeamDeathMatch;
             }(GameMode));
@@ -3294,8 +3473,17 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
         if (game_9.game.uiData.isProd)
             return false;
         if (keycode === 112) {
-            for (var _i = 0, _a = game_9.game.level.players; _i < _a.length; _i++) {
-                var player = _a[_i];
+            try {
+                for (var _a = __values(game_9.game.level.players), _b = _a.next(); !_b.done; _b = _a.next()) {
+                    var player = _b.value;
+                }
+            }
+            catch (e_18_1) { e_18 = { error: e_18_1 }; }
+            finally {
+                try {
+                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                }
+                finally { if (e_18) throw e_18.error; }
             }
             if (game_9.game.level.mainPlayer) {
                 game_9.game.level.mainPlayer.character.pos.x = 200;
@@ -3303,12 +3491,21 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
             }
         }
         if (keycode === 113) {
-            for (var _b = 0, _c = game_9.game.level.players; _b < _c.length; _b++) {
-                var player = _c[_b];
-                if (!player.isAI && player !== game_9.game.level.mainPlayer) {
-                    player.isAI = true;
-                    player.character.addAI();
+            try {
+                for (var _d = __values(game_9.game.level.players), _e = _d.next(); !_e.done; _e = _d.next()) {
+                    var player = _e.value;
+                    if (!player.isAI && player !== game_9.game.level.mainPlayer) {
+                        player.isAI = true;
+                        player.character.addAI();
+                    }
                 }
+            }
+            catch (e_19_1) { e_19 = { error: e_19_1 }; }
+            finally {
+                try {
+                    if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
+                }
+                finally { if (e_19) throw e_19.error; }
             }
         }
         if (keycode === 114) {
@@ -3327,12 +3524,21 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
             game_9.game.level.mainPlayer.character.applyDamage(undefined, undefined, 100);
         }
         if (keycode === 116) {
-            for (var _d = 0, _e = game_9.game.level.players; _d < _e.length; _d++) {
-                var player = _e[_d];
-                if (player.isAI) {
-                    player.character.changeWeapon(3);
-                    player.lockWeapon = true;
+            try {
+                for (var _g = __values(game_9.game.level.players), _h = _g.next(); !_h.done; _h = _g.next()) {
+                    var player = _h.value;
+                    if (player.isAI) {
+                        player.character.changeWeapon(3);
+                        player.lockWeapon = true;
+                    }
                 }
+            }
+            catch (e_20_1) { e_20 = { error: e_20_1 }; }
+            finally {
+                try {
+                    if (_h && !_h.done && (_j = _g.return)) _j.call(_g);
+                }
+                finally { if (e_20) throw e_20.error; }
             }
         }
         if (key === "reset") {
@@ -3342,6 +3548,7 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
         if (keycode === 80) {
             game_9.game.paused = !game_9.game.paused;
         }
+        var e_18, _c, e_19, _f, e_20, _j;
     }
     exports_15("cheat", cheat);
     var game_9, killFeedEntry_2;
@@ -3432,9 +3639,18 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                 Player.prototype.update = function () {
                     if (this.respawnTime === 0 && !this.character) {
                         this.health = this.maxHealth;
-                        for (var _i = 0, _a = this.weapons; _i < _a.length; _i++) {
-                            var weapon = _a[_i];
-                            weapon.ammo = weapon.maxAmmo;
+                        try {
+                            for (var _a = __values(this.weapons), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var weapon = _b.value;
+                                weapon.ammo = weapon.maxAmmo;
+                            }
+                        }
+                        catch (e_21_1) { e_21 = { error: e_21_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_21) throw e_21.error; }
                         }
                         var spawnPoint = game_10.game.level.getSpawnPoint(this);
                         this.character = new character_4.Character(this, spawnPoint.pos.x, spawnPoint.pos.y);
@@ -3451,6 +3667,7 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                     if (this.respawnTime > 0 && !game_10.game.level.gameMode.isOver) {
                         this.respawnTime = Helpers.clampMin0(this.respawnTime - game_10.game.deltaTime);
                     }
+                    var e_21, _c;
                 };
                 Object.defineProperty(Player.prototype, "canControl", {
                     get: function () {
@@ -3804,14 +4021,24 @@ System.register("objectPool", [], function (exports_21, context_21) {
                     if (!pool) {
                         return undefined;
                     }
-                    for (var _i = 0, pool_1 = pool; _i < pool_1.length; _i++) {
-                        var poolItem = pool_1[_i];
-                        if (poolItem.isFree()) {
-                            poolItem.reserve();
-                            return poolItem;
+                    try {
+                        for (var pool_1 = __values(pool), pool_1_1 = pool_1.next(); !pool_1_1.done; pool_1_1 = pool_1.next()) {
+                            var poolItem = pool_1_1.value;
+                            if (poolItem.isFree()) {
+                                poolItem.reserve();
+                                return poolItem;
+                            }
                         }
                     }
+                    catch (e_22_1) { e_22 = { error: e_22_1 }; }
+                    finally {
+                        try {
+                            if (pool_1_1 && !pool_1_1.done && (_a = pool_1.return)) _a.call(pool_1);
+                        }
+                        finally { if (e_22) throw e_22.error; }
+                    }
                     return undefined;
+                    var e_22, _a;
                 };
                 ObjectPool.prototype.add = function (key, poolItem) {
                     var pool = this.pool[key];
@@ -3938,86 +4165,140 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     this.gameObjects = new Set();
                     this.anims = new Set();
                     this.setupGrid(50);
-                    for (var _i = 0, _a = this.levelData.levelJson.instances; _i < _a.length; _i++) {
-                        var instance = _a[_i];
-                        if (instance.objectName === "Collision Shape") {
-                            var points = [];
-                            for (var _b = 0, _c = instance.points; _b < _c.length; _b++) {
-                                var point = _c[_b];
-                                points.push(new point_6.Point(point.x, point.y));
+                    try {
+                        for (var _a = __values(this.levelData.levelJson.instances), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var instance = _b.value;
+                            if (instance.objectName === "Collision Shape") {
+                                var points = [];
+                                try {
+                                    for (var _c = __values(instance.points), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                        var point = _d.value;
+                                        points.push(new point_6.Point(point.x, point.y));
+                                    }
+                                }
+                                catch (e_23_1) { e_23 = { error: e_23_1 }; }
+                                finally {
+                                    try {
+                                        if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
+                                    }
+                                    finally { if (e_23) throw e_23.error; }
+                                }
+                                var wall = new wall_4.Wall(instance.name, points);
+                                wall.collider.isClimbable = (instance.properties && instance.properties.climbable === "false") ? false : true;
+                                this.addGameObject(wall);
                             }
-                            var wall = new wall_4.Wall(instance.name, points);
-                            wall.collider.isClimbable = (instance.properties && instance.properties.climbable === "false") ? false : true;
-                            this.addGameObject(wall);
-                        }
-                        else if (instance.objectName === "Ladder") {
-                            var points = [];
-                            for (var _d = 0, _e = instance.points; _d < _e.length; _d++) {
-                                var point = _e[_d];
-                                points.push(new point_6.Point(point.x, point.y));
+                            else if (instance.objectName === "Ladder") {
+                                var points = [];
+                                try {
+                                    for (var _f = __values(instance.points), _g = _f.next(); !_g.done; _g = _f.next()) {
+                                        var point = _g.value;
+                                        points.push(new point_6.Point(point.x, point.y));
+                                    }
+                                }
+                                catch (e_24_1) { e_24 = { error: e_24_1 }; }
+                                finally {
+                                    try {
+                                        if (_g && !_g.done && (_h = _f.return)) _h.call(_f);
+                                    }
+                                    finally { if (e_24) throw e_24.error; }
+                                }
+                                this.addGameObject(new wall_4.Ladder(instance.name, points));
                             }
-                            this.addGameObject(new wall_4.Ladder(instance.name, points));
-                        }
-                        else if (instance.objectName === "No Scroll") {
-                            var points = [];
-                            for (var _f = 0, _g = instance.points; _f < _g.length; _f++) {
-                                var point = _g[_f];
-                                points.push(new point_6.Point(point.x, point.y));
+                            else if (instance.objectName === "No Scroll") {
+                                var points = [];
+                                try {
+                                    for (var _j = __values(instance.points), _k = _j.next(); !_k.done; _k = _j.next()) {
+                                        var point = _k.value;
+                                        points.push(new point_6.Point(point.x, point.y));
+                                    }
+                                }
+                                catch (e_25_1) { e_25 = { error: e_25_1 }; }
+                                finally {
+                                    try {
+                                        if (_k && !_k.done && (_l = _j.return)) _l.call(_j);
+                                    }
+                                    finally { if (e_25) throw e_25.error; }
+                                }
+                                var shape = new shape_1.Shape(points);
+                                var dir = void 0;
+                                if (instance.properties) {
+                                    if (instance.properties.freeDir === "up")
+                                        dir = noScroll_1.Direction.Up;
+                                    if (instance.properties.freeDir === "down")
+                                        dir = noScroll_1.Direction.Down;
+                                    if (instance.properties.freeDir === "left")
+                                        dir = noScroll_1.Direction.Left;
+                                    if (instance.properties.freeDir === "right")
+                                        dir = noScroll_1.Direction.Right;
+                                }
+                                this.noScrolls.push(new noScroll_1.NoScroll(shape, dir));
                             }
-                            var shape = new shape_1.Shape(points);
-                            var dir = void 0;
-                            if (instance.properties) {
-                                if (instance.properties.freeDir === "up")
-                                    dir = noScroll_1.Direction.Up;
-                                if (instance.properties.freeDir === "down")
-                                    dir = noScroll_1.Direction.Down;
-                                if (instance.properties.freeDir === "left")
-                                    dir = noScroll_1.Direction.Left;
-                                if (instance.properties.freeDir === "right")
-                                    dir = noScroll_1.Direction.Right;
+                            else if (instance.objectName === "Kill Zone") {
+                                var points = [];
+                                try {
+                                    for (var _m = __values(instance.points), _o = _m.next(); !_o.done; _o = _m.next()) {
+                                        var point = _o.value;
+                                        points.push(new point_6.Point(point.x, point.y));
+                                    }
+                                }
+                                catch (e_26_1) { e_26 = { error: e_26_1 }; }
+                                finally {
+                                    try {
+                                        if (_o && !_o.done && (_p = _m.return)) _p.call(_m);
+                                    }
+                                    finally { if (e_26) throw e_26.error; }
+                                }
+                                var shape = new shape_1.Shape(points);
+                                this.killZones.push(new killZone_1.KillZone(shape));
                             }
-                            this.noScrolls.push(new noScroll_1.NoScroll(shape, dir));
-                        }
-                        else if (instance.objectName === "Kill Zone") {
-                            var points = [];
-                            for (var _h = 0, _j = instance.points; _h < _j.length; _h++) {
-                                var point = _j[_h];
-                                points.push(new point_6.Point(point.x, point.y));
+                            else if (instance.objectName === "Spawn Point") {
+                                var properties = instance.properties;
+                                this.spawnPoints.push(new spawnPoint_1.SpawnPoint(instance.name, new point_6.Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
                             }
-                            var shape = new shape_1.Shape(points);
-                            this.killZones.push(new killZone_1.KillZone(shape));
-                        }
-                        else if (instance.objectName === "Spawn Point") {
-                            var properties = instance.properties;
-                            this.spawnPoints.push(new spawnPoint_1.SpawnPoint(instance.name, new point_6.Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
-                        }
-                        else if (instance.objectName === "Node") {
-                            var name_1 = instance.name;
-                            var pos = new point_6.Point(instance.pos.x, instance.pos.y);
-                            var node = new navMesh_1.NavMeshNode(name_1, pos, instance.properties);
-                            this.navMeshNodes.push(node);
-                        }
-                        else if (instance.objectName === "Large Health") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.LargeHealthPickup));
-                        }
-                        else if (instance.objectName === "Small Health") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.SmallHealthPickup));
-                        }
-                        else if (instance.objectName === "Large Ammo") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.LargeAmmoPickup));
-                        }
-                        else if (instance.objectName === "Small Ammo") {
-                            this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.SmallAmmoPickup));
-                        }
-                        else {
-                            var actor = new actor_5.Actor(instance.spriteName, new point_6.Point(instance.pos.x, instance.pos.y));
-                            actor.name = instance.name;
-                            this.addGameObject(actor);
+                            else if (instance.objectName === "Node") {
+                                var name_1 = instance.name;
+                                var pos = new point_6.Point(instance.pos.x, instance.pos.y);
+                                var node = new navMesh_1.NavMeshNode(name_1, pos, instance.properties);
+                                this.navMeshNodes.push(node);
+                            }
+                            else if (instance.objectName === "Large Health") {
+                                this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.LargeHealthPickup));
+                            }
+                            else if (instance.objectName === "Small Health") {
+                                this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.SmallHealthPickup));
+                            }
+                            else if (instance.objectName === "Large Ammo") {
+                                this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.LargeAmmoPickup));
+                            }
+                            else if (instance.objectName === "Small Ammo") {
+                                this.pickupSpawners.push(new pickup_2.PickupSpawner(new point_6.Point(instance.pos.x, instance.pos.y), pickup_2.SmallAmmoPickup));
+                            }
+                            else {
+                                var actor = new actor_5.Actor(instance.spriteName, new point_6.Point(instance.pos.x, instance.pos.y));
+                                actor.name = instance.name;
+                                this.addGameObject(actor);
+                            }
                         }
                     }
-                    for (var _k = 0, _l = this.navMeshNodes; _k < _l.length; _k++) {
-                        var navMeshNode = _l[_k];
-                        navMeshNode.setNeighbors(this.navMeshNodes, this.getGameObjectArray());
+                    catch (e_27_1) { e_27 = { error: e_27_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_q = _a.return)) _q.call(_a);
+                        }
+                        finally { if (e_27) throw e_27.error; }
+                    }
+                    try {
+                        for (var _r = __values(this.navMeshNodes), _s = _r.next(); !_s.done; _s = _r.next()) {
+                            var navMeshNode = _s.value;
+                            navMeshNode.setNeighbors(this.navMeshNodes, this.getGameObjectArray());
+                        }
+                    }
+                    catch (e_28_1) { e_28 = { error: e_28_1 }; }
+                    finally {
+                        try {
+                            if (_s && !_s.done && (_t = _r.return)) _t.call(_r);
+                        }
+                        finally { if (e_28) throw e_28.error; }
                     }
                     this.twoFrameCycle = 0;
                     this.gameMode = gameMode;
@@ -4044,6 +4325,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     this.hud = new hud_1.HUD(this);
                     this.gameMode.createHUD();
+                    var e_27, _q, e_23, _e, e_24, _h, e_25, _l, e_26, _p, e_28, _t;
                 };
                 Level.prototype.getGameObjectArray = function () {
                     return Array.from(this.gameObjects);
@@ -4083,45 +4365,100 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         playerY = this.mainPlayer.character.pos.y;
                     }
                     var gameObjects = this.getGameObjectArray();
-                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
-                        var go = gameObjects_1[_i];
-                        go.preUpdate();
-                        go.update();
+                    try {
+                        for (var gameObjects_1 = __values(gameObjects), gameObjects_1_1 = gameObjects_1.next(); !gameObjects_1_1.done; gameObjects_1_1 = gameObjects_1.next()) {
+                            var go = gameObjects_1_1.value;
+                            go.preUpdate();
+                            go.update();
+                        }
                     }
-                    for (var _a = 0, _b = Array.from(this.anims); _a < _b.length; _a++) {
-                        var anim = _b[_a];
-                        anim.preUpdate();
-                        anim.update();
+                    catch (e_29_1) { e_29 = { error: e_29_1 }; }
+                    finally {
+                        try {
+                            if (gameObjects_1_1 && !gameObjects_1_1.done && (_a = gameObjects_1.return)) _a.call(gameObjects_1);
+                        }
+                        finally { if (e_29) throw e_29.error; }
+                    }
+                    try {
+                        for (var _b = __values(Array.from(this.anims)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var anim = _c.value;
+                            anim.preUpdate();
+                            anim.update();
+                        }
+                    }
+                    catch (e_30_1) { e_30 = { error: e_30_1 }; }
+                    finally {
+                        try {
+                            if (_c && !_c.done && (_d = _b.return)) _d.call(_b);
+                        }
+                        finally { if (e_30) throw e_30.error; }
                     }
                     if (this.mainPlayer.character) {
                         var deltaX = this.mainPlayer.character.pos.x - playerX;
                         var deltaY = this.mainPlayer.character.pos.y - playerY;
                         this.updateCamPos(deltaX, deltaY);
                     }
-                    for (var _c = 0, _d = this.effects; _c < _d.length; _c++) {
-                        var effect = _d[_c];
-                        effect.update();
-                    }
-                    for (var _e = 0, _f = this.localPlayers; _e < _f.length; _e++) {
-                        var player = _f[_e];
-                        player.clearInputPressed();
-                        if (player.isAI) {
-                            player.clearAiInput();
+                    try {
+                        for (var _e = __values(this.effects), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            var effect = _f.value;
+                            effect.update();
                         }
                     }
-                    for (var _g = 0, _h = this.players; _g < _h.length; _g++) {
-                        var player = _h[_g];
-                        player.update();
+                    catch (e_31_1) { e_31 = { error: e_31_1 }; }
+                    finally {
+                        try {
+                            if (_f && !_f.done && (_g = _e.return)) _g.call(_e);
+                        }
+                        finally { if (e_31) throw e_31.error; }
                     }
-                    for (var _j = 0, _k = this.pickupSpawners; _j < _k.length; _j++) {
-                        var pickupSpawner = _k[_j];
-                        pickupSpawner.update();
+                    try {
+                        for (var _h = __values(this.localPlayers), _j = _h.next(); !_j.done; _j = _h.next()) {
+                            var player = _j.value;
+                            player.clearInputPressed();
+                            if (player.isAI) {
+                                player.clearAiInput();
+                            }
+                        }
+                    }
+                    catch (e_32_1) { e_32 = { error: e_32_1 }; }
+                    finally {
+                        try {
+                            if (_j && !_j.done && (_k = _h.return)) _k.call(_h);
+                        }
+                        finally { if (e_32) throw e_32.error; }
+                    }
+                    try {
+                        for (var _l = __values(this.players), _m = _l.next(); !_m.done; _m = _l.next()) {
+                            var player = _m.value;
+                            player.update();
+                        }
+                    }
+                    catch (e_33_1) { e_33 = { error: e_33_1 }; }
+                    finally {
+                        try {
+                            if (_m && !_m.done && (_o = _l.return)) _o.call(_l);
+                        }
+                        finally { if (e_33) throw e_33.error; }
+                    }
+                    try {
+                        for (var _p = __values(this.pickupSpawners), _q = _p.next(); !_q.done; _q = _p.next()) {
+                            var pickupSpawner = _q.value;
+                            pickupSpawner.update();
+                        }
+                    }
+                    catch (e_34_1) { e_34 = { error: e_34_1 }; }
+                    finally {
+                        try {
+                            if (_q && !_q.done && (_r = _p.return)) _r.call(_p);
+                        }
+                        finally { if (e_34) throw e_34.error; }
                     }
                     this.frameCount++;
                     this.twoFrameCycle++;
                     if (this.twoFrameCycle > 2)
                         this.twoFrameCycle = -2;
                     this.gameMode.update();
+                    var e_29, _a, e_30, _d, e_31, _g, e_32, _k, e_33, _o, e_34, _r;
                 };
                 Level.prototype.renderSetup = function () {
                     if (this.parallaxPath) {
@@ -4175,17 +4512,44 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.foregroundSprite.y = -this.camY;
                     }
                     var gameObjectsArray = this.getGameObjectArray();
-                    for (var _i = 0, gameObjectsArray_1 = gameObjectsArray; _i < gameObjectsArray_1.length; _i++) {
-                        var go = gameObjectsArray_1[_i];
-                        go.render(0, 0);
+                    try {
+                        for (var gameObjectsArray_1 = __values(gameObjectsArray), gameObjectsArray_1_1 = gameObjectsArray_1.next(); !gameObjectsArray_1_1.done; gameObjectsArray_1_1 = gameObjectsArray_1.next()) {
+                            var go = gameObjectsArray_1_1.value;
+                            go.render(0, 0);
+                        }
                     }
-                    for (var _a = 0, _b = Array.from(this.anims); _a < _b.length; _a++) {
-                        var anim = _b[_a];
-                        anim.render(0, 0);
+                    catch (e_35_1) { e_35 = { error: e_35_1 }; }
+                    finally {
+                        try {
+                            if (gameObjectsArray_1_1 && !gameObjectsArray_1_1.done && (_a = gameObjectsArray_1.return)) _a.call(gameObjectsArray_1);
+                        }
+                        finally { if (e_35) throw e_35.error; }
                     }
-                    for (var _c = 0, _d = this.effects; _c < _d.length; _c++) {
-                        var effect = _d[_c];
-                        effect.render(0, 0);
+                    try {
+                        for (var _b = __values(Array.from(this.anims)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var anim = _c.value;
+                            anim.render(0, 0);
+                        }
+                    }
+                    catch (e_36_1) { e_36 = { error: e_36_1 }; }
+                    finally {
+                        try {
+                            if (_c && !_c.done && (_d = _b.return)) _d.call(_b);
+                        }
+                        finally { if (e_36) throw e_36.error; }
+                    }
+                    try {
+                        for (var _e = __values(this.effects), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            var effect = _f.value;
+                            effect.render(0, 0);
+                        }
+                    }
+                    catch (e_37_1) { e_37 = { error: e_37_1 }; }
+                    finally {
+                        try {
+                            if (_f && !_f.done && (_g = _e.return)) _g.call(_e);
+                        }
+                        finally { if (e_37) throw e_37.error; }
                     }
                     this.hud.updateHUD();
                     this.gameMode.drawHUD();
@@ -4196,6 +4560,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         Helpers.drawText(game_13.game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
                         Helpers.drawText(game_13.game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
                     }
+                    var e_35, _a, e_36, _d, e_37, _g;
                 };
                 Object.defineProperty(Level.prototype, "width", {
                     get: function () { return this.backgroundSprite.width; },
@@ -4229,7 +4594,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 });
                 Object.defineProperty(Level.prototype, "halfScreenWidth", {
                     get: function () {
-                        return (game_13.game.pixiApp.stage.width / this.zoomScale) * 0.375;
+                        return this.screenWidth / 2;
                     },
                     enumerable: true,
                     configurable: true
@@ -4275,31 +4640,41 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     var camRect = new rect_4.Rect(this.camX, this.camY, this.camX + scaledCanvasW, this.camY + scaledCanvasH);
                     var camRectShape = camRect.getShape();
-                    for (var _i = 0, _a = this.noScrolls; _i < _a.length; _i++) {
-                        var noScroll = _a[_i];
-                        if (noScroll.shape.intersectsShape(camRectShape)) {
-                            if (noScroll.freeDir === noScroll_1.Direction.Left) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(-1, 0));
-                                if (mtv)
-                                    this.camX += mtv.x;
-                            }
-                            else if (noScroll.freeDir === noScroll_1.Direction.Right) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(1, 0));
-                                if (mtv)
-                                    this.camX += mtv.x;
-                            }
-                            else if (noScroll.freeDir === noScroll_1.Direction.Up) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(0, -1));
-                                if (mtv)
-                                    this.camY += mtv.y;
-                            }
-                            else if (noScroll.freeDir === noScroll_1.Direction.Down) {
-                                var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(0, 1));
-                                if (mtv)
-                                    this.camY += mtv.y;
+                    try {
+                        for (var _a = __values(this.noScrolls), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var noScroll = _b.value;
+                            if (noScroll.shape.intersectsShape(camRectShape)) {
+                                if (noScroll.freeDir === noScroll_1.Direction.Left) {
+                                    var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(-1, 0));
+                                    if (mtv)
+                                        this.camX += mtv.x;
+                                }
+                                else if (noScroll.freeDir === noScroll_1.Direction.Right) {
+                                    var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(1, 0));
+                                    if (mtv)
+                                        this.camX += mtv.x;
+                                }
+                                else if (noScroll.freeDir === noScroll_1.Direction.Up) {
+                                    var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(0, -1));
+                                    if (mtv)
+                                        this.camY += mtv.y;
+                                }
+                                else if (noScroll.freeDir === noScroll_1.Direction.Down) {
+                                    var mtv = camRectShape.getMinTransVectorDir(noScroll.shape, new point_6.Point(0, 1));
+                                    if (mtv)
+                                        this.camY += mtv.y;
+                                }
                             }
                         }
                     }
+                    catch (e_38_1) { e_38 = { error: e_38_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_38) throw e_38.error; }
+                    }
+                    var e_38, _c;
                 };
                 Level.prototype.computeCamPos = function (character) {
                     var scaledCanvasW = game_13.game.defaultCanvasWidth;
@@ -4330,16 +4705,26 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         for (var j = 0; j < hCellCount; j++) {
                             count += this.grid[i][j].size;
                             var arr = Array.from(this.grid[i][j]);
-                            for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
-                                var go = arr_1[_i];
-                                if (!this.gameObjects.has(go)) {
-                                    orphanedCount++;
+                            try {
+                                for (var arr_1 = __values(arr), arr_1_1 = arr_1.next(); !arr_1_1.done; arr_1_1 = arr_1.next()) {
+                                    var go = arr_1_1.value;
+                                    if (!this.gameObjects.has(go)) {
+                                        orphanedCount++;
+                                    }
                                 }
+                            }
+                            catch (e_39_1) { e_39 = { error: e_39_1 }; }
+                            finally {
+                                try {
+                                    if (arr_1_1 && !arr_1_1.done && (_a = arr_1.return)) _a.call(arr_1);
+                                }
+                                finally { if (e_39) throw e_39.error; }
                             }
                         }
                     }
                     this.debugString = String(count);
                     this.debugString2 = String(orphanedCount);
+                    var e_39, _a;
                 };
                 Level.prototype.setupGrid = function (cellWidth) {
                     this.cellWidth = cellWidth;
@@ -4356,11 +4741,36 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                 };
                 Level.prototype.getGridCells = function (shape, offsetX, offsetY) {
+                    var cells = [];
+                    if (shape.points.length === 2) {
+                        var point1 = shape.points[0];
+                        var point2 = shape.points[1];
+                        var dir = point1.directionTo(point2);
+                        var curX = point1.x;
+                        var curY = point1.y;
+                        var dist = 0;
+                        var maxDist = point1.distanceTo(point2);
+                        var mag = maxDist / (this.cellWidth / 2);
+                        var usedCoords = new Set();
+                        while (dist < maxDist) {
+                            curX += dir.x * mag;
+                            curY += dir.y * mag;
+                            var i = Math.floor((curY / this.height) * this.grid.length);
+                            var j = Math.floor((curX / this.width) * this.grid[0].length);
+                            dist += mag;
+                            if (i < 0 || j < 0 || i >= this.grid.length || j >= this.grid[0].length)
+                                continue;
+                            if (usedCoords.has(String(i) + String(j)))
+                                continue;
+                            usedCoords.add(String(i) + String(j));
+                            cells.push(new Cell(i, j, this.grid[i][j]));
+                        }
+                        return cells;
+                    }
                     var minI = Math.floor((shape.minY / this.height) * this.grid.length);
                     var minJ = Math.floor((shape.minX / this.width) * this.grid[0].length);
                     var maxI = Math.floor((shape.maxY / this.height) * this.grid.length);
                     var maxJ = Math.floor((shape.maxX / this.width) * this.grid[0].length);
-                    var cells = [];
                     for (var i = minI; i <= maxI; i++) {
                         for (var j = minJ; j <= maxJ; j++) {
                             if (i < 0 || j < 0 || i >= this.grid.length || j >= this.grid[0].length)
@@ -4373,20 +4783,30 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.getGameObjectsInSameCell = function (shape, offsetX, offsetY) {
                     var cells = this.getGridCells(shape, offsetX, offsetY);
                     var retGameobjects = new Set();
-                    for (var _i = 0, cells_1 = cells; _i < cells_1.length; _i++) {
-                        var cell = cells_1[_i];
-                        if (!cell.gameobjects)
-                            continue;
-                        for (var it = cell.gameobjects.values(), cell2 = undefined; cell2 = it.next().value;) {
-                            if (this.gameObjects.has(cell2)) {
-                                retGameobjects.add(cell2);
-                            }
-                            else {
-                                this.gameObjects.delete(cell2);
+                    try {
+                        for (var cells_1 = __values(cells), cells_1_1 = cells_1.next(); !cells_1_1.done; cells_1_1 = cells_1.next()) {
+                            var cell = cells_1_1.value;
+                            if (!cell.gameobjects)
+                                continue;
+                            for (var it = cell.gameobjects.values(), cell2 = undefined; cell2 = it.next().value;) {
+                                if (this.gameObjects.has(cell2)) {
+                                    retGameobjects.add(cell2);
+                                }
+                                else {
+                                    this.gameObjects.delete(cell2);
+                                }
                             }
                         }
                     }
+                    catch (e_40_1) { e_40 = { error: e_40_1 }; }
+                    finally {
+                        try {
+                            if (cells_1_1 && !cells_1_1.done && (_a = cells_1.return)) _a.call(cells_1);
+                        }
+                        finally { if (e_40) throw e_40.error; }
+                    }
                     return Array.from(retGameobjects);
+                    var e_40, _a;
                 };
                 Level.prototype.addGameObject = function (go) {
                     this.gameObjects.add(go);
@@ -4406,19 +4826,50 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         }
                     }
                 };
+                Level.prototype.removeFromGridFast = function (go) {
+                    if (!go.collider)
+                        return;
+                    var cells = this.getGridCells(go.collider.shape, 0, 0);
+                    try {
+                        for (var cells_2 = __values(cells), cells_2_1 = cells_2.next(); !cells_2_1.done; cells_2_1 = cells_2.next()) {
+                            var cell = cells_2_1.value;
+                            if (cell.gameobjects.has(go)) {
+                                cell.gameobjects.delete(go);
+                            }
+                        }
+                    }
+                    catch (e_41_1) { e_41 = { error: e_41_1 }; }
+                    finally {
+                        try {
+                            if (cells_2_1 && !cells_2_1.done && (_a = cells_2.return)) _a.call(cells_2);
+                        }
+                        finally { if (e_41) throw e_41.error; }
+                    }
+                    var e_41, _a;
+                };
                 Level.prototype.addGameObjectToGrid = function (go) {
                     if (!go.collider)
                         return;
                     if (!this.gameObjects.has(go))
                         return;
                     var cells = this.getGridCells(go.collider.shape, 0, 0);
-                    for (var _i = 0, cells_2 = cells; _i < cells_2.length; _i++) {
-                        var cell = cells_2[_i];
-                        if (!this.grid[cell.i][cell.j].has(go)) {
-                            this.grid[cell.i][cell.j].add(go);
-                            this.occupiedGridSets.add(this.grid[cell.i][cell.j]);
+                    try {
+                        for (var cells_3 = __values(cells), cells_3_1 = cells_3.next(); !cells_3_1.done; cells_3_1 = cells_3.next()) {
+                            var cell = cells_3_1.value;
+                            if (!this.grid[cell.i][cell.j].has(go)) {
+                                this.grid[cell.i][cell.j].add(go);
+                                this.occupiedGridSets.add(this.grid[cell.i][cell.j]);
+                            }
                         }
                     }
+                    catch (e_42_1) { e_42 = { error: e_42_1 }; }
+                    finally {
+                        try {
+                            if (cells_3_1 && !cells_3_1.done && (_a = cells_3.return)) _a.call(cells_3);
+                        }
+                        finally { if (e_42) throw e_42.error; }
+                    }
+                    var e_42, _a;
                 };
                 Level.prototype.hasGameObject = function (go) {
                     return this.gameObjects.has(go);
@@ -4429,13 +4880,23 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.isInKillZone = function (actor) {
                     if (!actor.collider)
                         return false;
-                    for (var _i = 0, _a = this.killZones; _i < _a.length; _i++) {
-                        var killZone = _a[_i];
-                        if (killZone.shape.intersectsShape(actor.collider.shape)) {
-                            return true;
+                    try {
+                        for (var _a = __values(this.killZones), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var killZone = _b.value;
+                            if (killZone.shape.intersectsShape(actor.collider.shape)) {
+                                return true;
+                            }
                         }
                     }
+                    catch (e_43_1) { e_43 = { error: e_43_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_43) throw e_43.error; }
+                    }
                     return false;
+                    var e_43, _c;
                 };
                 Level.prototype.shouldTrigger = function (actor, gameObject, offset) {
                     if (!actor.collider.isTrigger && gameObject instanceof wall_4.Ladder) {
@@ -4462,21 +4923,31 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var collideDatas = [];
                     var gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
-                    for (var _i = 0, gameObjects_2 = gameObjects; _i < gameObjects_2.length; _i++) {
-                        var go = gameObjects_2[_i];
-                        if (!go.collider)
-                            continue;
-                        if (go === actor)
-                            continue;
-                        if (this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY)))
-                            continue;
-                        var hitData = actorShape.intersectsShape(go.collider.shape, vel);
-                        if (hitData) {
-                            var collideData = new collider_4.CollideData(go.collider, vel, false, go, hitData);
-                            collideDatas.push(collideData);
+                    try {
+                        for (var gameObjects_2 = __values(gameObjects), gameObjects_2_1 = gameObjects_2.next(); !gameObjects_2_1.done; gameObjects_2_1 = gameObjects_2.next()) {
+                            var go = gameObjects_2_1.value;
+                            if (!go.collider)
+                                continue;
+                            if (go === actor)
+                                continue;
+                            if (this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY)))
+                                continue;
+                            var hitData = actorShape.intersectsShape(go.collider.shape, vel);
+                            if (hitData) {
+                                var collideData = new collider_4.CollideData(go.collider, vel, false, go, hitData);
+                                collideDatas.push(collideData);
+                            }
                         }
                     }
+                    catch (e_44_1) { e_44 = { error: e_44_1 }; }
+                    finally {
+                        try {
+                            if (gameObjects_2_1 && !gameObjects_2_1.done && (_a = gameObjects_2.return)) _a.call(gameObjects_2);
+                        }
+                        finally { if (e_44) throw e_44.error; }
+                    }
                     return collideDatas;
+                    var e_44, _a;
                 };
                 Level.prototype.getMtvDir = function (actor, offsetX, offsetY, vel, pushIncline, overrideCollideDatas) {
                     var collideDatas = overrideCollideDatas;
@@ -4486,81 +4957,130 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var pushDir = vel.times(-1).normalize();
                     if (collideDatas.length > 0) {
-                        for (var _i = 0, collideDatas_1 = collideDatas; _i < collideDatas_1.length; _i++) {
-                            var collideData = collideDatas_1[_i];
-                            if (collideData.hitData && collideData.hitData.normal && collideData.hitData.normal.isAngled() && pushIncline) {
-                                pushDir = new point_6.Point(0, -1);
+                        try {
+                            for (var collideDatas_1 = __values(collideDatas), collideDatas_1_1 = collideDatas_1.next(); !collideDatas_1_1.done; collideDatas_1_1 = collideDatas_1.next()) {
+                                var collideData = collideDatas_1_1.value;
+                                if (collideData.hitData && collideData.hitData.normal && collideData.hitData.normal.isAngled() && pushIncline) {
+                                    pushDir = new point_6.Point(0, -1);
+                                }
                             }
+                        }
+                        catch (e_45_1) { e_45 = { error: e_45_1 }; }
+                        finally {
+                            try {
+                                if (collideDatas_1_1 && !collideDatas_1_1.done && (_a = collideDatas_1.return)) _a.call(collideDatas_1);
+                            }
+                            finally { if (e_45) throw e_45.error; }
                         }
                     }
                     if (collideDatas.length > 0) {
                         var maxMag = 0;
                         var maxMtv = void 0;
-                        for (var _a = 0, collideDatas_2 = collideDatas; _a < collideDatas_2.length; _a++) {
-                            var collideData = collideDatas_2[_a];
-                            actor.registerCollision(collideData);
-                            var mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
-                            if (mtv && mtv.magnitude >= maxMag) {
-                                maxMag = mtv.magnitude;
-                                maxMtv = mtv;
+                        try {
+                            for (var collideDatas_2 = __values(collideDatas), collideDatas_2_1 = collideDatas_2.next(); !collideDatas_2_1.done; collideDatas_2_1 = collideDatas_2.next()) {
+                                var collideData = collideDatas_2_1.value;
+                                actor.registerCollision(collideData);
+                                var mtv = actorShape.getMinTransVectorDir(collideData.collider.shape, pushDir);
+                                if (mtv && mtv.magnitude >= maxMag) {
+                                    maxMag = mtv.magnitude;
+                                    maxMtv = mtv;
+                                }
                             }
+                        }
+                        catch (e_46_1) { e_46 = { error: e_46_1 }; }
+                        finally {
+                            try {
+                                if (collideDatas_2_1 && !collideDatas_2_1.done && (_b = collideDatas_2.return)) _b.call(collideDatas_2);
+                            }
+                            finally { if (e_46) throw e_46.error; }
                         }
                         return maxMtv;
                     }
                     else {
                         return undefined;
                     }
+                    var e_45, _a, e_46, _b;
                 };
                 Level.prototype.checkCollisionShape = function (shape, exclusions) {
                     var gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
-                    for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
-                        var go = gameObjects_3[_i];
-                        if (!go.collider)
-                            continue;
-                        if (exclusions.indexOf(go) !== -1)
-                            continue;
-                        var hitData = shape.intersectsShape(go.collider.shape);
-                        if (hitData) {
-                            return new collider_4.CollideData(go.collider, undefined, false, go, hitData);
+                    try {
+                        for (var gameObjects_3 = __values(gameObjects), gameObjects_3_1 = gameObjects_3.next(); !gameObjects_3_1.done; gameObjects_3_1 = gameObjects_3.next()) {
+                            var go = gameObjects_3_1.value;
+                            if (!go.collider)
+                                continue;
+                            if (exclusions.indexOf(go) !== -1)
+                                continue;
+                            var hitData = shape.intersectsShape(go.collider.shape);
+                            if (hitData) {
+                                return new collider_4.CollideData(go.collider, undefined, false, go, hitData);
+                            }
                         }
                     }
+                    catch (e_47_1) { e_47 = { error: e_47_1 }; }
+                    finally {
+                        try {
+                            if (gameObjects_3_1 && !gameObjects_3_1.done && (_a = gameObjects_3.return)) _a.call(gameObjects_3);
+                        }
+                        finally { if (e_47) throw e_47.error; }
+                    }
                     return undefined;
+                    var e_47, _a;
                 };
                 Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, vel) {
                     if (!actor.collider || actor.collider.isTrigger)
                         return undefined;
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
-                    for (var _i = 0, gameObjects_4 = gameObjects; _i < gameObjects_4.length; _i++) {
-                        var go = gameObjects_4[_i];
-                        if (go === actor)
-                            continue;
-                        if (!go.collider)
-                            continue;
-                        var isTrigger = this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY));
-                        if (isTrigger)
-                            continue;
-                        var hitData = actorShape.intersectsShape(go.collider.shape, vel);
-                        if (hitData) {
-                            return new collider_4.CollideData(go.collider, vel, isTrigger, go, hitData);
+                    try {
+                        for (var gameObjects_4 = __values(gameObjects), gameObjects_4_1 = gameObjects_4.next(); !gameObjects_4_1.done; gameObjects_4_1 = gameObjects_4.next()) {
+                            var go = gameObjects_4_1.value;
+                            if (go === actor)
+                                continue;
+                            if (!go.collider)
+                                continue;
+                            var isTrigger = this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY));
+                            if (isTrigger)
+                                continue;
+                            var hitData = actorShape.intersectsShape(go.collider.shape, vel);
+                            if (hitData) {
+                                return new collider_4.CollideData(go.collider, vel, isTrigger, go, hitData);
+                            }
                         }
                     }
+                    catch (e_48_1) { e_48 = { error: e_48_1 }; }
+                    finally {
+                        try {
+                            if (gameObjects_4_1 && !gameObjects_4_1.done && (_a = gameObjects_4.return)) _a.call(gameObjects_4);
+                        }
+                        finally { if (e_48) throw e_48.error; }
+                    }
                     return undefined;
+                    var e_48, _a;
                 };
                 Level.prototype.getActorsInRadius = function (pos, radius, classNames) {
                     var actors = [];
                     var gameObjects = this.getGameObjectArray();
-                    for (var _i = 0, gameObjects_5 = gameObjects; _i < gameObjects_5.length; _i++) {
-                        var go = gameObjects_5[_i];
-                        if (!(go instanceof actor_5.Actor))
-                            continue;
-                        if (!this.isOfClass(go, classNames))
-                            continue;
-                        if (go.pos.distanceTo(pos) < radius) {
-                            actors.push(go);
+                    try {
+                        for (var gameObjects_5 = __values(gameObjects), gameObjects_5_1 = gameObjects_5.next(); !gameObjects_5_1.done; gameObjects_5_1 = gameObjects_5.next()) {
+                            var go = gameObjects_5_1.value;
+                            if (!(go instanceof actor_5.Actor))
+                                continue;
+                            if (!this.isOfClass(go, classNames))
+                                continue;
+                            if (go.pos.distanceTo(pos) < radius) {
+                                actors.push(go);
+                            }
                         }
                     }
+                    catch (e_49_1) { e_49 = { error: e_49_1 }; }
+                    finally {
+                        try {
+                            if (gameObjects_5_1 && !gameObjects_5_1.done && (_a = gameObjects_5.return)) _a.call(gameObjects_5);
+                        }
+                        finally { if (e_49) throw e_49.error; }
+                    }
                     return actors;
+                    var e_49, _a;
                 };
                 Level.prototype.getTriggerList = function (actor, offsetX, offsetY, vel, classType) {
                     var triggers = [];
@@ -4568,59 +5088,89 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         return triggers;
                     var actorShape = actor.collider.shape.clone(offsetX, offsetY);
                     var gameObjects = this.getGameObjectsInSameCell(actor.collider.shape, offsetX, offsetY);
-                    for (var _i = 0, gameObjects_6 = gameObjects; _i < gameObjects_6.length; _i++) {
-                        var go = gameObjects_6[_i];
-                        if (go === actor)
-                            continue;
-                        if (!go.collider)
-                            continue;
-                        if (classType && !(go instanceof classType)) {
-                            continue;
-                        }
-                        var isTrigger = this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY));
-                        if (!isTrigger)
-                            continue;
-                        var hitData = actorShape.intersectsShape(go.collider.shape, vel);
-                        if (hitData) {
-                            triggers.push(new collider_4.CollideData(go.collider, vel, isTrigger, go, hitData));
+                    try {
+                        for (var gameObjects_6 = __values(gameObjects), gameObjects_6_1 = gameObjects_6.next(); !gameObjects_6_1.done; gameObjects_6_1 = gameObjects_6.next()) {
+                            var go = gameObjects_6_1.value;
+                            if (go === actor)
+                                continue;
+                            if (!go.collider)
+                                continue;
+                            if (classType && !(go instanceof classType)) {
+                                continue;
+                            }
+                            var isTrigger = this.shouldTrigger(actor, go, new point_6.Point(offsetX, offsetY));
+                            if (!isTrigger)
+                                continue;
+                            var hitData = actorShape.intersectsShape(go.collider.shape, vel);
+                            if (hitData) {
+                                triggers.push(new collider_4.CollideData(go.collider, vel, isTrigger, go, hitData));
+                            }
                         }
                     }
+                    catch (e_50_1) { e_50 = { error: e_50_1 }; }
+                    finally {
+                        try {
+                            if (gameObjects_6_1 && !gameObjects_6_1.done && (_a = gameObjects_6.return)) _a.call(gameObjects_6);
+                        }
+                        finally { if (e_50) throw e_50.error; }
+                    }
                     return triggers;
+                    var e_50, _a;
                 };
                 Level.prototype.isOfClass = function (go, classNames) {
                     if (!classNames || classNames.length === 0)
                         return true;
                     var found = false;
-                    for (var _i = 0, classNames_1 = classNames; _i < classNames_1.length; _i++) {
-                        var className = classNames_1[_i];
-                        if (go.constructor.name === className) {
-                            found = true;
-                            break;
+                    try {
+                        for (var classNames_1 = __values(classNames), classNames_1_1 = classNames_1.next(); !classNames_1_1.done; classNames_1_1 = classNames_1.next()) {
+                            var className = classNames_1_1.value;
+                            if (go.constructor.name === className) {
+                                found = true;
+                                break;
+                            }
                         }
                     }
+                    catch (e_51_1) { e_51 = { error: e_51_1 }; }
+                    finally {
+                        try {
+                            if (classNames_1_1 && !classNames_1_1.done && (_a = classNames_1.return)) _a.call(classNames_1);
+                        }
+                        finally { if (e_51) throw e_51.error; }
+                    }
                     return found;
+                    var e_51, _a;
                 };
                 Level.prototype.raycastAll = function (pos1, pos2, classNames) {
                     var hits = [];
                     var shape = new shape_1.Shape([pos1, pos2]);
                     var gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
-                    for (var _i = 0, gameObjects_7 = gameObjects; _i < gameObjects_7.length; _i++) {
-                        var go = gameObjects_7[_i];
-                        if (!go.collider)
-                            continue;
-                        if (!this.isOfClass(go, classNames))
-                            continue;
-                        var collideDatas = go.collider.shape.getLineIntersectCollisions(new shape_1.Line(pos1, pos2));
-                        var closestCollideData = _.minBy(collideDatas, function (collideData) {
-                            return collideData.hitData.hitPoint.distanceTo(pos1);
-                        });
-                        if (closestCollideData) {
-                            closestCollideData.collider = go.collider;
-                            closestCollideData.gameObject = go;
-                            hits.push(closestCollideData);
+                    try {
+                        for (var gameObjects_7 = __values(gameObjects), gameObjects_7_1 = gameObjects_7.next(); !gameObjects_7_1.done; gameObjects_7_1 = gameObjects_7.next()) {
+                            var go = gameObjects_7_1.value;
+                            if (!go.collider)
+                                continue;
+                            if (!this.isOfClass(go, classNames))
+                                continue;
+                            var collideDatas = go.collider.shape.getLineIntersectCollisions(new shape_1.Line(pos1, pos2));
+                            var closestCollideData = _.minBy(collideDatas, function (collideData) {
+                                return collideData.hitData.hitPoint.distanceTo(pos1);
+                            });
+                            if (closestCollideData) {
+                                closestCollideData.collider = go.collider;
+                                closestCollideData.gameObject = go;
+                                hits.push(closestCollideData);
+                            }
                         }
                     }
+                    catch (e_52_1) { e_52 = { error: e_52_1 }; }
+                    finally {
+                        try {
+                            if (gameObjects_7_1 && !gameObjects_7_1.done && (_a = gameObjects_7.return)) _a.call(gameObjects_7);
+                        }
+                        finally { if (e_52) throw e_52.error; }
+                    }
                     return hits;
+                    var e_52, _a;
                 };
                 Level.prototype.getClosestTarget = function (pos, alliance) {
                     var _this = this;
@@ -4648,17 +5198,27 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.getClosestNodeInSight = function (pos) {
                     var minNode;
                     var minDist = Infinity;
-                    for (var _i = 0, _a = this.navMeshNodes; _i < _a.length; _i++) {
-                        var node = _a[_i];
-                        if (this.noWallsInBetween(pos, node.pos)) {
-                            var dist = pos.distanceTo(node.pos);
-                            if (dist < minDist) {
-                                minDist = dist;
-                                minNode = node;
+                    try {
+                        for (var _a = __values(this.navMeshNodes), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var node = _b.value;
+                            if (this.noWallsInBetween(pos, node.pos)) {
+                                var dist = pos.distanceTo(node.pos);
+                                if (dist < minDist) {
+                                    minDist = dist;
+                                    minNode = node;
+                                }
                             }
                         }
                     }
+                    catch (e_53_1) { e_53 = { error: e_53_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_53) throw e_53.error; }
+                    }
                     return minNode;
+                    var e_53, _c;
                 };
                 Level.prototype.getRandomNode = function () {
                     return _.sample(this.navMeshNodes);
@@ -5364,18 +5924,38 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     });
                 };
                 Game.prototype.loadSprites = function () {
-                    for (var _i = 0, spriteJsons_1 = sprites_1.spriteJsons; _i < spriteJsons_1.length; _i++) {
-                        var spriteJson = spriteJsons_1[_i];
-                        var sprite = new sprite_3.Sprite(spriteJson, false, undefined);
-                        this.sprites[sprite.name] = sprite;
+                    try {
+                        for (var spriteJsons_1 = __values(sprites_1.spriteJsons), spriteJsons_1_1 = spriteJsons_1.next(); !spriteJsons_1_1.done; spriteJsons_1_1 = spriteJsons_1.next()) {
+                            var spriteJson = spriteJsons_1_1.value;
+                            var sprite = new sprite_3.Sprite(spriteJson, false, undefined);
+                            this.sprites[sprite.name] = sprite;
+                        }
                     }
+                    catch (e_54_1) { e_54 = { error: e_54_1 }; }
+                    finally {
+                        try {
+                            if (spriteJsons_1_1 && !spriteJsons_1_1.done && (_a = spriteJsons_1.return)) _a.call(spriteJsons_1);
+                        }
+                        finally { if (e_54) throw e_54.error; }
+                    }
+                    var e_54, _a;
                 };
                 Game.prototype.loadLevels = function () {
-                    for (var _i = 0, levelJsons_1 = levels_1.levelJsons; _i < levelJsons_1.length; _i++) {
-                        var levelJson = levelJsons_1[_i];
-                        var levelData = new level_1.LevelData(levelJson);
-                        this.levelDatas[levelJson.name] = levelData;
+                    try {
+                        for (var levelJsons_1 = __values(levels_1.levelJsons), levelJsons_1_1 = levelJsons_1.next(); !levelJsons_1_1.done; levelJsons_1_1 = levelJsons_1.next()) {
+                            var levelJson = levelJsons_1_1.value;
+                            var levelData = new level_1.LevelData(levelJson);
+                            this.levelDatas[levelJson.name] = levelData;
+                        }
                     }
+                    catch (e_55_1) { e_55 = { error: e_55_1 }; }
+                    finally {
+                        try {
+                            if (levelJsons_1_1 && !levelJsons_1_1.done && (_a = levelJsons_1.return)) _a.call(levelJsons_1);
+                        }
+                        finally { if (e_55) throw e_55.error; }
+                    }
+                    var e_55, _a;
                 };
                 Game.prototype.loadPalettes = function () {
                     this.palettes["red"] = new color_1.Palette("assets/palettes/red.png");
@@ -5390,16 +5970,25 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 };
                 Game.prototype.loadSounds = function () {
                     var _this = this;
-                    for (var _i = 0, soundFiles_1 = soundFiles; _i < soundFiles_1.length; _i++) {
-                        var soundFile = soundFiles_1[_i];
-                        this.maxLoadCount++;
-                        var sound = new Howl({
-                            src: ["assets/sounds/" + soundFile],
-                            onload: function () {
-                                _this.loadCount++;
-                            }
-                        });
-                        this.sounds[soundFile.split(".")[0]] = sound;
+                    try {
+                        for (var soundFiles_1 = __values(soundFiles), soundFiles_1_1 = soundFiles_1.next(); !soundFiles_1_1.done; soundFiles_1_1 = soundFiles_1.next()) {
+                            var soundFile = soundFiles_1_1.value;
+                            this.maxLoadCount++;
+                            var sound = new Howl({
+                                src: ["assets/sounds/" + soundFile],
+                                onload: function () {
+                                    _this.loadCount++;
+                                }
+                            });
+                            this.sounds[soundFile.split(".")[0]] = sound;
+                        }
+                    }
+                    catch (e_56_1) { e_56 = { error: e_56_1 }; }
+                    finally {
+                        try {
+                            if (soundFiles_1_1 && !soundFiles_1_1.done && (_a = soundFiles_1.return)) _a.call(soundFiles_1);
+                        }
+                        finally { if (e_56) throw e_56.error; }
                     }
                     this.maxLoadCount++;
                     this.soundSheet = new Howl({
@@ -5419,6 +6008,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             _this.loadCount++;
                         }
                     });
+                    var e_56, _a;
                 };
                 Game.prototype.isLoaded = function () {
                     return this.loadCount >= this.maxLoadCount;
@@ -5746,13 +6336,23 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                 };
                 Shape.prototype.intersectsLine = function (line) {
                     var lines = this.getLines();
-                    for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
-                        var myLine = lines_1[_i];
-                        if (myLine.getIntersectPoint(line)) {
-                            return true;
+                    try {
+                        for (var lines_1 = __values(lines), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
+                            var myLine = lines_1_1.value;
+                            if (myLine.getIntersectPoint(line)) {
+                                return true;
+                            }
                         }
                     }
+                    catch (e_57_1) { e_57 = { error: e_57_1 }; }
+                    finally {
+                        try {
+                            if (lines_1_1 && !lines_1_1.done && (_a = lines_1.return)) _a.call(lines_1);
+                        }
+                        finally { if (e_57) throw e_57.error; }
+                    }
                     return false;
+                    var e_57, _a;
                 };
                 Shape.prototype.getLineIntersectCollisions = function (line) {
                     var collideDatas = [];
@@ -5772,20 +6372,38 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                 Shape.prototype.intersectsShape = function (other, vel) {
                     game_14.game.collisionCalls++;
                     var pointOutside = false;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        if (!other.containsPoint(point)) {
-                            pointOutside = true;
-                            break;
+                    try {
+                        for (var _a = __values(this.points), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var point = _b.value;
+                            if (!other.containsPoint(point)) {
+                                pointOutside = true;
+                                break;
+                            }
                         }
                     }
-                    var pointOutside2 = false;
-                    for (var _b = 0, _c = other.points; _b < _c.length; _b++) {
-                        var point = _c[_b];
-                        if (!this.containsPoint(point)) {
-                            pointOutside2 = true;
-                            break;
+                    catch (e_58_1) { e_58 = { error: e_58_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
+                        finally { if (e_58) throw e_58.error; }
+                    }
+                    var pointOutside2 = false;
+                    try {
+                        for (var _d = __values(other.points), _e = _d.next(); !_e.done; _e = _d.next()) {
+                            var point = _e.value;
+                            if (!this.containsPoint(point)) {
+                                pointOutside2 = true;
+                                break;
+                            }
+                        }
+                    }
+                    catch (e_59_1) { e_59 = { error: e_59_1 }; }
+                    finally {
+                        try {
+                            if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
+                        }
+                        finally { if (e_59) throw e_59.error; }
                     }
                     if (!pointOutside || !pointOutside2) {
                         return new collider_5.HitData(undefined, undefined);
@@ -5793,35 +6411,54 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                     var lines1 = this.getLines();
                     var lines2 = other.getLines();
                     var hitNormals = [];
-                    for (var _d = 0, lines1_1 = lines1; _d < lines1_1.length; _d++) {
-                        var line1 = lines1_1[_d];
-                        var normals = other.getNormals();
-                        for (var i = 0; i < lines2.length; i++) {
-                            var line2 = lines2[i];
-                            if (line1.getIntersectPoint(line2)) {
-                                if (!vel) {
-                                    return new collider_5.HitData(normals[i], undefined);
-                                }
-                                else {
-                                    hitNormals.push(normals[i]);
+                    try {
+                        for (var lines1_1 = __values(lines1), lines1_1_1 = lines1_1.next(); !lines1_1_1.done; lines1_1_1 = lines1_1.next()) {
+                            var line1 = lines1_1_1.value;
+                            var normals = other.getNormals();
+                            for (var i = 0; i < lines2.length; i++) {
+                                var line2 = lines2[i];
+                                if (line1.getIntersectPoint(line2)) {
+                                    if (!vel) {
+                                        return new collider_5.HitData(normals[i], undefined);
+                                    }
+                                    else {
+                                        hitNormals.push(normals[i]);
+                                    }
                                 }
                             }
                         }
                     }
+                    catch (e_60_1) { e_60 = { error: e_60_1 }; }
+                    finally {
+                        try {
+                            if (lines1_1_1 && !lines1_1_1.done && (_g = lines1_1.return)) _g.call(lines1_1);
+                        }
+                        finally { if (e_60) throw e_60.error; }
+                    }
                     if (hitNormals.length === 0) {
                         return undefined;
                     }
-                    for (var _e = 0, hitNormals_1 = hitNormals; _e < hitNormals_1.length; _e++) {
-                        var normal = hitNormals_1[_e];
-                        var ang = vel.times(-1).angleWith(normal);
-                        if (ang < 90) {
-                            return new collider_5.HitData(normal, undefined);
+                    try {
+                        for (var hitNormals_1 = __values(hitNormals), hitNormals_1_1 = hitNormals_1.next(); !hitNormals_1_1.done; hitNormals_1_1 = hitNormals_1.next()) {
+                            var normal = hitNormals_1_1.value;
+                            var ang = vel.times(-1).angleWith(normal);
+                            if (ang < 90) {
+                                return new collider_5.HitData(normal, undefined);
+                            }
                         }
+                    }
+                    catch (e_61_1) { e_61 = { error: e_61_1 }; }
+                    finally {
+                        try {
+                            if (hitNormals_1_1 && !hitNormals_1_1.done && (_h = hitNormals_1.return)) _h.call(hitNormals_1);
+                        }
+                        finally { if (e_61) throw e_61.error; }
                     }
                     if (hitNormals.length > 0) {
                         return new collider_5.HitData(hitNormals[0], undefined);
                     }
                     return undefined;
+                    var e_58, _c, e_59, _f, e_60, _g, e_61, _h;
                 };
                 Shape.prototype.containsPoint = function (point) {
                     var x = point.x;
@@ -5844,32 +6481,52 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                     }
                     var intersections = [];
                     var pointLine = new Line(point, point.add(dir));
-                    for (var _i = 0, _a = this.getLines(); _i < _a.length; _i++) {
-                        var line = _a[_i];
-                        var intersectPoint = line.getIntersectPoint(pointLine);
-                        if (intersectPoint) {
-                            intersections.push(intersectPoint);
+                    try {
+                        for (var _a = __values(this.getLines()), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var line = _b.value;
+                            var intersectPoint = line.getIntersectPoint(pointLine);
+                            if (intersectPoint) {
+                                intersections.push(intersectPoint);
+                            }
                         }
+                    }
+                    catch (e_62_1) { e_62 = { error: e_62_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_62) throw e_62.error; }
                     }
                     if (intersections.length === 0)
                         return undefined;
                     return _.minBy(intersections, function (intersectPoint) {
                         return intersectPoint.distanceTo(point);
                     });
+                    var e_62, _c;
                 };
                 Shape.prototype.getClosestPointOnBounds = function (point) {
                 };
                 Shape.prototype.minMaxDotProd = function (normal) {
                     var min = null, max = null;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        var dp = point.dotProduct(normal);
-                        if (min === null || dp < min)
-                            min = dp;
-                        if (max === null || dp > max)
-                            max = dp;
+                    try {
+                        for (var _a = __values(this.points), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var point = _b.value;
+                            var dp = point.dotProduct(normal);
+                            if (min === null || dp < min)
+                                min = dp;
+                            if (max === null || dp > max)
+                                max = dp;
+                        }
+                    }
+                    catch (e_63_1) { e_63 = { error: e_63_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_63) throw e_63.error; }
                     }
                     return [min, max];
+                    var e_63, _c;
                 };
                 Shape.prototype.checkNormal = function (other, normal) {
                     var aMinMax = this.minMaxDotProd(normal);
@@ -5913,17 +6570,35 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                         thisNormals = this.getNormals();
                         bNormals = b.getNormals();
                     }
-                    for (var _i = 0, thisNormals_1 = thisNormals; _i < thisNormals_1.length; _i++) {
-                        var normal = thisNormals_1[_i];
-                        var result = this.checkNormal(b, normal);
-                        if (result)
-                            correctionVectors.push(result);
+                    try {
+                        for (var thisNormals_1 = __values(thisNormals), thisNormals_1_1 = thisNormals_1.next(); !thisNormals_1_1.done; thisNormals_1_1 = thisNormals_1.next()) {
+                            var normal = thisNormals_1_1.value;
+                            var result = this.checkNormal(b, normal);
+                            if (result)
+                                correctionVectors.push(result);
+                        }
                     }
-                    for (var _a = 0, bNormals_1 = bNormals; _a < bNormals_1.length; _a++) {
-                        var normal = bNormals_1[_a];
-                        var result = this.checkNormal(b, normal);
-                        if (result)
-                            correctionVectors.push(result);
+                    catch (e_64_1) { e_64 = { error: e_64_1 }; }
+                    finally {
+                        try {
+                            if (thisNormals_1_1 && !thisNormals_1_1.done && (_a = thisNormals_1.return)) _a.call(thisNormals_1);
+                        }
+                        finally { if (e_64) throw e_64.error; }
+                    }
+                    try {
+                        for (var bNormals_1 = __values(bNormals), bNormals_1_1 = bNormals_1.next(); !bNormals_1_1.done; bNormals_1_1 = bNormals_1.next()) {
+                            var normal = bNormals_1_1.value;
+                            var result = this.checkNormal(b, normal);
+                            if (result)
+                                correctionVectors.push(result);
+                        }
+                    }
+                    catch (e_65_1) { e_65 = { error: e_65_1 }; }
+                    finally {
+                        try {
+                            if (bNormals_1_1 && !bNormals_1_1.done && (_b = bNormals_1.return)) _b.call(bNormals_1);
+                        }
+                        finally { if (e_65) throw e_65.error; }
                     }
                     if (correctionVectors.length > 0) {
                         return _.minBy(correctionVectors, function (correctionVector) {
@@ -5931,74 +6606,141 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                         });
                     }
                     return undefined;
+                    var e_64, _a, e_65, _b;
                 };
                 Shape.prototype.getMinTransVectorDir = function (b, dir) {
                     dir = dir.normalize();
                     game_14.game.collisionCalls++;
                     var mag = 0;
                     var maxMag = 0;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        var line = new Line(point, point.add(dir.times(10000)));
-                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
-                            var bLine = _c[_b];
-                            var intersectPoint = bLine.getIntersectPoint(line);
-                            if (intersectPoint) {
-                                mag = point.distanceTo(intersectPoint);
-                                if (mag > maxMag) {
-                                    maxMag = mag;
+                    try {
+                        for (var _a = __values(this.points), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var point = _b.value;
+                            var line = new Line(point, point.add(dir.times(10000)));
+                            try {
+                                for (var _c = __values(b.getLines()), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                    var bLine = _d.value;
+                                    var intersectPoint = bLine.getIntersectPoint(line);
+                                    if (intersectPoint) {
+                                        mag = point.distanceTo(intersectPoint);
+                                        if (mag > maxMag) {
+                                            maxMag = mag;
+                                        }
+                                    }
                                 }
+                            }
+                            catch (e_66_1) { e_66 = { error: e_66_1 }; }
+                            finally {
+                                try {
+                                    if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
+                                }
+                                finally { if (e_66) throw e_66.error; }
                             }
                         }
                     }
-                    for (var _d = 0, _e = b.points; _d < _e.length; _d++) {
-                        var point = _e[_d];
-                        var line = new Line(point, point.add(dir.times(-10000)));
-                        for (var _f = 0, _g = this.getLines(); _f < _g.length; _f++) {
-                            var myLine = _g[_f];
-                            var intersectPoint = myLine.getIntersectPoint(line);
-                            if (intersectPoint) {
-                                mag = point.distanceTo(intersectPoint);
-                                if (mag > maxMag) {
-                                    maxMag = mag;
+                    catch (e_67_1) { e_67 = { error: e_67_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
+                        }
+                        finally { if (e_67) throw e_67.error; }
+                    }
+                    try {
+                        for (var _g = __values(b.points), _h = _g.next(); !_h.done; _h = _g.next()) {
+                            var point = _h.value;
+                            var line = new Line(point, point.add(dir.times(-10000)));
+                            try {
+                                for (var _j = __values(this.getLines()), _k = _j.next(); !_k.done; _k = _j.next()) {
+                                    var myLine = _k.value;
+                                    var intersectPoint = myLine.getIntersectPoint(line);
+                                    if (intersectPoint) {
+                                        mag = point.distanceTo(intersectPoint);
+                                        if (mag > maxMag) {
+                                            maxMag = mag;
+                                        }
+                                    }
                                 }
                             }
+                            catch (e_68_1) { e_68 = { error: e_68_1 }; }
+                            finally {
+                                try {
+                                    if (_k && !_k.done && (_l = _j.return)) _l.call(_j);
+                                }
+                                finally { if (e_68) throw e_68.error; }
+                            }
                         }
+                    }
+                    catch (e_69_1) { e_69 = { error: e_69_1 }; }
+                    finally {
+                        try {
+                            if (_h && !_h.done && (_m = _g.return)) _m.call(_g);
+                        }
+                        finally { if (e_69) throw e_69.error; }
                     }
                     if (maxMag === 0) {
                         return undefined;
                     }
                     return dir.times(maxMag);
+                    var e_67, _f, e_66, _e, e_69, _m, e_68, _l;
                 };
                 Shape.prototype.getSnapVector = function (b, dir) {
                     var mag = 0;
                     var minMag = Infinity;
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        var line = new Line(point, point.add(dir.times(10000)));
-                        for (var _b = 0, _c = b.getLines(); _b < _c.length; _b++) {
-                            var bLine = _c[_b];
-                            var intersectPoint = bLine.getIntersectPoint(line);
-                            if (intersectPoint) {
-                                mag = point.distanceTo(intersectPoint);
-                                if (mag < minMag) {
-                                    minMag = mag;
+                    try {
+                        for (var _a = __values(this.points), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var point = _b.value;
+                            var line = new Line(point, point.add(dir.times(10000)));
+                            try {
+                                for (var _c = __values(b.getLines()), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                    var bLine = _d.value;
+                                    var intersectPoint = bLine.getIntersectPoint(line);
+                                    if (intersectPoint) {
+                                        mag = point.distanceTo(intersectPoint);
+                                        if (mag < minMag) {
+                                            minMag = mag;
+                                        }
+                                    }
                                 }
                             }
+                            catch (e_70_1) { e_70 = { error: e_70_1 }; }
+                            finally {
+                                try {
+                                    if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
+                                }
+                                finally { if (e_70) throw e_70.error; }
+                            }
                         }
+                    }
+                    catch (e_71_1) { e_71 = { error: e_71_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
+                        }
+                        finally { if (e_71) throw e_71.error; }
                     }
                     if (mag === 0) {
                         return undefined;
                     }
                     return dir.times(minMag);
+                    var e_71, _f, e_70, _e;
                 };
                 Shape.prototype.clone = function (x, y) {
                     var points = [];
-                    for (var _i = 0, _a = this.points; _i < _a.length; _i++) {
-                        var point = _a[_i];
-                        points.push(new point_8.Point(point.x + x, point.y + y));
+                    try {
+                        for (var _a = __values(this.points), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var point = _b.value;
+                            points.push(new point_8.Point(point.x + x, point.y + y));
+                        }
+                    }
+                    catch (e_72_1) { e_72 = { error: e_72_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_72) throw e_72.error; }
                     }
                     return new Shape(points);
+                    var e_72, _c;
                 };
                 return Shape;
             }());
@@ -7023,30 +7765,58 @@ System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], fun
                     }
                     this.frames = [];
                     this.hitboxes = [];
-                    for (var _i = 0, _a = spriteJson.hitboxes; _i < _a.length; _i++) {
-                        var hitboxJson = _a[_i];
-                        var hitbox = new collider_6.Collider([
-                            new point_12.Point(hitboxJson.offset.x, hitboxJson.offset.y),
-                            new point_12.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
-                            new point_12.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
-                            new point_12.Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
-                        ], hitboxJson.isTrigger ? true : false, undefined, false, false);
-                        this.hitboxes.push(hitbox);
-                    }
-                    for (var _b = 0, _c = spriteJson.frames; _b < _c.length; _b++) {
-                        var frameJson = _c[_b];
-                        var frame = new frame_1.Frame(new rect_6.Rect(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y, frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y), frameJson.duration, new point_12.Point(frameJson.offset.x, frameJson.offset.y));
-                        if (frameJson.POIs) {
-                            for (var _d = 0, _e = frameJson.POIs; _d < _e.length; _d++) {
-                                var poi = _e[_d];
-                                frame.POIs.push(new point_12.Point(poi.x, poi.y));
-                            }
+                    try {
+                        for (var _a = __values(spriteJson.hitboxes), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var hitboxJson = _b.value;
+                            var hitbox = new collider_6.Collider([
+                                new point_12.Point(hitboxJson.offset.x, hitboxJson.offset.y),
+                                new point_12.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
+                                new point_12.Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
+                                new point_12.Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
+                            ], hitboxJson.isTrigger ? true : false, undefined, false, false);
+                            this.hitboxes.push(hitbox);
                         }
-                        this.frames.push(frame);
+                    }
+                    catch (e_73_1) { e_73 = { error: e_73_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_73) throw e_73.error; }
+                    }
+                    try {
+                        for (var _d = __values(spriteJson.frames), _e = _d.next(); !_e.done; _e = _d.next()) {
+                            var frameJson = _e.value;
+                            var frame = new frame_1.Frame(new rect_6.Rect(frameJson.rect.topLeftPoint.x, frameJson.rect.topLeftPoint.y, frameJson.rect.botRightPoint.x, frameJson.rect.botRightPoint.y), frameJson.duration, new point_12.Point(frameJson.offset.x, frameJson.offset.y));
+                            if (frameJson.POIs) {
+                                try {
+                                    for (var _f = __values(frameJson.POIs), _g = _f.next(); !_g.done; _g = _f.next()) {
+                                        var poi = _g.value;
+                                        frame.POIs.push(new point_12.Point(poi.x, poi.y));
+                                    }
+                                }
+                                catch (e_74_1) { e_74 = { error: e_74_1 }; }
+                                finally {
+                                    try {
+                                        if (_g && !_g.done && (_h = _f.return)) _h.call(_f);
+                                    }
+                                    finally { if (e_74) throw e_74.error; }
+                                }
+                            }
+                            this.frames.push(frame);
+                        }
+                    }
+                    catch (e_75_1) { e_75 = { error: e_75_1 }; }
+                    finally {
+                        try {
+                            if (_e && !_e.done && (_j = _d.return)) _j.call(_d);
+                        }
+                        finally { if (e_75) throw e_75.error; }
                     }
                     if (shouldInit) {
                         this.initSprite(container);
                     }
+                    var e_73, _c, e_75, _j, e_74, _h;
                 }
                 Object.defineProperty(Sprite.prototype, "spritesheet", {
                     get: function () {
@@ -7066,11 +7836,20 @@ System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], fun
                 };
                 Sprite.prototype.initSprite = function (container) {
                     var textureArray = [];
-                    for (var _i = 0, _a = this.frames; _i < _a.length; _i++) {
-                        var frame = _a[_i];
-                        var texture = PIXI.loader.resources[this.spritesheetPath].texture.clone();
-                        texture.frame = new PIXI.Rectangle(frame.rect.x1, frame.rect.y1, frame.rect.w, frame.rect.h);
-                        textureArray.push(texture);
+                    try {
+                        for (var _a = __values(this.frames), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var frame = _b.value;
+                            var texture = PIXI.loader.resources[this.spritesheetPath].texture.clone();
+                            texture.frame = new PIXI.Rectangle(frame.rect.x1, frame.rect.y1, frame.rect.w, frame.rect.h);
+                            textureArray.push(texture);
+                        }
+                    }
+                    catch (e_76_1) { e_76 = { error: e_76_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_76) throw e_76.error; }
                     }
                     this.pixiSprite = new PIXI.extras.AnimatedSprite(textureArray);
                     var anchor = this.getAnchor();
@@ -7078,6 +7857,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], fun
                     this.pixiSprite.anchor.y = anchor.y;
                     this.pixiSprite.animationSpeed = 0;
                     container.addChild(this.pixiSprite);
+                    var e_76, _c;
                 };
                 Sprite.prototype.getAnchor = function () {
                     var x, y;
@@ -7261,9 +8041,18 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         game_15.game.level.spritePool.add(sprite.name, newSprite);
                         this.sprite = newSprite;
                     }
-                    for (var _i = 0, _a = this.sprite.hitboxes; _i < _a.length; _i++) {
-                        var hitbox = _a[_i];
-                        hitbox.actor = this;
+                    try {
+                        for (var _a = __values(this.sprite.hitboxes), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var hitbox = _b.value;
+                            hitbox.actor = this;
+                        }
+                    }
+                    catch (e_77_1) { e_77 = { error: e_77_1 }; }
+                    finally {
+                        try {
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        }
+                        finally { if (e_77) throw e_77.error; }
                     }
                     if (resetFrame) {
                         this.frameIndex = 0;
@@ -7272,6 +8061,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     else if (this.frameIndex >= this.sprite.frames.length) {
                         this.frameIndex = 0;
                     }
+                    var e_77, _c;
                 };
                 Object.defineProperty(Actor.prototype, "angle", {
                     get: function () {
@@ -7340,21 +8130,31 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         }
                     }
                     var triggerList = game_15.game.level.getTriggerList(this, 0, 0);
-                    for (var _i = 0, triggerList_1 = triggerList; _i < triggerList_1.length; _i++) {
-                        var trigger = triggerList_1[_i];
-                        this.registerCollision(trigger);
+                    try {
+                        for (var triggerList_1 = __values(triggerList), triggerList_1_1 = triggerList_1.next(); !triggerList_1_1.done; triggerList_1_1 = triggerList_1.next()) {
+                            var trigger = triggerList_1_1.value;
+                            this.registerCollision(trigger);
+                        }
                     }
+                    catch (e_78_1) { e_78 = { error: e_78_1 }; }
+                    finally {
+                        try {
+                            if (triggerList_1_1 && !triggerList_1_1.done && (_a = triggerList_1.return)) _a.call(triggerList_1);
+                        }
+                        finally { if (e_78) throw e_78.error; }
+                    }
+                    var e_78, _a;
                 };
                 Actor.prototype.incPos = function (amount) {
                     if (this.collider)
-                        game_15.game.level.removeFromGrid(this);
+                        game_15.game.level.removeFromGridFast(this);
                     this.pos.inc(amount);
                     if (this.collider)
                         game_15.game.level.addGameObjectToGrid(this);
                 };
                 Actor.prototype.changePos = function (newPos) {
                     if (this.collider)
-                        game_15.game.level.removeFromGrid(this);
+                        game_15.game.level.removeFromGridFast(this);
                     this.pos = newPos;
                     if (this.collider)
                         game_15.game.level.addGameObjectToGrid(this);
@@ -7392,11 +8192,21 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 };
                 Actor.prototype.freeFromCollision = function () {
                     var currentCollideDatas = game_15.game.level.getAllCollideDatas(this, 0, 0, undefined);
-                    for (var _i = 0, currentCollideDatas_1 = currentCollideDatas; _i < currentCollideDatas_1.length; _i++) {
-                        var collideData = currentCollideDatas_1[_i];
-                        var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
-                        this.incPos(freeVec.unitInc(0.01));
+                    try {
+                        for (var currentCollideDatas_1 = __values(currentCollideDatas), currentCollideDatas_1_1 = currentCollideDatas_1.next(); !currentCollideDatas_1_1.done; currentCollideDatas_1_1 = currentCollideDatas_1.next()) {
+                            var collideData = currentCollideDatas_1_1.value;
+                            var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
+                            this.incPos(freeVec.unitInc(0.01));
+                        }
                     }
+                    catch (e_79_1) { e_79 = { error: e_79_1 }; }
+                    finally {
+                        try {
+                            if (currentCollideDatas_1_1 && !currentCollideDatas_1_1.done && (_a = currentCollideDatas_1.return)) _a.call(currentCollideDatas_1);
+                        }
+                        finally { if (e_79) throw e_79.error; }
+                    }
+                    var e_79, _a;
                 };
                 Actor.prototype.isRollingShield = function () {
                     return this.constructor.name === "RollingShieldProj";
