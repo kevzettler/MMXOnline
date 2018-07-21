@@ -1,17 +1,4 @@
 ===============
-Optimization
-===============
-
--Memory optimization: avoid new's, use object pooling for sprites, or pre-allocate
--Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
--getHex is called many times and should be optimized (may be fixed by above)
--Only draw things on-screen
--Use particle containers for:
-  -HUD stuff
-  -Backgrounds
-  -Effects
-
-===============
 Bugs
 ===============
 -Fix Edge bleeding
@@ -29,6 +16,19 @@ Abstraction
 -When restarting, clear the Pixi stage of objects
 -HUD System/framework
 -Effect system
+
+
+===============
+Optimization
+===============
+
+-Memory optimization: avoid new's, use object pooling for sprites, or pre-allocate
+-Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
+-Only draw things on-screen
+-Use particle containers for:
+  -HUD stuff
+  -Backgrounds
+  -Effects
 
 ===============
 Post-V1 Features

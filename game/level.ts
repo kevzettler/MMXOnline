@@ -237,12 +237,11 @@ export class Level {
       playerY = this.mainPlayer.character.pos.y;
     }
     
-    let gameObjects = this.getGameObjectArray();
-    for(let go of gameObjects) {
+    for(let go of this.gameObjects) {
       go.preUpdate();
       go.update();
     }
-    for(let anim of Array.from(this.anims)) {
+    for(let anim of this.anims) {
       anim.preUpdate();
       anim.update();
     }
@@ -361,11 +360,10 @@ export class Level {
       this.foregroundSprite.y = -this.camY;
     }
 
-    let gameObjectsArray = this.getGameObjectArray();
-    for(let go of gameObjectsArray) {
+    for(let go of this.gameObjects) {
       go.render(0, 0);
     }
-    for(let anim of Array.from(this.anims)) {
+    for(let anim of this.anims) {
       anim.render(0, 0);
     }
 
@@ -589,12 +587,13 @@ export class Level {
     return cells;
   }
 
+  //Called a lot
   getGameObjectsInSameCell(shape: Shape, offsetX: number, offsetY: number) {
     let cells = this.getGridCells(shape, offsetX, offsetY);
     let retGameobjects : Set<GameObject> = new Set();
     for(let cell of cells) {
       if(!cell.gameobjects) continue;
-      for (var it = cell.gameobjects.values(), cell2 = undefined; cell2 = it.next().value; ) {
+      for (let cell2 of cell.gameobjects) {
         if(this.gameObjects.has(cell2)) {
           retGameobjects.add(cell2);
         }
@@ -605,7 +604,11 @@ export class Level {
         }
       }
     }
-    return Array.from(retGameobjects);
+    let arr = [];
+    for(let go of retGameobjects) {
+      arr.push(go);
+    }
+    return arr;
   }
 
   addGameObject(go: GameObject) {
@@ -619,7 +622,7 @@ export class Level {
   }
 
   removeFromGrid(go: GameObject) {
-    for (var it = this.occupiedGridSets.values(), gridSet = undefined; gridSet = it.next().value; ) {
+    for(let gridSet of this.occupiedGridSets) {
       if(gridSet.has(go)) {
         gridSet.delete(go);
       }
@@ -778,8 +781,7 @@ export class Level {
 
   getActorsInRadius(pos: Point, radius: number, classNames?: string[]) {
     let actors: Actor[] = [];
-    let gameObjects = this.getGameObjectArray();
-    for(let go of gameObjects) {
+    for(let go of this.gameObjects) {
       if(!(go instanceof Actor)) continue;
       if(!this.isOfClass(go, classNames)) continue;
       if(go.pos.distanceTo(pos) < radius) {

@@ -19,6 +19,7 @@ export class Point {
     return point;
   }
 
+  //Avoid calls to this, if called a lot may be bottleneck
   normalize() {
     this.x = Helpers.roundEpsilon(this.x);
     this.y = Helpers.roundEpsilon(this.y);

@@ -175,14 +175,21 @@ export class Shape {
   maxX: number = -Infinity;
   maxY: number = -Infinity;
 
-  constructor(points: Point[]) {
+  constructor(points: Point[], normals?: Point[]) {
     this.points = points;
-    let normals = [];
+    let isNormalsSet = true;
+    if(!normals) {
+      normals = [];
+      isNormalsSet = false;
+    }
     for (let i = 0; i < this.points.length; i++) {
       let p1 = this.points[i];
       let p2 = (i == this.points.length - 1 ? this.points[0] : this.points[i + 1]);
-      let v = new Point(p2.x - p1.x, p2.y - p1.y);
-      normals.push(v.leftNormal().normalize());
+      
+      if(!isNormalsSet) {
+        let v = new Point(p2.x - p1.x, p2.y - p1.y);
+        normals.push(v.leftNormal().normalize());
+      }
 
       if(p1.x < this.minX) this.minX = p1.x;
       if(p1.y < this.minY) this.minY = p1.y;
@@ -192,9 +199,10 @@ export class Shape {
     this.normals = normals;
   }
 
+  //Called a lot
   getRect(): Rect {
     if(this.points.length !== 4) return undefined;
-    if(this.points[0].ix === this.points[3].ix && this.points[1].ix === this.points[2].ix && this.points[0].iy === this.points[1].iy && this.points[2].iy === this.points[3].iy) {
+    if(this.points[0].x === this.points[3].x && this.points[1].x === this.points[2].x && this.points[0].y === this.points[1].y && this.points[2].y === this.points[3].y) {
       return Rect.Create(this.points[0], this.points[2]);
     }
     return undefined;
@@ -477,10 +485,11 @@ export class Shape {
 
   clone(x: number, y: number) {
     let points: Point[] = [];
-    for(let point of this.points) {
+    for(let i = 0; i < this.points.length; i++) {
+      let point = this.points[i];
       points.push(new Point(point.x + x, point.y + y));
     }
-    return new Shape(points);
+    return new Shape(points, this.normals);
   }
 
 }
