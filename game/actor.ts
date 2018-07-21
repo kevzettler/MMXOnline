@@ -323,7 +323,8 @@ export class Actor {
   destroySprite() {
     if(this.sprite && this.sprite.pixiSprite) {
       game.level.gameContainer.removeChild(this.sprite.pixiSprite);
-      this.sprite.pixiSprite.destroy({ texture: true });
+      this.sprite.pixiSprite.destroy();
+      if(this.sprite.pixiSprite.texture) this.sprite.pixiSprite.texture.destroy();
     }
   }
 

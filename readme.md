@@ -1,3 +1,19 @@
+===============
+Optimization
+===============
+
+-Memory optimization: avoid new's, use object pooling for sprites, or pre-allocate
+-Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
+-getHex is called many times and should be optimized (may be fixed by above)
+-Only draw things on-screen
+-Use particle containers for:
+  -HUD stuff
+  -Backgrounds
+  -Effects
+
+===============
+Bugs
+===============
 -Fix Edge bleeding
 -Jerky walking animation again
 -Popping sounds when distant sounds are muted
@@ -11,23 +27,6 @@ Abstraction
 -When restarting, clear the Pixi stage of objects
 -HUD System/framework
 -Effect system
-===============
-Optimization
-===============
-
--Use particle containers for:
-  -HUD stuff
-  -Backgrounds
-  -Effects
--Debug Memory Usage
--Memory optimization: avoid new's
--Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
--getHex is called many times and should be optimized
--Only draw things on-screen
--Make sure each sprite isn't creating a new image in memory
-
-Collision Engine rules:
-  -An actor must never have its pos modified manually. Always use incPos() or move() function
 
 ===============
 Post-V1 Features

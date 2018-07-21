@@ -1403,6 +1403,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                     if (this.aiState.shouldAttack) {
                         if (this.shootTime === 0) {
                             if (this.character.isFacing(this.target)) {
+                                this.player.press("shoot");
                             }
                         }
                         this.shootTime += game_6.game.deltaTime;
@@ -4945,7 +4946,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.uiData.selectedArenaMap = "gallery";
                     this.uiData.selectedGameMode = "deathmatch";
                     this.uiData.maxPlayers = 0;
-                    this.uiData.numBots = 0;
+                    this.uiData.numBots = 9;
                     this.uiData.playTo = 20;
                     $("#options").show();
                     $("#dev-options").show();
@@ -7387,7 +7388,9 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 Actor.prototype.destroySprite = function () {
                     if (this.sprite && this.sprite.pixiSprite) {
                         game_15.game.level.gameContainer.removeChild(this.sprite.pixiSprite);
-                        this.sprite.pixiSprite.destroy({ texture: true });
+                        this.sprite.pixiSprite.destroy();
+                        if (this.sprite.pixiSprite.texture)
+                            this.sprite.pixiSprite.texture.destroy();
                     }
                 };
                 Actor.prototype.getSoundVolume = function () {

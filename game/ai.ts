@@ -64,7 +64,7 @@ export class AI {
       if(this.shootTime === 0) {
         //if(this.character.withinY(this.target, 25)) {
         if(this.character.isFacing(this.target)) {
-          //this.player.press("shoot");
+          this.player.press("shoot");
         }
         //}
       }
