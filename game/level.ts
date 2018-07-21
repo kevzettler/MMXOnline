@@ -3,7 +3,7 @@ import { Wall, Ladder } from "./wall";
 import { Point } from "./point";
 import { game } from "./game";
 import * as Helpers from "./helpers";
-import { Actor } from "./actor";
+import { Actor, Anim } from "./actor";
 import { Player } from "./player";
 import { Rect } from "./rect";
 import { Collider, CollideData, HitData } from "./collider";
@@ -24,6 +24,8 @@ import { ObjectPool } from "./objectPool";
 export class Level {
 
   gameObjects: Set<GameObject>;
+  anims: Set<Anim>;
+
   effects: Effect[] = [];
   backgroundPath: string;
   parallaxPath: string;
@@ -80,6 +82,7 @@ export class Level {
   startLevel(gameMode: GameMode) {
     this.renderSetup();
     this.gameObjects = new Set<GameObject>();
+    this.anims = new Set<Anim>();
     this.setupGrid(50);
     for(var instance of this.levelData.levelJson.instances) {
       if(instance.objectName === "Collision Shape") {
@@ -239,6 +242,10 @@ export class Level {
       go.preUpdate();
       go.update();
     }
+    for(let anim of Array.from(this.anims)) {
+      anim.preUpdate();
+      anim.update();
+    }
     
     if(this.mainPlayer.character) {
       let deltaX = this.mainPlayer.character.pos.x - playerX;
@@ -357,6 +364,9 @@ export class Level {
     let gameObjectsArray = this.getGameObjectArray();
     for(let go of gameObjectsArray) {
       go.render(0, 0);
+    }
+    for(let anim of Array.from(this.anims)) {
+      anim.render(0, 0);
     }
 
     for(let effect of this.effects) {

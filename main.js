@@ -3936,6 +3936,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.startLevel = function (gameMode) {
                     this.renderSetup();
                     this.gameObjects = new Set();
+                    this.anims = new Set();
                     this.setupGrid(50);
                     for (var _i = 0, _a = this.levelData.levelJson.instances; _i < _a.length; _i++) {
                         var instance = _a[_i];
@@ -4087,28 +4088,33 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         go.preUpdate();
                         go.update();
                     }
+                    for (var _a = 0, _b = Array.from(this.anims); _a < _b.length; _a++) {
+                        var anim = _b[_a];
+                        anim.preUpdate();
+                        anim.update();
+                    }
                     if (this.mainPlayer.character) {
                         var deltaX = this.mainPlayer.character.pos.x - playerX;
                         var deltaY = this.mainPlayer.character.pos.y - playerY;
                         this.updateCamPos(deltaX, deltaY);
                     }
-                    for (var _a = 0, _b = this.effects; _a < _b.length; _a++) {
-                        var effect = _b[_a];
+                    for (var _c = 0, _d = this.effects; _c < _d.length; _c++) {
+                        var effect = _d[_c];
                         effect.update();
                     }
-                    for (var _c = 0, _d = this.localPlayers; _c < _d.length; _c++) {
-                        var player = _d[_c];
+                    for (var _e = 0, _f = this.localPlayers; _e < _f.length; _e++) {
+                        var player = _f[_e];
                         player.clearInputPressed();
                         if (player.isAI) {
                             player.clearAiInput();
                         }
                     }
-                    for (var _e = 0, _f = this.players; _e < _f.length; _e++) {
-                        var player = _f[_e];
+                    for (var _g = 0, _h = this.players; _g < _h.length; _g++) {
+                        var player = _h[_g];
                         player.update();
                     }
-                    for (var _g = 0, _h = this.pickupSpawners; _g < _h.length; _g++) {
-                        var pickupSpawner = _h[_g];
+                    for (var _j = 0, _k = this.pickupSpawners; _j < _k.length; _j++) {
+                        var pickupSpawner = _k[_j];
                         pickupSpawner.update();
                     }
                     this.frameCount++;
@@ -4173,8 +4179,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         var go = gameObjectsArray_1[_i];
                         go.render(0, 0);
                     }
-                    for (var _a = 0, _b = this.effects; _a < _b.length; _a++) {
-                        var effect = _b[_a];
+                    for (var _a = 0, _b = Array.from(this.anims); _a < _b.length; _a++) {
+                        var anim = _b[_a];
+                        anim.render(0, 0);
+                    }
+                    for (var _c = 0, _d = this.effects; _c < _d.length; _c++) {
+                        var effect = _d[_c];
                         effect.render(0, 0);
                     }
                     this.hud.updateHUD();
@@ -7439,8 +7449,13 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 Actor.prototype.isAnimOver = function () {
                     return this.frameIndex === this.sprite.frames.length - 1 && this.frameTime >= this.currentFrame.duration;
                 };
-                Actor.prototype.destroySelf = function (sprite, fadeSound) {
-                    game_15.game.level.removeGameObject(this);
+                Actor.prototype.destroySelf = function (sprite, fadeSound, isAnim) {
+                    if (isAnim) {
+                        game_15.game.level.anims.delete(this);
+                    }
+                    else {
+                        game_15.game.level.removeGameObject(this);
+                    }
                     if (sprite) {
                         var anim = new Anim(this.pos, sprite, this.xDir);
                     }
@@ -7493,15 +7508,16 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
             Anim = (function (_super) {
                 __extends(Anim, _super);
                 function Anim(pos, sprite, xDir) {
-                    var _this = _super.call(this, sprite, new point_13.Point(pos.x, pos.y), undefined) || this;
+                    var _this = _super.call(this, sprite, new point_13.Point(pos.x, pos.y), true) || this;
                     _this.useGravity = false;
                     _this.xDir = xDir;
+                    game_15.game.level.anims.add(_this);
                     return _this;
                 }
                 Anim.prototype.update = function () {
                     _super.prototype.update.call(this);
                     if (this.isAnimOver()) {
-                        this.destroySelf();
+                        this.destroySelf(undefined, undefined, true);
                     }
                 };
                 return Anim;

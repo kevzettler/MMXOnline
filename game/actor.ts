@@ -314,9 +314,14 @@ export class Actor {
   }
 
   //Optionally take in a sprite to draw when destroyed
-  destroySelf(sprite?: Sprite, fadeSound?: string) {
+  destroySelf(sprite?: Sprite, fadeSound?: string, isAnim?: boolean) {
     //console.log("DESTROYING")
-    game.level.removeGameObject(this);
+    if(isAnim) {
+      game.level.anims.delete(this);
+    }
+    else {
+      game.level.removeGameObject(this);
+    }
     if(sprite) {
       let anim = new Anim(this.pos, sprite, this.xDir);
     }
@@ -380,15 +385,16 @@ export class Actor {
 export class Anim extends Actor {
 
   constructor(pos: Point, sprite: Sprite, xDir: number) {
-    super(sprite, new Point(pos.x, pos.y), undefined);
+    super(sprite, new Point(pos.x, pos.y), true);
     this.useGravity = false;
     this.xDir = xDir;
+    game.level.anims.add(this);
   }
 
   update() {
     super.update();
     if(this.isAnimOver()) {
-      this.destroySelf();
+      this.destroySelf(undefined, undefined, true);
     }
   }
 

@@ -21,6 +21,8 @@ Bugs
 ===============
 Abstraction
 ===============
+-Object instantiation
+-Sprite refactor: pass in only name
 -Press button to stop all AI in tracks
 -Flashing and effects, palettes
 -Z-Index problem: projectiles are behind players, etc.
