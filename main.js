@@ -5935,6 +5935,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             this.maxLoadCount++;
                             var sound = new Howl({
                                 src: ["assets/sounds/" + soundFile],
+                                mute: true,
                                 onload: function () {
                                     _this.loadCount++;
                                 }
@@ -5952,6 +5953,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.maxLoadCount++;
                     this.soundSheet = new Howl({
                         src: ["assets/soundsheets/mmx_sfx.mp3"],
+                        mute: true,
                         sprite: {
                             buster: [900, 1425 - 900],
                             buster2: [17461, 18220 - 17461],
@@ -6015,15 +6017,19 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     if (this.sounds[clip]) {
                         var id = this.sounds[clip].play();
                         this.sounds[clip].volume(volume * game.getSoundVolume01(), id);
+                        this.sounds[clip].mute(false, id);
                     }
                     else {
                         var id = this.soundSheet.play(clip);
                         this.soundSheet.volume(volume * game.getSoundVolume01(), id);
+                        this.soundSheet.mute(false, id);
                     }
                 };
                 Game.prototype.playClip = function (clip, volume) {
-                    clip.volume(volume * game.getSoundVolume01());
-                    return clip.play();
+                    var id = clip.play();
+                    clip.volume(volume * game.getSoundVolume01(), id);
+                    clip.mute(false, id);
+                    return id;
                 };
                 Game.prototype.getPlayerControls = function (playerNum) {
                     var controlJson = localStorage.getItem("player" + String(playerNum) + "-controls");

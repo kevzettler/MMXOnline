@@ -1,9 +1,7 @@
 ===============
 Bugs
 ===============
--Fix Edge bleeding
 -Jerky walking animation again
--Popping sounds when distant sounds are muted
 
 ===============
 Abstraction

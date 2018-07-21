@@ -573,6 +573,7 @@ class Game {
       this.maxLoadCount++;
       let sound = new Howl({
         src: ["assets/sounds/" + soundFile],
+        mute: true,
         onload: () => {
           //console.log("LOADED SOUND");
           this.loadCount++;
@@ -584,6 +585,7 @@ class Game {
     this.maxLoadCount++;
     this.soundSheet = new Howl({
       src: ["assets/soundsheets/mmx_sfx.mp3"],
+      mute: true,
       sprite: {
         buster: [900,1425-900],
         buster2: [17461,18220-17461],
@@ -671,16 +673,20 @@ class Game {
     if(this.sounds[clip]) {
       let id = this.sounds[clip].play();
       this.sounds[clip].volume(volume * game.getSoundVolume01(), id);
+      this.sounds[clip].mute(false, id);
     }
     else {
       let id = this.soundSheet.play(clip);
       this.soundSheet.volume(volume * game.getSoundVolume01(), id);
+      this.soundSheet.mute(false, id);
     }
   }
 
   playClip(clip: Howl, volume: number) {
-    clip.volume(volume * game.getSoundVolume01());
-    return clip.play();
+    let id = clip.play();
+    clip.volume(volume * game.getSoundVolume01(), id);
+    clip.mute(false, id);
+    return id;
   }
 
   getPlayerControls(playerNum: number) {
