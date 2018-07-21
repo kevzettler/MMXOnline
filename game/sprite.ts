@@ -67,6 +67,18 @@ export class Sprite {
     return PIXI.loader.resources[this.spritesheetPath].texture.baseTexture.source;
   }
 
+  free() {
+    this.pixiSprite.visible = false;
+  }
+
+  reserve() {
+    this.pixiSprite.visible = true;
+  }
+
+  isFree() {
+    return !this.pixiSprite.visible;
+  }
+
   initSprite(container: PIXI.Container) {
     let textureArray = [];
     for(let frame of this.frames) {

@@ -19,6 +19,7 @@ import { GameMode, FFADeathMatch } from "./gameMode";
 import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, SmallHealthPickup } from "./pickup";
 import { KillZone } from "./killZone";
 import { HUD } from "./hud";
+import { ObjectPool } from "./objectPool";
 
 export class Level {
 
@@ -47,6 +48,8 @@ export class Level {
   cellWidth: number;
   levelData: LevelData;
   hud: HUD;
+  spritePool: ObjectPool;
+  projectilePool: ObjectPool;
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
@@ -69,6 +72,8 @@ export class Level {
       imagesToLoad.push(this.foregroundPath);
     }
     game.loadImages(imagesToLoad);
+    this.spritePool = new ObjectPool();
+    this.projectilePool = new ObjectPool();
     
   }
 

@@ -55,9 +55,15 @@ export class Actor {
   changeSprite(sprite: Sprite, resetFrame: boolean) {
     if(!sprite) return;
 
-    this.destroySprite();
+    if(this.sprite) this.sprite.free();
 
-    this.sprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
+    this.sprite = <Sprite>game.level.spritePool.get(sprite.name);
+    if(!this.sprite) {
+      let newSprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
+      game.level.spritePool.add(sprite.name, newSprite);
+      this.sprite = newSprite;
+    }
+
     //this.sprite.pixiSprite.visible = false;
 
     for(let hitbox of this.sprite.hitboxes) {
@@ -317,9 +323,10 @@ export class Actor {
     if(fadeSound) {
       this.playSound(fadeSound);
     }
-    this.destroySprite();
+    this.sprite.free();
   }
 
+  /*
   destroySprite() {
     if(this.sprite && this.sprite.pixiSprite) {
       game.level.gameContainer.removeChild(this.sprite.pixiSprite);
@@ -327,6 +334,7 @@ export class Actor {
       if(this.sprite.pixiSprite.texture) this.sprite.pixiSprite.texture.destroy();
     }
   }
+  */
 
   getSoundVolume() {
     let dist = new Point(game.level.camCenterX, game.level.camCenterY).distanceTo(this.pos);
@@ -375,7 +383,6 @@ export class Anim extends Actor {
     super(sprite, new Point(pos.x, pos.y), undefined);
     this.useGravity = false;
     this.xDir = xDir;
-    
   }
 
   update() {
