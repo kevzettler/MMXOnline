@@ -9,6 +9,7 @@ Abstraction
 -HUD System/framework
 -Effect system
 
+-???
 -Object instantiation
 -Sprite refactor: pass in only name
 -Press button to stop all AI in tracks
@@ -17,7 +18,6 @@ Abstraction
 Bugs
 ===============
 -Jerky walking animation again
-
 
 ===============
 Optimization

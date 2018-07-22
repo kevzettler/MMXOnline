@@ -106,21 +106,48 @@ export class DieEffectParticles {
   centerPos: Point;
   time: number = 0;
   ang: number = 0;
+  alpha: number = 1;
+  dieParts: Actor[] = [];
+  destroyed: boolean = false;
+
   constructor(centerPos: Point) {
     this.centerPos = centerPos;
-  }
-
-  render(offsetX: number, offsetY: number) {
-    /*
-    this.time += game.deltaTime;
     for(let i = this.ang; i < this.ang + 360; i += 22.5) {
       let x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
       let y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
-      let diePartSprite = game.sprites["die_particle"];
-      diePartSprite.draw(game.ctx, Math.round(this.time * 20) % diePartSprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", Helpers.clamp01(1 - this.time*0.5));
+      let diePart = new Actor(game.sprites["die_particle"], new Point(centerPos.x, centerPos.y), true);
+      this.dieParts.push(diePart);
     }
+  }
+
+  render(offsetX: number, offsetY: number) {
+    let counter = 0;
+    for(let i = this.ang; i < this.ang + 360; i += 22.5) {
+      let diePart = this.dieParts[counter];
+      if(!diePart) continue;
+      let x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
+      let y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
+      diePart.sprite.draw(Math.round(this.time * 20) % diePart.sprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", this.alpha);
+      counter++;
+    }
+    
+  }
+
+  update() {
+    this.time += game.deltaTime;
+    this.alpha = Helpers.clamp01(1 - this.time*0.5);
     this.ang += game.deltaTime * 100;
-    */
+
+    if(this.alpha <= 0) {
+      this.destroy();
+    }
+  }
+
+  destroy() {
+    for(let diePart of this.dieParts) {
+      diePart.destroySelf();
+    }
+    this.destroyed = true;
   }
 
 }
@@ -168,6 +195,10 @@ export class DieEffect extends Effect {
       this.timer = 0;
       this.repeatCount++;
       if(this.repeatCount > repeat) {
+        for(let dieEffect of this.dieEffects) {
+          if(!dieEffect.destroyed)
+            dieEffect.destroy();
+        }
         this.destroySelf();
       }
       else {
@@ -175,11 +206,16 @@ export class DieEffect extends Effect {
         this.dieEffects.push(dieEffect);
       }
     }
+    for(let dieEffect of this.dieEffects) {
+      if(!dieEffect.destroyed)
+        dieEffect.update();
+    }
   }
 
   render(offsetX: number, offsetY: number) {
     for(let dieEffect of this.dieEffects) {
-      dieEffect.render(offsetX, offsetY);
+      if(!dieEffect.destroyed)
+        dieEffect.render(offsetX, offsetY);
     }
   }
 
