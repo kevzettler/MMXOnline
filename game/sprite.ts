@@ -19,7 +19,7 @@ export class Sprite {
   pixiSprite: PIXI.extras.AnimatedSprite;
   freeForPool: boolean = false;
 
-  constructor(spriteJson: any, shouldInit: boolean, container: PIXI.Container) {
+  constructor(spriteJson: any, shouldInit: boolean, container: PIXI.Container, addIndex: number) {
     this.spriteJson = spriteJson;
     this.name = spriteJson.name;
     this.alignment = spriteJson.alignment;
@@ -59,7 +59,7 @@ export class Sprite {
     }
 
     if(shouldInit) {
-      this.initSprite(container);
+      this.initSprite(container, addIndex);
     }
 
   }
@@ -82,7 +82,7 @@ export class Sprite {
     return this.freeForPool;
   }
 
-  initSprite(container: PIXI.Container) {
+  initSprite(container: PIXI.Container, addIndex: number) {
     let textureArray = [];
     for(let frame of this.frames) {
       let texture = PIXI.loader.resources[this.spritesheetPath].texture.clone();
@@ -94,7 +94,12 @@ export class Sprite {
     this.pixiSprite.anchor.x = anchor.x;
     this.pixiSprite.anchor.y = anchor.y;
     this.pixiSprite.animationSpeed = 0;
-    container.addChild(this.pixiSprite);
+    if(addIndex > -1) {
+      container.addChildAt(this.pixiSprite, addIndex);
+    }
+    else {
+      container.addChild(this.pixiSprite);
+    }
   }
 
   //Given the sprite's alignment, get the offset x and y on where to actually draw the sprite
@@ -156,7 +161,7 @@ export class Sprite {
   }
 
   createAndDraw(container: PIXI.Container, frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
-    let sprite = new Sprite(this.spriteJson, true, container);
+    let sprite = new Sprite(this.spriteJson, true, container, -1);
     sprite.draw(frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
     return sprite;
   }

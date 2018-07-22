@@ -142,8 +142,8 @@ class Game {
     
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
-    this.uiData.selectedGameMode = "deathmatch";
-    this.uiData.maxPlayers = 0;
+    this.uiData.selectedGameMode = "team deathmatch";
+    this.uiData.maxPlayers = 9;
     this.uiData.numBots = 9;
     this.uiData.playTo = 20;
     $("#options").show();
@@ -552,7 +552,7 @@ class Game {
 
   loadSprites() {
     for(var spriteJson of spriteJsons) {
-      let sprite: Sprite = new Sprite(spriteJson, false, undefined);
+      let sprite: Sprite = new Sprite(spriteJson, false, undefined, -1);
       this.sprites[sprite.name] = sprite;
     }
   }

@@ -55,13 +55,27 @@ export class Actor {
   changeSprite(sprite: Sprite, resetFrame: boolean) {
     if(!sprite) return;
 
-    if(this.sprite) this.sprite.free();
+    let addIndex = -1;
+    if(this.sprite) {
+      addIndex = game.level.gameContainer.children.indexOf(this.sprite.pixiSprite) + 1;
+      this.sprite.free();
+    }
 
     this.sprite = <Sprite>game.level.spritePool.get(sprite.name);
     if(!this.sprite) {
-      let newSprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer);
+      let newSprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer, addIndex);
       game.level.spritePool.add(sprite.name, newSprite);
       this.sprite = newSprite;
+    }
+    else {
+      //The pooled sprite must be moved to addIndex position, swap with it
+      if(addIndex > -1) {
+        addIndex--;
+        let newSpriteIndex = game.level.gameContainer.children.indexOf(this.sprite.pixiSprite);
+        let temp = game.level.gameContainer.children[newSpriteIndex];
+        game.level.gameContainer.children[newSpriteIndex] = game.level.gameContainer.children[addIndex];
+        game.level.gameContainer.children[addIndex] = temp;
+      }
     }
 
     //this.sprite.pixiSprite.visible = false;

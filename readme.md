@@ -1,30 +1,23 @@
+-When restarting, clear the Pixi stage of objects
+-Jerky walking animation again
 
 ===============
 Abstraction
 ===============
-
--Effects
--Z-Index problem: projectiles are behind players, etc.
--When restarting, clear the Pixi stage of objects
--HUD System/framework
--Effect system
-
--???
+-HUD System/framework? Consider HTML-like abstraction
+-Effects are messy. Think of a better abstraction
 -Object instantiation
 -Sprite refactor: pass in only name
 -Press button to stop all AI in tracks
 
 ===============
-Bugs
-===============
--Jerky walking animation again
-
-===============
 Optimization
 ===============
 
--Memory optimization: avoid new's, use object pooling for sprites, or pre-allocate
--Optimize getting collision cells: only get ones that intersect with shape. Or at least do for lines/raycast only
+-Performance concerns: death effect, change sprite indexof 
+-Figure out how to measure GPU performance precisely
+-Avoid new's
+-Object pool for actors
 -Only draw things on-screen
 -Use particle containers for:
   -HUD stuff
@@ -63,6 +56,13 @@ Post-V1 Features
 -More maps:
   -Boomer kwanger (no new features needed)
   -Launch octopus (underwater coding)
+
+===============
+UI Fixes
+===============
+Death explosion should go above foreground
+Death explosion: only have one spawn for performance
+Scoreboard should go above victory screen
 
 ===============
 Level editor

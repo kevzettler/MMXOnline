@@ -368,6 +368,14 @@ export function isSupportedBrowser() {
     return false;
 }
 
+export function setTextGradient(text: PIXI.Text, isRed: boolean) {
+  let col = "#6090D0";
+  if(isRed) col = "#f44256";
+  text.style.fill = [col, "#C8D8E8", col];
+  text.style.fillGradientType = 	PIXI.TEXT_GRADIENT.LINEAR_VERTICAL;
+  text.style.fillGradientStops = [0, 0.5, 1];
+}
+
 export function createAndDrawText(container: PIXI.Container, text: string, x: number, y: number, size: number, hAlign: string, vAlign: string, isRed?: boolean, overrideColor?: string) {
   let message = new PIXI.Text(text);
 
@@ -392,30 +400,16 @@ export function createAndDrawText(container: PIXI.Container, text: string, x: nu
     dropShadowBlur: 0,
     dropShadowDistance: size/2,
   });
-
+  message.style = style;
 
   if(!overrideColor) {
-    /*
-    let gradient = ctx.createLinearGradient(x, y - size/2, x, y);
-    let col = "#6090D0";
-    if(isRed) col = "#f44256";
-    gradient.addColorStop(0, col);
-    gradient.addColorStop(0.5, "#C8D8E8");
-    gradient.addColorStop(1.0, col);
-    ctx.fillStyle = gradient;
-    */
-    let col = "#6090D0";
-    if(isRed) col = "#f44256";
-    style.fill = [col, "#C8D8E8", col];
-    style.fillGradientType = 	PIXI.TEXT_GRADIENT.LINEAR_VERTICAL;
-    style.fillGradientStops = [0, 0.5, 1];
+    setTextGradient(message, isRed);
   }
   else {
     style.fill = overrideColor;
   }
 
   style.fontSize = size * 3;
-  message.style = style;
   message.position.set(x, y);
   message.scale.set(1/3, 1/3);
   container.addChild(message);
