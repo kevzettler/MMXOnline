@@ -6,6 +6,7 @@ export class Color {
   a: number;
 
   constructor(r:number, g: number, b: number, a: number) {
+    if(r === undefined || g === undefined || b === undefined || a === undefined) throw "Bad color";
     this.r = r;
     this.g = g;
     this.b = b;
@@ -14,6 +15,17 @@ export class Color {
 
   get hex() {
     return "#" + this.r.toString(16) + this.g.toString(16) + this.b.toString(16) + this.a.toString(16);
+  }
+
+  get number() {
+    let rString = this.r.toString(16);
+    let gString = this.g.toString(16);
+    let bString = this.b.toString(16);
+    if(rString.length === 1) rString = "0" + rString;
+    if(gString.length === 1) gString = "0" + gString;
+    if(bString.length === 1) bString = "0" + bString;
+    let hex = "0x" + rString + gString + bString;
+    return parseInt(hex, 16);
   }
 
 }
@@ -26,6 +38,7 @@ export class Palette {
   imageEl: HTMLImageElement;
   imagePath: string = "";
   colorMap: { [color: string]: Color; } = {};
+  filter: PIXI.filters.MultiColorReplaceFilter; 
 
   constructor(path: string) {
     this.imagePath = path;
@@ -43,6 +56,7 @@ export class Palette {
     let imageData = paletteCtx.getImageData(0, 0, paletteCanvas.width, paletteCanvas.height);
     let data = imageData.data;
 
+    let numberArray = [];
     for (let i = 0, j = 0; i < data.length/2; i += 4, j++) {
       let r = data[i];
       let g = data[i+1];
@@ -57,7 +71,12 @@ export class Palette {
       let botColor = new Color(r2, g2, b2, a2);
 
       this.colorMap[topColor.hex] = botColor;
+
+      numberArray.push([topColor.number, botColor.number]);
+      //console.log(topColor.number + "," + botColor.number);
     }
+    
+    this.filter = new PIXI.filters.MultiColorReplaceFilter(numberArray);
   }
 
 }

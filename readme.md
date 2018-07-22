@@ -1,19 +1,22 @@
-===============
-Bugs
-===============
--Jerky walking animation again
 
 ===============
 Abstraction
 ===============
--Object instantiation
--Sprite refactor: pass in only name
--Press button to stop all AI in tracks
+
 -Flashing and effects, palettes
 -Z-Index problem: projectiles are behind players, etc.
 -When restarting, clear the Pixi stage of objects
 -HUD System/framework
 -Effect system
+
+-Object instantiation
+-Sprite refactor: pass in only name
+-Press button to stop all AI in tracks
+
+===============
+Bugs
+===============
+-Jerky walking animation again
 
 
 ===============

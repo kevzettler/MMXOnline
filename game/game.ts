@@ -8,6 +8,7 @@ import * as Helpers from "./helpers";
 import * as Tests from "./tests";
 import { Point } from "./point";
 import { GameMode, Brawl, FFADeathMatch, TeamDeathMatch } from "./gameMode";
+import AddColorFilter from "./AddColorFilter";
 
 class Options {
   showHitboxes: boolean = false;
@@ -114,12 +115,15 @@ class Game {
 
   restartLevelName: string = "";
 
+  flashFilter: AddColorFilter;
+  hitFilter: AddColorFilter;
+
   constructor() {
 
     this.defaultCanvasWidth = 298;
     this.defaultCanvasHeight = 224;
     this.canvas = <HTMLCanvasElement>document.getElementById("canvas");    
-    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas,  });
+    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas  });
     //this.pixiApp.view.id = "canvas";
     //this.canvas = this.pixiApp.view;
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -128,6 +132,9 @@ class Game {
 
     this.uiCanvas = <HTMLCanvasElement>document.getElementById("ui-canvas");
     this.uiCtx = this.uiCanvas.getContext("2d");
+
+    this.flashFilter = new AddColorFilter({red: 64/255, green: 64/255, blue: 64/255});
+    this.hitFilter = new AddColorFilter({red: 128/255, green: 128/255, blue: 128/255});
   }
   
   doQuickStart: boolean = true;

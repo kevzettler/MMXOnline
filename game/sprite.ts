@@ -135,6 +135,21 @@ export class Sprite {
     if(y !== undefined) this.pixiSprite.y = y;
     this.pixiSprite.scale.x = flipX;
     this.pixiSprite.scale.y = flipY;
+
+    let filterArray = [];
+    if(palette) {
+      filterArray.push(palette.filter);
+    }
+    if(options === "flash") {
+      filterArray.push(game.flashFilter);
+    }
+    else if(options === "hit") {
+      filterArray.push(game.hitFilter);
+    }
+    else {
+    }
+    //@ts-ignore
+    this.pixiSprite.filters = filterArray;
   }
 
   createAndDraw(container: PIXI.Container, frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {

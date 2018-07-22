@@ -127,6 +127,8 @@ System.register("color", [], function (exports_5, context_5) {
         execute: function () {
             Color = (function () {
                 function Color(r, g, b, a) {
+                    if (r === undefined || g === undefined || b === undefined || a === undefined)
+                        throw "Bad color";
                     this.r = r;
                     this.g = g;
                     this.b = b;
@@ -135,6 +137,23 @@ System.register("color", [], function (exports_5, context_5) {
                 Object.defineProperty(Color.prototype, "hex", {
                     get: function () {
                         return "#" + this.r.toString(16) + this.g.toString(16) + this.b.toString(16) + this.a.toString(16);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Color.prototype, "number", {
+                    get: function () {
+                        var rString = this.r.toString(16);
+                        var gString = this.g.toString(16);
+                        var bString = this.b.toString(16);
+                        if (rString.length === 1)
+                            rString = "0" + rString;
+                        if (gString.length === 1)
+                            gString = "0" + gString;
+                        if (bString.length === 1)
+                            bString = "0" + bString;
+                        var hex = "0x" + rString + gString + bString;
+                        return parseInt(hex, 16);
                     },
                     enumerable: true,
                     configurable: true
@@ -161,6 +180,7 @@ System.register("color", [], function (exports_5, context_5) {
                     paletteCtx.drawImage(this.imageEl, 0, 0);
                     var imageData = paletteCtx.getImageData(0, 0, paletteCanvas.width, paletteCanvas.height);
                     var data = imageData.data;
+                    var numberArray = [];
                     for (var i = 0, j = 0; i < data.length / 2; i += 4, j++) {
                         var r = data[i];
                         var g = data[i + 1];
@@ -173,7 +193,9 @@ System.register("color", [], function (exports_5, context_5) {
                         var a2 = data[i + 3 + data.length / 2];
                         var botColor = new Color(r2, g2, b2, a2);
                         this.colorMap[topColor.hex] = botColor;
+                        numberArray.push([topColor.number, botColor.number]);
                     }
+                    this.filter = new PIXI.filters.MultiColorReplaceFilter(numberArray);
                 };
                 return Palette;
             }());
@@ -5400,10 +5422,42 @@ System.register("tests", ["shape", "point"], function (exports_25, context_25) {
         }
     };
 });
-System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "gameMode"], function (exports_26, context_26) {
+System.register("AddColorFilter", [], function (exports_26, context_26) {
     "use strict";
     var __moduleName = context_26 && context_26.id;
-    var sprite_3, level_1, sprites_1, levels_1, color_1, Helpers, gameMode_2, Options, Menu, UIData, Game, game;
+    var fragment, vertex, AddColorFilter;
+    return {
+        setters: [],
+        execute: function () {
+            fragment = "\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform float red;\nuniform float green;\nuniform float blue;\n\nvoid main(void)\n{\n    vec4 c = texture2D(uSampler, vTextureCoord);\n\n    vec3 rgb = c.rgb;\n    rgb.r = rgb.r + red;\n    rgb.g = rgb.g + green;\n    rgb.b = rgb.b + blue;\n    c.rgb = rgb;\n    c.rgb *= c.a;\n\n    gl_FragColor = c;\n}\n";
+            vertex = "\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}\n";
+            AddColorFilter = (function (_super) {
+                __extends(AddColorFilter, _super);
+                function AddColorFilter(options) {
+                    var _this = _super.call(this, vertex, fragment) || this;
+                    Object.assign(_this, {
+                        red: 1,
+                        green: 1,
+                        blue: 1
+                    }, options);
+                    return _this;
+                }
+                AddColorFilter.prototype.apply = function (filterManager, input, output, clear) {
+                    this.uniforms.red = this.red;
+                    this.uniforms.green = this.green;
+                    this.uniforms.blue = this.blue;
+                    filterManager.applyFilter(this, input, output, clear);
+                };
+                return AddColorFilter;
+            }(PIXI.Filter));
+            exports_26("default", AddColorFilter);
+        }
+    };
+});
+System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "gameMode", "AddColorFilter"], function (exports_27, context_27) {
+    "use strict";
+    var __moduleName = context_27 && context_27.id;
+    var sprite_3, level_1, sprites_1, levels_1, color_1, Helpers, gameMode_2, AddColorFilter_1, Options, Menu, UIData, Game, game;
     return {
         setters: [
             function (sprite_3_1) {
@@ -5426,6 +5480,9 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
             },
             function (gameMode_2_1) {
                 gameMode_2 = gameMode_2_1;
+            },
+            function (AddColorFilter_1_1) {
+                AddColorFilter_1 = AddColorFilter_1_1;
             }
         ],
         execute: function () {
@@ -5456,7 +5513,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Menu[Menu["OptionsMenu"] = 8] = "OptionsMenu";
                 Menu[Menu["BadBrowserMenu"] = 9] = "BadBrowserMenu";
             })(Menu || (Menu = {}));
-            exports_26("Menu", Menu);
+            exports_27("Menu", Menu);
             UIData = (function () {
                 function UIData() {
                     this.isProd = false;
@@ -5486,7 +5543,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 };
                 return UIData;
             }());
-            exports_26("UIData", UIData);
+            exports_27("UIData", UIData);
             Game = (function () {
                 function Game() {
                     this.sprites = {};
@@ -5513,11 +5570,13 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.defaultCanvasWidth = 298;
                     this.defaultCanvasHeight = 224;
                     this.canvas = document.getElementById("canvas");
-                    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas, });
+                    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas });
                     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
                     this.uiEl = $("#ui")[0];
                     this.uiCanvas = document.getElementById("ui-canvas");
                     this.uiCtx = this.uiCanvas.getContext("2d");
+                    this.flashFilter = new AddColorFilter_1.default({ red: 64 / 255, green: 64 / 255, blue: 64 / 255 });
+                    this.hitFilter = new AddColorFilter_1.default({ red: 128 / 255, green: 128 / 255, blue: 128 / 255 });
                 }
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
@@ -6084,14 +6143,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 return Game;
             }());
             game = new Game();
-            exports_26("game", game);
+            exports_27("game", game);
             window.game = game;
         }
     };
 });
-System.register("shape", ["point", "rect", "collider", "game"], function (exports_27, context_27) {
+System.register("shape", ["point", "rect", "collider", "game"], function (exports_28, context_28) {
     "use strict";
-    var __moduleName = context_27 && context_27.id;
+    var __moduleName = context_28 && context_28.id;
     var point_8, rect_5, collider_5, game_14, Line, IntersectData, Shape;
     return {
         setters: [
@@ -6245,7 +6304,7 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                 });
                 return Line;
             }());
-            exports_27("Line", Line);
+            exports_28("Line", Line);
             IntersectData = (function () {
                 function IntersectData(intersectPoint, normal) {
                     this.intersectPoint = intersectPoint;
@@ -6253,7 +6312,7 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                 }
                 return IntersectData;
             }());
-            exports_27("IntersectData", IntersectData);
+            exports_28("IntersectData", IntersectData);
             Shape = (function () {
                 function Shape(points, normals) {
                     this.minX = Infinity;
@@ -6705,13 +6764,13 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                 };
                 return Shape;
             }());
-            exports_27("Shape", Shape);
+            exports_28("Shape", Shape);
         }
     };
 });
-System.register("rect", ["point", "shape"], function (exports_28, context_28) {
+System.register("rect", ["point", "shape"], function (exports_29, context_29) {
     "use strict";
-    var __moduleName = context_28 && context_28.id;
+    var __moduleName = context_29 && context_29.id;
     var point_9, shape_3, Rect;
     return {
         setters: [
@@ -6803,13 +6862,13 @@ System.register("rect", ["point", "shape"], function (exports_28, context_28) {
                 };
                 return Rect;
             }());
-            exports_28("Rect", Rect);
+            exports_29("Rect", Rect);
         }
     };
 });
-System.register("helpers", ["point"], function (exports_29, context_29) {
+System.register("helpers", ["point"], function (exports_30, context_30) {
     "use strict";
-    var __moduleName = context_29 && context_29.id;
+    var __moduleName = context_30 && context_30.id;
     function inRect(x, y, rect) {
         var rx = rect.x1;
         var ry = rect.y1;
@@ -6817,14 +6876,14 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         var ry2 = rect.y2;
         return x >= rx && x <= rx2 && y >= ry && y <= ry2;
     }
-    exports_29("inRect", inRect);
+    exports_30("inRect", inRect);
     function inCircle(x, y, circleX, circleY, r) {
         if (Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2)) <= r) {
             return true;
         }
         return false;
     }
-    exports_29("inCircle", inCircle);
+    exports_30("inCircle", inCircle);
     function toZero(num, inc, dir) {
         if (dir === 1) {
             num -= inc;
@@ -6842,21 +6901,21 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
             throw "Must pass in -1 or 1 for dir";
         }
     }
-    exports_29("toZero", toZero);
+    exports_30("toZero", toZero);
     function incrementRange(num, min, max) {
         num++;
         if (num >= max)
             num = min;
         return num;
     }
-    exports_29("incrementRange", incrementRange);
+    exports_30("incrementRange", incrementRange);
     function decrementRange(num, min, max) {
         num--;
         if (num < min)
             num = max - 1;
         return num;
     }
-    exports_29("decrementRange", decrementRange);
+    exports_30("decrementRange", decrementRange);
     function clamp01(num) {
         if (num < 0)
             num = 0;
@@ -6864,23 +6923,23 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
             num = 1;
         return num;
     }
-    exports_29("clamp01", clamp01);
+    exports_30("clamp01", clamp01);
     function randomRange(start, end) {
         return _.random(start, end);
     }
-    exports_29("randomRange", randomRange);
+    exports_30("randomRange", randomRange);
     function clampMax(num, max) {
         return num < max ? num : max;
     }
-    exports_29("clampMax", clampMax);
+    exports_30("clampMax", clampMax);
     function clampMin(num, min) {
         return num > min ? num : min;
     }
-    exports_29("clampMin", clampMin);
+    exports_30("clampMin", clampMin);
     function clampMin0(num) {
         return clampMin(num, 0);
     }
-    exports_29("clampMin0", clampMin0);
+    exports_30("clampMin0", clampMin0);
     function clamp(num, min, max) {
         if (num < min)
             return min;
@@ -6888,39 +6947,39 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
             return max;
         return num;
     }
-    exports_29("clamp", clamp);
+    exports_30("clamp", clamp);
     function sin(degrees) {
         var rads = degrees * Math.PI / 180;
         return Math.sin(rads);
     }
-    exports_29("sin", sin);
+    exports_30("sin", sin);
     function cos(degrees) {
         var rads = degrees * Math.PI / 180;
         return Math.cos(rads);
     }
-    exports_29("cos", cos);
+    exports_30("cos", cos);
     function atan(value) {
         return Math.atan(value) * 180 / Math.PI;
     }
-    exports_29("atan", atan);
+    exports_30("atan", atan);
     function moveTo(num, dest, inc) {
         inc *= Math.sign(dest - num);
         num += inc;
         return num;
     }
-    exports_29("moveTo", moveTo);
+    exports_30("moveTo", moveTo);
     function lerp(num, dest, timeScale) {
         num = num + (dest - num) * timeScale;
         return num;
     }
-    exports_29("lerp", lerp);
+    exports_30("lerp", lerp);
     function lerpNoOver(num, dest, timeScale) {
         num = num + (dest - num) * timeScale;
         if (Math.abs(num - dest) < 1)
             num = dest;
         return num;
     }
-    exports_29("lerpNoOver", lerpNoOver);
+    exports_30("lerpNoOver", lerpNoOver);
     function lerpAngle(angle, destAngle, timeScale) {
         var dir = 1;
         if (Math.abs(destAngle - angle) > 180) {
@@ -6929,7 +6988,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         angle = angle + dir * (destAngle - angle) * timeScale;
         return to360(angle);
     }
-    exports_29("lerpAngle", lerpAngle);
+    exports_30("lerpAngle", lerpAngle);
     function to360(angle) {
         if (angle < 0)
             angle += 360;
@@ -6937,11 +6996,11 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
             angle -= 360;
         return angle;
     }
-    exports_29("to360", to360);
+    exports_30("to360", to360);
     function getHex(r, g, b, a) {
         return "#" + r.toString(16) + g.toString(16) + b.toString(16) + a.toString(16);
     }
-    exports_29("getHex", getHex);
+    exports_30("getHex", getHex);
     function roundEpsilon(num) {
         var numRound = Math.round(num);
         var diff = Math.abs(numRound - num);
@@ -6950,22 +7009,22 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         }
         return num;
     }
-    exports_29("roundEpsilon", roundEpsilon);
+    exports_30("roundEpsilon", roundEpsilon);
     function getAutoIncId() {
         autoInc++;
         return autoInc;
     }
-    exports_29("getAutoIncId", getAutoIncId);
+    exports_30("getAutoIncId", getAutoIncId);
     function stringReplace(str, pattern, replacement) {
         return str.replace(new RegExp(pattern, 'g'), replacement);
     }
-    exports_29("stringReplace", stringReplace);
+    exports_30("stringReplace", stringReplace);
     function noCanvasSmoothing(c) {
         c.webkitImageSmoothingEnabled = false;
         c.mozImageSmoothingEnabled = false;
         c.imageSmoothingEnabled = false;
     }
-    exports_29("noCanvasSmoothing", noCanvasSmoothing);
+    exports_30("noCanvasSmoothing", noCanvasSmoothing);
     function drawImage(ctx, imgEl, sX, sY, sW, sH, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
         if (!sW) {
             ctx.drawImage(imgEl, (sX), sY);
@@ -7031,7 +7090,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         ctx.globalAlpha = 1;
         helperCtx.restore();
     }
-    exports_29("drawImage", drawImage);
+    exports_30("drawImage", drawImage);
     function createAndDrawRect(container, rect, fillColor, strokeColor, strokeWidth, fillAlpha) {
         var rectangle = new PIXI.Graphics();
         if (fillAlpha === undefined)
@@ -7047,7 +7106,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         container.addChild(rectangle);
         return rectangle;
     }
-    exports_29("createAndDrawRect", createAndDrawRect);
+    exports_30("createAndDrawRect", createAndDrawRect);
     function drawRect(ctx, rect, fillColor, strokeColor, strokeWidth, fillAlpha) {
         var rx = Math.round(rect.x1);
         var ry = Math.round(rect.y1);
@@ -7070,7 +7129,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         }
         ctx.globalAlpha = 1;
     }
-    exports_29("drawRect", drawRect);
+    exports_30("drawRect", drawRect);
     function drawPolygon(ctx, shape, closed, fillColor, lineColor, lineThickness, fillAlpha) {
         var vertices = shape.points;
         if (fillAlpha) {
@@ -7095,7 +7154,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         }
         ctx.globalAlpha = 1;
     }
-    exports_29("drawPolygon", drawPolygon);
+    exports_30("drawPolygon", drawPolygon);
     function isSupportedBrowser() {
         if (navigator.userAgent.search("MSIE") >= 0) {
             return false;
@@ -7114,7 +7173,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         }
         return false;
     }
-    exports_29("isSupportedBrowser", isSupportedBrowser);
+    exports_30("isSupportedBrowser", isSupportedBrowser);
     function createAndDrawText(container, text, x, y, size, hAlign, vAlign, isRed, overrideColor) {
         var message = new PIXI.Text(text);
         size = size || 14;
@@ -7160,7 +7219,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         container.addChild(message);
         return message;
     }
-    exports_29("createAndDrawText", createAndDrawText);
+    exports_30("createAndDrawText", createAndDrawText);
     function drawTextMMX(ctx, text, x, y, size, hAlign, vAlign, isRed, overrideColor) {
         ctx.save();
         ctx.shadowColor = "black";
@@ -7189,7 +7248,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         ctx.fillText(text, x, y);
         ctx.restore();
     }
-    exports_29("drawTextMMX", drawTextMMX);
+    exports_30("drawTextMMX", drawTextMMX);
     function drawText(ctx, text, x, y, fillColor, outlineColor, size, hAlign, vAlign, font) {
         ctx.save();
         fillColor = fillColor || "black";
@@ -7209,7 +7268,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         }
         ctx.restore();
     }
-    exports_29("drawText", drawText);
+    exports_30("drawText", drawText);
     function drawCircle(ctx, x, y, r, fillColor, lineColor, lineThickness) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * Math.PI, false);
@@ -7223,7 +7282,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
             ctx.stroke();
         }
     }
-    exports_29("drawCircle", drawCircle);
+    exports_30("drawCircle", drawCircle);
     function createAndDrawLine(container, x, y, x2, y2, color, thickness) {
         var line = new PIXI.Graphics();
         if (!thickness)
@@ -7238,7 +7297,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         container.addChild(line);
         return line;
     }
-    exports_29("createAndDrawLine", createAndDrawLine);
+    exports_30("createAndDrawLine", createAndDrawLine);
     function drawLine(ctx, x, y, x2, y2, color, thickness) {
         if (!thickness)
             thickness = 1;
@@ -7251,7 +7310,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         ctx.strokeStyle = color;
         ctx.stroke();
     }
-    exports_29("drawLine", drawLine);
+    exports_30("drawLine", drawLine);
     function linepointNearestMouse(x0, y0, x1, y1, x, y) {
         function lerp(a, b, x) { return (a + x * (b - a)); }
         ;
@@ -7262,7 +7321,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         var lineY = lerp(y0, y1, t);
         return new point_10.Point(lineX, lineY);
     }
-    exports_29("linepointNearestMouse", linepointNearestMouse);
+    exports_30("linepointNearestMouse", linepointNearestMouse);
     function inLine(mouseX, mouseY, x0, y0, x1, y1) {
         var threshold = 4;
         var small_x = Math.min(x0, x1);
@@ -7281,7 +7340,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
             return false;
         }
     }
-    exports_29("inLine", inLine);
+    exports_30("inLine", inLine);
     function getInclinePushDir(inclineNormal, pushDir) {
         var bisectingPoint = inclineNormal.normalize().add(pushDir.normalize());
         bisectingPoint = bisectingPoint.normalize();
@@ -7293,7 +7352,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         }
         return bisectingPoint.normalize();
     }
-    exports_29("getInclinePushDir", getInclinePushDir);
+    exports_30("getInclinePushDir", getInclinePushDir);
     function keyCodeToString(charCode) {
         if (charCode === 0)
             return "left mouse";
@@ -7433,7 +7492,7 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
             return "space";
         return String.fromCharCode(charCode);
     }
-    exports_29("keyCodeToString", keyCodeToString);
+    exports_30("keyCodeToString", keyCodeToString);
     var point_10, autoInc, helperCanvas, helperCtx, helperCanvas2, helperCtx2, helperCanvas3, helperCtx3;
     return {
         setters: [
@@ -7455,9 +7514,9 @@ System.register("helpers", ["point"], function (exports_29, context_29) {
         }
     };
 });
-System.register("point", ["helpers"], function (exports_30, context_30) {
+System.register("point", ["helpers"], function (exports_31, context_31) {
     "use strict";
-    var __moduleName = context_30 && context_30.id;
+    var __moduleName = context_31 && context_31.id;
     var Helpers, Point;
     return {
         setters: [
@@ -7589,13 +7648,13 @@ System.register("point", ["helpers"], function (exports_30, context_30) {
                 };
                 return Point;
             }());
-            exports_30("Point", Point);
+            exports_31("Point", Point);
         }
     };
 });
-System.register("collider", ["point", "shape"], function (exports_31, context_31) {
+System.register("collider", ["point", "shape"], function (exports_32, context_32) {
     "use strict";
-    var __moduleName = context_31 && context_31.id;
+    var __moduleName = context_32 && context_32.id;
     var point_11, shape_4, Collider, CollideData, HitData;
     return {
         setters: [
@@ -7641,7 +7700,7 @@ System.register("collider", ["point", "shape"], function (exports_31, context_31
                 };
                 return Collider;
             }());
-            exports_31("Collider", Collider);
+            exports_32("Collider", Collider);
             CollideData = (function () {
                 function CollideData(collider, vel, isTrigger, gameObject, hitData) {
                     this.collider = collider;
@@ -7652,7 +7711,7 @@ System.register("collider", ["point", "shape"], function (exports_31, context_31
                 }
                 return CollideData;
             }());
-            exports_31("CollideData", CollideData);
+            exports_32("CollideData", CollideData);
             HitData = (function () {
                 function HitData(normal, hitPoint) {
                     this.normal = normal;
@@ -7660,13 +7719,13 @@ System.register("collider", ["point", "shape"], function (exports_31, context_31
                 }
                 return HitData;
             }());
-            exports_31("HitData", HitData);
+            exports_32("HitData", HitData);
         }
     };
 });
-System.register("frame", [], function (exports_32, context_32) {
+System.register("frame", [], function (exports_33, context_33) {
     "use strict";
-    var __moduleName = context_32 && context_32.id;
+    var __moduleName = context_33 && context_33.id;
     var Frame;
     return {
         setters: [],
@@ -7686,14 +7745,14 @@ System.register("frame", [], function (exports_32, context_32) {
                 };
                 return Frame;
             }());
-            exports_32("Frame", Frame);
+            exports_33("Frame", Frame);
         }
     };
 });
-System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], function (exports_33, context_33) {
+System.register("sprite", ["collider", "frame", "point", "rect", "game", "helpers"], function (exports_34, context_34) {
     "use strict";
-    var __moduleName = context_33 && context_33.id;
-    var collider_6, frame_1, point_12, rect_6, Helpers, Sprite;
+    var __moduleName = context_34 && context_34.id;
+    var collider_6, frame_1, point_12, rect_6, game_15, Helpers, Sprite;
     return {
         setters: [
             function (collider_6_1) {
@@ -7707,6 +7766,9 @@ System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], fun
             },
             function (rect_6_1) {
                 rect_6 = rect_6_1;
+            },
+            function (game_15_1) {
+                game_15 = game_15_1;
             },
             function (Helpers_12) {
                 Helpers = Helpers_12;
@@ -7870,6 +7932,19 @@ System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], fun
                         this.pixiSprite.y = y;
                     this.pixiSprite.scale.x = flipX;
                     this.pixiSprite.scale.y = flipY;
+                    var filterArray = [];
+                    if (palette) {
+                        filterArray.push(palette.filter);
+                    }
+                    if (options === "flash") {
+                        filterArray.push(game_15.game.flashFilter);
+                    }
+                    else if (options === "hit") {
+                        filterArray.push(game_15.game.hitFilter);
+                    }
+                    else {
+                    }
+                    this.pixiSprite.filters = filterArray;
                 };
                 Sprite.prototype.createAndDraw = function (container, frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
                     var sprite = new Sprite(this.spriteJson, true, container);
@@ -7947,14 +8022,14 @@ System.register("sprite", ["collider", "frame", "point", "rect", "helpers"], fun
                 };
                 return Sprite;
             }());
-            exports_33("Sprite", Sprite);
+            exports_34("Sprite", Sprite);
         }
     };
 });
-System.register("actor", ["sprite", "point", "game", "helpers"], function (exports_34, context_34) {
+System.register("actor", ["sprite", "point", "game", "helpers"], function (exports_35, context_35) {
     "use strict";
-    var __moduleName = context_34 && context_34.id;
-    var sprite_4, point_13, game_15, Helpers, Actor, Anim;
+    var __moduleName = context_35 && context_35.id;
+    var sprite_4, point_13, game_16, Helpers, Actor, Anim;
     return {
         setters: [
             function (sprite_4_1) {
@@ -7963,8 +8038,8 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
             function (point_13_1) {
                 point_13 = point_13_1;
             },
-            function (game_15_1) {
-                game_15 = game_15_1;
+            function (game_16_1) {
+                game_16 = game_16_1;
             },
             function (Helpers_13) {
                 Helpers = Helpers_13;
@@ -7988,7 +8063,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     this.renderEffect = "";
                     this.changeSprite(sprite, true);
                     if (!dontAddToLevel) {
-                        game_15.game.level.addGameObject(this);
+                        game_16.game.level.addGameObject(this);
                     }
                 }
                 Actor.prototype.changeSprite = function (sprite, resetFrame) {
@@ -7996,10 +8071,10 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         return;
                     if (this.sprite)
                         this.sprite.free();
-                    this.sprite = game_15.game.level.spritePool.get(sprite.name);
+                    this.sprite = game_16.game.level.spritePool.get(sprite.name);
                     if (!this.sprite) {
-                        var newSprite = new sprite_4.Sprite(sprite.spriteJson, true, game_15.game.level.gameContainer);
-                        game_15.game.level.spritePool.add(sprite.name, newSprite);
+                        var newSprite = new sprite_4.Sprite(sprite.spriteJson, true, game_16.game.level.gameContainer);
+                        game_16.game.level.spritePool.add(sprite.name, newSprite);
                         this.sprite = newSprite;
                     }
                     try {
@@ -8046,11 +8121,11 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     configurable: true
                 });
                 Actor.prototype.update = function () {
-                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_15.game.deltaTime);
+                    this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_16.game.deltaTime);
                     if (this.renderEffectTime <= 0) {
                         this.renderEffect = "";
                     }
-                    this.frameTime += game_15.game.deltaTime * this.frameSpeed;
+                    this.frameTime += game_16.game.deltaTime * this.frameSpeed;
                     if (this.frameTime >= this.currentFrame.duration) {
                         var onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
                         if (!onceEnd) {
@@ -8061,7 +8136,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         }
                     }
                     if (this.useGravity && !this.grounded) {
-                        this.vel.y += game_15.game.level.gravity * game_15.game.deltaTime;
+                        this.vel.y += game_16.game.level.gravity * game_16.game.deltaTime;
                         if (this.vel.y > 1000) {
                             this.vel.y = 1000;
                         }
@@ -8073,14 +8148,14 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     if (this.collider && !this.collider.isTrigger) {
                         var yDist = 1;
                         if (this.grounded) {
-                            yDist = 300 * game_15.game.deltaTime;
+                            yDist = 300 * game_16.game.deltaTime;
                         }
-                        var collideData = game_15.game.level.checkCollisionActor(this, 0, yDist);
+                        var collideData = game_16.game.level.checkCollisionActor(this, 0, yDist);
                         if (collideData && this.vel.y >= 0) {
                             this.grounded = true;
                             this.vel.y = 0;
                             var yVel = new point_13.Point(0, yDist);
-                            var mtv = game_15.game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
+                            var mtv = game_16.game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
                             if (mtv) {
                                 this.incPos(yVel);
                                 this.incPos(mtv.unitInc(0.01));
@@ -8090,7 +8165,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                             this.grounded = false;
                         }
                     }
-                    var triggerList = game_15.game.level.getTriggerList(this, 0, 0);
+                    var triggerList = game_16.game.level.getTriggerList(this, 0, 0);
                     try {
                         for (var triggerList_1 = __values(triggerList), triggerList_1_1 = triggerList_1.next(); !triggerList_1_1.done; triggerList_1_1 = triggerList_1.next()) {
                             var trigger = triggerList_1_1.value;
@@ -8108,24 +8183,24 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 };
                 Actor.prototype.incPos = function (amount) {
                     if (this.collider)
-                        game_15.game.level.removeFromGridFast(this);
+                        game_16.game.level.removeFromGridFast(this);
                     this.pos.inc(amount);
                     if (this.collider)
-                        game_15.game.level.addGameObjectToGrid(this);
+                        game_16.game.level.addGameObjectToGrid(this);
                 };
                 Actor.prototype.changePos = function (newPos) {
                     if (this.collider)
-                        game_15.game.level.removeFromGridFast(this);
+                        game_16.game.level.removeFromGridFast(this);
                     this.pos = newPos;
                     if (this.collider)
-                        game_15.game.level.addGameObjectToGrid(this);
+                        game_16.game.level.addGameObjectToGrid(this);
                 };
                 Actor.prototype.preUpdate = function () {
                     this.collidedInFrame.clear();
                 };
                 Actor.prototype.sweepTest = function (offset) {
                     var inc = offset.clone();
-                    var collideData = game_15.game.level.checkCollisionActor(this, inc.x, inc.y);
+                    var collideData = game_16.game.level.checkCollisionActor(this, inc.x, inc.y);
                     if (collideData) {
                         return true;
                     }
@@ -8135,7 +8210,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     if (useDeltaTime === void 0) { useDeltaTime = true; }
                     if (pushIncline === void 0) { pushIncline = true; }
                     if (snapInclineGravity === void 0) { snapInclineGravity = true; }
-                    var times = useDeltaTime ? game_15.game.deltaTime : 1;
+                    var times = useDeltaTime ? game_16.game.deltaTime : 1;
                     if (!this.collider) {
                         this.pos.inc(amount.times(times));
                     }
@@ -8143,7 +8218,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         this.freeFromCollision();
                         var inc = amount.clone();
                         var incAmount = inc.multiply(times);
-                        var mtv = game_15.game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
+                        var mtv = game_16.game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
                         this.incPos(incAmount);
                         if (mtv) {
                             this.incPos(mtv.unitInc(0.01));
@@ -8152,7 +8227,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     }
                 };
                 Actor.prototype.freeFromCollision = function () {
-                    var currentCollideDatas = game_15.game.level.getAllCollideDatas(this, 0, 0, undefined);
+                    var currentCollideDatas = game_16.game.level.getAllCollideDatas(this, 0, 0, undefined);
                     try {
                         for (var currentCollideDatas_1 = __values(currentCollideDatas), currentCollideDatas_1_1 = currentCollideDatas_1.next(); !currentCollideDatas_1_1.done; currentCollideDatas_1_1 = currentCollideDatas_1.next()) {
                             var collideData = currentCollideDatas_1_1.value;
@@ -8181,9 +8256,9 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     else {
                         this.renderFromAngle(x, y);
                     }
-                    if (game_15.game.options.showHitboxes && this.collider) {
-                        Helpers.drawPolygon(game_15.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
-                        Helpers.drawCircle(game_15.game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
+                    if (game_16.game.options.showHitboxes && this.collider) {
+                        Helpers.drawPolygon(game_16.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+                        Helpers.drawCircle(game_16.game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
                     }
                 };
                 Actor.prototype.renderFromAngle = function (x, y) {
@@ -8222,10 +8297,10 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 };
                 Actor.prototype.destroySelf = function (sprite, fadeSound, isAnim) {
                     if (isAnim) {
-                        game_15.game.level.anims.delete(this);
+                        game_16.game.level.anims.delete(this);
                     }
                     else {
-                        game_15.game.level.removeGameObject(this);
+                        game_16.game.level.removeGameObject(this);
                     }
                     if (sprite) {
                         var anim = new Anim(this.pos, sprite, this.xDir);
@@ -8236,8 +8311,8 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     this.sprite.free();
                 };
                 Actor.prototype.getSoundVolume = function () {
-                    var dist = new point_13.Point(game_15.game.level.camCenterX, game_15.game.level.camCenterY).distanceTo(this.pos);
-                    var volume = 1 - (dist / (game_15.game.level.screenWidth));
+                    var dist = new point_13.Point(game_16.game.level.camCenterX, game_16.game.level.camCenterY).distanceTo(this.pos);
+                    var volume = 1 - (dist / (game_16.game.level.screenWidth));
                     volume = Helpers.clampMin0(volume);
                     return volume;
                 };
@@ -8246,7 +8321,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     if (overrideVolume !== undefined)
                         volume = overrideVolume;
                     volume = Helpers.clampMin0(volume);
-                    game_15.game.playSound(soundName, volume);
+                    game_16.game.playSound(soundName, volume);
                 };
                 Actor.prototype.withinX = function (other, amount) {
                     return Math.abs(this.pos.x - other.pos.x) <= amount;
@@ -8275,14 +8350,14 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 });
                 return Actor;
             }());
-            exports_34("Actor", Actor);
+            exports_35("Actor", Actor);
             Anim = (function (_super) {
                 __extends(Anim, _super);
                 function Anim(pos, sprite, xDir) {
                     var _this = _super.call(this, sprite, new point_13.Point(pos.x, pos.y), true) || this;
                     _this.useGravity = false;
                     _this.xDir = xDir;
-                    game_15.game.level.anims.add(_this);
+                    game_16.game.level.anims.add(_this);
                     return _this;
                 }
                 Anim.prototype.update = function () {
@@ -8293,17 +8368,17 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 };
                 return Anim;
             }(Actor));
-            exports_34("Anim", Anim);
+            exports_35("Anim", Anim);
         }
     };
 });
 var soundFiles = ["charge_loop.wav", "charge_start.wav", "csting.wav", "dash.wav", "die.wav", "explosion.wav", "heal.wav", "hit.wav", "hurt.wav", "jump.wav", "land.wav", "torpedo.wav", "weakness.wav"];
-System.register("vue", [], function (exports_35, context_35) {
+System.register("vue", [], function (exports_36, context_36) {
     "use strict";
-    var __moduleName = context_35 && context_35.id;
+    var __moduleName = context_36 && context_36.id;
     function startVue() {
     }
-    exports_35("startVue", startVue);
+    exports_36("startVue", startVue);
     return {
         setters: [],
         execute: function () {
