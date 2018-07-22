@@ -16,6 +16,6 @@
     "node_modules/@types/lodash/index.d.ts",
     "node_modules/@types/howler/index.d.ts",
     "node_modules/@types/pixi.js/index.d.ts",
-    "node_modules/@types/pixi-filters/types.d.ts"
+    "node_modules/@types/pixi-filters/index.d.ts"
   ]
 }

@@ -139,6 +139,7 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
+    
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
     this.uiData.selectedGameMode = "deathmatch";
@@ -541,7 +542,7 @@ class Game {
         paths.splice(i, 1);
       }
     }
-    console.log(paths);
+    //console.log(paths);
     this.maxLoadCount++;
     PIXI.loader.add(paths).load(() => {
       this.loadCount++;

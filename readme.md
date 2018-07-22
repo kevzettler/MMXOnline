@@ -3,7 +3,7 @@
 Abstraction
 ===============
 
--Flashing and effects, palettes
+-Effects
 -Z-Index problem: projectiles are behind players, etc.
 -When restarting, clear the Pixi stage of objects
 -HUD System/framework

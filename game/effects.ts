@@ -2,15 +2,29 @@ import { Point } from "./point";
 import { game } from "./game";
 import * as Helpers from "./helpers";
 import { Actor } from "./actor";
+import { Sprite } from "./sprite";
+
+class ChargeParticle extends Actor {
+  
+  time: number;
+  constructor(pos: Point, time: number) {
+    super(game.sprites["charge_part_1"], new Point(pos.x, pos.y), true);
+    this.time = time;
+  }
+
+  update() {
+    super.update();
+  }
+}
 
 export class ChargeEffect {
   
-  points: Point[];
   origPoints: Point[];
-  pointTimes: number[];
+  chargeParts: ChargeParticle[];
+  active: boolean = false;
 
   constructor() {
-    this.points = [];
+    this.chargeParts = [];
     let radius = 24;
 
     let angle = 0;
@@ -26,39 +40,63 @@ export class ChargeEffect {
     this.origPoints = [
       point1, point2, point3, point4, point5, point6, point7, point8
     ];
-    //@ts-ignore
-    this.points = _.cloneDeep(this.origPoints);
-    this.pointTimes = [0,3,0,1.5,-1.5,-3,-1.5,-1.5];
+
+    this.chargeParts = [
+      new ChargeParticle(point1.clone(), 0),
+      new ChargeParticle(point2.clone(), 3),
+      new ChargeParticle(point3.clone(), 0),
+      new ChargeParticle(point4.clone(), 1.5),
+      new ChargeParticle(point5.clone(), -1.5),
+      new ChargeParticle(point6.clone(), -3),
+      new ChargeParticle(point7.clone(), -1.5),
+      new ChargeParticle(point8.clone(), -1.5)
+    ];
+  }
+
+  stop() {
+    this.active = false;
   }
 
   update(centerPos: Point, chargeLevel: number) {
-    for(let i = 0; i < this.points.length; i++) {
-      let point = this.points[i];
-      if(this.pointTimes[i] > 0) {
-        point.x = Helpers.moveTo(point.x, 0, game.deltaTime * 70);
-        point.y = Helpers.moveTo(point.y, 0, game.deltaTime * 70);
+    this.active = true;
+    for(let i = 0; i < this.chargeParts.length; i++) {
+      let part = this.chargeParts[i];
+      if(part.time > 0) {
+        part.pos.x = Helpers.moveTo(part.pos.x, 0, game.deltaTime * 70);
+        part.pos.y = Helpers.moveTo(part.pos.y, 0, game.deltaTime * 70);
       }
       let chargePart = game.sprites["charge_part_" + String(chargeLevel)];
-      this.pointTimes[i]+=game.deltaTime*20;
-      if(this.pointTimes[i] > 3) {
-        this.pointTimes[i] = -3;
-        this.points[i] = this.origPoints[i].clone();
+      part.changeSprite(chargePart, true);
+      part.time += game.deltaTime*20;
+      if(part.time > 3) {
+        part.time = -3;
+        part.pos.x = this.origPoints[i].x;
+        part.pos.y = this.origPoints[i].y;
       }
     }
 
   }
 
   render(centerPos: Point, chargeLevel: number) {
-    /*
-    for(let i = 0; i < this.points.length; i++) {
-      let point = this.points[i];
-      let chargePart = game.sprites["charge_part_" + String(chargeLevel)];
-      if(this.pointTimes[i] > 0) {
-        chargePart.draw(game.uiCtx, Math.round(this.pointTimes[i]), centerPos.x + point.x, centerPos.y + point.y);
+    for(let i = 0; i < this.chargeParts.length; i++) {
+      let part = this.chargeParts[i];
+      if(!this.active) {
+        part.sprite.pixiSprite.visible = false;
+      }
+      else if(part.time > 0) {
+        part.sprite.pixiSprite.visible = true;
+        part.sprite.draw(Math.round(part.time), centerPos.x + part.pos.x, centerPos.y + part.pos.y);
+      }
+      else {
+        part.sprite.pixiSprite.visible = false;
       }
     }
-    */
+  }
 
+  destroy() {
+    for(let chargePart of this.chargeParts) {
+      chargePart.destroySelf(undefined, undefined);
+    }
   }
 
 }

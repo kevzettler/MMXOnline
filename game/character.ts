@@ -68,6 +68,8 @@ export class Character extends Actor {
     this.chargeLoopSound.loop(true);
 
     game.level.addGameObject(this);
+
+    this.chargeEffect = new ChargeEffect();
   }
 
   getStandingCollider() {
@@ -229,10 +231,6 @@ export class Character extends Actor {
       else {
         this.renderEffect = "";
       }
-      if(!this.chargeEffect) {
-        this.chargeEffect = new ChargeEffect();
-      }
-
       this.chargeEffect.update(this.pos, this.getChargeLevel());
     }
   }
@@ -308,7 +306,7 @@ export class Character extends Actor {
       this.chargeLoopSound.stop(this.chargeLoopSoundId);
       this.chargeLoopSoundId = undefined;
     }
-    this.chargeEffect = undefined;
+    this.chargeEffect.stop();
   }
 
   shoot() {
@@ -419,6 +417,11 @@ export class Character extends Actor {
 
   setHurt(dir: number) {
     this.changeState(new Hurt(dir));
+  }
+
+  destroySelf(sprite?: Sprite, fadeSound?: string) {
+    super.destroySelf(sprite, fadeSound);
+    this.chargeEffect.destroy();
   }
 
 }

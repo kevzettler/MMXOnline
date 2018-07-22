@@ -17,6 +17,7 @@ export class Sprite {
   wrapMode: string; //Can be "once", "loop" or "pingpong"
   spriteJson: string;
   pixiSprite: PIXI.extras.AnimatedSprite;
+  freeForPool: boolean = false;
 
   constructor(spriteJson: any, shouldInit: boolean, container: PIXI.Container) {
     this.spriteJson = spriteJson;
@@ -68,15 +69,17 @@ export class Sprite {
   }
 
   free() {
+    this.freeForPool = true;
     this.pixiSprite.visible = false;
   }
 
   reserve() {
+    this.freeForPool = false;
     this.pixiSprite.visible = true;
   }
 
   isFree() {
-    return !this.pixiSprite.visible;
+    return this.freeForPool;
   }
 
   initSprite(container: PIXI.Container) {
