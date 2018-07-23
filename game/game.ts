@@ -568,7 +568,7 @@ class Game {
 
   loadSprites() {
     for(var spriteJson of spriteJsons) {
-      let sprite: Sprite = new Sprite(spriteJson, false, undefined, -1);
+      let sprite: Sprite = new Sprite(spriteJson, false, undefined);
       this.sprites[sprite.name] = sprite;
     }
   }

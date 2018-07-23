@@ -9,6 +9,7 @@ Post-V1 Features
     -Characters (0)
     -Main character (1)
     -Projectiles (2)
+  this.app.stage.children.sort((a, b) => b.zIndex - a.zIndex);
 
 -Play as Zero
 -All the special weapon charges

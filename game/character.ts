@@ -73,6 +73,13 @@ export class Character extends Actor {
     this.chargeLoopSound = game.sounds["charge_loop"];
     this.chargeLoopSound.loop(true);
 
+    if(this.player !== game.level.mainPlayer) {
+      this.zIndex = ++game.level.zChar;
+    }
+    else {
+      this.zIndex = game.level.zMainPlayer;
+    }
+
     game.level.addGameObject(this);
 
     this.chargeEffect = new ChargeEffect();

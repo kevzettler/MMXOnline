@@ -32,8 +32,9 @@ export class Actor {
   renderEffectTime: number = 0;
   renderEffects: Set<string> = new Set();
   container: PIXI.Container;
+  zIndex: number = 0;
 
-  constructor(sprite: Sprite, pos: Point, dontAddToLevel?: boolean, container?: PIXI.Container) {    
+  constructor(sprite: Sprite, pos: Point, dontAddToLevel?: boolean, container?: PIXI.Container) {
     if(container) {
       this.container = container;
     }
@@ -52,6 +53,7 @@ export class Actor {
     this.yDir = 1;
     this.grounded = false;
     this.collidedInFrame = new Set<Collider>();
+    this.zIndex = ++game.level.zDefault;
     this.changeSprite(sprite, true);
 
     if(!dontAddToLevel) {
@@ -62,29 +64,19 @@ export class Actor {
   changeSprite(sprite: Sprite, resetFrame: boolean) {
     if(!sprite) return;
 
-    let addIndex = -1;
     if(this.sprite) {
-      addIndex = this.container.children.indexOf(this.sprite.pixiSprite) + 1;
       this.sprite.free();
     }
 
     this.sprite = <Sprite>game.level.spritePool.get(sprite.name);
     if(!this.sprite) {
-      let newSprite = new Sprite(sprite.spriteJson, true, this.container, addIndex);
+      let newSprite = new Sprite(sprite.spriteJson, true, this.container);
       game.level.spritePool.add(sprite.name, newSprite);
       this.sprite = newSprite;
     }
-    else {
-      //The pooled sprite must be moved to addIndex position, swap with it
-      if(addIndex > -1) {
-        addIndex--;
-        let newSpriteIndex = this.container.children.indexOf(this.sprite.pixiSprite);
-        let temp = this.container.children[newSpriteIndex];
-        this.container.children[newSpriteIndex] = this.container.children[addIndex];
-        this.container.children[addIndex] = temp;
-      }
-    }
-
+    //@ts-ignore
+    this.sprite.pixiSprite.zIndex = this.zIndex;
+    
     //this.sprite.pixiSprite.visible = false;
 
     for(let hitbox of this.sprite.hitboxes) {

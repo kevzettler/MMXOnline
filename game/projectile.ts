@@ -387,13 +387,13 @@ export class TornadoProj extends Projectile {
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
     super(weapon, pos, vel, 1, player, game.sprites["tornado_mid"]);
     this.sprite.pixiSprite.visible = false;
-    this.spriteStart = new Sprite(game.sprites["tornado_start"].spriteJson, true, this.container, -1);
+    this.spriteStart = new Sprite(game.sprites["tornado_start"].spriteJson, true, this.container);
     for(let i = 0; i < 6; i++) {
-      let midSprite = new Sprite(game.sprites["tornado_mid"].spriteJson, true, this.container, -1);
+      let midSprite = new Sprite(game.sprites["tornado_mid"].spriteJson, true, this.container);
       midSprite.pixiSprite.visible = false;
       this.spriteMids.push(midSprite);
     }
-    this.spriteEnd = new Sprite(game.sprites["tornado_end"].spriteJson, true, this.container, -1);
+    this.spriteEnd = new Sprite(game.sprites["tornado_end"].spriteJson, true, this.container);
     this.vel.x = 0;
     this.hitCooldown = 0.3;
   }

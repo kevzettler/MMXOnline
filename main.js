@@ -954,13 +954,13 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                     _this.spriteMids = [];
                     _this.length = 1;
                     _this.sprite.pixiSprite.visible = false;
-                    _this.spriteStart = new sprite_1.Sprite(game_4.game.sprites["tornado_start"].spriteJson, true, _this.container, -1);
+                    _this.spriteStart = new sprite_1.Sprite(game_4.game.sprites["tornado_start"].spriteJson, true, _this.container);
                     for (var i = 0; i < 6; i++) {
-                        var midSprite = new sprite_1.Sprite(game_4.game.sprites["tornado_mid"].spriteJson, true, _this.container, -1);
+                        var midSprite = new sprite_1.Sprite(game_4.game.sprites["tornado_mid"].spriteJson, true, _this.container);
                         midSprite.pixiSprite.visible = false;
                         _this.spriteMids.push(midSprite);
                     }
-                    _this.spriteEnd = new sprite_1.Sprite(game_4.game.sprites["tornado_end"].spriteJson, true, _this.container, -1);
+                    _this.spriteEnd = new sprite_1.Sprite(game_4.game.sprites["tornado_end"].spriteJson, true, _this.container);
                     _this.vel.x = 0;
                     _this.hitCooldown = 0.3;
                     return _this;
@@ -2834,6 +2834,12 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _this.chargeSound = game_8.game.sounds["charge_start"];
                     _this.chargeLoopSound = game_8.game.sounds["charge_loop"];
                     _this.chargeLoopSound.loop(true);
+                    if (_this.player !== game_8.game.level.mainPlayer) {
+                        _this.zIndex = ++game_8.game.level.zChar;
+                    }
+                    else {
+                        _this.zIndex = game_8.game.level.zMainPlayer;
+                    }
                     game_8.game.level.addGameObject(_this);
                     _this.chargeEffect = new effects_1.ChargeEffect();
                     if (game_8.game.level.gameMode.isTeamMode || game_8.game.level.gameMode.isBrawl) {
@@ -4412,6 +4418,10 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     this.killZones = [];
                     this.grid = [];
                     this.occupiedGridSets = new Set();
+                    this.zDefault = 0;
+                    this.zMainPlayer = -1000000000;
+                    this.zChar = -2000000000;
+                    this.zBackground = -3000000000;
                     this.levelData = levelData;
                     this.zoomScale = 3;
                     this.gravity = 550;
@@ -4761,6 +4771,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     game_13.game.pixiApp.stage.addChild(this.gameContainer);
                     if (this.backgroundPath) {
                         this.backgroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.backgroundPath].texture);
+                        this.backgroundSprite.zIndex = this.zBackground;
                         this.gameContainer.addChild(this.backgroundSprite);
                     }
                     this.foregroundContainer = new PIXI.Container();
@@ -4807,6 +4818,11 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.parallaxSprite.x = -this.camX * 0.5;
                         this.parallaxSprite.y = -this.camY * 0.5;
                     }
+                    this.gameContainer.children.sort(function (a, b) {
+                        var bIndex = b.zIndex || 0;
+                        var aIndex = a.zIndex || 0;
+                        return aIndex - bIndex;
+                    });
                     try {
                         for (var _a = __values(this.gameObjects), _b = _a.next(); !_b.done; _b = _a.next()) {
                             var go = _b.value;
@@ -6232,7 +6248,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     try {
                         for (var spriteJsons_1 = __values(sprites_1.spriteJsons), spriteJsons_1_1 = spriteJsons_1.next(); !spriteJsons_1_1.done; spriteJsons_1_1 = spriteJsons_1.next()) {
                             var spriteJson = spriteJsons_1_1.value;
-                            var sprite = new sprite_3.Sprite(spriteJson, false, undefined, -1);
+                            var sprite = new sprite_3.Sprite(spriteJson, false, undefined);
                             this.sprites[sprite.name] = sprite;
                         }
                     }
@@ -8067,7 +8083,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
         ],
         execute: function () {
             Sprite = (function () {
-                function Sprite(spriteJson, shouldInit, container, addIndex) {
+                function Sprite(spriteJson, shouldInit, container) {
                     this.freeForPool = false;
                     this.spriteJson = spriteJson;
                     this.name = spriteJson.name;
@@ -8129,7 +8145,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                         finally { if (e_82) throw e_82.error; }
                     }
                     if (shouldInit) {
-                        this.initSprite(container, addIndex);
+                        this.initSprite(container);
                     }
                     var e_80, _c, e_82, _j, e_81, _h;
                 }
@@ -8151,7 +8167,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                 Sprite.prototype.isFree = function () {
                     return this.freeForPool;
                 };
-                Sprite.prototype.initSprite = function (container, addIndex) {
+                Sprite.prototype.initSprite = function (container) {
                     var textureArray = [];
                     try {
                         for (var _a = __values(this.frames), _b = _a.next(); !_b.done; _b = _a.next()) {
@@ -8173,12 +8189,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     this.pixiSprite.anchor.x = anchor.x;
                     this.pixiSprite.anchor.y = anchor.y;
                     this.pixiSprite.animationSpeed = 0;
-                    if (addIndex > -1) {
-                        container.addChildAt(this.pixiSprite, addIndex);
-                    }
-                    else {
-                        container.addChild(this.pixiSprite);
-                    }
+                    container.addChild(this.pixiSprite);
                     var e_83, _c;
                 };
                 Sprite.prototype.getAnchor = function () {
@@ -8265,7 +8276,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     var e_84, _a;
                 };
                 Sprite.prototype.createAndDraw = function (container, frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
-                    var sprite = new Sprite(this.spriteJson, true, container, -1);
+                    var sprite = new Sprite(this.spriteJson, true, container);
                     sprite.draw(frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
                     return sprite;
                 };
@@ -8368,6 +8379,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 function Actor(sprite, pos, dontAddToLevel, container) {
                     this.renderEffectTime = 0;
                     this.renderEffects = new Set();
+                    this.zIndex = 0;
                     if (container) {
                         this.container = container;
                     }
@@ -8385,6 +8397,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     this.yDir = 1;
                     this.grounded = false;
                     this.collidedInFrame = new Set();
+                    this.zIndex = ++game_16.game.level.zDefault;
                     this.changeSprite(sprite, true);
                     if (!dontAddToLevel) {
                         game_16.game.level.addGameObject(this);
@@ -8393,26 +8406,16 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 Actor.prototype.changeSprite = function (sprite, resetFrame) {
                     if (!sprite)
                         return;
-                    var addIndex = -1;
                     if (this.sprite) {
-                        addIndex = this.container.children.indexOf(this.sprite.pixiSprite) + 1;
                         this.sprite.free();
                     }
                     this.sprite = game_16.game.level.spritePool.get(sprite.name);
                     if (!this.sprite) {
-                        var newSprite = new sprite_4.Sprite(sprite.spriteJson, true, this.container, addIndex);
+                        var newSprite = new sprite_4.Sprite(sprite.spriteJson, true, this.container);
                         game_16.game.level.spritePool.add(sprite.name, newSprite);
                         this.sprite = newSprite;
                     }
-                    else {
-                        if (addIndex > -1) {
-                            addIndex--;
-                            var newSpriteIndex = this.container.children.indexOf(this.sprite.pixiSprite);
-                            var temp = this.container.children[newSpriteIndex];
-                            this.container.children[newSpriteIndex] = this.container.children[addIndex];
-                            this.container.children[addIndex] = temp;
-                        }
-                    }
+                    this.sprite.pixiSprite.zIndex = this.zIndex;
                     try {
                         for (var _a = __values(this.sprite.hitboxes), _b = _a.next(); !_b.done; _b = _a.next()) {
                             var hitbox = _b.value;

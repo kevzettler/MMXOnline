@@ -52,6 +52,10 @@ export class Level {
   hud: HUD;
   spritePool: ObjectPool;
   projectilePool: ObjectPool;
+  zDefault: number = 0;
+  zMainPlayer: number = -1000000000;
+  zChar: number = -2000000000;
+  zBackground: number = -3000000000
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
@@ -313,6 +317,8 @@ export class Level {
 
     if(this.backgroundPath) {
       this.backgroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.backgroundPath].texture);
+      //@ts-ignore
+      this.backgroundSprite.zIndex = this.zBackground;
       this.gameContainer.addChild(this.backgroundSprite);
     }
 
@@ -383,6 +389,14 @@ export class Level {
       this.parallaxSprite.y = -this.camY * 0.5;
     }
     
+    this.gameContainer.children.sort((a, b) => {
+      //@ts-ignore
+      let bIndex = b.zIndex || 0;
+      //@ts-ignore
+      let aIndex = a.zIndex || 0;
+      return aIndex - bIndex;
+    });
+
     for(let go of this.gameObjects) {
       go.render(0, 0);
     }
