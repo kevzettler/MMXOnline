@@ -2,15 +2,16 @@
 Post-V1 Features
 ===============
 
--Team games:
-  -team-colored outline instead of palette swap
-  -possibly team-colored projectiles as well
-  -allies: show health bar + name
+-Main player Character's zindex should always be on top
+  -Consider a z-index system
+  -Proposal: actors get a z-index. Their sprites also get a z-index (patch this into pixi). Then have pixi sort itself every frame (or every time sprite changed)
+  -Classes:
+    -Characters (0)
+    -Main character (1)
+    -Projectiles (2)
 
 -Play as Zero
-
 -All the special weapon charges
-
 -HUD changes: -Switch UI - switch weapons/char, and the menu HUDs too
 
 -More nav-mesh features:

@@ -8,7 +8,6 @@ import { Character } from "./character";
 import { Wall } from "./wall";
 import { game } from "./game";
 import * as Helpers from "./helpers";
-import { LoDashImplicitNumberArrayWrapper } from "../node_modules/@types/lodash/index";
 import { GameObject } from "./gameObject";
 import { Rect } from "./rect";
 import { FireWave, Tornado, Torpedo, ShotgunIce, RollingShield, ElectricSpark, Sting, Boomerang, Weapon } from "./weapon";
@@ -34,6 +33,14 @@ export class Projectile extends Actor {
     this.flinch = false;
     this.damager = new Damager(player, damage);
     this.xDir = Math.sign(vel.x);
+    if(game.level.gameMode.isTeamMode) {
+      if(player.alliance === 0) {
+        this.renderEffects.add("blueshadow");
+      }
+      else {
+        this.renderEffects.add("redshadow");
+      }
+    }
   }
 
   update() {
@@ -77,7 +84,7 @@ export class Projectile extends Actor {
         if(!character.projectileCooldown[key] && !character.invulnFrames) {
           character.projectileCooldown[key] = this.hitCooldown;
 
-          character.renderEffect = "hit";
+          character.renderEffects.add("hit");
           character.renderEffectTime = 0.1;
           
           let weakness = false;
@@ -275,7 +282,7 @@ export class TorpedoProj extends Projectile {
     else if(normAngle >= 54 && normAngle < 72) frameIndex = 3;
     else if(normAngle >= 72 && normAngle < 90) frameIndex = 4;
 
-    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
+    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffects, 1, this.palette);
   }
   
 }
@@ -380,28 +387,26 @@ export class TornadoProj extends Projectile {
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
     super(weapon, pos, vel, 1, player, game.sprites["tornado_mid"]);
     this.sprite.pixiSprite.visible = false;
-    this.spriteStart = new Sprite(game.sprites["tornado_start"].spriteJson, true, game.level.gameContainer, -1);
+    this.spriteStart = new Sprite(game.sprites["tornado_start"].spriteJson, true, this.container, -1);
     for(let i = 0; i < 6; i++) {
-      let midSprite = new Sprite(game.sprites["tornado_mid"].spriteJson, true, game.level.gameContainer, -1);
+      let midSprite = new Sprite(game.sprites["tornado_mid"].spriteJson, true, this.container, -1);
       midSprite.pixiSprite.visible = false;
       this.spriteMids.push(midSprite);
     }
-    this.spriteEnd = new Sprite(game.sprites["tornado_end"].spriteJson, true, game.level.gameContainer, -1);
+    this.spriteEnd = new Sprite(game.sprites["tornado_end"].spriteJson, true, this.container, -1);
     this.vel.x = 0;
     this.hitCooldown = 0.3;
   }
   
   render(x: number, y: number) {
-    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
     let i = 0;
     let spriteMidLen = this.spriteMids[0].frames[this.frameIndex].rect.w;
     for(i; i < this.length; i++) {
       this.spriteMids[i].pixiSprite.visible = true;
-      this.spriteMids[i].draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+      this.spriteMids[i].draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
     }
-    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
-
-    this.renderEffect = "";
+    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i*this.xDir*spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
     if(game.options.showHitboxes && this.collider) {
       Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       //Helpers.drawCircle(game.ctx, this.pos.x + x, this.pos.y + y, 1, "red");
@@ -443,12 +448,12 @@ export class TornadoProj extends Projectile {
 
   destroySelf(sprite?: Sprite, fadeSound?: string) {
     super.destroySelf(sprite, fadeSound);
-    game.level.gameContainer.removeChild(this.spriteStart.pixiSprite);
+    this.container.removeChild(this.spriteStart.pixiSprite);
     this.spriteStart.pixiSprite.destroy();
-    game.level.gameContainer.removeChild(this.spriteEnd.pixiSprite);
+    this.container.removeChild(this.spriteEnd.pixiSprite);
     this.spriteEnd.pixiSprite.destroy();
     for(let sprite of this.spriteMids) {
-      game.level.gameContainer.removeChild(sprite.pixiSprite);
+      this.container.removeChild(sprite.pixiSprite);
       sprite.pixiSprite.destroy();
     }
   }
@@ -521,7 +526,7 @@ export class BoomerangProj extends Projectile {
   }
 
   renderFromAngle(x: number, y: number) {
-    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffects, 1, this.palette);
   }
 
   update() {

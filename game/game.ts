@@ -117,6 +117,8 @@ class Game {
 
   flashFilter: AddColorFilter;
   hitFilter: AddColorFilter;
+  blueShadowFilter: PIXI.filters.DropShadowFilter;
+  redShadowFilter: PIXI.filters.DropShadowFilter;
 
   constructor() {
 
@@ -135,6 +137,18 @@ class Game {
 
     this.flashFilter = new AddColorFilter({red: 64/255, green: 64/255, blue: 64/255});
     this.hitFilter = new AddColorFilter({red: 128/255, green: 128/255, blue: 128/255});
+    this.blueShadowFilter = new PIXI.filters.DropShadowFilter();
+    this.setShadowSettings(this.blueShadowFilter, 0x0000FF);
+    this.redShadowFilter = new PIXI.filters.DropShadowFilter();
+    this.setShadowSettings(this.redShadowFilter, 0xFF0000);
+  }
+
+  setShadowSettings(filter: PIXI.filters.DropShadowFilter, color: number) {
+    filter.color = color;
+    filter.distance = 0;
+    filter.alpha = 1;
+    filter.quality = 6;
+    filter.blur = 2;
   }
   
   doQuickStart: boolean = true;

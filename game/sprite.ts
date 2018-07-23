@@ -135,7 +135,7 @@ export class Sprite {
     return new Point(x, y);
   }
 
-  draw(frameIndex: number, x?: number, y?: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
+  draw(frameIndex: number, x?: number, y?: number, flipX?: number, flipY?: number, options?: Set<string>, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
     flipX = flipX || 1;
     flipY = flipY || 1;
     this.pixiSprite.gotoAndStop(frameIndex);
@@ -148,19 +148,27 @@ export class Sprite {
     if(palette) {
       filterArray.push(palette.filter);
     }
-    if(options === "flash") {
-      filterArray.push(game.flashFilter);
-    }
-    else if(options === "hit") {
-      filterArray.push(game.hitFilter);
-    }
-    else {
+    if(options) {
+      for(let option of options) {
+        if(option === "flash") {
+          filterArray.push(game.flashFilter);
+        }
+        else if(option === "hit") {
+          filterArray.push(game.hitFilter);
+        }
+        else if(option === "blueshadow") {
+          filterArray.push(game.blueShadowFilter);
+        }
+        else if(option === "redshadow") {
+          filterArray.push(game.redShadowFilter);
+        }
+      }
     }
     //@ts-ignore
     this.pixiSprite.filters = filterArray;
   }
 
-  createAndDraw(container: PIXI.Container, frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: string, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
+  createAndDraw(container: PIXI.Container, frameIndex: number, x: number, y: number, flipX?: number, flipY?: number, options?: Set<string>, alpha?: number, palette?: Palette, scaleX?: number, scaleY?: number) {
     let sprite = new Sprite(this.spriteJson, true, container, -1);
     sprite.draw(frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY);
     return sprite;

@@ -44,6 +44,12 @@ export class Character extends Actor {
   healTime: number = 0;
   weaponHealAmount: number = 0;
   weaponHealTime: number = 0;
+  characterTag: PIXI.Container;
+  nameTag: PIXI.Text;
+  healthBarBorder: PIXI.Graphics;
+  healthBarOuter: PIXI.Graphics;
+  healthBarInner: PIXI.Graphics;
+  healthBarInnerWidth: number;
 
   constructor(player: Player, x: number, y: number) {
     super(undefined, new Point(x, y), true);
@@ -70,6 +76,35 @@ export class Character extends Actor {
     game.level.addGameObject(this);
 
     this.chargeEffect = new ChargeEffect();
+
+    if(game.level.gameMode.isTeamMode || game.level.gameMode.isBrawl) {
+
+      if(game.level.gameMode.isTeamMode) {
+        this.characterTag = new PIXI.Container();
+        game.level.gameUIContainer.addChild(this.characterTag);
+
+        this.nameTag = Helpers.createAndDrawText(this.characterTag, this.player.name, 0, 0, 6, "", "", this.player.alliance === 1);
+        this.healthBarBorder = Helpers.createAndDrawRect(this.characterTag, new Rect(0, 0, 30, 6), 0xFFFFFF);
+        this.healthBarBorder.x = -15;
+        this.healthBarBorder.y = 5;
+        this.healthBarOuter = Helpers.createAndDrawRect(this.characterTag, new Rect(0, 1, 28, 5), 0x000000);
+        this.healthBarOuter.x = -15 + 1;
+        this.healthBarOuter.y = 5;
+        this.healthBarInner = Helpers.createAndDrawRect(this.characterTag, new Rect(0, 2, 26, 4), 0xFFFFFF);
+        this.healthBarInner.x = -15 + 2;
+        this.healthBarInner.y = 5;
+
+        this.healthBarInnerWidth = this.healthBarInner.width;
+        this.characterTag.visible = false;
+      }
+
+      if(this.player.alliance === 0) {
+        this.renderEffects.add("blueshadow");
+      }
+      else {
+        this.renderEffects.add("redshadow");
+      }
+    }
   }
 
   getStandingCollider() {
@@ -148,14 +183,17 @@ export class Character extends Actor {
     if(this.invulnFrames > 0) {
       this.invulnFrames = Helpers.clampMin0(this.invulnFrames - game.deltaTime);
       if(game.level.twoFrameCycle > 0) {
-        this.renderEffect = "hit";
+        this.renderEffects.add("hit");
       }
       else {
-        this.renderEffect = "";
+        this.renderEffects.delete("hit");
+        this.renderEffects.delete("flash");
       }
       
       if(this.invulnFrames <= 0) {
-        this.renderEffect = "";
+        //@ts-ignore
+        this.renderEffects.delete("hit");
+        this.renderEffects.delete("flash");
       } 
     }
     
@@ -226,10 +264,11 @@ export class Character extends Actor {
         this.chargeFlashTime = 0;
       }
       if(this.chargeFlashTime > maxFlashTime * 0.5) {        
-        this.renderEffect = "flash";
+        this.renderEffects.add("flash");
       }
       else {
-        this.renderEffect = "";
+        this.renderEffects.delete("hit");
+        this.renderEffects.delete("flash");
       }
       this.chargeEffect.update(this.pos, this.getChargeLevel());
     }
@@ -242,9 +281,7 @@ export class Character extends Actor {
   }
 
   changePaletteWeapon() {
-    if(!game.level.gameMode.isTeamMode && !(game.level.gameMode instanceof Brawl)) {
-      this.palette = this.player.weapon.palette;
-    }
+    this.palette = this.player.weapon.palette;
   }
 
   getCenterPos() {
@@ -380,13 +417,26 @@ export class Character extends Actor {
   }
   
   render(x: number, y: number) {
-    //@ts-ignore
-    window.playerDebug = true;
     super.render(x, y);
-    //@ts-ignore
-    window.playerDebug = false;
     if(this.chargeEffect) {
       this.chargeEffect.render(this.getCenterPos().add(new Point(x, y)), this.getChargeLevel())
+    }
+    if(this.charState instanceof Die) {
+      this.characterTag.visible = false;
+    }
+    else if(game.level.gameMode.isTeamMode
+      && this.player !== game.level.mainPlayer
+      && this.player.alliance === game.level.mainPlayer.alliance
+    ) {
+      this.characterTag.visible = true;
+      this.characterTag.x = this.pos.x + x;
+      this.characterTag.y = this.pos.y + y - 47;
+
+      let healthPct = this.player.health / this.player.maxHealth;
+      this.healthBarInner.width = Helpers.clampMax(Math.ceil(this.healthBarInnerWidth * healthPct), this.healthBarInnerWidth);
+      if(healthPct > 0.66) this.healthBarInner.tint = 0x00FF00;
+      else if(healthPct <= 0.66 && healthPct >= 0.33) this.healthBarInner.tint = 0xFFFF00;
+      else if(healthPct < 0.33) this.healthBarInner.tint = 0xFF0000;
     }
   }
   
@@ -422,6 +472,8 @@ export class Character extends Actor {
   destroySelf(sprite?: Sprite, fadeSound?: string) {
     super.destroySelf(sprite, fadeSound);
     this.chargeEffect.destroy();
+    game.level.gameUIContainer.removeChild(this.characterTag);
+    this.characterTag.destroy({ children: true, texture: true });
   }
 
 }

@@ -53,13 +53,6 @@ export class Level {
   spritePool: ObjectPool;
   projectilePool: ObjectPool;
 
-  backgroundSprite: PIXI.Sprite;
-  parallaxSprite: PIXI.Sprite;
-  foregroundSprite: PIXI.Sprite;
-  gameContainer: PIXI.Container;
-  uiContainer: PIXI.Container;
-  textContainer: PIXI.Container;
-
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
   get mainPlayer() { return this.gameMode.mainPlayer; }
@@ -299,6 +292,14 @@ export class Level {
     //this.getTotalCountInGrid();
   }
 
+  backgroundSprite: PIXI.Sprite;
+  parallaxSprite: PIXI.Sprite;
+  foregroundSprite: PIXI.Sprite;
+  gameContainer: PIXI.Container;
+  uiContainer: PIXI.Container;
+  textContainer: PIXI.Container;
+  foregroundContainer: PIXI.Container;
+  gameUIContainer: PIXI.Container;
   renderSetup() {
 
     if(this.parallaxPath) {
@@ -306,6 +307,7 @@ export class Level {
       game.pixiApp.stage.addChild(this.parallaxSprite);
     }
 
+    //Stores all gameobjects
     this.gameContainer = new PIXI.Container();
     game.pixiApp.stage.addChild(this.gameContainer);
 
@@ -313,11 +315,21 @@ export class Level {
       this.backgroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.backgroundPath].texture);
       this.gameContainer.addChild(this.backgroundSprite);
     }
+
+    //Stores foreground and effects that should go above foreground (i.e. death balls)
+    this.foregroundContainer = new PIXI.Container();
+    game.pixiApp.stage.addChild(this.foregroundContainer);
+    
     if(this.foregroundPath) {
       this.foregroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.foregroundPath].texture);
-      game.pixiApp.stage.addChild(this.foregroundSprite);
+      this.foregroundContainer.addChild(this.foregroundSprite);
     }
 
+    //Stores UI that moves with gameobjects (i.e. healthbars)
+    this.gameUIContainer = new PIXI.Container();
+    game.pixiApp.stage.addChild(this.gameUIContainer);
+    
+    //Stores the UI
     this.uiContainer = new PIXI.Container();
     game.pixiApp.stage.addChild(this.uiContainer);
 
@@ -359,17 +371,18 @@ export class Level {
 
   render() {
     
-    this.gameContainer.x = -this.camX;// * this.zoomScale;
-    this.gameContainer.y = -this.camY;// * this.zoomScale;
+    this.gameContainer.x = -this.camX;
+    this.gameContainer.y = -this.camY;
+    this.foregroundContainer.x = -this.camX;
+    this.foregroundContainer.y = -this.camY;
+    this.gameUIContainer.x = -this.camX;
+    this.gameUIContainer.y = -this.camY;
+  
     if(this.parallaxSprite) {
       this.parallaxSprite.x = -this.camX * 0.5;
       this.parallaxSprite.y = -this.camY * 0.5;
     }
-    if(this.foregroundSprite) {
-      this.foregroundSprite.x = -this.camX;
-      this.foregroundSprite.y = -this.camY;
-    }
-
+    
     for(let go of this.gameObjects) {
       go.render(0, 0);
     }

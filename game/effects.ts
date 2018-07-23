@@ -115,7 +115,7 @@ export class DieEffectParticles {
     for(let i = this.ang; i < this.ang + 360; i += 22.5) {
       let x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
       let y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
-      let diePart = new Actor(game.sprites["die_particle"], new Point(centerPos.x, centerPos.y), true);
+      let diePart = new Actor(game.sprites["die_particle"], new Point(centerPos.x, centerPos.y), true, game.level.foregroundContainer);
       this.dieParts.push(diePart);
     }
   }
@@ -127,7 +127,7 @@ export class DieEffectParticles {
       if(!diePart) continue;
       let x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
       let y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
-      diePart.sprite.draw(Math.round(this.time * 20) % diePart.sprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", this.alpha);
+      diePart.sprite.draw(Math.round(this.time * 20) % diePart.sprite.frames.length, x + offsetX, y + offsetY, 1, 1, undefined, this.alpha);
       counter++;
     }
     
@@ -188,18 +188,13 @@ export class DieEffect extends Effect {
 
   update() {
     super.update();
-    let repeat = 5;
+    let repeat = 1;
     let repeatPeriod = 0.5;
     this.timer += game.deltaTime;
     if(this.timer > repeatPeriod) {
       this.timer = 0;
       this.repeatCount++;
       if(this.repeatCount > repeat) {
-        for(let dieEffect of this.dieEffects) {
-          if(!dieEffect.destroyed)
-            dieEffect.destroy();
-        }
-        this.destroySelf();
       }
       else {
         let dieEffect = new DieEffectParticles(this.pos);
@@ -210,6 +205,8 @@ export class DieEffect extends Effect {
       if(!dieEffect.destroyed)
         dieEffect.update();
     }
+    if(this.dieEffects[0].destroyed)
+      this.destroySelf();
   }
 
   render(offsetX: number, offsetY: number) {

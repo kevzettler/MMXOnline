@@ -28,7 +28,7 @@ export class PlayerHUD {
     
     let baseY = game.level.screenHeight/2;
     baseY += 25;
-    this.healthBase = game.sprites["hud_health_base"].createAndDraw(container, 0, baseX, baseY, 1, 1, "", 1, this.player.palette);
+    this.healthBase = game.sprites["hud_health_base"].createAndDraw(container, 0, baseX, baseY, 1, 1, undefined, 1, this.player.palette);
     baseY -= 16;
     for(let i = 0; i < Math.ceil(this.player.maxHealth); i++) {
       this.emptyHealthBars.push(game.sprites["hud_health_empty"].createAndDraw(container, 0, baseX, baseY));

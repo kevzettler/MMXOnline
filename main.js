@@ -620,6 +620,14 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                     _this.flinch = false;
                     _this.damager = new damager_1.Damager(player, damage);
                     _this.xDir = Math.sign(vel.x);
+                    if (game_4.game.level.gameMode.isTeamMode) {
+                        if (player.alliance === 0) {
+                            _this.renderEffects.add("blueshadow");
+                        }
+                        else {
+                            _this.renderEffects.add("redshadow");
+                        }
+                    }
                     return _this;
                 }
                 Projectile.prototype.update = function () {
@@ -654,7 +662,7 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                             var key = this.constructor.toString() + this.damager.owner.id.toString();
                             if (!character_3.projectileCooldown[key] && !character_3.invulnFrames) {
                                 character_3.projectileCooldown[key] = this.hitCooldown;
-                                character_3.renderEffect = "hit";
+                                character_3.renderEffects.add("hit");
                                 character_3.renderEffectTime = 0.1;
                                 var weakness = false;
                                 if (this instanceof TorpedoProj && character_3.player.weapon instanceof weapon_1.Boomerang)
@@ -849,7 +857,7 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                         frameIndex = 3;
                     else if (normAngle >= 72 && normAngle < 90)
                         frameIndex = 4;
-                    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(frameIndex, this.pos.x + x, this.pos.y + y, xDir, yDir, this.renderEffects, 1, this.palette);
                 };
                 return TorpedoProj;
             }(Projectile));
@@ -946,27 +954,26 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                     _this.spriteMids = [];
                     _this.length = 1;
                     _this.sprite.pixiSprite.visible = false;
-                    _this.spriteStart = new sprite_1.Sprite(game_4.game.sprites["tornado_start"].spriteJson, true, game_4.game.level.gameContainer, -1);
+                    _this.spriteStart = new sprite_1.Sprite(game_4.game.sprites["tornado_start"].spriteJson, true, _this.container, -1);
                     for (var i = 0; i < 6; i++) {
-                        var midSprite = new sprite_1.Sprite(game_4.game.sprites["tornado_mid"].spriteJson, true, game_4.game.level.gameContainer, -1);
+                        var midSprite = new sprite_1.Sprite(game_4.game.sprites["tornado_mid"].spriteJson, true, _this.container, -1);
                         midSprite.pixiSprite.visible = false;
                         _this.spriteMids.push(midSprite);
                     }
-                    _this.spriteEnd = new sprite_1.Sprite(game_4.game.sprites["tornado_end"].spriteJson, true, game_4.game.level.gameContainer, -1);
+                    _this.spriteEnd = new sprite_1.Sprite(game_4.game.sprites["tornado_end"].spriteJson, true, _this.container, -1);
                     _this.vel.x = 0;
                     _this.hitCooldown = 0.3;
                     return _this;
                 }
                 TornadoProj.prototype.render = function (x, y) {
-                    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
                     var i = 0;
                     var spriteMidLen = this.spriteMids[0].frames[this.frameIndex].rect.w;
                     for (i; i < this.length; i++) {
                         this.spriteMids[i].pixiSprite.visible = true;
-                        this.spriteMids[i].draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                        this.spriteMids[i].draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
                     }
-                    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
-                    this.renderEffect = "";
+                    this.spriteEnd.draw(this.frameIndex, this.pos.x + x + (i * this.xDir * spriteMidLen), this.pos.y + y, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
                     if (game_4.game.options.showHitboxes && this.collider) {
                         Helpers.drawPolygon(game_4.game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
                     }
@@ -999,14 +1006,14 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                 };
                 TornadoProj.prototype.destroySelf = function (sprite, fadeSound) {
                     _super.prototype.destroySelf.call(this, sprite, fadeSound);
-                    game_4.game.level.gameContainer.removeChild(this.spriteStart.pixiSprite);
+                    this.container.removeChild(this.spriteStart.pixiSprite);
                     this.spriteStart.pixiSprite.destroy();
-                    game_4.game.level.gameContainer.removeChild(this.spriteEnd.pixiSprite);
+                    this.container.removeChild(this.spriteEnd.pixiSprite);
                     this.spriteEnd.pixiSprite.destroy();
                     try {
                         for (var _a = __values(this.spriteMids), _b = _a.next(); !_b.done; _b = _a.next()) {
                             var sprite_2 = _b.value;
-                            game_4.game.level.gameContainer.removeChild(sprite_2.pixiSprite);
+                            this.container.removeChild(sprite_2.pixiSprite);
                             sprite_2.pixiSprite.destroy();
                         }
                     }
@@ -1083,7 +1090,7 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                     }
                 };
                 BoomerangProj.prototype.renderFromAngle = function (x, y) {
-                    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffects, 1, this.palette);
                 };
                 BoomerangProj.prototype.update = function () {
                     _super.prototype.update.call(this);
@@ -1288,7 +1295,7 @@ System.register("effects", ["point", "game", "helpers", "actor"], function (expo
                     for (var i = this.ang; i < this.ang + 360; i += 22.5) {
                         var x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
                         var y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
-                        var diePart = new actor_4.Actor(game_5.game.sprites["die_particle"], new point_3.Point(centerPos.x, centerPos.y), true);
+                        var diePart = new actor_4.Actor(game_5.game.sprites["die_particle"], new point_3.Point(centerPos.x, centerPos.y), true, game_5.game.level.foregroundContainer);
                         this.dieParts.push(diePart);
                     }
                 }
@@ -1300,7 +1307,7 @@ System.register("effects", ["point", "game", "helpers", "actor"], function (expo
                             continue;
                         var x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
                         var y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
-                        diePart.sprite.draw(Math.round(this.time * 20) % diePart.sprite.frames.length, x + offsetX, y + offsetY, 1, 1, "", this.alpha);
+                        diePart.sprite.draw(Math.round(this.time * 20) % diePart.sprite.frames.length, x + offsetX, y + offsetY, 1, 1, undefined, this.alpha);
                         counter++;
                     }
                 };
@@ -1359,28 +1366,13 @@ System.register("effects", ["point", "game", "helpers", "actor"], function (expo
                 }
                 DieEffect.prototype.update = function () {
                     _super.prototype.update.call(this);
-                    var repeat = 5;
+                    var repeat = 1;
                     var repeatPeriod = 0.5;
                     this.timer += game_5.game.deltaTime;
                     if (this.timer > repeatPeriod) {
                         this.timer = 0;
                         this.repeatCount++;
                         if (this.repeatCount > repeat) {
-                            try {
-                                for (var _a = __values(this.dieEffects), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                    var dieEffect = _b.value;
-                                    if (!dieEffect.destroyed)
-                                        dieEffect.destroy();
-                                }
-                            }
-                            catch (e_4_1) { e_4 = { error: e_4_1 }; }
-                            finally {
-                                try {
-                                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
-                                }
-                                finally { if (e_4) throw e_4.error; }
-                            }
-                            this.destroySelf();
                         }
                         else {
                             var dieEffect = new DieEffectParticles(this.pos);
@@ -1388,20 +1380,22 @@ System.register("effects", ["point", "game", "helpers", "actor"], function (expo
                         }
                     }
                     try {
-                        for (var _d = __values(this.dieEffects), _e = _d.next(); !_e.done; _e = _d.next()) {
-                            var dieEffect = _e.value;
+                        for (var _a = __values(this.dieEffects), _b = _a.next(); !_b.done; _b = _a.next()) {
+                            var dieEffect = _b.value;
                             if (!dieEffect.destroyed)
                                 dieEffect.update();
                         }
                     }
-                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                    catch (e_4_1) { e_4 = { error: e_4_1 }; }
                     finally {
                         try {
-                            if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
+                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_5) throw e_5.error; }
+                        finally { if (e_4) throw e_4.error; }
                     }
-                    var e_4, _c, e_5, _f;
+                    if (this.dieEffects[0].destroyed)
+                        this.destroySelf();
+                    var e_4, _c;
                 };
                 DieEffect.prototype.render = function (offsetX, offsetY) {
                     try {
@@ -1411,14 +1405,14 @@ System.register("effects", ["point", "game", "helpers", "actor"], function (expo
                                 dieEffect.render(offsetX, offsetY);
                         }
                     }
-                    catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_6) throw e_6.error; }
+                        finally { if (e_5) throw e_5.error; }
                     }
-                    var e_6, _c;
+                    var e_5, _c;
                 };
                 return DieEffect;
             }(Effect));
@@ -1463,14 +1457,14 @@ System.register("navMesh", ["wall"], function (exports_10, context_10) {
                             _loop_1(jsonNeighbor);
                         }
                     }
-                    catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                    catch (e_6_1) { e_6 = { error: e_6_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_7) throw e_7.error; }
+                        finally { if (e_6) throw e_6.error; }
                     }
-                    var e_7, _c;
+                    var e_6, _c;
                 };
                 NavMeshNode.prototype.getNeighbor = function (neighborNode) {
                     var node = _.find(this.neighbors, function (neighbor) {
@@ -1505,14 +1499,14 @@ System.register("navMesh", ["wall"], function (exports_10, context_10) {
                                 pathToNode.pop();
                             }
                         }
-                        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                        catch (e_7_1) { e_7 = { error: e_7_1 }; }
                         finally {
                             try {
                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                             }
-                            finally { if (e_8) throw e_8.error; }
+                            finally { if (e_7) throw e_7.error; }
                         }
-                        var e_8, _c;
+                        var e_7, _c;
                     }
                     getNextNodeDfs(this);
                     if (foundPath.length > 0)
@@ -1627,12 +1621,12 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                                 }
                             }
                         }
-                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                        catch (e_8_1) { e_8 = { error: e_8_1 }; }
                         finally {
                             try {
                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                             }
-                            finally { if (e_9) throw e_9.error; }
+                            finally { if (e_8) throw e_8.error; }
                         }
                     }
                     if (this.aiState.randomlyChangeState) {
@@ -1672,7 +1666,7 @@ System.register("ai", ["game", "projectile", "point", "helpers"], function (expo
                         }
                     }
                     this.aiState.update();
-                    var e_9, _c;
+                    var e_8, _c;
                 };
                 AI.prototype.changeState = function (newState) {
                     this.aiState = newState;
@@ -1978,6 +1972,25 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                 player.onKeyDown(e.keyCode);
                             }
                         }
+                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            }
+                            finally { if (e_9) throw e_9.error; }
+                        }
+                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
+                            e.preventDefault();
+                        }
+                        var e_9, _c;
+                    };
+                    document.onkeyup = function (e) {
+                        try {
+                            for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                var player = _b.value;
+                                player.onKeyUp(e.keyCode);
+                            }
+                        }
                         catch (e_10_1) { e_10 = { error: e_10_1 }; }
                         finally {
                             try {
@@ -1985,16 +1998,16 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             }
                             finally { if (e_10) throw e_10.error; }
                         }
-                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
+                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
                             e.preventDefault();
                         }
                         var e_10, _c;
                     };
-                    document.onkeyup = function (e) {
+                    game_7.game.uiCanvas.onmousedown = function (e) {
                         try {
                             for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
                                 var player = _b.value;
-                                player.onKeyUp(e.keyCode);
+                                player.onKeyDown(e.button);
                             }
                         }
                         catch (e_11_1) { e_11 = { error: e_11_1 }; }
@@ -2004,16 +2017,17 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             }
                             finally { if (e_11) throw e_11.error; }
                         }
-                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
-                            e.preventDefault();
-                        }
+                        e.preventDefault();
                         var e_11, _c;
                     };
-                    game_7.game.uiCanvas.onmousedown = function (e) {
+                    game_7.game.uiCanvas.oncontextmenu = function (e) {
+                        e.preventDefault();
+                    };
+                    game_7.game.uiCanvas.onmouseup = function (e) {
                         try {
                             for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
                                 var player = _b.value;
-                                player.onKeyDown(e.button);
+                                player.onKeyUp(e.button);
                             }
                         }
                         catch (e_12_1) { e_12 = { error: e_12_1 }; }
@@ -2026,26 +2040,6 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         e.preventDefault();
                         var e_12, _c;
                     };
-                    game_7.game.uiCanvas.oncontextmenu = function (e) {
-                        e.preventDefault();
-                    };
-                    game_7.game.uiCanvas.onmouseup = function (e) {
-                        try {
-                            for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                var player = _b.value;
-                                player.onKeyUp(e.button);
-                            }
-                        }
-                        catch (e_13_1) { e_13 = { error: e_13_1 }; }
-                        finally {
-                            try {
-                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
-                            }
-                            finally { if (e_13) throw e_13.error; }
-                        }
-                        e.preventDefault();
-                        var e_13, _c;
-                    };
                     document.onwheel = function (e) {
                         if (e.deltaY < 0) {
                             try {
@@ -2055,12 +2049,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                     player.onKeyDown(3);
                                 }
                             }
-                            catch (e_14_1) { e_14 = { error: e_14_1 }; }
+                            catch (e_13_1) { e_13 = { error: e_13_1 }; }
                             finally {
                                 try {
                                     if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                 }
-                                finally { if (e_14) throw e_14.error; }
+                                finally { if (e_13) throw e_13.error; }
                             }
                         }
                         else if (e.deltaY > 0) {
@@ -2071,15 +2065,15 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                     player.onKeyDown(4);
                                 }
                             }
-                            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+                            catch (e_14_1) { e_14 = { error: e_14_1 }; }
                             finally {
                                 try {
                                     if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
                                 }
-                                finally { if (e_15) throw e_15.error; }
+                                finally { if (e_14) throw e_14.error; }
                             }
                         }
-                        var e_14, _c, e_15, _f;
+                        var e_13, _c, e_14, _f;
                     };
                 };
                 GameMode.prototype.update = function () {
@@ -2300,12 +2294,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                     }
                                 }
                             }
-                            catch (e_16_1) { e_16 = { error: e_16_1 }; }
+                            catch (e_15_1) { e_15 = { error: e_15_1 }; }
                             finally {
                                 try {
                                     if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                 }
-                                finally { if (e_16) throw e_16.error; }
+                                finally { if (e_15) throw e_15.error; }
                             }
                         }
                         if (this.isOver) {
@@ -2324,7 +2318,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             game_7.game.restartLevel(this.level.levelData.name);
                         }
                     }
-                    var e_16, _c;
+                    var e_15, _c;
                 };
                 return Brawl;
             }(GameMode));
@@ -2423,12 +2417,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                     text.style.fill = color;
                                 }
                             }
-                            catch (e_17_1) { e_17 = { error: e_17_1 }; }
+                            catch (e_16_1) { e_16 = { error: e_16_1 }; }
                             finally {
                                 try {
                                     if (row_1_1 && !row_1_1.done && (_a = row_1.return)) _a.call(row_1);
                                 }
-                                finally { if (e_17) throw e_17.error; }
+                                finally { if (e_16) throw e_16.error; }
                             }
                             row[0].text = player.name;
                             row[1].text = String(player.kills);
@@ -2440,7 +2434,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             row[2].visible = false;
                         }
                     }
-                    var e_17, _a;
+                    var e_16, _a;
                 };
                 FFADeathMatch.prototype.checkIfWin = function () {
                     if (!this.isOver) {
@@ -2453,12 +2447,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                 }
                             }
                         }
-                        catch (e_18_1) { e_18 = { error: e_18_1 }; }
+                        catch (e_17_1) { e_17 = { error: e_17_1 }; }
                         finally {
                             try {
                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                             }
-                            finally { if (e_18) throw e_18.error; }
+                            finally { if (e_17) throw e_17.error; }
                         }
                         if (this.isOver) {
                             if (game_7.game.music) {
@@ -2484,7 +2478,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             game_7.game.restartLevel(this.level.levelData.name);
                         }
                     }
-                    var e_18, _c;
+                    var e_17, _c;
                 };
                 return FFADeathMatch;
             }(GameMode));
@@ -2532,12 +2526,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                 redKills += player.kills;
                         }
                     }
-                    catch (e_19_1) { e_19 = { error: e_19_1 }; }
+                    catch (e_18_1) { e_18 = { error: e_18_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_19) throw e_19.error; }
+                        finally { if (e_18) throw e_18.error; }
                     }
                     if (redKills > blueKills) {
                         this.topText.text = "Red: " + String(redKills);
@@ -2551,7 +2545,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         Helpers.setTextGradient(this.botText, true);
                         Helpers.setTextGradient(this.topText, false);
                     }
-                    var e_19, _c;
+                    var e_18, _c;
                 };
                 TeamDeathMatch.prototype.drawWinScreen = function () {
                     var team;
@@ -2629,12 +2623,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                 redKills += player.kills;
                         }
                     }
-                    catch (e_20_1) { e_20 = { error: e_20_1 }; }
+                    catch (e_19_1) { e_19 = { error: e_19_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_20) throw e_20.error; }
+                        finally { if (e_19) throw e_19.error; }
                     }
                     var redPlayers = _.filter(this.players, function (player) {
                         return player.alliance === 1;
@@ -2656,12 +2650,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                     text.style.fill = color;
                                 }
                             }
-                            catch (e_21_1) { e_21 = { error: e_21_1 }; }
+                            catch (e_20_1) { e_20 = { error: e_20_1 }; }
                             finally {
                                 try {
                                     if (rowBlue_1_1 && !rowBlue_1_1.done && (_d = rowBlue_1.return)) _d.call(rowBlue_1);
                                 }
-                                finally { if (e_21) throw e_21.error; }
+                                finally { if (e_20) throw e_20.error; }
                             }
                             rowBlue[0].text = player.name;
                             rowBlue[1].text = String(player.kills);
@@ -2683,12 +2677,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                     text.style.fill = color;
                                 }
                             }
-                            catch (e_22_1) { e_22 = { error: e_22_1 }; }
+                            catch (e_21_1) { e_21 = { error: e_21_1 }; }
                             finally {
                                 try {
                                     if (rowRed_1_1 && !rowRed_1_1.done && (_e = rowRed_1.return)) _e.call(rowRed_1);
                                 }
-                                finally { if (e_22) throw e_22.error; }
+                                finally { if (e_21) throw e_21.error; }
                             }
                             rowRed[0].text = player.name;
                             rowRed[1].text = String(player.kills);
@@ -2700,7 +2694,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             rowRed[2].visible = false;
                         }
                     }
-                    var e_20, _c, e_21, _d, e_22, _e;
+                    var e_19, _c, e_20, _d, e_21, _e;
                 };
                 TeamDeathMatch.prototype.checkIfWin = function () {
                     if (!this.isOver) {
@@ -2715,12 +2709,12 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                                     redKills += player.kills;
                             }
                         }
-                        catch (e_23_1) { e_23 = { error: e_23_1 }; }
+                        catch (e_22_1) { e_22 = { error: e_22_1 }; }
                         finally {
                             try {
                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                             }
-                            finally { if (e_23) throw e_23.error; }
+                            finally { if (e_22) throw e_22.error; }
                         }
                         if (blueKills >= this.killsToWin) {
                             this.isOver = true;
@@ -2762,7 +2756,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             game_7.game.restartLevel(this.level.levelData.name);
                         }
                     }
-                    var e_23, _c;
+                    var e_22, _c;
                 };
                 return TeamDeathMatch;
             }(GameMode));
@@ -2770,10 +2764,10 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
         }
     };
 });
-System.register("character", ["actor", "game", "point", "collider", "rect", "helpers", "weapon", "effects", "ai", "wall", "killFeedEntry", "gameMode"], function (exports_14, context_14) {
+System.register("character", ["actor", "game", "point", "collider", "rect", "helpers", "weapon", "effects", "ai", "wall", "killFeedEntry"], function (exports_14, context_14) {
     "use strict";
     var __moduleName = context_14 && context_14.id;
-    var actor_5, game_8, point_5, collider_3, rect_3, Helpers, weapon_2, effects_1, ai_1, wall_3, killFeedEntry_1, gameMode_1, Character, CharState, Idle, Run, Jump, Fall, Dash, AirDash, WallSlide, WallKick, LadderClimb, LadderEnd, Hurt, Die;
+    var actor_5, game_8, point_5, collider_3, rect_3, Helpers, weapon_2, effects_1, ai_1, wall_3, killFeedEntry_1, Character, CharState, Idle, Run, Jump, Fall, Dash, AirDash, WallSlide, WallKick, LadderClimb, LadderEnd, Hurt, Die;
     return {
         setters: [
             function (actor_5_1) {
@@ -2808,9 +2802,6 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
             },
             function (killFeedEntry_1_1) {
                 killFeedEntry_1 = killFeedEntry_1_1;
-            },
-            function (gameMode_1_1) {
-                gameMode_1 = gameMode_1_1;
             }
         ],
         execute: function () {
@@ -2845,6 +2836,30 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     _this.chargeLoopSound.loop(true);
                     game_8.game.level.addGameObject(_this);
                     _this.chargeEffect = new effects_1.ChargeEffect();
+                    if (game_8.game.level.gameMode.isTeamMode || game_8.game.level.gameMode.isBrawl) {
+                        if (game_8.game.level.gameMode.isTeamMode) {
+                            _this.characterTag = new PIXI.Container();
+                            game_8.game.level.gameUIContainer.addChild(_this.characterTag);
+                            _this.nameTag = Helpers.createAndDrawText(_this.characterTag, _this.player.name, 0, 0, 6, "", "", _this.player.alliance === 1);
+                            _this.healthBarBorder = Helpers.createAndDrawRect(_this.characterTag, new rect_3.Rect(0, 0, 30, 6), 0xFFFFFF);
+                            _this.healthBarBorder.x = -15;
+                            _this.healthBarBorder.y = 5;
+                            _this.healthBarOuter = Helpers.createAndDrawRect(_this.characterTag, new rect_3.Rect(0, 1, 28, 5), 0x000000);
+                            _this.healthBarOuter.x = -15 + 1;
+                            _this.healthBarOuter.y = 5;
+                            _this.healthBarInner = Helpers.createAndDrawRect(_this.characterTag, new rect_3.Rect(0, 2, 26, 4), 0xFFFFFF);
+                            _this.healthBarInner.x = -15 + 2;
+                            _this.healthBarInner.y = 5;
+                            _this.healthBarInnerWidth = _this.healthBarInner.width;
+                            _this.characterTag.visible = false;
+                        }
+                        if (_this.player.alliance === 0) {
+                            _this.renderEffects.add("blueshadow");
+                        }
+                        else {
+                            _this.renderEffects.add("redshadow");
+                        }
+                    }
                     return _this;
                 }
                 Character.prototype.getStandingCollider = function () {
@@ -2914,13 +2929,15 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (this.invulnFrames > 0) {
                         this.invulnFrames = Helpers.clampMin0(this.invulnFrames - game_8.game.deltaTime);
                         if (game_8.game.level.twoFrameCycle > 0) {
-                            this.renderEffect = "hit";
+                            this.renderEffects.add("hit");
                         }
                         else {
-                            this.renderEffect = "";
+                            this.renderEffects.delete("hit");
+                            this.renderEffects.delete("flash");
                         }
                         if (this.invulnFrames <= 0) {
-                            this.renderEffect = "";
+                            this.renderEffects.delete("hit");
+                            this.renderEffects.delete("flash");
                         }
                     }
                     if (this.ai) {
@@ -2994,10 +3011,11 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                             this.chargeFlashTime = 0;
                         }
                         if (this.chargeFlashTime > maxFlashTime * 0.5) {
-                            this.renderEffect = "flash";
+                            this.renderEffects.add("flash");
                         }
                         else {
-                            this.renderEffect = "";
+                            this.renderEffects.delete("hit");
+                            this.renderEffects.delete("flash");
                         }
                         this.chargeEffect.update(this.pos, this.getChargeLevel());
                     }
@@ -3009,9 +3027,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     this.changePaletteWeapon();
                 };
                 Character.prototype.changePaletteWeapon = function () {
-                    if (!game_8.game.level.gameMode.isTeamMode && !(game_8.game.level.gameMode instanceof gameMode_1.Brawl)) {
-                        this.palette = this.player.weapon.palette;
-                    }
+                    this.palette = this.player.weapon.palette;
                 };
                 Character.prototype.getCenterPos = function () {
                     return this.pos.addxy(0, -18);
@@ -3134,11 +3150,27 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     }
                 };
                 Character.prototype.render = function (x, y) {
-                    window.playerDebug = true;
                     _super.prototype.render.call(this, x, y);
-                    window.playerDebug = false;
                     if (this.chargeEffect) {
                         this.chargeEffect.render(this.getCenterPos().add(new point_5.Point(x, y)), this.getChargeLevel());
+                    }
+                    if (this.charState instanceof Die) {
+                        this.characterTag.visible = false;
+                    }
+                    else if (game_8.game.level.gameMode.isTeamMode
+                        && this.player !== game_8.game.level.mainPlayer
+                        && this.player.alliance === game_8.game.level.mainPlayer.alliance) {
+                        this.characterTag.visible = true;
+                        this.characterTag.x = this.pos.x + x;
+                        this.characterTag.y = this.pos.y + y - 47;
+                        var healthPct = this.player.health / this.player.maxHealth;
+                        this.healthBarInner.width = Helpers.clampMax(Math.ceil(this.healthBarInnerWidth * healthPct), this.healthBarInnerWidth);
+                        if (healthPct > 0.66)
+                            this.healthBarInner.tint = 0x00FF00;
+                        else if (healthPct <= 0.66 && healthPct >= 0.33)
+                            this.healthBarInner.tint = 0xFFFF00;
+                        else if (healthPct < 0.33)
+                            this.healthBarInner.tint = 0xFF0000;
                     }
                 };
                 Character.prototype.applyDamage = function (attacker, weapon, damage) {
@@ -3170,6 +3202,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 Character.prototype.destroySelf = function (sprite, fadeSound) {
                     _super.prototype.destroySelf.call(this, sprite, fadeSound);
                     this.chargeEffect.destroy();
+                    game_8.game.level.gameUIContainer.removeChild(this.characterTag);
+                    this.characterTag.destroy({ children: true, texture: true });
                 };
                 return Character;
             }(actor_5.Actor));
@@ -3731,12 +3765,12 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
                     player.health = 1;
                 }
             }
-            catch (e_24_1) { e_24 = { error: e_24_1 }; }
+            catch (e_23_1) { e_23 = { error: e_23_1 }; }
             finally {
                 try {
                     if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                 }
-                finally { if (e_24) throw e_24.error; }
+                finally { if (e_23) throw e_23.error; }
             }
             if (game_9.game.level.mainPlayer) {
             }
@@ -3751,12 +3785,12 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
                     }
                 }
             }
-            catch (e_25_1) { e_25 = { error: e_25_1 }; }
+            catch (e_24_1) { e_24 = { error: e_24_1 }; }
             finally {
                 try {
                     if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
                 }
-                finally { if (e_25) throw e_25.error; }
+                finally { if (e_24) throw e_24.error; }
             }
         }
         if (keycode === 114) {
@@ -3784,12 +3818,12 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
                     }
                 }
             }
-            catch (e_26_1) { e_26 = { error: e_26_1 }; }
+            catch (e_25_1) { e_25 = { error: e_25_1 }; }
             finally {
                 try {
                     if (_h && !_h.done && (_j = _g.return)) _j.call(_g);
                 }
-                finally { if (e_26) throw e_26.error; }
+                finally { if (e_25) throw e_25.error; }
             }
         }
         if (key === "reset") {
@@ -3799,7 +3833,7 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_15, conte
         if (keycode === 80) {
             game_9.game.paused = !game_9.game.paused;
         }
-        var e_24, _c, e_25, _f, e_26, _j;
+        var e_23, _c, e_24, _f, e_25, _j;
     }
     exports_15("cheat", cheat);
     var game_9, killFeedEntry_2;
@@ -3896,12 +3930,12 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                                 weapon.ammo = weapon.maxAmmo;
                             }
                         }
-                        catch (e_27_1) { e_27 = { error: e_27_1 }; }
+                        catch (e_26_1) { e_26 = { error: e_26_1 }; }
                         finally {
                             try {
                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                             }
-                            finally { if (e_27) throw e_27.error; }
+                            finally { if (e_26) throw e_26.error; }
                         }
                         var spawnPoint = game_10.game.level.getSpawnPoint(this);
                         this.character = new character_4.Character(this, spawnPoint.pos.x, spawnPoint.pos.y);
@@ -3918,7 +3952,7 @@ System.register("player", ["character", "weapon", "game", "helpers", "cheats"], 
                     if (this.respawnTime > 0 && !game_10.game.level.gameMode.isOver) {
                         this.respawnTime = Helpers.clampMin0(this.respawnTime - game_10.game.deltaTime);
                     }
-                    var e_27, _c;
+                    var e_26, _c;
                 };
                 Object.defineProperty(Player.prototype, "canControl", {
                     get: function () {
@@ -4175,7 +4209,7 @@ System.register("hud", ["game"], function (exports_20, context_20) {
                         baseX = game_12.game.level.screenWidth - 4 - baseX;
                     var baseY = game_12.game.level.screenHeight / 2;
                     baseY += 25;
-                    this.healthBase = game_12.game.sprites["hud_health_base"].createAndDraw(container, 0, baseX, baseY, 1, 1, "", 1, this.player.palette);
+                    this.healthBase = game_12.game.sprites["hud_health_base"].createAndDraw(container, 0, baseX, baseY, 1, 1, undefined, 1, this.player.palette);
                     baseY -= 16;
                     for (var i = 0; i < Math.ceil(this.player.maxHealth); i++) {
                         this.emptyHealthBars.push(game_12.game.sprites["hud_health_empty"].createAndDraw(container, 0, baseX, baseY));
@@ -4281,15 +4315,15 @@ System.register("objectPool", [], function (exports_21, context_21) {
                             }
                         }
                     }
-                    catch (e_28_1) { e_28 = { error: e_28_1 }; }
+                    catch (e_27_1) { e_27 = { error: e_27_1 }; }
                     finally {
                         try {
                             if (pool_1_1 && !pool_1_1.done && (_a = pool_1.return)) _a.call(pool_1);
                         }
-                        finally { if (e_28) throw e_28.error; }
+                        finally { if (e_27) throw e_27.error; }
                     }
                     return undefined;
-                    var e_28, _a;
+                    var e_27, _a;
                 };
                 ObjectPool.prototype.add = function (key, poolItem) {
                     var pool = this.pool[key];
@@ -4435,12 +4469,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                         points.push(new point_6.Point(point.x, point.y));
                                     }
                                 }
-                                catch (e_29_1) { e_29 = { error: e_29_1 }; }
+                                catch (e_28_1) { e_28 = { error: e_28_1 }; }
                                 finally {
                                     try {
                                         if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
                                     }
-                                    finally { if (e_29) throw e_29.error; }
+                                    finally { if (e_28) throw e_28.error; }
                                 }
                                 var wall = new wall_4.Wall(instance.name, points);
                                 wall.collider.isClimbable = (instance.properties && instance.properties.climbable === "false") ? false : true;
@@ -4454,12 +4488,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                         points.push(new point_6.Point(point.x, point.y));
                                     }
                                 }
-                                catch (e_30_1) { e_30 = { error: e_30_1 }; }
+                                catch (e_29_1) { e_29 = { error: e_29_1 }; }
                                 finally {
                                     try {
                                         if (_g && !_g.done && (_h = _f.return)) _h.call(_f);
                                     }
-                                    finally { if (e_30) throw e_30.error; }
+                                    finally { if (e_29) throw e_29.error; }
                                 }
                                 this.addGameObject(new wall_4.Ladder(instance.name, points));
                             }
@@ -4471,12 +4505,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                         points.push(new point_6.Point(point.x, point.y));
                                     }
                                 }
-                                catch (e_31_1) { e_31 = { error: e_31_1 }; }
+                                catch (e_30_1) { e_30 = { error: e_30_1 }; }
                                 finally {
                                     try {
                                         if (_k && !_k.done && (_l = _j.return)) _l.call(_j);
                                     }
-                                    finally { if (e_31) throw e_31.error; }
+                                    finally { if (e_30) throw e_30.error; }
                                 }
                                 var shape = new shape_1.Shape(points);
                                 var dir = void 0;
@@ -4500,12 +4534,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                         points.push(new point_6.Point(point.x, point.y));
                                     }
                                 }
-                                catch (e_32_1) { e_32 = { error: e_32_1 }; }
+                                catch (e_31_1) { e_31 = { error: e_31_1 }; }
                                 finally {
                                     try {
                                         if (_o && !_o.done && (_p = _m.return)) _p.call(_m);
                                     }
-                                    finally { if (e_32) throw e_32.error; }
+                                    finally { if (e_31) throw e_31.error; }
                                 }
                                 var shape = new shape_1.Shape(points);
                                 this.killZones.push(new killZone_1.KillZone(shape));
@@ -4539,12 +4573,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_33_1) { e_33 = { error: e_33_1 }; }
+                    catch (e_32_1) { e_32 = { error: e_32_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_q = _a.return)) _q.call(_a);
                         }
-                        finally { if (e_33) throw e_33.error; }
+                        finally { if (e_32) throw e_32.error; }
                     }
                     try {
                         for (var _r = __values(this.navMeshNodes), _s = _r.next(); !_s.done; _s = _r.next()) {
@@ -4552,12 +4586,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             navMeshNode.setNeighbors(this.navMeshNodes, this.getGameObjectArray());
                         }
                     }
-                    catch (e_34_1) { e_34 = { error: e_34_1 }; }
+                    catch (e_33_1) { e_33 = { error: e_33_1 }; }
                     finally {
                         try {
                             if (_s && !_s.done && (_t = _r.return)) _t.call(_r);
                         }
-                        finally { if (e_34) throw e_34.error; }
+                        finally { if (e_33) throw e_33.error; }
                     }
                     this.twoFrameCycle = 0;
                     this.gameMode = gameMode;
@@ -4584,7 +4618,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     this.hud = new hud_1.HUD(this);
                     this.gameMode.createHUD();
-                    var e_33, _q, e_29, _e, e_30, _h, e_31, _l, e_32, _p, e_34, _t;
+                    var e_32, _q, e_28, _e, e_29, _h, e_30, _l, e_31, _p, e_33, _t;
                 };
                 Level.prototype.getGameObjectArray = function () {
                     return Array.from(this.gameObjects);
@@ -4630,12 +4664,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             go.update();
                         }
                     }
-                    catch (e_35_1) { e_35 = { error: e_35_1 }; }
+                    catch (e_34_1) { e_34 = { error: e_34_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_35) throw e_35.error; }
+                        finally { if (e_34) throw e_34.error; }
                     }
                     try {
                         for (var _d = __values(this.anims), _e = _d.next(); !_e.done; _e = _d.next()) {
@@ -4644,12 +4678,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             anim.update();
                         }
                     }
-                    catch (e_36_1) { e_36 = { error: e_36_1 }; }
+                    catch (e_35_1) { e_35 = { error: e_35_1 }; }
                     finally {
                         try {
                             if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
                         }
-                        finally { if (e_36) throw e_36.error; }
+                        finally { if (e_35) throw e_35.error; }
                     }
                     if (this.mainPlayer.character) {
                         var deltaX = this.mainPlayer.character.pos.x - playerX;
@@ -4662,12 +4696,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             effect.update();
                         }
                     }
-                    catch (e_37_1) { e_37 = { error: e_37_1 }; }
+                    catch (e_36_1) { e_36 = { error: e_36_1 }; }
                     finally {
                         try {
                             if (_h && !_h.done && (_j = _g.return)) _j.call(_g);
                         }
-                        finally { if (e_37) throw e_37.error; }
+                        finally { if (e_36) throw e_36.error; }
                     }
                     try {
                         for (var _k = __values(this.localPlayers), _l = _k.next(); !_l.done; _l = _k.next()) {
@@ -4678,12 +4712,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_38_1) { e_38 = { error: e_38_1 }; }
+                    catch (e_37_1) { e_37 = { error: e_37_1 }; }
                     finally {
                         try {
                             if (_l && !_l.done && (_m = _k.return)) _m.call(_k);
                         }
-                        finally { if (e_38) throw e_38.error; }
+                        finally { if (e_37) throw e_37.error; }
                     }
                     try {
                         for (var _o = __values(this.players), _p = _o.next(); !_p.done; _p = _o.next()) {
@@ -4691,12 +4725,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             player.update();
                         }
                     }
-                    catch (e_39_1) { e_39 = { error: e_39_1 }; }
+                    catch (e_38_1) { e_38 = { error: e_38_1 }; }
                     finally {
                         try {
                             if (_p && !_p.done && (_q = _o.return)) _q.call(_o);
                         }
-                        finally { if (e_39) throw e_39.error; }
+                        finally { if (e_38) throw e_38.error; }
                     }
                     try {
                         for (var _r = __values(this.pickupSpawners), _s = _r.next(); !_s.done; _s = _r.next()) {
@@ -4704,19 +4738,19 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             pickupSpawner.update();
                         }
                     }
-                    catch (e_40_1) { e_40 = { error: e_40_1 }; }
+                    catch (e_39_1) { e_39 = { error: e_39_1 }; }
                     finally {
                         try {
                             if (_s && !_s.done && (_t = _r.return)) _t.call(_r);
                         }
-                        finally { if (e_40) throw e_40.error; }
+                        finally { if (e_39) throw e_39.error; }
                     }
                     this.frameCount++;
                     this.twoFrameCycle++;
                     if (this.twoFrameCycle > 2)
                         this.twoFrameCycle = -2;
                     this.gameMode.update();
-                    var e_35, _c, e_36, _f, e_37, _j, e_38, _m, e_39, _q, e_40, _t;
+                    var e_34, _c, e_35, _f, e_36, _j, e_37, _m, e_38, _q, e_39, _t;
                 };
                 Level.prototype.renderSetup = function () {
                     if (this.parallaxPath) {
@@ -4729,10 +4763,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.backgroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.backgroundPath].texture);
                         this.gameContainer.addChild(this.backgroundSprite);
                     }
+                    this.foregroundContainer = new PIXI.Container();
+                    game_13.game.pixiApp.stage.addChild(this.foregroundContainer);
                     if (this.foregroundPath) {
                         this.foregroundSprite = new PIXI.Sprite(PIXI.loader.resources[this.foregroundPath].texture);
-                        game_13.game.pixiApp.stage.addChild(this.foregroundSprite);
+                        this.foregroundContainer.addChild(this.foregroundSprite);
                     }
+                    this.gameUIContainer = new PIXI.Container();
+                    game_13.game.pixiApp.stage.addChild(this.gameUIContainer);
                     this.uiContainer = new PIXI.Container();
                     game_13.game.pixiApp.stage.addChild(this.uiContainer);
                     if (this.levelData.fixedCam) {
@@ -4761,13 +4799,13 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.render = function () {
                     this.gameContainer.x = -this.camX;
                     this.gameContainer.y = -this.camY;
+                    this.foregroundContainer.x = -this.camX;
+                    this.foregroundContainer.y = -this.camY;
+                    this.gameUIContainer.x = -this.camX;
+                    this.gameUIContainer.y = -this.camY;
                     if (this.parallaxSprite) {
                         this.parallaxSprite.x = -this.camX * 0.5;
                         this.parallaxSprite.y = -this.camY * 0.5;
-                    }
-                    if (this.foregroundSprite) {
-                        this.foregroundSprite.x = -this.camX;
-                        this.foregroundSprite.y = -this.camY;
                     }
                     try {
                         for (var _a = __values(this.gameObjects), _b = _a.next(); !_b.done; _b = _a.next()) {
@@ -4775,12 +4813,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             go.render(0, 0);
                         }
                     }
-                    catch (e_41_1) { e_41 = { error: e_41_1 }; }
+                    catch (e_40_1) { e_40 = { error: e_40_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_41) throw e_41.error; }
+                        finally { if (e_40) throw e_40.error; }
                     }
                     try {
                         for (var _d = __values(this.anims), _e = _d.next(); !_e.done; _e = _d.next()) {
@@ -4788,12 +4826,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             anim.render(0, 0);
                         }
                     }
-                    catch (e_42_1) { e_42 = { error: e_42_1 }; }
+                    catch (e_41_1) { e_41 = { error: e_41_1 }; }
                     finally {
                         try {
                             if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
                         }
-                        finally { if (e_42) throw e_42.error; }
+                        finally { if (e_41) throw e_41.error; }
                     }
                     try {
                         for (var _g = __values(this.effects), _h = _g.next(); !_h.done; _h = _g.next()) {
@@ -4801,12 +4839,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             effect.render(0, 0);
                         }
                     }
-                    catch (e_43_1) { e_43 = { error: e_43_1 }; }
+                    catch (e_42_1) { e_42 = { error: e_42_1 }; }
                     finally {
                         try {
                             if (_h && !_h.done && (_j = _g.return)) _j.call(_g);
                         }
-                        finally { if (e_43) throw e_43.error; }
+                        finally { if (e_42) throw e_42.error; }
                     }
                     this.hud.updateHUD();
                     this.gameMode.drawHUD();
@@ -4817,7 +4855,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         Helpers.drawText(game_13.game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
                         Helpers.drawText(game_13.game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
                     }
-                    var e_41, _c, e_42, _f, e_43, _j;
+                    var e_40, _c, e_41, _f, e_42, _j;
                 };
                 Object.defineProperty(Level.prototype, "width", {
                     get: function () { return this.backgroundSprite.width; },
@@ -4924,14 +4962,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_44_1) { e_44 = { error: e_44_1 }; }
+                    catch (e_43_1) { e_43 = { error: e_43_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_44) throw e_44.error; }
+                        finally { if (e_43) throw e_43.error; }
                     }
-                    var e_44, _c;
+                    var e_43, _c;
                 };
                 Level.prototype.computeCamPos = function (character) {
                     var scaledCanvasW = game_13.game.defaultCanvasWidth;
@@ -4970,18 +5008,18 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                     }
                                 }
                             }
-                            catch (e_45_1) { e_45 = { error: e_45_1 }; }
+                            catch (e_44_1) { e_44 = { error: e_44_1 }; }
                             finally {
                                 try {
                                     if (arr_1_1 && !arr_1_1.done && (_a = arr_1.return)) _a.call(arr_1);
                                 }
-                                finally { if (e_45) throw e_45.error; }
+                                finally { if (e_44) throw e_44.error; }
                             }
                         }
                     }
                     this.debugString = String(count);
                     this.debugString2 = String(orphanedCount);
-                    var e_45, _a;
+                    var e_44, _a;
                 };
                 Level.prototype.setupGrid = function (cellWidth) {
                     this.cellWidth = cellWidth;
@@ -5056,21 +5094,21 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                     }
                                 }
                             }
-                            catch (e_46_1) { e_46 = { error: e_46_1 }; }
+                            catch (e_45_1) { e_45 = { error: e_45_1 }; }
                             finally {
                                 try {
                                     if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                 }
-                                finally { if (e_46) throw e_46.error; }
+                                finally { if (e_45) throw e_45.error; }
                             }
                         }
                     }
-                    catch (e_47_1) { e_47 = { error: e_47_1 }; }
+                    catch (e_46_1) { e_46 = { error: e_46_1 }; }
                     finally {
                         try {
                             if (cells_1_1 && !cells_1_1.done && (_d = cells_1.return)) _d.call(cells_1);
                         }
-                        finally { if (e_47) throw e_47.error; }
+                        finally { if (e_46) throw e_46.error; }
                     }
                     var arr = [];
                     try {
@@ -5079,15 +5117,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             arr.push(go);
                         }
                     }
-                    catch (e_48_1) { e_48 = { error: e_48_1 }; }
+                    catch (e_47_1) { e_47 = { error: e_47_1 }; }
                     finally {
                         try {
                             if (retGameobjects_1_1 && !retGameobjects_1_1.done && (_e = retGameobjects_1.return)) _e.call(retGameobjects_1);
                         }
-                        finally { if (e_48) throw e_48.error; }
+                        finally { if (e_47) throw e_47.error; }
                     }
                     return arr;
-                    var e_47, _d, e_46, _c, e_48, _e;
+                    var e_46, _d, e_45, _c, e_47, _e;
                 };
                 Level.prototype.addGameObject = function (go) {
                     this.gameObjects.add(go);
@@ -5109,14 +5147,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_49_1) { e_49 = { error: e_49_1 }; }
+                    catch (e_48_1) { e_48 = { error: e_48_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_49) throw e_49.error; }
+                        finally { if (e_48) throw e_48.error; }
                     }
-                    var e_49, _c;
+                    var e_48, _c;
                 };
                 Level.prototype.removeFromGridFast = function (go) {
                     if (!go.collider)
@@ -5130,14 +5168,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_50_1) { e_50 = { error: e_50_1 }; }
+                    catch (e_49_1) { e_49 = { error: e_49_1 }; }
                     finally {
                         try {
                             if (cells_2_1 && !cells_2_1.done && (_a = cells_2.return)) _a.call(cells_2);
                         }
-                        finally { if (e_50) throw e_50.error; }
+                        finally { if (e_49) throw e_49.error; }
                     }
-                    var e_50, _a;
+                    var e_49, _a;
                 };
                 Level.prototype.addGameObjectToGrid = function (go) {
                     if (!go.collider)
@@ -5154,14 +5192,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_51_1) { e_51 = { error: e_51_1 }; }
+                    catch (e_50_1) { e_50 = { error: e_50_1 }; }
                     finally {
                         try {
                             if (cells_3_1 && !cells_3_1.done && (_a = cells_3.return)) _a.call(cells_3);
                         }
-                        finally { if (e_51) throw e_51.error; }
+                        finally { if (e_50) throw e_50.error; }
                     }
-                    var e_51, _a;
+                    var e_50, _a;
                 };
                 Level.prototype.hasGameObject = function (go) {
                     return this.gameObjects.has(go);
@@ -5180,15 +5218,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_52_1) { e_52 = { error: e_52_1 }; }
+                    catch (e_51_1) { e_51 = { error: e_51_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_52) throw e_52.error; }
+                        finally { if (e_51) throw e_51.error; }
                     }
                     return false;
-                    var e_52, _c;
+                    var e_51, _c;
                 };
                 Level.prototype.shouldTrigger = function (actor, gameObject, offset) {
                     if (!actor.collider.isTrigger && gameObject instanceof wall_4.Ladder) {
@@ -5231,15 +5269,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_53_1) { e_53 = { error: e_53_1 }; }
+                    catch (e_52_1) { e_52 = { error: e_52_1 }; }
                     finally {
                         try {
                             if (gameObjects_1_1 && !gameObjects_1_1.done && (_a = gameObjects_1.return)) _a.call(gameObjects_1);
                         }
-                        finally { if (e_53) throw e_53.error; }
+                        finally { if (e_52) throw e_52.error; }
                     }
                     return collideDatas;
-                    var e_53, _a;
+                    var e_52, _a;
                 };
                 Level.prototype.getMtvDir = function (actor, offsetX, offsetY, vel, pushIncline, overrideCollideDatas) {
                     var collideDatas = overrideCollideDatas;
@@ -5257,12 +5295,12 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                 }
                             }
                         }
-                        catch (e_54_1) { e_54 = { error: e_54_1 }; }
+                        catch (e_53_1) { e_53 = { error: e_53_1 }; }
                         finally {
                             try {
                                 if (collideDatas_1_1 && !collideDatas_1_1.done && (_a = collideDatas_1.return)) _a.call(collideDatas_1);
                             }
-                            finally { if (e_54) throw e_54.error; }
+                            finally { if (e_53) throw e_53.error; }
                         }
                     }
                     if (collideDatas.length > 0) {
@@ -5279,19 +5317,19 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                                 }
                             }
                         }
-                        catch (e_55_1) { e_55 = { error: e_55_1 }; }
+                        catch (e_54_1) { e_54 = { error: e_54_1 }; }
                         finally {
                             try {
                                 if (collideDatas_2_1 && !collideDatas_2_1.done && (_b = collideDatas_2.return)) _b.call(collideDatas_2);
                             }
-                            finally { if (e_55) throw e_55.error; }
+                            finally { if (e_54) throw e_54.error; }
                         }
                         return maxMtv;
                     }
                     else {
                         return undefined;
                     }
-                    var e_54, _a, e_55, _b;
+                    var e_53, _a, e_54, _b;
                 };
                 Level.prototype.checkCollisionShape = function (shape, exclusions) {
                     var gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
@@ -5308,15 +5346,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_56_1) { e_56 = { error: e_56_1 }; }
+                    catch (e_55_1) { e_55 = { error: e_55_1 }; }
                     finally {
                         try {
                             if (gameObjects_2_1 && !gameObjects_2_1.done && (_a = gameObjects_2.return)) _a.call(gameObjects_2);
                         }
-                        finally { if (e_56) throw e_56.error; }
+                        finally { if (e_55) throw e_55.error; }
                     }
                     return undefined;
-                    var e_56, _a;
+                    var e_55, _a;
                 };
                 Level.prototype.checkCollisionActor = function (actor, offsetX, offsetY, vel) {
                     if (!actor.collider || actor.collider.isTrigger)
@@ -5339,15 +5377,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_57_1) { e_57 = { error: e_57_1 }; }
+                    catch (e_56_1) { e_56 = { error: e_56_1 }; }
                     finally {
                         try {
                             if (gameObjects_3_1 && !gameObjects_3_1.done && (_a = gameObjects_3.return)) _a.call(gameObjects_3);
                         }
-                        finally { if (e_57) throw e_57.error; }
+                        finally { if (e_56) throw e_56.error; }
                     }
                     return undefined;
-                    var e_57, _a;
+                    var e_56, _a;
                 };
                 Level.prototype.getActorsInRadius = function (pos, radius, classNames) {
                     var actors = [];
@@ -5363,15 +5401,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_58_1) { e_58 = { error: e_58_1 }; }
+                    catch (e_57_1) { e_57 = { error: e_57_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_58) throw e_58.error; }
+                        finally { if (e_57) throw e_57.error; }
                     }
                     return actors;
-                    var e_58, _c;
+                    var e_57, _c;
                 };
                 Level.prototype.getTriggerList = function (actor, offsetX, offsetY, vel, classType) {
                     var triggers = [];
@@ -5398,15 +5436,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_59_1) { e_59 = { error: e_59_1 }; }
+                    catch (e_58_1) { e_58 = { error: e_58_1 }; }
                     finally {
                         try {
                             if (gameObjects_4_1 && !gameObjects_4_1.done && (_a = gameObjects_4.return)) _a.call(gameObjects_4);
                         }
-                        finally { if (e_59) throw e_59.error; }
+                        finally { if (e_58) throw e_58.error; }
                     }
                     return triggers;
-                    var e_59, _a;
+                    var e_58, _a;
                 };
                 Level.prototype.isOfClass = function (go, classNames) {
                     if (!classNames || classNames.length === 0)
@@ -5421,15 +5459,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_60_1) { e_60 = { error: e_60_1 }; }
+                    catch (e_59_1) { e_59 = { error: e_59_1 }; }
                     finally {
                         try {
                             if (classNames_1_1 && !classNames_1_1.done && (_a = classNames_1.return)) _a.call(classNames_1);
                         }
-                        finally { if (e_60) throw e_60.error; }
+                        finally { if (e_59) throw e_59.error; }
                     }
                     return found;
-                    var e_60, _a;
+                    var e_59, _a;
                 };
                 Level.prototype.raycastAll = function (pos1, pos2, classNames) {
                     var hits = [];
@@ -5453,15 +5491,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_61_1) { e_61 = { error: e_61_1 }; }
+                    catch (e_60_1) { e_60 = { error: e_60_1 }; }
                     finally {
                         try {
                             if (gameObjects_5_1 && !gameObjects_5_1.done && (_a = gameObjects_5.return)) _a.call(gameObjects_5);
                         }
-                        finally { if (e_61) throw e_61.error; }
+                        finally { if (e_60) throw e_60.error; }
                     }
                     return hits;
-                    var e_61, _a;
+                    var e_60, _a;
                 };
                 Level.prototype.getClosestTarget = function (pos, alliance) {
                     var _this = this;
@@ -5501,15 +5539,15 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                             }
                         }
                     }
-                    catch (e_62_1) { e_62 = { error: e_62_1 }; }
+                    catch (e_61_1) { e_61 = { error: e_61_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_62) throw e_62.error; }
+                        finally { if (e_61) throw e_61.error; }
                     }
                     return minNode;
-                    var e_62, _c;
+                    var e_61, _c;
                 };
                 Level.prototype.getRandomNode = function () {
                     return _.sample(this.navMeshNodes);
@@ -5694,7 +5732,7 @@ System.register("AddColorFilter", [], function (exports_26, context_26) {
 System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpers", "gameMode", "AddColorFilter"], function (exports_27, context_27) {
     "use strict";
     var __moduleName = context_27 && context_27.id;
-    var sprite_3, level_1, sprites_1, levels_1, color_1, Helpers, gameMode_2, AddColorFilter_1, Options, Menu, UIData, Game, game;
+    var sprite_3, level_1, sprites_1, levels_1, color_1, Helpers, gameMode_1, AddColorFilter_1, Options, Menu, UIData, Game, game;
     return {
         setters: [
             function (sprite_3_1) {
@@ -5715,8 +5753,8 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
             function (Helpers_10) {
                 Helpers = Helpers_10;
             },
-            function (gameMode_2_1) {
-                gameMode_2 = gameMode_2_1;
+            function (gameMode_1_1) {
+                gameMode_1 = gameMode_1_1;
             },
             function (AddColorFilter_1_1) {
                 AddColorFilter_1 = AddColorFilter_1_1;
@@ -5814,7 +5852,18 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.uiCtx = this.uiCanvas.getContext("2d");
                     this.flashFilter = new AddColorFilter_1.default({ red: 64 / 255, green: 64 / 255, blue: 64 / 255 });
                     this.hitFilter = new AddColorFilter_1.default({ red: 128 / 255, green: 128 / 255, blue: 128 / 255 });
+                    this.blueShadowFilter = new PIXI.filters.DropShadowFilter();
+                    this.setShadowSettings(this.blueShadowFilter, 0x0000FF);
+                    this.redShadowFilter = new PIXI.filters.DropShadowFilter();
+                    this.setShadowSettings(this.redShadowFilter, 0xFF0000);
                 }
+                Game.prototype.setShadowSettings = function (filter, color) {
+                    filter.color = color;
+                    filter.distance = 0;
+                    filter.alpha = 1;
+                    filter.quality = 6;
+                    filter.blur = 2;
+                };
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
                     this.uiData.selectedArenaMap = "gallery";
@@ -6152,13 +6201,13 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         $("#ui-canvas").show();
                         var gameMode = void 0;
                         if (this.uiData.isBrawl) {
-                            gameMode = new gameMode_2.Brawl(this.level, this.uiData);
+                            gameMode = new gameMode_1.Brawl(this.level, this.uiData);
                         }
                         else if (this.uiData.selectedGameMode === "deathmatch") {
-                            gameMode = new gameMode_2.FFADeathMatch(this.level, this.uiData);
+                            gameMode = new gameMode_1.FFADeathMatch(this.level, this.uiData);
                         }
                         else if (this.uiData.selectedGameMode === "team deathmatch") {
-                            gameMode = new gameMode_2.TeamDeathMatch(this.level, this.uiData);
+                            gameMode = new gameMode_1.TeamDeathMatch(this.level, this.uiData);
                         }
                         this.level.startLevel(gameMode);
                         this.gameLoop(0);
@@ -6187,14 +6236,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             this.sprites[sprite.name] = sprite;
                         }
                     }
-                    catch (e_63_1) { e_63 = { error: e_63_1 }; }
+                    catch (e_62_1) { e_62 = { error: e_62_1 }; }
                     finally {
                         try {
                             if (spriteJsons_1_1 && !spriteJsons_1_1.done && (_a = spriteJsons_1.return)) _a.call(spriteJsons_1);
                         }
-                        finally { if (e_63) throw e_63.error; }
+                        finally { if (e_62) throw e_62.error; }
                     }
-                    var e_63, _a;
+                    var e_62, _a;
                 };
                 Game.prototype.loadLevels = function () {
                     try {
@@ -6204,14 +6253,14 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             this.levelDatas[levelJson.name] = levelData;
                         }
                     }
-                    catch (e_64_1) { e_64 = { error: e_64_1 }; }
+                    catch (e_63_1) { e_63 = { error: e_63_1 }; }
                     finally {
                         try {
                             if (levelJsons_1_1 && !levelJsons_1_1.done && (_a = levelJsons_1.return)) _a.call(levelJsons_1);
                         }
-                        finally { if (e_64) throw e_64.error; }
+                        finally { if (e_63) throw e_63.error; }
                     }
-                    var e_64, _a;
+                    var e_63, _a;
                 };
                 Game.prototype.loadPalettes = function () {
                     this.palettes["red"] = new color_1.Palette("assets/palettes/red.png");
@@ -6240,12 +6289,12 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             this.sounds[soundFile.split(".")[0]] = sound;
                         }
                     }
-                    catch (e_65_1) { e_65 = { error: e_65_1 }; }
+                    catch (e_64_1) { e_64 = { error: e_64_1 }; }
                     finally {
                         try {
                             if (soundFiles_1_1 && !soundFiles_1_1.done && (_a = soundFiles_1.return)) _a.call(soundFiles_1);
                         }
-                        finally { if (e_65) throw e_65.error; }
+                        finally { if (e_64) throw e_64.error; }
                     }
                     this.maxLoadCount++;
                     this.soundSheet = new Howl({
@@ -6266,7 +6315,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             _this.loadCount++;
                         }
                     });
-                    var e_65, _a;
+                    var e_64, _a;
                 };
                 Game.prototype.isLoaded = function () {
                     return this.loadCount >= this.maxLoadCount;
@@ -6612,15 +6661,15 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                             }
                         }
                     }
-                    catch (e_66_1) { e_66 = { error: e_66_1 }; }
+                    catch (e_65_1) { e_65 = { error: e_65_1 }; }
                     finally {
                         try {
                             if (lines_1_1 && !lines_1_1.done && (_a = lines_1.return)) _a.call(lines_1);
                         }
-                        finally { if (e_66) throw e_66.error; }
+                        finally { if (e_65) throw e_65.error; }
                     }
                     return false;
-                    var e_66, _a;
+                    var e_65, _a;
                 };
                 Shape.prototype.getLineIntersectCollisions = function (line) {
                     var collideDatas = [];
@@ -6649,12 +6698,12 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                             }
                         }
                     }
-                    catch (e_67_1) { e_67 = { error: e_67_1 }; }
+                    catch (e_66_1) { e_66 = { error: e_66_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_67) throw e_67.error; }
+                        finally { if (e_66) throw e_66.error; }
                     }
                     var pointOutside2 = false;
                     try {
@@ -6666,12 +6715,12 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                             }
                         }
                     }
-                    catch (e_68_1) { e_68 = { error: e_68_1 }; }
+                    catch (e_67_1) { e_67 = { error: e_67_1 }; }
                     finally {
                         try {
                             if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
                         }
-                        finally { if (e_68) throw e_68.error; }
+                        finally { if (e_67) throw e_67.error; }
                     }
                     if (!pointOutside || !pointOutside2) {
                         return new collider_5.HitData(undefined, undefined);
@@ -6696,12 +6745,12 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                             }
                         }
                     }
-                    catch (e_69_1) { e_69 = { error: e_69_1 }; }
+                    catch (e_68_1) { e_68 = { error: e_68_1 }; }
                     finally {
                         try {
                             if (lines1_1_1 && !lines1_1_1.done && (_g = lines1_1.return)) _g.call(lines1_1);
                         }
-                        finally { if (e_69) throw e_69.error; }
+                        finally { if (e_68) throw e_68.error; }
                     }
                     if (hitNormals.length === 0) {
                         return undefined;
@@ -6715,18 +6764,18 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                             }
                         }
                     }
-                    catch (e_70_1) { e_70 = { error: e_70_1 }; }
+                    catch (e_69_1) { e_69 = { error: e_69_1 }; }
                     finally {
                         try {
                             if (hitNormals_1_1 && !hitNormals_1_1.done && (_h = hitNormals_1.return)) _h.call(hitNormals_1);
                         }
-                        finally { if (e_70) throw e_70.error; }
+                        finally { if (e_69) throw e_69.error; }
                     }
                     if (hitNormals.length > 0) {
                         return new collider_5.HitData(hitNormals[0], undefined);
                     }
                     return undefined;
-                    var e_67, _c, e_68, _f, e_69, _g, e_70, _h;
+                    var e_66, _c, e_67, _f, e_68, _g, e_69, _h;
                 };
                 Shape.prototype.containsPoint = function (point) {
                     var x = point.x;
@@ -6758,19 +6807,19 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                             }
                         }
                     }
-                    catch (e_71_1) { e_71 = { error: e_71_1 }; }
+                    catch (e_70_1) { e_70 = { error: e_70_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_71) throw e_71.error; }
+                        finally { if (e_70) throw e_70.error; }
                     }
                     if (intersections.length === 0)
                         return undefined;
                     return _.minBy(intersections, function (intersectPoint) {
                         return intersectPoint.distanceTo(point);
                     });
-                    var e_71, _c;
+                    var e_70, _c;
                 };
                 Shape.prototype.getClosestPointOnBounds = function (point) {
                 };
@@ -6786,15 +6835,15 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                                 max = dp;
                         }
                     }
-                    catch (e_72_1) { e_72 = { error: e_72_1 }; }
+                    catch (e_71_1) { e_71 = { error: e_71_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_72) throw e_72.error; }
+                        finally { if (e_71) throw e_71.error; }
                     }
                     return [min, max];
-                    var e_72, _c;
+                    var e_71, _c;
                 };
                 Shape.prototype.checkNormal = function (other, normal) {
                     var aMinMax = this.minMaxDotProd(normal);
@@ -6846,12 +6895,12 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                                 correctionVectors.push(result);
                         }
                     }
-                    catch (e_73_1) { e_73 = { error: e_73_1 }; }
+                    catch (e_72_1) { e_72 = { error: e_72_1 }; }
                     finally {
                         try {
                             if (thisNormals_1_1 && !thisNormals_1_1.done && (_a = thisNormals_1.return)) _a.call(thisNormals_1);
                         }
-                        finally { if (e_73) throw e_73.error; }
+                        finally { if (e_72) throw e_72.error; }
                     }
                     try {
                         for (var bNormals_1 = __values(bNormals), bNormals_1_1 = bNormals_1.next(); !bNormals_1_1.done; bNormals_1_1 = bNormals_1.next()) {
@@ -6861,12 +6910,12 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                                 correctionVectors.push(result);
                         }
                     }
-                    catch (e_74_1) { e_74 = { error: e_74_1 }; }
+                    catch (e_73_1) { e_73 = { error: e_73_1 }; }
                     finally {
                         try {
                             if (bNormals_1_1 && !bNormals_1_1.done && (_b = bNormals_1.return)) _b.call(bNormals_1);
                         }
-                        finally { if (e_74) throw e_74.error; }
+                        finally { if (e_73) throw e_73.error; }
                     }
                     if (correctionVectors.length > 0) {
                         return _.minBy(correctionVectors, function (correctionVector) {
@@ -6874,7 +6923,7 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                         });
                     }
                     return undefined;
-                    var e_73, _a, e_74, _b;
+                    var e_72, _a, e_73, _b;
                 };
                 Shape.prototype.getMinTransVectorDir = function (b, dir) {
                     dir = dir.normalize();
@@ -6897,21 +6946,21 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                                     }
                                 }
                             }
-                            catch (e_75_1) { e_75 = { error: e_75_1 }; }
+                            catch (e_74_1) { e_74 = { error: e_74_1 }; }
                             finally {
                                 try {
                                     if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
                                 }
-                                finally { if (e_75) throw e_75.error; }
+                                finally { if (e_74) throw e_74.error; }
                             }
                         }
                     }
-                    catch (e_76_1) { e_76 = { error: e_76_1 }; }
+                    catch (e_75_1) { e_75 = { error: e_75_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
                         }
-                        finally { if (e_76) throw e_76.error; }
+                        finally { if (e_75) throw e_75.error; }
                     }
                     try {
                         for (var _g = __values(b.points), _h = _g.next(); !_h.done; _h = _g.next()) {
@@ -6929,27 +6978,27 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                                     }
                                 }
                             }
-                            catch (e_77_1) { e_77 = { error: e_77_1 }; }
+                            catch (e_76_1) { e_76 = { error: e_76_1 }; }
                             finally {
                                 try {
                                     if (_k && !_k.done && (_l = _j.return)) _l.call(_j);
                                 }
-                                finally { if (e_77) throw e_77.error; }
+                                finally { if (e_76) throw e_76.error; }
                             }
                         }
                     }
-                    catch (e_78_1) { e_78 = { error: e_78_1 }; }
+                    catch (e_77_1) { e_77 = { error: e_77_1 }; }
                     finally {
                         try {
                             if (_h && !_h.done && (_m = _g.return)) _m.call(_g);
                         }
-                        finally { if (e_78) throw e_78.error; }
+                        finally { if (e_77) throw e_77.error; }
                     }
                     if (maxMag === 0) {
                         return undefined;
                     }
                     return dir.times(maxMag);
-                    var e_76, _f, e_75, _e, e_78, _m, e_77, _l;
+                    var e_75, _f, e_74, _e, e_77, _m, e_76, _l;
                 };
                 Shape.prototype.getSnapVector = function (b, dir) {
                     var mag = 0;
@@ -6970,27 +7019,27 @@ System.register("shape", ["point", "rect", "collider", "game"], function (export
                                     }
                                 }
                             }
-                            catch (e_79_1) { e_79 = { error: e_79_1 }; }
+                            catch (e_78_1) { e_78 = { error: e_78_1 }; }
                             finally {
                                 try {
                                     if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
                                 }
-                                finally { if (e_79) throw e_79.error; }
+                                finally { if (e_78) throw e_78.error; }
                             }
                         }
                     }
-                    catch (e_80_1) { e_80 = { error: e_80_1 }; }
+                    catch (e_79_1) { e_79 = { error: e_79_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
                         }
-                        finally { if (e_80) throw e_80.error; }
+                        finally { if (e_79) throw e_79.error; }
                     }
                     if (mag === 0) {
                         return undefined;
                     }
                     return dir.times(minMag);
-                    var e_80, _f, e_79, _e;
+                    var e_79, _f, e_78, _e;
                 };
                 Shape.prototype.clone = function (x, y) {
                     var points = [];
@@ -8043,12 +8092,12 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                             this.hitboxes.push(hitbox);
                         }
                     }
-                    catch (e_81_1) { e_81 = { error: e_81_1 }; }
+                    catch (e_80_1) { e_80 = { error: e_80_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_81) throw e_81.error; }
+                        finally { if (e_80) throw e_80.error; }
                     }
                     try {
                         for (var _d = __values(spriteJson.frames), _e = _d.next(); !_e.done; _e = _d.next()) {
@@ -8061,28 +8110,28 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                                         frame.POIs.push(new point_12.Point(poi.x, poi.y));
                                     }
                                 }
-                                catch (e_82_1) { e_82 = { error: e_82_1 }; }
+                                catch (e_81_1) { e_81 = { error: e_81_1 }; }
                                 finally {
                                     try {
                                         if (_g && !_g.done && (_h = _f.return)) _h.call(_f);
                                     }
-                                    finally { if (e_82) throw e_82.error; }
+                                    finally { if (e_81) throw e_81.error; }
                                 }
                             }
                             this.frames.push(frame);
                         }
                     }
-                    catch (e_83_1) { e_83 = { error: e_83_1 }; }
+                    catch (e_82_1) { e_82 = { error: e_82_1 }; }
                     finally {
                         try {
                             if (_e && !_e.done && (_j = _d.return)) _j.call(_d);
                         }
-                        finally { if (e_83) throw e_83.error; }
+                        finally { if (e_82) throw e_82.error; }
                     }
                     if (shouldInit) {
                         this.initSprite(container, addIndex);
                     }
-                    var e_81, _c, e_83, _j, e_82, _h;
+                    var e_80, _c, e_82, _j, e_81, _h;
                 }
                 Object.defineProperty(Sprite.prototype, "spritesheet", {
                     get: function () {
@@ -8112,12 +8161,12 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                             textureArray.push(texture);
                         }
                     }
-                    catch (e_84_1) { e_84 = { error: e_84_1 }; }
+                    catch (e_83_1) { e_83 = { error: e_83_1 }; }
                     finally {
                         try {
                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                         }
-                        finally { if (e_84) throw e_84.error; }
+                        finally { if (e_83) throw e_83.error; }
                     }
                     this.pixiSprite = new PIXI.extras.AnimatedSprite(textureArray);
                     var anchor = this.getAnchor();
@@ -8130,7 +8179,7 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     else {
                         container.addChild(this.pixiSprite);
                     }
-                    var e_84, _c;
+                    var e_83, _c;
                 };
                 Sprite.prototype.getAnchor = function () {
                     var x, y;
@@ -8186,15 +8235,34 @@ System.register("sprite", ["collider", "frame", "point", "rect", "game", "helper
                     if (palette) {
                         filterArray.push(palette.filter);
                     }
-                    if (options === "flash") {
-                        filterArray.push(game_15.game.flashFilter);
-                    }
-                    else if (options === "hit") {
-                        filterArray.push(game_15.game.hitFilter);
-                    }
-                    else {
+                    if (options) {
+                        try {
+                            for (var options_1 = __values(options), options_1_1 = options_1.next(); !options_1_1.done; options_1_1 = options_1.next()) {
+                                var option = options_1_1.value;
+                                if (option === "flash") {
+                                    filterArray.push(game_15.game.flashFilter);
+                                }
+                                else if (option === "hit") {
+                                    filterArray.push(game_15.game.hitFilter);
+                                }
+                                else if (option === "blueshadow") {
+                                    filterArray.push(game_15.game.blueShadowFilter);
+                                }
+                                else if (option === "redshadow") {
+                                    filterArray.push(game_15.game.redShadowFilter);
+                                }
+                            }
+                        }
+                        catch (e_84_1) { e_84 = { error: e_84_1 }; }
+                        finally {
+                            try {
+                                if (options_1_1 && !options_1_1.done && (_a = options_1.return)) _a.call(options_1);
+                            }
+                            finally { if (e_84) throw e_84.error; }
+                        }
                     }
                     this.pixiSprite.filters = filterArray;
+                    var e_84, _a;
                 };
                 Sprite.prototype.createAndDraw = function (container, frameIndex, x, y, flipX, flipY, options, alpha, palette, scaleX, scaleY) {
                     var sprite = new Sprite(this.spriteJson, true, container, -1);
@@ -8297,8 +8365,15 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
         ],
         execute: function () {
             Actor = (function () {
-                function Actor(sprite, pos, dontAddToLevel) {
+                function Actor(sprite, pos, dontAddToLevel, container) {
                     this.renderEffectTime = 0;
+                    this.renderEffects = new Set();
+                    if (container) {
+                        this.container = container;
+                    }
+                    else {
+                        this.container = game_16.game.level.gameContainer;
+                    }
                     this.pos = pos;
                     this.vel = new point_13.Point(0, 0);
                     this.useGravity = true;
@@ -8310,7 +8385,6 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     this.yDir = 1;
                     this.grounded = false;
                     this.collidedInFrame = new Set();
-                    this.renderEffect = "";
                     this.changeSprite(sprite, true);
                     if (!dontAddToLevel) {
                         game_16.game.level.addGameObject(this);
@@ -8321,22 +8395,22 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                         return;
                     var addIndex = -1;
                     if (this.sprite) {
-                        addIndex = game_16.game.level.gameContainer.children.indexOf(this.sprite.pixiSprite) + 1;
+                        addIndex = this.container.children.indexOf(this.sprite.pixiSprite) + 1;
                         this.sprite.free();
                     }
                     this.sprite = game_16.game.level.spritePool.get(sprite.name);
                     if (!this.sprite) {
-                        var newSprite = new sprite_4.Sprite(sprite.spriteJson, true, game_16.game.level.gameContainer, addIndex);
+                        var newSprite = new sprite_4.Sprite(sprite.spriteJson, true, this.container, addIndex);
                         game_16.game.level.spritePool.add(sprite.name, newSprite);
                         this.sprite = newSprite;
                     }
                     else {
                         if (addIndex > -1) {
                             addIndex--;
-                            var newSpriteIndex = game_16.game.level.gameContainer.children.indexOf(this.sprite.pixiSprite);
-                            var temp = game_16.game.level.gameContainer.children[newSpriteIndex];
-                            game_16.game.level.gameContainer.children[newSpriteIndex] = game_16.game.level.gameContainer.children[addIndex];
-                            game_16.game.level.gameContainer.children[addIndex] = temp;
+                            var newSpriteIndex = this.container.children.indexOf(this.sprite.pixiSprite);
+                            var temp = this.container.children[newSpriteIndex];
+                            this.container.children[newSpriteIndex] = this.container.children[addIndex];
+                            this.container.children[addIndex] = temp;
                         }
                     }
                     try {
@@ -8385,7 +8459,8 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 Actor.prototype.update = function () {
                     this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game_16.game.deltaTime);
                     if (this.renderEffectTime <= 0) {
-                        this.renderEffect = "";
+                        this.renderEffects.delete("hit");
+                        this.renderEffects.delete("flash");
                     }
                     this.frameTime += game_16.game.deltaTime * this.frameSpeed;
                     if (this.frameTime >= this.currentFrame.duration) {
@@ -8513,7 +8588,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     var offsetX = this.xDir * this.currentFrame.offset.x;
                     var offsetY = this.yDir * this.currentFrame.offset.y;
                     if (this.angle === undefined) {
-                        this.sprite.draw(this.frameIndex, this.pos.x + x + offsetX, this.pos.y + y + offsetY, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+                        this.sprite.draw(this.frameIndex, this.pos.x + x + offsetX, this.pos.y + y + offsetY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
                     }
                     else {
                         this.renderFromAngle(x, y);
@@ -8524,7 +8599,7 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                     }
                 };
                 Actor.prototype.renderFromAngle = function (x, y) {
-                    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+                    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffects, 1, this.palette);
                 };
                 Actor.prototype.registerCollision = function (other) {
                     if (!this.collidedInFrame.has(other.collider)) {

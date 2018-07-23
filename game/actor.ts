@@ -28,11 +28,19 @@ export class Actor {
   name: string;
   globalCollider: Collider; //If no collider data found in sprite, fall back to this one
   collidedInFrame: Set<Collider>;
-  renderEffect: string;
   palette: Palette;
   renderEffectTime: number = 0;
+  renderEffects: Set<string> = new Set();
+  container: PIXI.Container;
 
-  constructor(sprite: Sprite, pos: Point, dontAddToLevel?: boolean) {
+  constructor(sprite: Sprite, pos: Point, dontAddToLevel?: boolean, container?: PIXI.Container) {    
+    if(container) {
+      this.container = container;
+    }
+    else {
+      this.container = game.level.gameContainer;
+    }
+
     this.pos = pos;
     this.vel = new Point(0, 0);
     this.useGravity = true;
@@ -44,7 +52,6 @@ export class Actor {
     this.yDir = 1;
     this.grounded = false;
     this.collidedInFrame = new Set<Collider>();
-    this.renderEffect = "";
     this.changeSprite(sprite, true);
 
     if(!dontAddToLevel) {
@@ -57,13 +64,13 @@ export class Actor {
 
     let addIndex = -1;
     if(this.sprite) {
-      addIndex = game.level.gameContainer.children.indexOf(this.sprite.pixiSprite) + 1;
+      addIndex = this.container.children.indexOf(this.sprite.pixiSprite) + 1;
       this.sprite.free();
     }
 
     this.sprite = <Sprite>game.level.spritePool.get(sprite.name);
     if(!this.sprite) {
-      let newSprite = new Sprite(sprite.spriteJson, true, game.level.gameContainer, addIndex);
+      let newSprite = new Sprite(sprite.spriteJson, true, this.container, addIndex);
       game.level.spritePool.add(sprite.name, newSprite);
       this.sprite = newSprite;
     }
@@ -71,10 +78,10 @@ export class Actor {
       //The pooled sprite must be moved to addIndex position, swap with it
       if(addIndex > -1) {
         addIndex--;
-        let newSpriteIndex = game.level.gameContainer.children.indexOf(this.sprite.pixiSprite);
-        let temp = game.level.gameContainer.children[newSpriteIndex];
-        game.level.gameContainer.children[newSpriteIndex] = game.level.gameContainer.children[addIndex];
-        game.level.gameContainer.children[addIndex] = temp;
+        let newSpriteIndex = this.container.children.indexOf(this.sprite.pixiSprite);
+        let temp = this.container.children[newSpriteIndex];
+        this.container.children[newSpriteIndex] = this.container.children[addIndex];
+        this.container.children[addIndex] = temp;
       }
     }
 
@@ -111,7 +118,8 @@ export class Actor {
     
     this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game.deltaTime);
     if(this.renderEffectTime <= 0) {
-      this.renderEffect = "";
+      this.renderEffects.delete("hit");
+      this.renderEffects.delete("flash");
     }
 
     this.frameTime += game.deltaTime * this.frameSpeed;
@@ -267,7 +275,7 @@ export class Actor {
     let offsetY = this.yDir * this.currentFrame.offset.y;
 
     if(this.angle === undefined) {
-      this.sprite.draw(this.frameIndex, this.pos.x + x + offsetX, this.pos.y + y + offsetY, this.xDir, this.yDir, this.renderEffect, 1, this.palette);
+      this.sprite.draw(this.frameIndex, this.pos.x + x + offsetX, this.pos.y + y + offsetY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
     }
     else {
       this.renderFromAngle(x, y);
@@ -292,7 +300,7 @@ export class Actor {
   }
 
   renderFromAngle(x: number, y: number) {
-    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffect, 1, this.palette);
+    this.sprite.draw(0, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffects, 1, this.palette);
   }
 
   registerCollision(other: CollideData) {
@@ -349,7 +357,7 @@ export class Actor {
   /*
   destroySprite() {
     if(this.sprite && this.sprite.pixiSprite) {
-      game.level.gameContainer.removeChild(this.sprite.pixiSprite);
+      this.container.removeChild(this.sprite.pixiSprite);
       this.sprite.pixiSprite.destroy();
       if(this.sprite.pixiSprite.texture) this.sprite.pixiSprite.texture.destroy();
     }
