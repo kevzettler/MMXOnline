@@ -53,6 +53,13 @@ export class Level {
   spritePool: ObjectPool;
   projectilePool: ObjectPool;
 
+  backgroundSprite: PIXI.Sprite;
+  parallaxSprite: PIXI.Sprite;
+  foregroundSprite: PIXI.Sprite;
+  gameContainer: PIXI.Container;
+  uiContainer: PIXI.Container;
+  textContainer: PIXI.Container;
+
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
   get mainPlayer() { return this.gameMode.mainPlayer; }
@@ -77,6 +84,15 @@ export class Level {
     this.spritePool = new ObjectPool();
     this.projectilePool = new ObjectPool();
     
+  }
+
+  destroy() {
+    let stage = game.pixiApp.stage;
+    for (var i = stage.children.length - 1; i >= 0; i--) {
+      let child = stage.children[i];
+      stage.removeChild(child);
+      child.destroy();
+    }
   }
 
   startLevel(gameMode: GameMode) {
@@ -283,12 +299,6 @@ export class Level {
     //this.getTotalCountInGrid();
   }
 
-  backgroundSprite: PIXI.Sprite;
-  parallaxSprite: PIXI.Sprite;
-  foregroundSprite: PIXI.Sprite;
-  gameContainer: PIXI.Container;
-  uiContainer: PIXI.Container;
-  textContainer: PIXI.Container;
   renderSetup() {
 
     if(this.parallaxPath) {

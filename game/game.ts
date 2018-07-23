@@ -363,10 +363,11 @@ class Game {
         confirmExit: function(exit: boolean) {
           if(exit) {
             cancelAnimationFrame(game.requestId);
+            game.level.destroy();
             game.level = undefined;
             if(game.music) game.music.stop();
             game.uiData.menu = Menu.MainMenu;
-            $(game.canvasWrapper).hide();
+            $("#canvas-wrapper").hide();
             $("#ui-canvas").hide();
             $("#options").hide();
           }
@@ -491,6 +492,7 @@ class Game {
     //cancelAnimationFrame(this.requestId);
     let name = this.restartLevelName;
     this.restartLevelName = "";
+    this.level.destroy();
     this.loadLevel(name);
   }
 
@@ -507,7 +509,7 @@ class Game {
     if(this.isLoaded()) {
       window.clearInterval(this.levelLoadInterval);
       
-      $(this.canvasWrapper).show();
+      $("#canvas-wrapper").show();
       $("#ui-canvas").show();
       
       let gameMode : GameMode;

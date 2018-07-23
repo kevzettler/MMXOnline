@@ -91,7 +91,8 @@ button {
   position: absolute;
 }
 
-#ui, #canvas, #ui-canvas {
+#ui {
+  padding: 19px;
 }
 
 #ui-canvas {

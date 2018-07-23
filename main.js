@@ -4411,6 +4411,14 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     enumerable: true,
                     configurable: true
                 });
+                Level.prototype.destroy = function () {
+                    var stage = game_13.game.pixiApp.stage;
+                    for (var i = stage.children.length - 1; i >= 0; i--) {
+                        var child = stage.children[i];
+                        stage.removeChild(child);
+                        child.destroy();
+                    }
+                };
                 Level.prototype.startLevel = function (gameMode) {
                     this.renderSetup();
                     this.gameObjects = new Set();
@@ -6014,11 +6022,12 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             confirmExit: function (exit) {
                                 if (exit) {
                                     cancelAnimationFrame(game.requestId);
+                                    game.level.destroy();
                                     game.level = undefined;
                                     if (game.music)
                                         game.music.stop();
                                     game.uiData.menu = Menu.MainMenu;
-                                    $(game.canvasWrapper).hide();
+                                    $("#canvas-wrapper").hide();
                                     $("#ui-canvas").hide();
                                     $("#options").hide();
                                 }
@@ -6124,6 +6133,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Game.prototype.doRestart = function () {
                     var name = this.restartLevelName;
                     this.restartLevelName = "";
+                    this.level.destroy();
                     this.loadLevel(name);
                 };
                 Game.prototype.loadLevel = function (name) {
@@ -6138,7 +6148,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Game.prototype.startLevel = function () {
                     if (this.isLoaded()) {
                         window.clearInterval(this.levelLoadInterval);
-                        $(this.canvasWrapper).show();
+                        $("#canvas-wrapper").show();
                         $("#ui-canvas").show();
                         var gameMode = void 0;
                         if (this.uiData.isBrawl) {
