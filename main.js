@@ -2509,7 +2509,6 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                 }
                 TeamDeathMatch.prototype.drawHUD = function () {
                     _super.prototype.drawHUD.call(this);
-                    this.drawKillFeed();
                     this.drawTopHUD();
                     this.drawWeaponSwitchHUD();
                     this.drawScoreboard();

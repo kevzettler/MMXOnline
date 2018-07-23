@@ -535,8 +535,6 @@ export class TeamDeathMatch extends GameMode {
     
     super.drawHUD();
 
-    this.drawKillFeed();
-    
     this.drawTopHUD();
     this.drawWeaponSwitchHUD();
 
