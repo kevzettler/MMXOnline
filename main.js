@@ -2076,6 +2076,13 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         var e_13, _c, e_14, _f;
                     };
                 };
+                GameMode.prototype.destroy = function () {
+                    document.onkeydown = undefined;
+                    document.onkeyup = undefined;
+                    game_7.game.uiCanvas.onmousedown = undefined;
+                    game_7.game.uiCanvas.onmouseup = undefined;
+                    document.onwheel = undefined;
+                };
                 GameMode.prototype.update = function () {
                     var removed = false;
                     for (var i = this.killFeed.length - 1; i >= 0; i--) {
@@ -3159,7 +3166,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                     if (this.chargeEffect) {
                         this.chargeEffect.render(this.getCenterPos().add(new point_5.Point(x, y)), this.getChargeLevel());
                     }
-                    if (this.charState instanceof Die) {
+                    if (game_8.game.level.gameMode.isTeamMode && this.charState instanceof Die) {
                         this.characterTag.visible = false;
                     }
                     else if (game_8.game.level.gameMode.isTeamMode
@@ -3207,8 +3214,10 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                 Character.prototype.destroySelf = function (sprite, fadeSound) {
                     _super.prototype.destroySelf.call(this, sprite, fadeSound);
                     this.chargeEffect.destroy();
-                    game_8.game.level.gameUIContainer.removeChild(this.characterTag);
-                    this.characterTag.destroy({ children: true, texture: true });
+                    if (this.characterTag) {
+                        game_8.game.level.gameUIContainer.removeChild(this.characterTag);
+                        this.characterTag.destroy({ children: true, texture: true });
+                    }
                 };
                 return Character;
             }(actor_5.Actor));
@@ -4461,6 +4470,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         stage.removeChild(child);
                         child.destroy();
                     }
+                    this.gameMode.destroy();
                 };
                 Level.prototype.startLevel = function (gameMode) {
                     this.renderSetup();
@@ -5853,7 +5863,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.loadCount = 0;
                     this.maxLoadCount = 0;
                     this.restartLevelName = "";
-                    this.doQuickStart = true;
+                    this.doQuickStart = false;
                     this.timePassed = 0;
                     this.lag = 0;
                     this.MS_PER_UPDATE = 16.6666;

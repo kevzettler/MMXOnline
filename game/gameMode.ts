@@ -94,6 +94,14 @@ export class GameMode {
 
   }
 
+  destroy() {
+    document.onkeydown = undefined;
+    document.onkeyup = undefined;
+    game.uiCanvas.onmousedown = undefined;
+    game.uiCanvas.onmouseup = undefined;
+    document.onwheel = undefined;
+  }
+
   update() {
     
     let removed = false;

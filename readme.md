@@ -2,15 +2,6 @@
 Post-V1 Features
 ===============
 
--Main player Character's zindex should always be on top
-  -Consider a z-index system
-  -Proposal: actors get a z-index. Their sprites also get a z-index (patch this into pixi). Then have pixi sort itself every frame (or every time sprite changed)
-  -Classes:
-    -Characters (0)
-    -Main character (1)
-    -Projectiles (2)
-  this.app.stage.children.sort((a, b) => b.zIndex - a.zIndex);
-
 -Play as Zero
 -All the special weapon charges
 -HUD changes: -Switch UI - switch weapons/char, and the menu HUDs too
@@ -22,7 +13,10 @@ Post-V1 Features
 
 -A "prod" system/switch
   -Hook up google analytics if it's on
-  -A telemetry system: send error logs to Azure; build some authentication app for this to view the logs
+  -A telemetry system
+    -Send error logs to Azure; build some authentication app for this to view the logs
+    -Send events on useful actions (start game, win/lose game, etc)
+    -
 
 -CTF 
 -CTF AI
@@ -33,9 +27,9 @@ Post-V1 Features
 ===============
 Fixes
 ===============
+-Health not spawning in powerplant sometimes (try after a second game)
+-Stage music continues playing in menu if quit right when it starts
 -Should not be able to destroy teammates' projectiles
-Death explosion should go above foreground
-Death explosion: only have one spawn for performance
 Scoreboard should go above victory screen
 -Jerky walking animation again
 

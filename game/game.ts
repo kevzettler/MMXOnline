@@ -151,7 +151,7 @@ class Game {
     filter.blur = 2;
   }
   
-  doQuickStart: boolean = true;
+  doQuickStart: boolean = false;
   quickStart() {
     
     this.uiData.menu = Menu.None;

@@ -90,6 +90,7 @@ export class Level {
       stage.removeChild(child);
       child.destroy();
     }
+    this.gameMode.destroy();
   }
 
   startLevel(gameMode: GameMode) {

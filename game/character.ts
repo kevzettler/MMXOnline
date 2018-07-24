@@ -428,7 +428,7 @@ export class Character extends Actor {
     if(this.chargeEffect) {
       this.chargeEffect.render(this.getCenterPos().add(new Point(x, y)), this.getChargeLevel())
     }
-    if(this.charState instanceof Die) {
+    if(game.level.gameMode.isTeamMode && this.charState instanceof Die) {
       this.characterTag.visible = false;
     }
     else if(game.level.gameMode.isTeamMode
@@ -479,8 +479,10 @@ export class Character extends Actor {
   destroySelf(sprite?: Sprite, fadeSound?: string) {
     super.destroySelf(sprite, fadeSound);
     this.chargeEffect.destroy();
-    game.level.gameUIContainer.removeChild(this.characterTag);
-    this.characterTag.destroy({ children: true, texture: true });
+    if(this.characterTag) {
+      game.level.gameUIContainer.removeChild(this.characterTag);
+      this.characterTag.destroy({ children: true, texture: true });
+    }
   }
 
 }
