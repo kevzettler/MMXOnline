@@ -23,6 +23,7 @@ export class Projectile extends Actor {
   time: number = 0;
   hitCooldown: number = 0;
   weapon: Weapon;
+  destroyOnCharHit: boolean = true;
 
   constructor(weapon: Weapon, pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
     super(sprite, pos);
@@ -54,7 +55,6 @@ export class Projectile extends Actor {
   }
 
   onCollision(other: CollideData) {
-
     //Destroy torpedo if it hits something else
     if(this instanceof TorpedoProj && other.gameObject instanceof Projectile && this.damager.owner !== other.gameObject.damager.owner) {
       this.destroySelf(this.fadeSprite, this.fadeSound);
@@ -135,7 +135,9 @@ export class Projectile extends Actor {
   }
 
   onHitChar(character: Character) {
-    this.destroySelf(this.fadeSprite, this.fadeSound);
+    if(this.destroyOnCharHit) {
+      this.destroySelf(this.fadeSprite, this.fadeSound);
+    }
   }
 
   onHitWall(other: CollideData) {
@@ -483,6 +485,16 @@ export class ElectricSparkProj extends Projectile {
       new ElectricSparkProj(this.weapon, this.pos.clone(), normal, this.damager.owner, 1);
       new ElectricSparkProj(this.weapon, this.pos.clone(), normal.times(-1), this.damager.owner, 1);
     }
+  }
+
+}
+
+export class ElectricSparkProjCharged extends Projectile {
+
+  constructor(weapon: Weapon, pos: Point, player: Player, dir: number) {
+    super(weapon, pos, new Point(dir * 450, 0), 4, player, game.sprites["electric_spark_charge"]);
+    this.xDir = dir;
+    this.destroyOnCharHit = false;
   }
 
 }
