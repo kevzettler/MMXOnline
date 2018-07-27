@@ -25,7 +25,7 @@ export class Sprite {
     this.alignment = spriteJson.alignment;
     this.wrapMode = spriteJson.wrapMode;
     this.loopStartFrame = spriteJson.loopStartFrame || 0;
-    this.spritesheetPath = spriteJson.spritesheetPath;
+    this.spritesheetPath = spriteJson.spritesheetPath + game.path.version;
     if(!this.wrapMode) { 
       console.error("NO WRAP MODE FOR SPRITE " + this.name);
     }

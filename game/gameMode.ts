@@ -140,8 +140,8 @@ export class GameMode {
     this.createTopHUD();
     this.killFeedContainer = new PIXI.Container();
     game.level.uiContainer.addChild(this.killFeedContainer);
-    this.createScoreboardHUD();
     this.createWinScreenHUD();
+    this.createScoreboardHUD();
   }
 
   createScoreboardHUD() {
@@ -322,6 +322,7 @@ export class Brawl extends GameMode {
   drawWinScreen() {
     let winner = this.getWinner();
     if(winner) {
+      this.winScreenTitle.style.fontSize = 42;
       this.winScreenContainer.visible = true;
       this.winScreenTitle.text = winner.name + " wins!";
     }
@@ -347,7 +348,7 @@ export class Brawl extends GameMode {
           game.music.stop();
         }
         game.music = new Howl({
-          src: ["assets/music/win.mp3"],
+          src: [game.path.winMusic],
         });
         game.music.play();
       }
@@ -492,13 +493,13 @@ export class FFADeathMatch extends GameMode {
         }
         if(this.level.mainPlayer && this.level.mainPlayer.won) {
           game.music = new Howl({
-            src: ["assets/music/win.mp3"],
+            src: [game.path.winMusic],
           });
           game.music.play();
         }
         else if(this.level.mainPlayer && !this.level.mainPlayer.won) {
           game.music = new Howl({
-            src: ["assets/music/lose.mp3"],
+            src: [game.path.loseMusic],
           });
           game.music.play();
         }
@@ -751,13 +752,13 @@ export class TeamDeathMatch extends GameMode {
         }
         if(this.level.mainPlayer && this.level.mainPlayer.won) {
           game.music = new Howl({
-            src: ["assets/music/win.mp3"],
+            src: [game.path.winMusic],
           });
           game.music.play();
         }
         else if(this.level.mainPlayer && !this.level.mainPlayer.won) {
           game.music = new Howl({
-            src: ["assets/music/lose.mp3"],
+            src: [game.path.loseMusic],
           });
           game.music.play();
         }

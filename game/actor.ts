@@ -277,17 +277,20 @@ export class Actor {
       Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
       Helpers.drawCircle(game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
     }
-    /*
+    
     this.sprite.pixiSprite.visible = true;
-    let rect = this.currentFrame.rect.clone(this.pos.x + x + offsetX, this.pos.y + y + offsetY);
+    let alignOffset = this.sprite.getAlignOffset(this.frameIndex, this.xDir, this.yDir);
+    let rx = this.pos.x + x + offsetX + alignOffset.x;
+    let ry = this.pos.y + y + offsetY + alignOffset.y;
+    let rect = new Rect(rx, ry, rx + this.currentFrame.rect.w, ry + this.currentFrame.rect.h);
     let camRect = new Rect(game.level.camX, game.level.camY, game.level.camX + game.defaultCanvasWidth, game.level.camY + game.defaultCanvasHeight);
     if(!rect.overlaps(camRect)) {
-      this.sprite.pixiSprite.visible = false;
+      this.sprite.pixiSprite.renderable = false;
     }
     else {
-      this.sprite.pixiSprite.visible = true;
+      this.sprite.pixiSprite.renderable = true;
     }
-    */
+    
       
   }
 

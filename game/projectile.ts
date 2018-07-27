@@ -56,7 +56,7 @@ export class Projectile extends Actor {
 
   onCollision(other: CollideData) {
     //Destroy torpedo if it hits something else
-    if(this instanceof TorpedoProj && other.gameObject instanceof Projectile && this.damager.owner !== other.gameObject.damager.owner) {
+    if(this instanceof TorpedoProj && other.gameObject instanceof Projectile && this.damager.owner.alliance !== other.gameObject.damager.owner.alliance) {
       this.destroySelf(this.fadeSprite, this.fadeSound);
       if(!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof FireWaveProj) && !(other.gameObject instanceof Buster2Proj)
         && !(other.gameObject instanceof Buster3Proj) && !(other.gameObject instanceof Buster4Proj) && !(other.gameObject instanceof RollingShieldProj)) {
@@ -66,7 +66,7 @@ export class Projectile extends Actor {
     }
 
     //If this is rolling shield, destroy the other projectile
-    if(this instanceof RollingShieldProj && other.gameObject instanceof Projectile && this.damager.owner !== other.gameObject.damager.owner) {
+    if(this instanceof RollingShieldProj && other.gameObject instanceof Projectile && this.damager.owner.alliance !== other.gameObject.damager.owner.alliance) {
       if(!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof RollingShieldProj) && !(other.gameObject instanceof ElectricSparkProj)) {
         other.gameObject.destroySelf(other.gameObject.fadeSprite, other.gameObject.fadeSound);
       }
@@ -495,6 +495,8 @@ export class ElectricSparkProjCharged extends Projectile {
     super(weapon, pos, new Point(dir * 450, 0), 4, player, game.sprites["electric_spark_charge"]);
     this.xDir = dir;
     this.destroyOnCharHit = false;
+    this.hitCooldown = 0.5;
+    this.flinch = true;
   }
 
 }

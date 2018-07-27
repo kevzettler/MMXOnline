@@ -3,14 +3,14 @@ import { Sprite } from "./sprite";
 import { game } from "./game";
 import { Point } from "./point";
 import { Player } from "./player";
-import { Collider } from "./collider";
+import { Collider, CollideData } from "./collider";
 import { Rect } from "./rect";
 import { Projectile } from "./projectile";
 import * as Helpers from "./helpers";
 import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
 import { AI } from "./ai";
-import { Ladder } from "./wall";
+import { Ladder, KillZone } from "./wall";
 import { KillFeedEntry } from "./killFeedEntry";
 import { FFADeathMatch, Brawl } from "./gameMode";
 
@@ -129,12 +129,16 @@ export class Character extends Actor {
     this.changedStateInFrame = false;
   }
 
+  onCollision(other: CollideData) {
+    super.onCollision(other);
+    if(other.gameObject instanceof KillZone) {
+      this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
+    }
+  }
+
   update() {
 
     if(game.level.levelData.killY !== undefined && this.pos.y > game.level.levelData.killY) {
-      this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
-    }
-    else if(game.level.isInKillZone(this)) {
       this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
     }
 
@@ -220,7 +224,7 @@ export class Character extends Actor {
       ) {
         this.shoot();
       }
-      if(this.player.isHeld("shoot") && this.player.weapon.ammo > 0) {
+      if(this.player.isHeld("shoot") && this.player.weapon.ammo > 0 && this.player.weaponIndex === 0) {
         this.chargeTime += game.deltaTime;
       }
       else {
@@ -397,7 +401,7 @@ export class Character extends Actor {
       return 2;
     }
     else if(this.chargeTime >= this.charge3Time) {
-      return 3;
+      return 2; //return 3;
     }
   }
 

@@ -24,6 +24,11 @@ var objects = [
     "color": "red"
   },
   {
+    "name": "Jump Zone",
+    "isShape": true,
+    "color": "green"
+  },
+  {
     "name": "Spawn Point",
     "image": "spawnPoint.png"
   },

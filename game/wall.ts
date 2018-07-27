@@ -14,3 +14,17 @@ export class Ladder extends Geometry {
     this.collider.isTrigger = true;
   }
 }
+
+export class KillZone extends Geometry {
+  constructor(name: string, points: Point[]) {
+    super(name, points);
+    this.collider.isTrigger = true;
+  }
+}
+
+export class JumpZone extends Geometry {
+  constructor(name: string, points: Point[]) {
+    super(name, points);
+    this.collider.isTrigger = true;
+  }
+}

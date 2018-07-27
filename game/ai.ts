@@ -4,6 +4,7 @@ import { Projectile, BusterProj } from "./projectile";
 import { Point } from "./point";
 import * as Helpers from "./helpers";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
+import { JumpZone } from "./wall";
 
 export class AI {
 
@@ -32,26 +33,38 @@ export class AI {
 
     this.target = game.level.getClosestTarget(this.character.pos, this.player.alliance);
 
-    if(!this.target) {
-      if(this.aiState.constructor.name !== "FindPlayer") {
-        this.aiState = new FindPlayer(this.character);
+    if(!(this.aiState instanceof InJumpZone)) {
+      let jumpZones = game.level.getTriggerList(this.character, 0, 0, undefined, JumpZone);
+      if(jumpZones.length > 0) {
+        let jumpZone = jumpZones[0].gameObject;
+        let jumpZoneDir = Helpers.randomRange(0, 1);
+        if(jumpZoneDir === 0) jumpZoneDir = -1;
+        this.aiState = new InJumpZone(this.character, jumpZone, jumpZoneDir);
       }
     }
-    else {
-      if(this.aiState.constructor.name === "FindPlayer") {
-        this.aiState = new AimAtPlayer(this.character);
+    if(!(this.aiState instanceof InJumpZone)) {
+      if(!this.target) {
+        if(this.aiState.constructor.name !== "FindPlayer") {
+          this.aiState = new FindPlayer(this.character);
+        }
+      }
+      else {
+        if(this.aiState.constructor.name === "FindPlayer") {
+          this.aiState = new AimAtPlayer(this.character);
+        }
+      }
+
+      if(this.target) {
+        if(this.character.charState.constructor.name === "LadderClimb") {
+          this.player.press("jump");
+        }
+        let xDist = this.target.pos.x - this.character.pos.x;
+        if(Math.abs(xDist) > game.level.halfScreenWidth) {
+          this.aiState = new MoveTowardsTarget(this.character);
+        }
       }
     }
 
-    if(this.target) {
-      if(this.character.charState.constructor.name === "LadderClimb") {
-        this.player.press("jump");
-      }
-      let xDist = this.target.pos.x - this.character.pos.x;
-      if(Math.abs(xDist) > game.level.halfScreenWidth) {
-        this.aiState = new MoveTowardsTarget(this.character);
-      }
-    }
     if(this.aiState.facePlayer) {
       if(this.character.pos.x > this.target.pos.x) {
         this.character.xDir = -1;
@@ -328,6 +341,39 @@ class AimAtPlayer extends AIState {
     }
     else {
       //this.changeState(new JumpToWall());
+    }
+  }
+}
+
+class InJumpZone extends AIState {
+  jumpZone: JumpZone;
+  jumpZoneDir: number;
+  constructor(character: Character, jumpZone: JumpZone, jumpZoneDir: number) {
+    super(character);
+    this.jumpZone = jumpZone;
+    this.jumpZoneDir = jumpZoneDir;
+    this.facePlayer = false;
+    this.shouldAttack = false;
+    this.shouldDodge = false;
+    this.randomlyChangeState = false;
+    this.randomlyDash = true;
+    this.randomlyJump = false;
+    this.randomlyChangeWeapon = false;
+  }
+  update() {
+    super.update();
+    this.player.press("jump");
+    if(this.jumpZoneDir === -1) {
+      this.player.press("left");
+    }
+    else if(this.jumpZoneDir === 1) {
+      this.player.press("right");
+    }
+    //Check if out of zone
+    if(this.character && this.character.collider) {
+      if(!this.character.collider.isCollidingWith(this.jumpZone.collider)) {
+        this.ai.changeState(new FindPlayer(this.character));
+      }
     }
   }
 }

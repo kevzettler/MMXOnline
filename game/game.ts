@@ -9,6 +9,7 @@ import * as Tests from "./tests";
 import { Point } from "./point";
 import { GameMode, Brawl, FFADeathMatch, TeamDeathMatch } from "./gameMode";
 import AddColorFilter from "./AddColorFilter";
+import { Path } from "./paths";
 
 class Options {
   showHitboxes: boolean = false;
@@ -120,6 +121,8 @@ class Game {
   blueShadowFilter: PIXI.filters.DropShadowFilter;
   redShadowFilter: PIXI.filters.DropShadowFilter;
 
+  path: Path = new Path();
+
   constructor() {
 
     this.defaultCanvasWidth = 298;
@@ -153,7 +156,7 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    
+    /*
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
     this.uiData.selectedGameMode = "team deathmatch";
@@ -163,7 +166,7 @@ class Game {
     $("#options").show();
     $("#dev-options").show();
     game.loadLevel(this.uiData.selectedArenaMap);
-    /*
+    */
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
     this.uiData.maxPlayers = 1;
@@ -173,7 +176,6 @@ class Game {
     $("#options").show();
     $("#dev-options").show();
     game.loadLevel("sm_bossroom");
-    */
   }
 
   getMusicVolume01() {
@@ -423,8 +425,8 @@ class Game {
     });
 
     this.loadImages([
-      "assets/spritesheets/effects.png",
-      "assets/spritesheets/MegamanX.png"
+      game.path.effectsSpritesheetPath,
+      game.path.megaManXSpritesheetPath
     ], () => {
       this.loadSprites();
       this.loadLevels();
@@ -467,7 +469,7 @@ class Game {
     if(this.doQuickStart) return;
 
     let music = new Howl({
-      src: ["assets/music/menu.mp3"],
+      src: [game.path.menuMusic],
       sprite: {
         musicStart: [0, 2006],
         musicLoop: [2006, 25083 - 2006]
@@ -553,8 +555,7 @@ class Game {
 
   loadImages(paths: string[], callback?: Function) {
     for(let i = paths.length - 1; i >= 0; i--) {
-      let path = paths[i];
-      if(PIXI.utils.TextureCache[path]) {
+      if(PIXI.utils.TextureCache[paths[i]]) {
         paths.splice(i, 1);
       }
     }
@@ -581,22 +582,22 @@ class Game {
   }
 
   loadPalettes() {
-    this.palettes["red"] = new Palette("assets/palettes/red.png");
-    this.palettes["boomerang"] = new Palette("assets/palettes/boomerang.png");
-    this.palettes["electric_spark"] = new Palette("assets/palettes/electric_spark.png");
-    this.palettes["fire_wave"] = new Palette("assets/palettes/fire_wave.png");
-    this.palettes["rolling_shield"] = new Palette("assets/palettes/rolling_shield.png");
-    this.palettes["shotgun_ice"] = new Palette("assets/palettes/shotgun_ice.png");
-    this.palettes["sting"] = new Palette("assets/palettes/sting.png");
-    this.palettes["tornado"] = new Palette("assets/palettes/tornado.png");
-    this.palettes["torpedo"] = new Palette("assets/palettes/torpedo.png");
+    this.palettes["red"] = new Palette(game.path.redPalette);
+    this.palettes["boomerang"] = new Palette(game.path.boomerangPalette);
+    this.palettes["electric_spark"] = new Palette(game.path.electric_sparkPalette);
+    this.palettes["fire_wave"] = new Palette(game.path.fire_wavePalette);
+    this.palettes["rolling_shield"] = new Palette(game.path.rolling_shieldPalette);
+    this.palettes["shotgun_ice"] = new Palette(game.path.shotgun_icePalette);
+    this.palettes["sting"] = new Palette(game.path.stingPalette);
+    this.palettes["tornado"] = new Palette(game.path.tornadoPalette);
+    this.palettes["torpedo"] = new Palette(game.path.torpedoPalette);
   }
 
   loadSounds() {
     for(let soundFile of soundFiles) {
       this.maxLoadCount++;
       let sound = new Howl({
-        src: ["assets/sounds/" + soundFile],
+        src: [game.path.getSoundPathFromFile(soundFile)],
         mute: true,
         onload: () => {
           //console.log("LOADED SOUND");
@@ -608,7 +609,7 @@ class Game {
 
     this.maxLoadCount++;
     this.soundSheet = new Howl({
-      src: ["assets/soundsheets/mmx_sfx.mp3"],
+      src: [game.path.soundsheetPath],
       mute: true,
       sprite: {
         buster: [900,1425-900],
@@ -653,6 +654,7 @@ class Game {
     //Translate to deltaTime
     //this.deltaTime = 1/60;
     this.deltaTime = elapsed / 1000;
+    if(this.deltaTime < 0 || this.deltaTime > 1/15) this.deltaTime = 1/15;
     this.time += this.deltaTime;
     this.timePassed += this.deltaTime;
     
@@ -677,8 +679,8 @@ class Game {
         this.level.update();
         //console.log(this.collisionCalls);
         this.collisionCalls = 0;
+        this.level.render();
       }
-      this.level.render();
     }
     
     if(this.restartLevelName !== "") {

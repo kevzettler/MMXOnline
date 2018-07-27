@@ -1,6 +1,25 @@
+-Some MTV issues (snapping out)
+-Jerky walking animation again
+
+-Test edge and firefox more if you are going to support them
+
+-A telemetry system
+  -Send error logs to Azure; build some authentication app for this to view the logs
+  -Send events on useful actions (start game, win/lose game, etc)
+
+-Google analytics, after site is deployed
+
 ===============
 Post-V1 Features
 ===============
+-Intro when starting match
+-Stage music continues playing in menu if quit right when it starts
+-Climbing down ladders broken sometimes
+-Homing torpedo better behavior
+-If pushing against wall don't play run animation
+-Soft collision with allies
+-AI should switch weapons that have no ammo
+-Walls stop weapons
 
 -Play as Zero
 -All the special weapon charges
@@ -11,12 +30,7 @@ Post-V1 Features
   -Ability to drop down to a waypoint
   -Ability to jump over gaps
 
--A "prod" system/switch
-  -Hook up google analytics if it's on
-  -A telemetry system
-    -Send error logs to Azure; build some authentication app for this to view the logs
-    -Send events on useful actions (start game, win/lose game, etc)
-    -
+-AI Use charged weapons
 
 -CTF 
 -CTF AI
@@ -25,29 +39,9 @@ Post-V1 Features
   -Launch octopus (underwater coding)
 
 ===============
-Fixes
-===============
--Health not spawning in powerplant sometimes (try after a second game)
--Stage music continues playing in menu if quit right when it starts
--Should not be able to destroy teammates' projectiles
-Scoreboard should go above victory screen
--Jerky walking animation again
-
--Storm tornado glitches when pushing against wall (doesn't go forward)
--AI should switch weapons that have no ammo
--Walls stop weapons
-
--Collision system
-  -Ability for "soft collision"
-  -Need matrix collision system / way for 2 non-triggers to avoid collision
-
--Homing torpedo better behavior
--Shotgun ice meatshot when hit
--If pushing against wall don't play run animation
-
-===============
 Abstraction
 ===============
+-CheckCollisionActor, add gameobject array param
 -HUD System/framework? Consider HTML-like abstraction
 -Effects are messy. Think of a better abstraction
 -Object instantiation

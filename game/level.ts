@@ -1,5 +1,5 @@
 import { GameObject } from "./gameObject";
-import { Wall, Ladder } from "./wall";
+import { Wall, Ladder, KillZone, JumpZone } from "./wall";
 import { Point } from "./point";
 import { game } from "./game";
 import * as Helpers from "./helpers";
@@ -17,7 +17,6 @@ import { Line, Shape } from "./shape";
 import { KillFeedEntry } from "./killFeedEntry";
 import { GameMode, FFADeathMatch } from "./gameMode";
 import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, SmallHealthPickup } from "./pickup";
-import { KillZone } from "./killZone";
 import { HUD } from "./hud";
 import { ObjectPool } from "./objectPool";
 
@@ -44,7 +43,6 @@ export class Level {
   navMeshNodes: NavMeshNode[] = [];
   gameMode: GameMode;
   pickupSpawners: PickupSpawner[] = [];
-  killZones: KillZone[] = [];
   grid: Set<GameObject>[][] = [];
   occupiedGridSets: Set<Set<GameObject>> = new Set();
   cellWidth: number;
@@ -66,9 +64,9 @@ export class Level {
     this.zoomScale = 3;
     this.gravity = 550;
     this.frameCount = 0;
-    this.backgroundPath = levelData.levelJson.backgroundPath;
-    this.parallaxPath = levelData.parallax ? "assets/backgrounds/" + levelData.parallax : "";
-    this.foregroundPath = levelData.foreground ? "assets/backgrounds/" + levelData.foreground : "";
+    this.backgroundPath = levelData.levelJson.backgroundPath + game.path.version;
+    this.parallaxPath = levelData.parallax ? levelData.parallax : "";
+    this.foregroundPath = levelData.foreground ? levelData.foreground : "";
 
     let imagesToLoad = [this.backgroundPath];
     if(this.parallaxPath) {
@@ -135,8 +133,16 @@ export class Level {
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        let shape = new Shape(points);
-        this.killZones.push(new KillZone(shape));
+        let killZone = new KillZone(instance.name, points);
+        this.addGameObject(killZone);
+      }
+      else if(instance.objectName === "Jump Zone") {
+        let points: Point[] = [];
+        for(var point of instance.points) {
+          points.push(new Point(point.x, point.y));
+        }
+        let jumpZone = new JumpZone(instance.name, points);
+        this.addGameObject(jumpZone);
       }
       else if(instance.objectName === "Spawn Point") {
         let properties = instance.properties;
@@ -181,7 +187,7 @@ export class Level {
         game.music.stop();
       }
       let music = new Howl({
-        src: ["assets/music/" + this.levelData.levelMusic],
+        src: [this.levelData.levelMusic],
         sprite: {
           musicStart: [0, this.levelData.musicLoopStart],
           musicLoop: [this.levelData.musicLoopStart, this.levelData.musicLoopEnd - this.levelData.musicLoopStart]
@@ -414,9 +420,7 @@ export class Level {
     
     Helpers.noCanvasSmoothing(game.uiCtx);
     
-    //game.ctx.setTransform(this.zoomScale, 0, 0, this.zoomScale, -this.camX * this.zoomScale, -this.camY * this.zoomScale);
     game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
-    //console.log(this.screenWidth + "," + this.screenHeight)
     game.uiCtx.clearRect(0, 0, this.screenWidth, this.screenHeight);
 
     if(!game.uiData.isProd) {
@@ -698,16 +702,6 @@ export class Level {
 
   addEffect(effect: Effect) {
     this.effects.push(effect);
-  }
-
-  isInKillZone(actor: Actor) {
-    if(!actor.collider) return false;
-    for(let killZone of this.killZones) {
-      if(killZone.shape.intersectsShape(actor.collider.shape)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   //Should actor collide with gameobject?
@@ -1006,37 +1000,37 @@ export class LevelData {
     
     if(this.name === "sm_bossroom") {
       this.fixedCam = true;
-      this.levelMusic = "BossBattle.mp3";
+      this.levelMusic = game.path.bossMusic;
       this.musicLoopStart = 1500;
       this.musicLoopEnd = 29664;
       this.maxPlayers = 2;
     }
     else if(this.name === "powerplant") {
       this.fixedCam = false;
-      this.levelMusic = "PowerPlant.mp3";
-      this.parallax = "powerplant_parallex.png";
+      this.levelMusic = game.path.powerPlantMusic;
+      this.parallax = game.path.powerPlantParallax;
       this.musicLoopStart = 51040;
       this.musicLoopEnd = 101116;
       this.maxPlayers = 8;
     }
     else if(this.name === "highway") {
       this.fixedCam = false;
-      this.levelMusic = "highway.mp3";
-      this.parallax = "highway_parallax.png";
+      this.levelMusic = game.path.highwayMusic;
+      this.parallax = game.path.highwayParallax;
       this.musicLoopStart = 44440;
       this.musicLoopEnd = 87463;
       this.killY = 300;
-      this.foreground = "highway_foreground.png";
+      this.foreground = game.path.highwayForeground;
       this.maxPlayers = 8;
     }
     else if(this.name === "gallery") {
       this.fixedCam = false;
-      this.levelMusic = "gallery.mp3";
-      this.parallax = "gallery_parallax.png";
+      this.levelMusic = game.path.galleryMusic;
+      this.parallax = game.path.galleryParallax;
       this.musicLoopStart = 0;
       this.musicLoopEnd = 110687;
       this.killY = 1034;
-      this.foreground = "gallery_foreground.png";
+      this.foreground = game.path.galleryForeground;
       this.maxPlayers = 10;
     }
 
