@@ -266,8 +266,11 @@ export class Actor {
     let offsetX = this.xDir * this.currentFrame.offset.x;
     let offsetY = this.yDir * this.currentFrame.offset.y;
 
+    let drawX = this.pos.x + x + offsetX;
+    let drawY = this.pos.y + y + offsetY;
+    
     if(this.angle === undefined) {
-      this.sprite.draw(this.frameIndex, this.pos.x + x + offsetX, this.pos.y + y + offsetY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
+      this.sprite.draw(this.frameIndex, drawX, drawY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
     }
     else {
       this.renderFromAngle(x, y);
@@ -280,8 +283,8 @@ export class Actor {
     
     this.sprite.pixiSprite.visible = true;
     let alignOffset = this.sprite.getAlignOffset(this.frameIndex, this.xDir, this.yDir);
-    let rx = this.pos.x + x + offsetX + alignOffset.x;
-    let ry = this.pos.y + y + offsetY + alignOffset.y;
+    let rx = this.pos.x + offsetX + alignOffset.x;
+    let ry = this.pos.y + offsetY + alignOffset.y;
     let rect = new Rect(rx, ry, rx + this.currentFrame.rect.w, ry + this.currentFrame.rect.h);
     let camRect = new Rect(game.level.camX, game.level.camY, game.level.camX + game.defaultCanvasWidth, game.level.camY + game.defaultCanvasHeight);
     if(!rect.overlaps(camRect)) {
@@ -291,7 +294,6 @@ export class Actor {
       this.sprite.pixiSprite.renderable = true;
     }
     
-      
   }
 
   renderFromAngle(x: number, y: number) {

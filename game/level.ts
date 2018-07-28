@@ -384,8 +384,10 @@ export class Level {
 
   render() {
     
-    this.gameContainer.x = -this.camX;
-    this.gameContainer.y = -this.camY;
+    this.gameContainer.x = 0;
+    this.gameContainer.y = 0;
+    this.backgroundSprite.x = -this.camX;
+    this.backgroundSprite.y = -this.camY;
     this.foregroundContainer.x = -this.camX;
     this.foregroundContainer.y = -this.camY;
     this.gameUIContainer.x = -this.camX;
@@ -405,10 +407,10 @@ export class Level {
     });
 
     for(let go of this.gameObjects) {
-      go.render(0, 0);
+      go.render(-this.camX, -this.camY);
     }
     for(let anim of this.anims) {
-      anim.render(0, 0);
+      anim.render(-this.camX, -this.camY);
     }
 
     for(let effect of this.effects) {

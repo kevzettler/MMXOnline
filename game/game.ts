@@ -5,6 +5,7 @@ import { levelJsons } from "./levels";
 import { Player } from "./player";
 import { Palette } from "./color";
 import * as Helpers from "./helpers";
+import * as API from "./api";
 import * as Tests from "./tests";
 import { Point } from "./point";
 import { GameMode, Brawl, FFADeathMatch, TeamDeathMatch } from "./gameMode";
@@ -40,6 +41,7 @@ export enum Menu {
 
 export class UIData {
   isProd: boolean = false;
+  logInDev: boolean = true;
   playerName: string = "Player 1";
   menu: Menu;
   isBrawl: boolean = false;
@@ -121,6 +123,11 @@ class Game {
   blueShadowFilter: PIXI.filters.DropShadowFilter;
   redShadowFilter: PIXI.filters.DropShadowFilter;
 
+  devApiUrl: string = "http://localhost:60691/api";
+  prodApiUrl: string = "http://localhost:60691/api";
+
+  errorLogged: boolean = false;
+
   path: Path = new Path();
 
   constructor() {
@@ -128,7 +135,7 @@ class Game {
     this.defaultCanvasWidth = 298;
     this.defaultCanvasHeight = 224;
     this.canvas = <HTMLCanvasElement>document.getElementById("canvas");    
-    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas  });
+    this.pixiApp = new PIXI.Application({ width: 298, height: 224, view: this.canvas });
     //this.pixiApp.view.id = "canvas";
     //this.canvas = this.pixiApp.view;
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -156,17 +163,17 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    /*
+    
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "gallery";
     this.uiData.selectedGameMode = "team deathmatch";
     this.uiData.maxPlayers = 9;
-    this.uiData.numBots = 9;
+    this.uiData.numBots = 0;
     this.uiData.playTo = 20;
     $("#options").show();
     $("#dev-options").show();
-    game.loadLevel(this.uiData.selectedArenaMap);
-    */
+    game.loadLevel(this.uiData.selectedArenaMap, false);
+    /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
     this.uiData.maxPlayers = 1;
@@ -175,7 +182,8 @@ class Game {
     this.uiData.numBots = 0;
     $("#options").show();
     $("#dev-options").show();
-    game.loadLevel("sm_bossroom");
+    game.loadLevel("sm_bossroom", false);
+    */
   }
 
   getMusicVolume01() {
@@ -355,7 +363,7 @@ class Game {
           this.uiData.menu = Menu.None;
           $("#options").show();
           $("#dev-options").show();
-          game.loadLevel(selectedMap);
+          game.loadLevel(selectedMap, false);
         },
         goToMainMenu: function() {
           if(!game.level) {
@@ -509,19 +517,19 @@ class Game {
     let name = this.restartLevelName;
     this.restartLevelName = "";
     this.level.destroy();
-    this.loadLevel(name);
+    this.loadLevel(name, true);
   }
 
-  loadLevel(name: string) {
+  loadLevel(name: string, restart: boolean) {
     let levelData = this.levelDatas[name];
     if(!levelData) {
       throw "Bad level";
     }
     this.level = new Level(levelData);
-    this.levelLoadInterval = window.setInterval(() => this.startLevel(), 1);
+    this.levelLoadInterval = window.setInterval(() => this.startLevel(restart), 1);
   }
 
-  startLevel() {
+  startLevel(restart: boolean) {
     if(this.isLoaded()) {
       window.clearInterval(this.levelLoadInterval);
       
@@ -538,6 +546,13 @@ class Game {
       else if(this.uiData.selectedGameMode === "team deathmatch") {
         gameMode = new TeamDeathMatch(this.level, this.uiData);
       }
+      
+      if(!restart) {
+        let playerInfo = this.uiData.isBrawl ? (this.uiData.isPlayer2CPU ? "1" : "0") : String(this.uiData.numBots);
+        //gamemode name/map name/number of bots
+        API.logEvent("startGame", gameMode.constructor.name + "," + this.level.levelData.name + "," + playerInfo);
+      }
+      
       this.level.startLevel(gameMode);
       this.gameLoop(0);
     }
@@ -676,10 +691,18 @@ class Game {
       this.deltaTime = this.timePassed;
       this.timePassed = 0;
       if(!this.paused) {
-        this.level.update();
-        //console.log(this.collisionCalls);
-        this.collisionCalls = 0;
-        this.level.render();
+        try {
+          this.level.update();
+          //console.log(this.collisionCalls);
+          this.collisionCalls = 0;
+          this.level.render();
+        }
+        catch(err) {
+          if(!game.errorLogged) {
+            game.errorLogged = true;
+            API.logEvent("error", err.stack);
+          }
+        }
       }
     }
     

@@ -1,13 +1,20 @@
--Some MTV issues (snapping out)
--Jerky walking animation again
+-Some MTV issues (snapping out). Test the climb in gallery stage, and inclines
 
 -Test edge and firefox more if you are going to support them
 
 -A telemetry system
   -Send error logs to Azure; build some authentication app for this to view the logs
-  -Send events on useful actions (start game, win/lose game, etc)
+  -Send events on useful actions:
+    -Start game
+    -End game
+  -Should this be made generic? For other apps
+  -Don't send if certain cookie or ip range set
 
 -Google analytics, after site is deployed
+
+-Telemetry data model:
+
+-Id, datetime created, label, content
 
 ===============
 Post-V1 Features

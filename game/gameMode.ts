@@ -6,6 +6,7 @@ import { KillFeedEntry } from "./killFeedEntry";
 import { Rect } from "./rect";
 import { Sprite } from "./sprite";
 import { Graphics } from "pixi.js";
+import * as API from "./api";
 
 export class GameMode {
 
@@ -281,6 +282,11 @@ export class GameMode {
     }
   }
 
+  restart() {
+    API.logEvent("endGame", this.level.mainPlayer.won ? "win" : "lose");
+    game.restartLevel(this.level.levelData.name);
+  }
+
 }
 
 export class Brawl extends GameMode {
@@ -356,7 +362,7 @@ export class Brawl extends GameMode {
     else {
       this.overTime += game.deltaTime;
       if(this.overTime > 10) {
-        game.restartLevel(this.level.levelData.name);
+        this.restart();
       }
     }
 
@@ -508,7 +514,7 @@ export class FFADeathMatch extends GameMode {
     else {
       this.overTime += game.deltaTime;
       if(this.overTime > 10) {
-        game.restartLevel(this.level.levelData.name);
+        this.restart();
       }
     }
 
@@ -767,7 +773,7 @@ export class TeamDeathMatch extends GameMode {
     else {
       this.overTime += game.deltaTime;
       if(this.overTime > 10) {
-        game.restartLevel(this.level.levelData.name);
+        this.restart();
       }
     }
 

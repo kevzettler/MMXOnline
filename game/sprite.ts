@@ -136,6 +136,7 @@ export class Sprite {
     this.pixiSprite.gotoAndStop(frameIndex);
     if(x !== undefined) this.pixiSprite.x = x;
     if(y !== undefined) this.pixiSprite.y = y;
+
     this.pixiSprite.scale.x = flipX;
     this.pixiSprite.scale.y = flipY;
 
