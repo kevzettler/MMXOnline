@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="assets/gamePage.css?v=1.0.0">
+<title>Game</title>
+</head>
+<body>
+<div id="top-flex">
+  <div id="left-panel">
+    <img id="left-image" src="assets/images/X2.png?v=1.0.0" />
+  </div>
+  <div id="content">
+    <img id="logo" src="assets/images/logo.png?v=1.0.0" />
+    <div id="canvas-wrapper" style="display: none">
+      <canvas id="canvas" width="298" height="222"></canvas>
+      <canvas id="ui-canvas" width="298" height="222"></canvas>
+    </div>
+    <div id="ui" v-cloak>
+      <img src="assets/images/bg4.png?v=1.0.0" id="ui-background" />
+      <!--Browser not supported menu-->
+      <div id="bad-browser" v-show="uiData.menu === 9">
+        <h1>Browser not supported!</h1><h1>Chrome, Edge and Firefox supported.</h1><h1>Mobile not supported.</h1>
+      </div>
+      <!--Name select menu-->
+      <div id="loading" v-show="uiData.menu === 1">
+        <h1 id="loading1">Loading...</h1>
+      </div>
+      <div id="name-select" v-show="uiData.menu === 2">
+        <label for="name-select">Enter a name</label><input v-model="uiData.playerName" type="text" maxlength="10">
+        <button type="submit" v-on:click="submitName">Submit</button>
+      </div>
+      <!--Main menu-->
+      <div id="mainMenu" v-show="uiData.menu === 3">
+        <h1>Select Mode</h1>
+        <img src="assets/images/mmx.png?v=1.0.0" id="splash-image"/>
+        <div class="button-group" style="margin-top:350px">
+          <button type="submit" v-on:click="goTo1v1()">1 on 1</button>
+          <button type="submit" v-on:click="goToArena()">Arena</button>
+          <button v-on:click="goToControls(1)">Keyboard Controls (P1)</button>
+          <button v-on:click="goToControls(2)">Keyboard Controls (P2)</button>
+        </div>
+        <!--<button v-on:click="">Options</button>-->
+      </div>
+      <!--1v1 menu-->
+      <div id="mainMenu" v-show="uiData.menu === 4">
+        <h1>1v1 Setup</h1>
+        <div>
+          <div class="player-block">
+            <h2>Player 1</h2>
+            <div class="player-img-box">
+              <img class="player-img" src="assets/images/player1.png?v=1.0.0" />
+            </div>
+            <label>CPU?</label><input v-model="uiData.isPlayer1CPU" type="checkbox" />
+          </div>
+          <div class="player-block">
+            <h2>Player 2</h2>
+            <div class="player-img-box">
+              <img class="player-img" src="assets/images/player2.png?v=1.0.0" />
+            </div>
+            <label>CPU?</label><input v-model="uiData.isPlayer2CPU" type="checkbox" />
+          </div>
+          <br><br><br>
+          
+          <div class="map-box">
+            <h2 style="display:inline">Map</h2>
+            <select v-model="uiData.selectedBrawlMap">
+              <option v-for="map in uiData.brawlMaps" v-bind:value="map">{{ map }}</option>
+            </select>
+            <br><br>
+            <img class="map-img" v-bind:src="'assets/images/maps/' + mapImage(uiData.selectedBrawlMap) + '?v=1.0.0'" />
+            <div class="battlemenu-button-group">
+              <button type="submit" :disabled="!isBrawlReady()" v-on:click="goToBattle(uiData.selectedBrawlMap)">Battle!</button>
+              <button v-on:click="goToMainMenu()" class="back-button">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--arena menu-->
+      <div id="mainMenu" v-show="uiData.menu === 5">
+        <h1>Arena Map Select</h1>
+
+        <div class="map-box" style="display:inline-block">
+          <h2 style="display:inline">Select Map</h2>
+          <br><br>
+          <select v-model="uiData.selectedArenaMap" @change="onArenaMapChange()">
+            <option v-for="map in uiData.arenaMaps" v-bind:value="map">{{ map }}</option>
+          </select>
+          <br><br>
+          <img class="map-img" v-bind:src="'assets/images/maps/' + mapImage(uiData.selectedArenaMap) + '?v=1.0.0'" />
+        </div>
+
+        <div class="game-config">
+          <table>
+            <tr>
+              <td><label>Game Mode</label></td>
+              <td>
+                <select v-model="uiData.selectedGameMode">
+                  <option v-for="mode in uiData.gameModes" v-bind:value="mode">{{ mode }}</option>
+                </select>
+              </td>
+            </tr>
+            <!--
+            <tr>
+              <td><label>Max Players</label></td>
+              <td><input v-model:number="uiData.maxPlayers" type="number"></td>
+            </tr>
+            -->
+            <tr>
+              <td><label>Bots</label></td>
+              <td><input v-model:number="uiData.numBots" @change="numBotsChange" type="number"></td>
+            </tr>
+            <tr>
+              <td><label>Play to</label></td>
+              <td><input v-model:number="uiData.playTo" @change="playToChange" type="number"></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="player-block">
+          <h2>Player 1</h2>
+          <div class="player-img-box">
+            <img class="player-img" src="assets/images/player1.png?v=1.0.0" />
+          </div>
+          <!--<label>CPU?</label><input v-model="uiData.isPlayer1CPU" type="checkbox" />-->
+        </div>
+        <div class="battlemenu-button-group" style="margin-top:75px">
+          <button type="submit" :disabled="!isArenaReady()" v-on:click="goToBattle(uiData.selectedArenaMap)">Battle!</button>
+          <button v-on:click="goToMainMenu()" class="back-button">Back</button>
+        </div>
+      </div>
+      <!--Options menu-->
+      <div id="optionsMenu" v-show="uiData.menu === 8" style="padding-left: 10px">
+        <h1>Options</h1>
+        <div v-if="uiData.optionsCopy">
+          <label>Music volume</label><input type="range" min="0" max="100" v-model:number="uiData.optionsCopy.musicVolume" class="slider" id="myRange"><br>
+          <label>Sound volume</label><input type="range" min="0" max="100" v-model:number="uiData.optionsCopy.soundVolume" class="slider" id="myRange"><br><br>
+          <label>Show weapon switch HUD?</label><input type="checkbox" v-model="uiData.optionsCopy.showWeaponHUD"><br><br>
+        </div>
+        <button id="c-submit" type="submit" v-on:click="saveOptions()">Save</button>
+        <button v-on:click="goToMainMenu()" class="back-button">Back</button>
+      </div>
+      <!--Control config-->
+      <div id="controlMenu" v-show="uiData.menu === 6">
+        <h1>Player {{ uiData.whoseControls }} Controls</h1>
+        <h2 style="text-align: center">Click box and press key to rebind</h2>
+        <table style="display:inline-block;margin-left:20px">
+          <tr>
+            <td><label>Up</label></td>
+            <td><input id="c1" type="text" v-bind:value="getBind('up',uiData.whoseControls)" v-on:keydown="setBind($event,'up',uiData.whoseControls, 'c2')" />
+          </tr>
+          <tr>
+            <td><label>Down</label></td>
+            <td><input id="c2" type="text" v-bind:value="getBind('down',uiData.whoseControls)" v-on:keydown="setBind($event,'down',uiData.whoseControls, 'c3')" />
+          </tr>
+          <tr>
+            <td><label>Left</label></td>
+            <td><input id="c3" type="text" v-bind:value="getBind('left',uiData.whoseControls)" v-on:keydown="setBind($event,'left',uiData.whoseControls, 'c4')" />
+          </tr>
+          <tr>
+            <td><label>Right</label></td>
+            <td><input id="c4" type="text" v-bind:value="getBind('right',uiData.whoseControls)" v-on:keydown="setBind($event,'right',uiData.whoseControls, 'c5')" />
+          </tr>
+          <tr>
+            <td><label>Shoot</label></td>
+            <td><input id="c5" type="text" v-bind:value="getBind('shoot',uiData.whoseControls)" v-on:keydown="setBind($event,'shoot',uiData.whoseControls, 'c6')" />
+          </tr>
+          <tr>
+            <td><label>Jump</label></td>
+            <td><input id="c6" type="text" v-bind:value="getBind('jump',uiData.whoseControls)" v-on:keydown="setBind($event,'jump',uiData.whoseControls, 'c7')" />
+          </tr>
+          <tr>
+            <td><label>Dash</label></td>
+            <td><input id="c7" type="text" v-bind:value="getBind('dash',uiData.whoseControls)" v-on:keydown="setBind($event,'dash',uiData.whoseControls, 'c8')" />
+          </tr>
+          <tr>
+            <td><label>WeaponL</label></td>
+            <td><input id="c8" type="text" v-bind:value="getBind('weaponleft',uiData.whoseControls)" v-on:keydown="setBind($event,'weaponleft',uiData.whoseControls, 'c9')" />
+          </tr>
+          <tr>
+            <td><label>WeaponR</label></td>
+            <td><input id="c9" type="text" v-bind:value="getBind('weaponright',uiData.whoseControls)" v-on:keydown="setBind($event,'weaponright',uiData.whoseControls, 'c10')" />
+          </tr>
+          <tr>
+            <td><label>Score</label></td>
+            <td><input id="c10" type="text" v-bind:value="getBind('scoreboard',uiData.whoseControls)" v-on:keydown="setBind($event,'scoreboard',uiData.whoseControls, 'c11')" />
+          </tr>
+        </table>
+        <table v-show="uiData.whoseControls === 1" style="vertical-align:top;margin-top:0px;display:inline-block;margin-left:20px">
+          <tr>
+            <td><label>Weapon 1</label></td>
+            <td><input id="c11" type="text" v-bind:value="getBind('weapon1',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon1',uiData.whoseControls, 'c12')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 2</label></td>
+            <td><input id="c12" type="text" v-bind:value="getBind('weapon2',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon2',uiData.whoseControls, 'c13')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 3</label></td>
+            <td><input id="c13" type="text" v-bind:value="getBind('weapon3',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon3',uiData.whoseControls, 'c14')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 4</label></td>
+            <td><input id="c14" type="text" v-bind:value="getBind('weapon4',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon4',uiData.whoseControls, 'c15')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 5</label></td>
+            <td><input id="c15" type="text" v-bind:value="getBind('weapon5',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon5',uiData.whoseControls, 'c16')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 6</label></td>
+            <td><input id="c16" type="text" v-bind:value="getBind('weapon6',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon6',uiData.whoseControls, 'c17')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 7</label></td>
+            <td><input id="c17" type="text" v-bind:value="getBind('weapon7',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon7',uiData.whoseControls, 'c18')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 8</label></td>
+            <td><input id="c18" type="text" v-bind:value="getBind('weapon8',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon8',uiData.whoseControls, 'c19')" />
+          </tr>
+          <tr>
+            <td><label>Weapon 9</label></td>
+            <td><input id="c19" type="text" v-bind:value="getBind('weapon9',uiData.whoseControls)" v-on:keydown="setBind($event,'weapon9',uiData.whoseControls, 'c-submit')" />
+          </tr>
+        </table>
+        <button id="c-submit" type="submit" v-on:click="saveControls(uiData.whoseControls)" :disabled="!canSaveControls()" 
+          v-bind:title="canSaveControls() ? '' : 'Must bind all keys'">Save</button>
+        <button v-on:click="goToMainMenu()" class="back-button">Back</button>
+      </div>
+      <!--Confirm exit menu-->
+      <div id="exitMenu" v-show="uiData.menu === 7">
+        <br><br><br><br>
+        <h1>Really exit?</h1>
+        <button v-on:click="confirmExit(true)">Yes</button>
+        <button v-on:click="confirmExit(false)">No</button>
+      </div>
+    </div>
+    <div id="ingame-pause" style="display:none"></div>
+    <img src="assets/images/border.png?v=1.0.0" id="border-image" style="pointer-events:none;" />
+    
+    <div id="options" style="display:none;width:100%;" v-cloak>
+      <div id="button-group">
+        <!--<div id="button-switch" v-on:click="switchClick()"></div>-->
+        <div id="button-controls" v-on:click="goToControls(1)"></div>
+        <div id="button-controls2" v-show="uiData.isBrawl && !uiData.isPlayer2CPU" v-on:click="goToControls(2)"></div>
+        <div id="button-options" v-on:click="optionsClick()"></div>
+        <div id="button-quit" v-on:click="exitGame()"></div>
+      </div>
+      
+      <div id="dev-options" v-show="uiData.menu === 0 && !hideDevOptions && !uiData.isProd" style="margin-top: -130px; display:none">
+        <div style="display:inline-block">
+          <input type="checkbox" v-model="options.showHitboxes" @change="onChange()">Show hitboxes? <br>
+          <input type="checkbox" v-model="hideDevOptions" @change="onChange()">Hide dev options<br>
+          <input type="checkbox" v-model="options.muteMusic" @change="onChange()">Mute music?<br>
+          <input type="checkbox" v-model="options.alwaysFlinch" @change="onChange()">Always flinch?<br>
+        </div>
+        <div style="display:inline-block">
+          <input type="checkbox" v-model="options.invulnFrames" @change="onChange()">Invuln frames?<br>
+          <input type="checkbox" v-model="options.antiAlias" @change="onChange()">Anti Alias?<br>
+          <input type="checkbox" v-model="options.showFPS" @change="onChange()">Show FPS?<br>
+          <input type="checkbox" v-model="options.capTo30FPS" @change="onChange()">Cap to 30 FPS?<br>
+        </div>
+      </div>
+      
+    </div>  
+  </div>
+  <div id="right-panel">
+    <img id="right-image" src="assets/images/X2.png?v=1.0.0" />
+  </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/lodash/4.17.1/lodash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.0.14/howler.min.js"></script>
+<script src="node_modules/systemjs/dist/system.js?v=1.0.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi-filters@2.6.1/dist/pixi-filters.min.js"></script>
+<script src="main.js?v=1.0.0"></script>
+<script>
+  SystemJS.import("game").then(function(game) {
+    game.game.start();
+  });
+</script>
+
+</body>
+</html>
