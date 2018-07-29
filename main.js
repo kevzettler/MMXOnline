@@ -5986,7 +5986,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
             exports_28("Menu", Menu);
             UIData = (function () {
                 function UIData() {
-                    this.isProd = false;
+                    this.isProd = true;
                     this.logInDev = true;
                     this.playerName = "Player 1";
                     this.isBrawl = false;

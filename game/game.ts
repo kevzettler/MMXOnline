@@ -40,7 +40,7 @@ export enum Menu {
 }
 
 export class UIData {
-  isProd: boolean = false;
+  isProd: boolean = true;
   logInDev: boolean = true;
   playerName: string = "Player 1";
   menu: Menu;
