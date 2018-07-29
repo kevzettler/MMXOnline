@@ -125,7 +125,7 @@ class Game {
   redShadowFilter: PIXI.filters.DropShadowFilter;
 
   devApiUrl: string = "http://localhost:60691/api";
-  prodApiUrl: string = "http://localhost:60691/api";
+  prodApiUrl: string = "https://telemetrysystem2.azurewebsites.net/api";
 
   errorLogged: boolean = false;
 
@@ -710,7 +710,9 @@ class Game {
             console.error(err);
             if(!game.errorLogged) {
               game.errorLogged = true;
-              API.logEvent("error", err.stack);
+              let stack = err.stack;
+              if(!stack) stack = String(err);
+              API.logEvent("error", stack);
             }
           }
         }

@@ -14,6 +14,7 @@ export function logEvent(label: string, content: string) {
     if(!game.uiData.logInDev && !game.uiData.isProd) {
       return;
     }
+    if(!content) content = "";
 
     let userAgent = navigator.userAgent;
     let event: any = {
@@ -28,7 +29,7 @@ export function logEvent(label: string, content: string) {
       dataType: 'json',
       contentType: 'application/json',
       success: function (data) {
-        if(!game.uiData.isProd) console.log(data);
+        console.log(data);
       },
       data: JSON.stringify(event)
     });

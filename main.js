@@ -2020,6 +2020,8 @@ System.register("api", ["game"], function (exports_13, context_13) {
             if (!game_7.game.uiData.logInDev && !game_7.game.uiData.isProd) {
                 return;
             }
+            if (!content)
+                content = "";
             var userAgent = navigator.userAgent;
             var event_1 = {
                 UserAgent: userAgent,
@@ -2032,8 +2034,7 @@ System.register("api", ["game"], function (exports_13, context_13) {
                 dataType: 'json',
                 contentType: 'application/json',
                 success: function (data) {
-                    if (!game_7.game.uiData.isProd)
-                        console.log(data);
+                    console.log(data);
                 },
                 data: JSON.stringify(event_1)
             });
@@ -6035,7 +6036,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.maxLoadCount = 0;
                     this.restartLevelName = "";
                     this.devApiUrl = "http://localhost:60691/api";
-                    this.prodApiUrl = "http://localhost:60691/api";
+                    this.prodApiUrl = "https://telemetrysystem2.azurewebsites.net/api";
                     this.errorLogged = false;
                     this.path = new paths_1.Path();
                     this.doQuickStart = true;
@@ -6578,7 +6579,10 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                                     console.error(err);
                                     if (!game.errorLogged) {
                                         game.errorLogged = true;
-                                        API.logEvent("error", err.stack);
+                                        var stack = err.stack;
+                                        if (!stack)
+                                            stack = String(err);
+                                        API.logEvent("error", stack);
                                     }
                                 }
                             }
