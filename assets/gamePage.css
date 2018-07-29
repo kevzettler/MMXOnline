@@ -11,7 +11,7 @@ body {
   padding: 0;
   margin: 0;
   background-color: black;
-  /*background-image: url("images/bg2.jpg?v=1.0.0");*/
+  /*background-image: url("images/bg2.jpg?v=1.0.1");*/
   height:100vh;
   overflow: hidden;
 }
@@ -20,7 +20,7 @@ body {
   width: 100%;
   height: 100%;
   /*
-  background-image: url("images/mmx.png?v=1.0.0");
+  background-image: url("images/mmx.png?v=1.0.1");
   background-repeat: no-repeat;
   background-size: 70%;
   background-position:  center;
@@ -166,7 +166,7 @@ button {
 }
 
 .player-img-box {
-  background-image: url("images/playerbox.png?v=1.0.0");
+  background-image: url("images/playerbox.png?v=1.0.1");
   background-repeat: no-repeat;
   background-size: 192px 192px;
   width: 192px;
@@ -232,53 +232,53 @@ button {
 }
 
 #button-switch {
-  background-image: url("images/switch_off.png?v=1.0.0");
+  background-image: url("images/switch_off.png?v=1.0.1");
 }
 
 #button-controls {
-  background-image: url("images/controls_off.png?v=1.0.0");
+  background-image: url("images/controls_off.png?v=1.0.1");
 }
 
 #button-controls2 {
-  background-image: url("images/controls_off2.png?v=1.0.0");
+  background-image: url("images/controls_off2.png?v=1.0.1");
 }
 
 #button-options {
-  background-image: url("images/options_off.png?v=1.0.0");
+  background-image: url("images/options_off.png?v=1.0.1");
 }
 
 #button-quit {
-  background-image: url("images/quit_off.png?v=1.0.0");
+  background-image: url("images/quit_off.png?v=1.0.1");
 }
 
 #button-switch:hover {
-  background-image: url("images/switch_on.png?v=1.0.0");
+  background-image: url("images/switch_on.png?v=1.0.1");
 }
 
 #button-controls:hover {
-  background-image: url("images/controls_on.png?v=1.0.0");
+  background-image: url("images/controls_on.png?v=1.0.1");
 }
 
 #button-controls2:hover {
-  background-image: url("images/controls_on2.png?v=1.0.0");
+  background-image: url("images/controls_on2.png?v=1.0.1");
 }
 
 #button-options:hover {
-  background-image: url("images/options_on.png?v=1.0.0");
+  background-image: url("images/options_on.png?v=1.0.1");
 }
 
 #button-quit:hover {
-  background-image: url("images/quit_on.png?v=1.0.0");
+  background-image: url("images/quit_on.png?v=1.0.1");
 }
 
 body:after{
   display:none;
   content: 
-    url("images/switch_on.png?v=1.0.0") 
-    url("images/controls_on.png?v=1.0.0") 
-    url("images/controls_on2.png?v=1.0.0") 
-    url("images/options_on.png?v=1.0.0")
-    url("images/quit_on.png?v=1.0.0");
+    url("images/switch_on.png?v=1.0.1") 
+    url("images/controls_on.png?v=1.0.1") 
+    url("images/controls_on2.png?v=1.0.1") 
+    url("images/options_on.png?v=1.0.1")
+    url("images/quit_on.png?v=1.0.1");
  }
 
 #left-image, #right-image {    

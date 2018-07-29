@@ -5877,37 +5877,37 @@ System.register("paths", [], function (exports_27, context_27) {
         execute: function () {
             Path = (function () {
                 function Path() {
-                    this.winMusic = "assets/music/win.mp3?v=1.0.0";
-                    this.loseMusic = "assets/music/lose.mp3?v=1.0.0";
-                    this.menuMusic = "assets/music/menu.mp3?v=1.0.0";
-                    this.bossMusic = "assets/music/BossBattle.mp3?v=1.0.0";
-                    this.powerPlantMusic = "assets/music/PowerPlant.mp3?v=1.0.0";
-                    this.highwayMusic = "assets/music/highway.mp3?v=1.0.0";
-                    this.galleryMusic = "assets/music/gallery.mp3?v=1.0.0";
-                    this.powerPlantParallax = "assets/backgrounds/powerplant_parallex.png?v=1.0.0";
-                    this.highwayParallax = "assets/backgrounds/highway_parallax.png?v=1.0.0";
-                    this.galleryParallax = "assets/backgrounds/gallery_parallax.png?v=1.0.0";
-                    this.highwayForeground = "assets/backgrounds/highway_foreground.png?v=1.0.0";
-                    this.galleryForeground = "assets/backgrounds/gallery_foreground.png?v=1.0.0";
-                    this.effectsSpritesheetPath = "assets/spritesheets/effects.png?v=1.0.0";
-                    this.megaManXSpritesheetPath = "assets/spritesheets/MegamanX.png?v=1.0.0";
-                    this.redPalette = "assets/palettes/red.png?v=1.0.0";
-                    this.boomerangPalette = "assets/palettes/boomerang.png?v=1.0.0";
-                    this.electric_sparkPalette = "assets/palettes/electric_spark.png?v=1.0.0";
-                    this.fire_wavePalette = "assets/palettes/fire_wave.png?v=1.0.0";
-                    this.rolling_shieldPalette = "assets/palettes/rolling_shield.png?v=1.0.0";
-                    this.shotgun_icePalette = "assets/palettes/shotgun_ice.png?v=1.0.0";
-                    this.stingPalette = "assets/palettes/sting.png?v=1.0.0";
-                    this.tornadoPalette = "assets/palettes/tornado.png?v=1.0.0";
-                    this.torpedoPalette = "assets/palettes/torpedo.png?v=1.0.0";
-                    this.soundsheetPath = "assets/soundsheets/mmx_sfx.mp3?v=1.0.0";
+                    this.winMusic = "assets/music/win.mp3?v=1.0.1";
+                    this.loseMusic = "assets/music/lose.mp3?v=1.0.1";
+                    this.menuMusic = "assets/music/menu.mp3?v=1.0.1";
+                    this.bossMusic = "assets/music/BossBattle.mp3?v=1.0.1";
+                    this.powerPlantMusic = "assets/music/PowerPlant.mp3?v=1.0.1";
+                    this.highwayMusic = "assets/music/highway.mp3?v=1.0.1";
+                    this.galleryMusic = "assets/music/gallery.mp3?v=1.0.1";
+                    this.powerPlantParallax = "assets/backgrounds/powerplant_parallex.png?v=1.0.1";
+                    this.highwayParallax = "assets/backgrounds/highway_parallax.png?v=1.0.1";
+                    this.galleryParallax = "assets/backgrounds/gallery_parallax.png?v=1.0.1";
+                    this.highwayForeground = "assets/backgrounds/highway_foreground.png?v=1.0.1";
+                    this.galleryForeground = "assets/backgrounds/gallery_foreground.png?v=1.0.1";
+                    this.effectsSpritesheetPath = "assets/spritesheets/effects.png?v=1.0.1";
+                    this.megaManXSpritesheetPath = "assets/spritesheets/MegamanX.png?v=1.0.1";
+                    this.redPalette = "assets/palettes/red.png?v=1.0.1";
+                    this.boomerangPalette = "assets/palettes/boomerang.png?v=1.0.1";
+                    this.electric_sparkPalette = "assets/palettes/electric_spark.png?v=1.0.1";
+                    this.fire_wavePalette = "assets/palettes/fire_wave.png?v=1.0.1";
+                    this.rolling_shieldPalette = "assets/palettes/rolling_shield.png?v=1.0.1";
+                    this.shotgun_icePalette = "assets/palettes/shotgun_ice.png?v=1.0.1";
+                    this.stingPalette = "assets/palettes/sting.png?v=1.0.1";
+                    this.tornadoPalette = "assets/palettes/tornado.png?v=1.0.1";
+                    this.torpedoPalette = "assets/palettes/torpedo.png?v=1.0.1";
+                    this.soundsheetPath = "assets/soundsheets/mmx_sfx.mp3?v=1.0.1";
                 }
                 Path.prototype.getSoundPathFromFile = function (fileName) {
-                    return "assets/sounds/" + fileName + "?v=1.0.0";
+                    return "assets/sounds/" + fileName + "?v=1.0.1";
                 };
                 Object.defineProperty(Path.prototype, "version", {
                     get: function () {
-                        return "?v=1.0.0";
+                        return "?v=1.0.1";
                     },
                     enumerable: true,
                     configurable: true
