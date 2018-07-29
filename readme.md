@@ -1,3 +1,5 @@
+-Favicon broken
+-Add Online button, disabled with tooltip coming soon!
 -Google analytics, after site is deployed
 -Deploy and hook up analytics (don't forget to change the ProdUrl)
 

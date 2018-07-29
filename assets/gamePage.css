@@ -3,7 +3,7 @@
   src: url(fonts/Mega\ Man\ X.ttf);
 }
 
-#c-submit:disabled {
+button:disabled {
   opacity: 0.5;
 }
 
