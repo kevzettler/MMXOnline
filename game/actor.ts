@@ -153,13 +153,13 @@ export class Actor {
         let yVel = new Point(0, yDist);
         let mtv = game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
         if(mtv) {
-          /*
-          if(mtv.magnitude > 10) {
+          
+          if(mtv.magnitude > 30 && !game.uiData.isProd) {
             let shape1 = this.collider.shape.clone(0, yDist);
             let shape2 = collideData.collider.shape;
-            console.log(mtv);
+            throw "MTV too big";
           }
-          */
+          
           this.incPos(yVel);
           this.incPos(mtv.unitInc(0.01));
         }
@@ -266,7 +266,7 @@ export class Actor {
     let offsetX = this.xDir * this.currentFrame.offset.x;
     let offsetY = this.yDir * this.currentFrame.offset.y;
 
-    let drawX = this.pos.x + x + offsetX;
+    let drawX = Math.floor(this.pos.x + x) + offsetX;
     let drawY = this.pos.y + y + offsetY;
     
     if(this.angle === undefined) {

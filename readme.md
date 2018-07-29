@@ -1,24 +1,14 @@
--Some MTV issues (snapping out). Test the climb in gallery stage, and inclines
-
--Test edge and firefox more if you are going to support them
-
--A telemetry system
-  -Send error logs to Azure; build some authentication app for this to view the logs
-  -Send events on useful actions:
-    -Start game
-    -End game
-  -Should this be made generic? For other apps
-  -Don't send if certain cookie or ip range set
-
 -Google analytics, after site is deployed
-
--Telemetry data model:
-
--Id, datetime created, label, content
+-Deploy and hook up analytics (don't forget to change the ProdUrl)
 
 ===============
 Post-V1 Features
 ===============
+-MTV occasionally snaps out too far
+-DOM nodes growing and not getting GC'd
+-Have a level loading screen that only loads level backgrounds/music
+-Sprite transitions screw up win animation alignment
+-Some MTV issues (snapping out). Test the climb in gallery stage, and inclines
 -Intro when starting match
 -Stage music continues playing in menu if quit right when it starts
 -Climbing down ladders broken sometimes

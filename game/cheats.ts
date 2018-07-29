@@ -20,10 +20,18 @@ export function cheat(key: string, keycode: number) {
   //F2
   if(keycode === 113) {
     for(let player of game.level.players) { 
+      /*
       if(!player.isAI && player !== game.level.mainPlayer) {
         player.isAI = true;
         player.character.addAI();
-      } 
+      }
+     if(player.isAI) {
+       player.character.ai = undefined;
+       player.isAI = false;
+       player.inputMapping = game.getPlayerControls(2);
+       game.level.localPlayers.push(player);
+     }
+      */
     }
   }
   //F3

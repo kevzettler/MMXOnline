@@ -3,6 +3,10 @@
   src: url(fonts/Mega\ Man\ X.ttf);
 }
 
+#c-submit:disabled {
+  opacity: 0.5;
+}
+
 body {
   padding: 0;
   margin: 0;
@@ -266,6 +270,16 @@ button {
 #button-quit:hover {
   background-image: url("images/quit_on.png?v=1.0.0");
 }
+
+body:after{
+  display:none;
+  content: 
+    url("images/switch_on.png?v=1.0.0") 
+    url("images/controls_on.png?v=1.0.0") 
+    url("images/controls_on2.png?v=1.0.0") 
+    url("images/options_on.png?v=1.0.0")
+    url("images/quit_on.png?v=1.0.0");
+ }
 
 #left-image, #right-image {    
   display: block;

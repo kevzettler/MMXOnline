@@ -365,7 +365,7 @@ export function isSupportedBrowser() {
   //Check if browser is Firefox 
   else if (navigator.userAgent.search("Firefox") >= 0) {
       // insert conditional Firefox Code here
-      return false;
+      return true;
   }
   //Check if browser is Safari
   else if (navigator.userAgent.search("Safari") >= 0 && navigator.userAgent.search("Chrome") < 0) {

@@ -2349,18 +2349,21 @@ System.register("gameMode", ["game", "player", "helpers", "rect", "api"], functi
                     enumerable: true,
                     configurable: true
                 });
-                GameMode.prototype.drawKillFeed = function () {
+                GameMode.prototype.clearKillFeed = function () {
                     for (var i = this.killFeedContainer.children.length - 1; i >= 0; i--) {
                         var child = this.killFeedContainer.children[i];
                         this.killFeedContainer.removeChild(child);
                         child.destroy();
                     }
                     ;
+                };
+                GameMode.prototype.drawKillFeed = function () {
+                    this.clearKillFeed();
                     var fromRight = this.screenWidth - 10;
                     var fromTop = 10;
                     var yDist = 12;
-                    for (var i_1 = 0; i_1 < this.killFeed.length; i_1++) {
-                        var killFeed = this.killFeed[i_1];
+                    for (var i = 0; i < this.killFeed.length; i++) {
+                        var killFeed = this.killFeed[i];
                         var msg = "";
                         if (killFeed.killer) {
                             msg = killFeed.killer.name + "    " + killFeed.victim.name;
@@ -2372,20 +2375,20 @@ System.register("gameMode", ["game", "player", "helpers", "rect", "api"], functi
                         if (killFeed.killer === this.mainPlayer || killFeed.victim == this.mainPlayer) {
                             var msgLen = game_8.game.uiCtx.measureText(msg).width;
                             var msgHeight = 10;
-                            Helpers.createAndDrawRect(this.killFeedContainer, new rect_2.Rect(fromRight - msgLen - 2, fromTop - 2 + (i_1 * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i_1 * yDist)), 0x000000, 0xFFFFFF, 1, 0.75);
+                            Helpers.createAndDrawRect(this.killFeedContainer, new rect_2.Rect(fromRight - msgLen - 2, fromTop - 2 + (i * yDist) - msgHeight / 2, fromRight + 2, fromTop - 2 + msgHeight / 2 + (i * yDist)), 0x000000, 0xFFFFFF, 1, 0.75);
                         }
                         var isKillerRed = killFeed.killer && killFeed.killer.alliance === 1 && this.isTeamMode;
                         var isVictimRed = killFeed.victim.alliance === 1 && this.isTeamMode;
                         if (killFeed.killer) {
                             var nameLen = game_8.game.uiCtx.measureText(killFeed.victim.name).width;
-                            Helpers.createAndDrawText(this.killFeedContainer, killFeed.victim.name, fromRight, fromTop + (i_1 * yDist) - 5, 6, "right", "top", isVictimRed);
+                            Helpers.createAndDrawText(this.killFeedContainer, killFeed.victim.name, fromRight, fromTop + (i * yDist) - 5, 6, "right", "top", isVictimRed);
                             var victimNameWidth = game_8.game.uiCtx.measureText(killFeed.victim.name).width;
-                            Helpers.createAndDrawText(this.killFeedContainer, killFeed.killer.name + "    ", fromRight - victimNameWidth, fromTop + (i_1 * yDist) - 5, 6, "right", "top", isKillerRed);
+                            Helpers.createAndDrawText(this.killFeedContainer, killFeed.killer.name + "    ", fromRight - victimNameWidth, fromTop + (i * yDist) - 5, 6, "right", "top", isKillerRed);
                             var weaponIndex = killFeed.weapon.index;
-                            game_8.game.sprites["hud_killfeed_weapon"].createAndDraw(this.killFeedContainer, weaponIndex, fromRight - nameLen - 13, fromTop + (i_1 * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
+                            game_8.game.sprites["hud_killfeed_weapon"].createAndDraw(this.killFeedContainer, weaponIndex, fromRight - nameLen - 13, fromTop + (i * yDist) - 2, undefined, undefined, undefined, undefined, undefined);
                         }
                         else {
-                            Helpers.createAndDrawText(this.killFeedContainer, msg, fromRight, fromTop + (i_1 * yDist) - 5, 6, "right", "top", isVictimRed);
+                            Helpers.createAndDrawText(this.killFeedContainer, msg, fromRight, fromTop + (i * yDist) - 5, 6, "right", "top", isVictimRed);
                         }
                     }
                 };
@@ -3321,8 +3324,8 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "hel
                         && this.player !== game_9.game.level.mainPlayer
                         && this.player.alliance === game_9.game.level.mainPlayer.alliance) {
                         this.characterTag.visible = true;
-                        this.characterTag.x = this.pos.x + x;
-                        this.characterTag.y = this.pos.y + y - 47;
+                        this.characterTag.x = this.pos.x;
+                        this.characterTag.y = this.pos.y - 47;
                         var healthPct = this.player.health / this.player.maxHealth;
                         this.healthBarInner.width = Helpers.clampMax(Math.ceil(this.healthBarInnerWidth * healthPct), this.healthBarInnerWidth);
                         if (healthPct > 0.66)
@@ -3941,10 +3944,6 @@ System.register("cheats", ["game", "killFeedEntry"], function (exports_16, conte
             try {
                 for (var _d = __values(game_10.game.level.players), _e = _d.next(); !_e.done; _e = _d.next()) {
                     var player = _e.value;
-                    if (!player.isAI && player !== game_10.game.level.mainPlayer) {
-                        player.isAI = true;
-                        player.character.addAI();
-                    }
                 }
             }
             catch (e_24_1) { e_24 = { error: e_24_1 }; }
@@ -4592,6 +4591,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 });
                 Level.prototype.destroy = function () {
                     var stage = game_14.game.pixiApp.stage;
+                    this.gameMode.clearKillFeed();
                     for (var i = stage.children.length - 1; i >= 0; i--) {
                         var child = stage.children[i];
                         stage.removeChild(child);
@@ -4763,22 +4763,9 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         if (game_14.game.music) {
                             game_14.game.music.stop();
                         }
-                        var music_1 = new Howl({
-                            src: [this.levelData.levelMusic],
-                            sprite: {
-                                musicStart: [0, this.levelData.musicLoopStart],
-                                musicLoop: [this.levelData.musicLoopStart, this.levelData.musicLoopEnd - this.levelData.musicLoopStart]
-                            },
-                            onload: function () {
-                            }
-                        });
-                        window.setTimeout(function () {
-                            music_1.play("musicStart");
-                            music_1.on("end", function () {
-                                music_1.play("musicLoop");
-                            });
-                        }, 1000);
-                        game_14.game.music = music_1;
+                        game_14.game.music = this.levelData.levelMusic;
+                        game_14.game.music.seek(0);
+                        setTimeout(function () { game_14.game.music.play("musicStart"); }, 500);
                     }
                     this.hud = new hud_1.HUD(this);
                     this.gameMode.createHUD();
@@ -4812,7 +4799,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 };
                 Level.prototype.update = function () {
                     if (game_14.game.music) {
-                        game_14.game.music.volume((game_14.game.options.playMusic ? game_14.game.getMusicVolume01() : 0));
+                        game_14.game.music.volume((!game_14.game.options.muteMusic ? game_14.game.getMusicVolume01() : 0));
                     }
                     this.gameMode.checkIfWin();
                     var playerX = 0;
@@ -5212,7 +5199,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     if (shape.points.length === 2) {
                         var point1 = shape.points[0];
                         var point2 = shape.points[1];
-                        var dir = point1.directionTo(point2);
+                        var dir = point1.directionToNorm(point2);
                         var curX = point1.x;
                         var curY = point1.y;
                         var dist = 0;
@@ -5732,20 +5719,20 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 function LevelData(levelJson) {
                     this.parallax = "";
                     this.foreground = "";
-                    this.levelMusic = "";
                     this.maxPlayers = 0;
                     this.levelJson = levelJson;
                     this.name = levelJson.name;
+                    var musicPath = "";
                     if (this.name === "sm_bossroom") {
                         this.fixedCam = true;
-                        this.levelMusic = game_14.game.path.bossMusic;
+                        musicPath = game_14.game.path.bossMusic;
                         this.musicLoopStart = 1500;
                         this.musicLoopEnd = 29664;
                         this.maxPlayers = 2;
                     }
                     else if (this.name === "powerplant") {
                         this.fixedCam = false;
-                        this.levelMusic = game_14.game.path.powerPlantMusic;
+                        musicPath = game_14.game.path.powerPlantMusic;
                         this.parallax = game_14.game.path.powerPlantParallax;
                         this.musicLoopStart = 51040;
                         this.musicLoopEnd = 101116;
@@ -5753,7 +5740,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     else if (this.name === "highway") {
                         this.fixedCam = false;
-                        this.levelMusic = game_14.game.path.highwayMusic;
+                        musicPath = game_14.game.path.highwayMusic;
                         this.parallax = game_14.game.path.highwayParallax;
                         this.musicLoopStart = 44440;
                         this.musicLoopEnd = 87463;
@@ -5763,7 +5750,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     }
                     else if (this.name === "gallery") {
                         this.fixedCam = false;
-                        this.levelMusic = game_14.game.path.galleryMusic;
+                        musicPath = game_14.game.path.galleryMusic;
                         this.parallax = game_14.game.path.galleryParallax;
                         this.musicLoopStart = 0;
                         this.musicLoopEnd = 110687;
@@ -5771,6 +5758,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                         this.foreground = game_14.game.path.galleryForeground;
                         this.maxPlayers = 10;
                     }
+                    this.levelMusic = game_14.game.loadMusic(musicPath, this.musicLoopStart, this.musicLoopEnd);
                 }
                 return LevelData;
             }());
@@ -5974,7 +5962,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.alwaysFlinch = false;
                     this.invulnFrames = false;
                     this.antiAlias = false;
-                    this.playMusic = false;
+                    this.muteMusic = false;
                     this.showFPS = false;
                     this.capTo30FPS = false;
                     this.musicVolume = 100;
@@ -6003,7 +5991,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.playerName = "Player 1";
                     this.isBrawl = false;
                     this.brawlMaps = ["sm_bossroom"];
-                    this.arenaMaps = ["powerplant", "highway", "gallery"];
+                    this.arenaMaps = ["highway", "powerplant"];
                     this.selectedBrawlMap = this.brawlMaps[0];
                     this.selectedArenaMap = this.arenaMaps[0];
                     this.gameModes = ["deathmatch", "team deathmatch"];
@@ -6078,13 +6066,12 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 };
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
-                    this.uiData.selectedArenaMap = "gallery";
+                    this.uiData.selectedArenaMap = "powerplant";
                     this.uiData.selectedGameMode = "team deathmatch";
-                    this.uiData.maxPlayers = 9;
-                    this.uiData.numBots = 0;
+                    this.uiData.maxPlayers = 7;
+                    this.uiData.numBots = 7;
                     this.uiData.playTo = 20;
                     $("#options").show();
-                    $("#dev-options").show();
                     game.loadLevel(this.uiData.selectedArenaMap, false);
                 };
                 Game.prototype.getMusicVolume01 = function () {
@@ -6217,30 +6204,48 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             },
                             canSaveControls: function () {
                                 var playerControls = this.uiData.currentControls;
-                                var upFound = false, downFound = false, leftFound = false, rightFound = false, shootFound = false, jumpFound = false, dashFound = false, scoreboardFound = false, weaponleftFound = false, weaponrightFound = false;
+                                var foundCount = 0;
                                 for (var key in playerControls) {
                                     if (playerControls[key] === "up")
-                                        upFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "down")
-                                        downFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "left")
-                                        leftFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "right")
-                                        rightFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "shoot")
-                                        shootFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "jump")
-                                        jumpFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "dash")
-                                        dashFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "scoreboard")
-                                        scoreboardFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "weaponleft")
-                                        weaponleftFound = true;
+                                        foundCount++;
                                     if (playerControls[key] === "weaponright")
-                                        weaponrightFound = true;
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon1")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon2")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon3")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon4")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon5")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon6")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon7")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon8")
+                                        foundCount++;
+                                    if (playerControls[key] === "weapon9")
+                                        foundCount++;
                                 }
-                                return upFound && downFound && leftFound && rightFound && shootFound && jumpFound && dashFound && scoreboardFound && weaponleftFound && weaponrightFound;
+                                return foundCount === (this.uiData.whoseControls === 1 ? 19 : 10);
                             },
                             submitName: function () {
                                 localStorage.setItem("playerName", game.uiData.playerName);
@@ -6258,7 +6263,6 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             goToBattle: function (selectedMap) {
                                 this.uiData.menu = Menu.None;
                                 $("#options").show();
-                                $("#dev-options").show();
                                 game.loadLevel(selectedMap, false);
                             },
                             goToMainMenu: function () {
@@ -6325,6 +6329,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                             }
                         }
                     });
+                    this.loadMenuMusic();
                     this.loadImages([
                         game.path.effectsSpritesheetPath,
                         game.path.megaManXSpritesheetPath
@@ -6341,13 +6346,15 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Game.prototype.onLoad = function () {
                     if (this.isLoaded()) {
                         window.clearInterval(this.appLoadInterval);
-                        this.startMenuMusic();
+                        if (!(this.doQuickStart && !this.uiData.isProd)) {
+                            this.music.play("musicStart");
+                        }
                         var name_2 = "Player 1";
                         if (!name_2) {
                             this.uiData.menu = Menu.NameSelect;
                         }
                         else {
-                            if (this.doQuickStart) {
+                            if (this.doQuickStart && !this.uiData.isProd) {
                                 this.quickStart();
                             }
                             else {
@@ -6360,27 +6367,28 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     else {
                     }
                 };
-                Game.prototype.startMenuMusic = function () {
-                    if (this.doQuickStart)
-                        return;
+                Game.prototype.loadMenuMusic = function () {
+                    var music = this.loadMusic(game.path.menuMusic, 2006, 25083);
+                    music.volume(!game.options.muteMusic ? game.getMusicVolume01() : 0);
+                    this.music = music;
+                };
+                Game.prototype.loadMusic = function (path, musicLoopStart, musicLoopEnd) {
+                    var _this = this;
+                    this.maxLoadCount++;
                     var music = new Howl({
-                        src: [game.path.menuMusic],
+                        src: [path],
                         sprite: {
-                            musicStart: [0, 2006],
-                            musicLoop: [2006, 25083 - 2006]
+                            musicStart: [0, musicLoopStart],
+                            musicLoop: [musicLoopStart, musicLoopEnd - musicLoopStart]
                         },
                         onload: function () {
+                            _this.loadCount++;
                         }
                     });
-                    window.setTimeout(function () {
-                        music.play("musicStart");
-                        music.on("end", function () {
-                            console.log("Loop");
-                            music.play("musicLoop");
-                        });
-                    }, 1000);
-                    music.volume(game.options.playMusic ? game.getMusicVolume01() : 0);
-                    this.music = music;
+                    music.on("end", function () {
+                        music.play("musicLoop");
+                    });
+                    return music;
                 };
                 Game.prototype.refreshUI = function () {
                     this.ui.$forceUpdate();
@@ -6557,17 +6565,24 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         this.deltaTime = this.timePassed;
                         this.timePassed = 0;
                         if (!this.paused) {
-                            try {
+                            if (!game.uiData.isProd) {
                                 this.level.update();
-                                this.collisionCalls = 0;
                                 this.level.render();
                             }
-                            catch (err) {
-                                if (!game.errorLogged) {
-                                    game.errorLogged = true;
-                                    API.logEvent("error", err.stack);
+                            else {
+                                try {
+                                    this.level.update();
+                                    this.level.render();
+                                }
+                                catch (err) {
+                                    console.error(err);
+                                    if (!game.errorLogged) {
+                                        game.errorLogged = true;
+                                        API.logEvent("error", err.stack);
+                                    }
                                 }
                             }
+                            this.collisionCalls = 0;
                         }
                     }
                     if (this.restartLevelName !== "") {
@@ -6647,8 +6662,6 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     return inputMapping;
                 };
                 Game.prototype.setPlayerControls = function (playerNum, inputMapping) {
-                    if (playerNum === 1 && !inputMapping[49])
-                        throw "Bad input mapping";
                     var json = JSON.stringify(inputMapping);
                     localStorage.setItem("player" + String(playerNum) + "-controls", json);
                 };
@@ -7684,7 +7697,7 @@ System.register("helpers", ["point"], function (exports_31, context_31) {
             return true;
         }
         else if (navigator.userAgent.search("Firefox") >= 0) {
-            return false;
+            return true;
         }
         else if (navigator.userAgent.search("Safari") >= 0 && navigator.userAgent.search("Chrome") < 0) {
             return false;
@@ -8167,6 +8180,9 @@ System.register("point", ["helpers"], function (exports_32, context_32) {
                 };
                 Point.prototype.directionTo = function (other) {
                     return new Point(other.x - this.x, other.y - this.y);
+                };
+                Point.prototype.directionToNorm = function (other) {
+                    return (new Point(other.x - this.x, other.y - this.y)).normalize();
                 };
                 Point.prototype.isAngled = function () {
                     return this.x !== 0 && this.y !== 0;
@@ -8718,6 +8734,11 @@ System.register("actor", ["sprite", "point", "game", "helpers", "rect"], functio
                             var yVel = new point_13.Point(0, yDist);
                             var mtv = game_17.game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
                             if (mtv) {
+                                if (mtv.magnitude > 30 && !game_17.game.uiData.isProd) {
+                                    var shape1 = this.collider.shape.clone(0, yDist);
+                                    var shape2 = collideData.collider.shape;
+                                    throw "MTV too big";
+                                }
                                 this.incPos(yVel);
                                 this.incPos(mtv.unitInc(0.01));
                             }
@@ -8811,7 +8832,7 @@ System.register("actor", ["sprite", "point", "game", "helpers", "rect"], functio
                 Actor.prototype.render = function (x, y) {
                     var offsetX = this.xDir * this.currentFrame.offset.x;
                     var offsetY = this.yDir * this.currentFrame.offset.y;
-                    var drawX = this.pos.x + x + offsetX;
+                    var drawX = Math.floor(this.pos.x + x) + offsetX;
                     var drawY = this.pos.y + y + offsetY;
                     if (this.angle === undefined) {
                         this.sprite.draw(this.frameIndex, drawX, drawY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);

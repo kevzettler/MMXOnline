@@ -119,6 +119,9 @@ export class Point {
   directionTo(other: Point) {
     return new Point(other.x - this.x, other.y - this.y);
   }
+  directionToNorm(other: Point) {
+    return (new Point(other.x - this.x, other.y - this.y)).normalize();
+  }
   isAngled() {
     return this.x !== 0 && this.y !== 0;
   }

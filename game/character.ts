@@ -440,8 +440,8 @@ export class Character extends Actor {
       && this.player.alliance === game.level.mainPlayer.alliance
     ) {
       this.characterTag.visible = true;
-      this.characterTag.x = this.pos.x + x;
-      this.characterTag.y = this.pos.y + y - 47;
+      this.characterTag.x = this.pos.x;
+      this.characterTag.y = this.pos.y - 47;
 
       let healthPct = this.player.health / this.player.maxHealth;
       this.healthBarInner.width = Helpers.clampMax(Math.ceil(this.healthBarInnerWidth * healthPct), this.healthBarInnerWidth);

@@ -83,6 +83,7 @@ export class Level {
 
   destroy() {
     let stage = game.pixiApp.stage;
+    this.gameMode.clearKillFeed();
     for (var i = stage.children.length - 1; i >= 0; i--) {
       let child = stage.children[i];
       stage.removeChild(child);
@@ -186,27 +187,9 @@ export class Level {
       if(game.music) {
         game.music.stop();
       }
-      let music = new Howl({
-        src: [this.levelData.levelMusic],
-        sprite: {
-          musicStart: [0, this.levelData.musicLoopStart],
-          musicLoop: [this.levelData.musicLoopStart, this.levelData.musicLoopEnd - this.levelData.musicLoopStart]
-        },
-        onload: () => {
-        }
-      });
-      
-      window.setTimeout(
-        () => {
-          music.play("musicStart");
-          music.on("end", function() {
-            //console.log("Loop");
-            music.play("musicLoop");
-          });
-        },
-        1000);
-
-      game.music = music;
+      game.music = this.levelData.levelMusic;
+      game.music.seek(0);
+      setTimeout(() => { game.music.play("musicStart"); }, 500);
     }
 
     this.hud = new HUD(this);
@@ -245,7 +228,7 @@ export class Level {
   update() {
 
     if(game.music) {
-      game.music.volume((game.options.playMusic ? game.getMusicVolume01() : 0));
+      game.music.volume((!game.options.muteMusic ? game.getMusicVolume01() : 0));
     }
 
     this.gameMode.checkIfWin();
@@ -591,12 +574,12 @@ export class Level {
   getGridCells(shape: Shape, offsetX: number, offsetY: number): Cell[] {
 
     let cells = [];
-
+    
     //Line case
     if(shape.points.length === 2) {
       let point1 = shape.points[0];
       let point2 = shape.points[1];
-      let dir = point1.directionTo(point2);
+      let dir = point1.directionToNorm(point2);
       let curX = point1.x;
       let curY = point1.y;
       let dist = 0;
@@ -992,24 +975,24 @@ export class LevelData {
   musicLoopEnd: number;
   parallax: string = "";
   foreground: string = "";
-  levelMusic: string = "";
+  levelMusic: Howl;
   killY: number;
   maxPlayers: number = 0;
 
   constructor(levelJson: any) {
     this.levelJson = levelJson;
     this.name = levelJson.name;
-    
+    let musicPath = "";
     if(this.name === "sm_bossroom") {
       this.fixedCam = true;
-      this.levelMusic = game.path.bossMusic;
+      musicPath = game.path.bossMusic;
       this.musicLoopStart = 1500;
       this.musicLoopEnd = 29664;
       this.maxPlayers = 2;
     }
     else if(this.name === "powerplant") {
       this.fixedCam = false;
-      this.levelMusic = game.path.powerPlantMusic;
+      musicPath = game.path.powerPlantMusic;
       this.parallax = game.path.powerPlantParallax;
       this.musicLoopStart = 51040;
       this.musicLoopEnd = 101116;
@@ -1017,7 +1000,7 @@ export class LevelData {
     }
     else if(this.name === "highway") {
       this.fixedCam = false;
-      this.levelMusic = game.path.highwayMusic;
+      musicPath = game.path.highwayMusic;
       this.parallax = game.path.highwayParallax;
       this.musicLoopStart = 44440;
       this.musicLoopEnd = 87463;
@@ -1027,7 +1010,7 @@ export class LevelData {
     }
     else if(this.name === "gallery") {
       this.fixedCam = false;
-      this.levelMusic = game.path.galleryMusic;
+      musicPath = game.path.galleryMusic;
       this.parallax = game.path.galleryParallax;
       this.musicLoopStart = 0;
       this.musicLoopEnd = 110687;
@@ -1035,6 +1018,8 @@ export class LevelData {
       this.foreground = game.path.galleryForeground;
       this.maxPlayers = 10;
     }
+
+    this.levelMusic = game.loadMusic(musicPath, this.musicLoopStart, this.musicLoopEnd);    
 
   }
 

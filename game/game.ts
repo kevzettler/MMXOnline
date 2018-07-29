@@ -17,7 +17,7 @@ class Options {
   alwaysFlinch: boolean = false;
   invulnFrames: boolean = false;
   antiAlias: boolean = false;
-  playMusic: boolean = false;
+  muteMusic: boolean = false;
   showFPS: boolean = false;
   capTo30FPS: boolean = false;
   musicVolume: number = 100;
@@ -46,7 +46,8 @@ export class UIData {
   menu: Menu;
   isBrawl: boolean = false;
   brawlMaps: string[] = ["sm_bossroom"];
-  arenaMaps: string[] = ["powerplant", "highway", "gallery"];
+  //arenaMaps: string[] = ["powerplant", "highway", "gallery"];
+  arenaMaps: string[] = ["highway", "powerplant"];
   selectedBrawlMap: string = this.brawlMaps[0];
   selectedArenaMap: string = this.arenaMaps[0];
   gameModes: string[] = ["deathmatch", "team deathmatch"];
@@ -163,15 +164,13 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    
     this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "gallery";
+    this.uiData.selectedArenaMap = "powerplant";
     this.uiData.selectedGameMode = "team deathmatch";
-    this.uiData.maxPlayers = 9;
-    this.uiData.numBots = 0;
+    this.uiData.maxPlayers = 7;
+    this.uiData.numBots = 7;
     this.uiData.playTo = 20;
     $("#options").show();
-    $("#dev-options").show();
     game.loadLevel(this.uiData.selectedArenaMap, false);
     /*
     this.uiData.menu = Menu.None;
@@ -181,7 +180,6 @@ class Game {
     this.uiData.maxPlayers = 0;
     this.uiData.numBots = 0;
     $("#options").show();
-    $("#dev-options").show();
     game.loadLevel("sm_bossroom", false);
     */
   }
@@ -330,21 +328,29 @@ class Game {
         },
         canSaveControls() {
           let playerControls = this.uiData.currentControls;
-          let upFound = false, downFound = false, leftFound = false, rightFound = false, shootFound = false, jumpFound = false, 
-              dashFound = false, scoreboardFound = false, weaponleftFound = false, weaponrightFound = false;
+          let foundCount = 0;
           for(let key in playerControls) {
-            if(playerControls[key] === "up") upFound = true;
-            if(playerControls[key] === "down") downFound = true;
-            if(playerControls[key] === "left") leftFound = true;
-            if(playerControls[key] === "right") rightFound = true;
-            if(playerControls[key] === "shoot") shootFound = true;
-            if(playerControls[key] === "jump") jumpFound = true;
-            if(playerControls[key] === "dash") dashFound = true;
-            if(playerControls[key] === "scoreboard") scoreboardFound = true;
-            if(playerControls[key] === "weaponleft") weaponleftFound = true;
-            if(playerControls[key] === "weaponright") weaponrightFound = true;
+            if(playerControls[key] === "up") foundCount++;
+            if(playerControls[key] === "down") foundCount++;
+            if(playerControls[key] === "left") foundCount++;
+            if(playerControls[key] === "right") foundCount++;
+            if(playerControls[key] === "shoot") foundCount++;
+            if(playerControls[key] === "jump") foundCount++;
+            if(playerControls[key] === "dash") foundCount++;
+            if(playerControls[key] === "scoreboard") foundCount++;
+            if(playerControls[key] === "weaponleft") foundCount++;
+            if(playerControls[key] === "weaponright") foundCount++;
+            if(playerControls[key] === "weapon1") foundCount++;
+            if(playerControls[key] === "weapon2") foundCount++;
+            if(playerControls[key] === "weapon3") foundCount++;
+            if(playerControls[key] === "weapon4") foundCount++;
+            if(playerControls[key] === "weapon5") foundCount++;
+            if(playerControls[key] === "weapon6") foundCount++;
+            if(playerControls[key] === "weapon7") foundCount++;
+            if(playerControls[key] === "weapon8") foundCount++;
+            if(playerControls[key] === "weapon9") foundCount++;
           }
-          return upFound && downFound && leftFound && rightFound && shootFound && jumpFound && dashFound && scoreboardFound && weaponleftFound && weaponrightFound;
+          return foundCount === (this.uiData.whoseControls === 1 ? 19 : 10);
         },
         submitName: function() {
           localStorage.setItem("playerName", game.uiData.playerName);
@@ -362,7 +368,6 @@ class Game {
         goToBattle: function(selectedMap: any) {
           this.uiData.menu = Menu.None;
           $("#options").show();
-          $("#dev-options").show();
           game.loadLevel(selectedMap, false);
         },
         goToMainMenu: function() {
@@ -431,7 +436,7 @@ class Game {
         }
       }
     });
-
+    this.loadMenuMusic();
     this.loadImages([
       game.path.effectsSpritesheetPath,
       game.path.megaManXSpritesheetPath
@@ -451,13 +456,17 @@ class Game {
     if(this.isLoaded()) {
       //console.log("LOADED");
       window.clearInterval(this.appLoadInterval);
-      this.startMenuMusic();
+
+      if(!(this.doQuickStart && !this.uiData.isProd)) {
+        this.music.play("musicStart");
+      }
+      
       let name = "Player 1";// localStorage.getItem("playerName");
       if(!name) {
         this.uiData.menu = Menu.NameSelect;
       }
       else {
-        if(this.doQuickStart) {
+        if(this.doQuickStart && !this.uiData.isProd) {
           this.quickStart();
         }
         else {
@@ -472,33 +481,28 @@ class Game {
     }
   }
 
-  startMenuMusic() {
+  loadMenuMusic() {
+    let music = this.loadMusic(game.path.menuMusic, 2006, 25083);
+    music.volume(!game.options.muteMusic ? game.getMusicVolume01() : 0);
+    this.music = music;
+  }
 
-    if(this.doQuickStart) return;
-
+  loadMusic(path: string, musicLoopStart: number, musicLoopEnd: number) {
+    this.maxLoadCount++;
     let music = new Howl({
-      src: [game.path.menuMusic],
+      src: [path],
       sprite: {
-        musicStart: [0, 2006],
-        musicLoop: [2006, 25083 - 2006]
+        musicStart: [0, musicLoopStart],
+        musicLoop: [musicLoopStart, musicLoopEnd - musicLoopStart]
       },
       onload: () => {
+        this.loadCount++;
       }
     });
-    
-    window.setTimeout(
-      () => {
-        music.play("musicStart");
-        music.on("end", function() {
-          console.log("Loop");
-          
-          music.play("musicLoop");
-        });
-      },
-      1000);
-
-    music.volume(game.options.playMusic ? game.getMusicVolume01() : 0);
-    this.music = music;
+    music.on("end", () => {
+      music.play("musicLoop");
+    });
+    return music;
   }
 
   refreshUI() {
@@ -691,18 +695,26 @@ class Game {
       this.deltaTime = this.timePassed;
       this.timePassed = 0;
       if(!this.paused) {
-        try {
+        //In dev, don't catch errors
+        if(!game.uiData.isProd) {
           this.level.update();
-          //console.log(this.collisionCalls);
-          this.collisionCalls = 0;
           this.level.render();
         }
-        catch(err) {
-          if(!game.errorLogged) {
-            game.errorLogged = true;
-            API.logEvent("error", err.stack);
+        //In prod, try/catch the game logic
+        else {
+          try {
+            this.level.update();
+            this.level.render();
+          }
+          catch(err) {
+            console.error(err);
+            if(!game.errorLogged) {
+              game.errorLogged = true;
+              API.logEvent("error", err.stack);
+            }
           }
         }
+        this.collisionCalls = 0;
       }
     }
     
@@ -785,7 +797,7 @@ class Game {
   }
 
   setPlayerControls(playerNum: number, inputMapping: { [code: number]: string }) {
-    if(playerNum === 1 && !inputMapping[49]) throw "Bad input mapping";
+    //if(playerNum === 1 && !inputMapping[49]) throw "Bad input mapping";
     let json = JSON.stringify(inputMapping);
     localStorage.setItem("player" + String(playerNum) + "-controls", json);
   }
