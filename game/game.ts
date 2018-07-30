@@ -5,7 +5,6 @@ import { levelJsons } from "./levels";
 import { Player } from "./player";
 import { Palette } from "./color";
 import * as Helpers from "./helpers";
-import * as API from "./api";
 import * as Tests from "./tests";
 import { Point } from "./point";
 import { GameMode, Brawl, FFADeathMatch, TeamDeathMatch } from "./gameMode";
@@ -124,9 +123,6 @@ class Game {
   blueShadowFilter: PIXI.filters.DropShadowFilter;
   redShadowFilter: PIXI.filters.DropShadowFilter;
 
-  devApiUrl: string = "http://localhost:60691/api";
-  prodApiUrl: string = "https://telemetrysystem2.azurewebsites.net/api";
-
   errorLogged: boolean = false;
 
   path: Path = new Path();
@@ -184,6 +180,11 @@ class Game {
     */
   }
 
+  shouldLog() {
+    let noLog = (localStorage.getItem("noLog") === "true") || !this.uiData.isProd;
+    return !noLog;
+  }
+
   getMusicVolume01() {
     return Number(this.options.musicVolume) / 100;
   }
@@ -212,11 +213,23 @@ class Game {
     let options = this.options;
     let game = this;
     this.uiData = new UIData();
+    
+    if(this.shouldLog()) {
+      //@ts-ignore
+      gtag('config', 'UA-122948333-1');
+    }
+    else {
+      console.log("NOT LOGGING");
+    }
 
     if(Helpers.isSupportedBrowser()) {
       this.uiData.menu = Menu.Loading;
     }
     else {
+      if(game.shouldLog()) {
+        //@ts-ignore
+        gtag('event', 'bad browser');
+      }
       this.uiData.menu = Menu.BadBrowserMenu;
     }
 
@@ -554,7 +567,13 @@ class Game {
       if(!restart) {
         let playerInfo = this.uiData.isBrawl ? (this.uiData.isPlayer2CPU ? "1" : "0") : String(this.uiData.numBots);
         //gamemode name/map name/number of bots
-        API.logEvent("startGame", gameMode.constructor.name + "," + this.level.levelData.name + "," + playerInfo);
+        
+        if(this.shouldLog()) {
+          //@ts-ignore
+          gtag('event', 'start game', {
+            'event_label': gameMode.constructor.name + "," + this.level.levelData.name + "," + playerInfo
+          });
+        }
       }
       
       this.level.startLevel(gameMode);
@@ -712,7 +731,10 @@ class Game {
               game.errorLogged = true;
               let stack = err.stack;
               if(!stack) stack = String(err);
-              API.logEvent("error", stack);
+              if(this.shouldLog()) {
+                //@ts-ignore
+                gtag('event', 'exception', { "description": stack });
+              }
             }
           }
         }

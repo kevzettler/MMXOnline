@@ -6,7 +6,6 @@ import { KillFeedEntry } from "./killFeedEntry";
 import { Rect } from "./rect";
 import { Sprite } from "./sprite";
 import { Graphics } from "pixi.js";
-import * as API from "./api";
 
 export class GameMode {
 
@@ -293,7 +292,12 @@ export class GameMode {
   }
 
   restart() {
-    API.logEvent("endGame", this.level.mainPlayer.won ? "win" : "lose");
+    if(game.shouldLog()) {
+      //@ts-ignore
+      gtag('event', 'end game', {
+        'event_label': this.level.mainPlayer.won ? "win" : "lose"
+      });
+    }
     game.restartLevel(this.level.levelData.name);
   }
 

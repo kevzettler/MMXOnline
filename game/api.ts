@@ -1,3 +1,4 @@
+/*
 import { game } from "./game";
 
 function getUrl() {
@@ -36,3 +37,4 @@ export function logEvent(label: string, content: string) {
   }
   catch { }
 }
+*/
