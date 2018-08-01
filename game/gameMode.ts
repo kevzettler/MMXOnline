@@ -45,7 +45,7 @@ export class GameMode {
       for(let player of this.localPlayers) {
         player.onKeyDown(e.keyCode);
       }
-      if(e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
+      if(e.keyCode === 9 || e.keyCode === 37 || e.keyCode === 38 || e.keyCode === 39 || e.keyCode === 40 || (e.keyCode >= 112 && e.keyCode <= 121)) {
         e.preventDefault();
       }
     }
@@ -54,7 +54,7 @@ export class GameMode {
       for(let player of this.localPlayers) {
         player.onKeyUp(e.keyCode);
       }
-      if(e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
+      if(e.keyCode === 9 || e.keyCode === 37 || e.keyCode === 38 || e.keyCode === 39 || e.keyCode === 40 || (e.keyCode >= 112 && e.keyCode <= 124)) {
         e.preventDefault();
       }
     }

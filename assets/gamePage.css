@@ -13,7 +13,7 @@ body {
   background-color: black;
   /*background-image: url("images/bg2.jpg?v=1.0.1");*/
   height:100vh;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 #mainMenu {

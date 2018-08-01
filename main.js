@@ -2067,7 +2067,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             }
                             finally { if (e_9) throw e_9.error; }
                         }
-                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 121)) {
+                        if (e.keyCode === 9 || e.keyCode === 37 || e.keyCode === 38 || e.keyCode === 39 || e.keyCode === 40 || (e.keyCode >= 112 && e.keyCode <= 121)) {
                             e.preventDefault();
                         }
                         var e_9, _c;
@@ -2086,7 +2086,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             }
                             finally { if (e_10) throw e_10.error; }
                         }
-                        if (e.keyCode === 9 || (e.keyCode >= 112 && e.keyCode <= 124)) {
+                        if (e.keyCode === 9 || e.keyCode === 37 || e.keyCode === 38 || e.keyCode === 39 || e.keyCode === 40 || (e.keyCode >= 112 && e.keyCode <= 124)) {
                             e.preventDefault();
                         }
                         var e_10, _c;
