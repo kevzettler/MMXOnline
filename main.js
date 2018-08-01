@@ -2133,7 +2133,6 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             try {
                                 for (var _a = __values(_this.localPlayers), _b = _a.next(); !_b.done; _b = _a.next()) {
                                     var player = _b.value;
-                                    console.log("MOUSEHWEELUP");
                                     player.onKeyDown(3);
                                 }
                             }
@@ -2149,7 +2148,6 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             try {
                                 for (var _d = __values(_this.localPlayers), _e = _d.next(); !_e.done; _e = _d.next()) {
                                     var player = _e.value;
-                                    console.log("MOUSEHWEELDOWN");
                                     player.onKeyDown(4);
                                 }
                             }

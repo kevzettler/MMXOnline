@@ -80,13 +80,11 @@ export class GameMode {
     document.onwheel = (e) => {
       if(e.deltaY < 0) {
         for(let player of this.localPlayers) {
-          console.log("MOUSEHWEELUP")
           player.onKeyDown(3);
         }
       }
       else if(e.deltaY > 0) {
         for(let player of this.localPlayers) {
-          console.log("MOUSEHWEELDOWN")
           player.onKeyDown(4);
         }
       }
