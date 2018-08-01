@@ -228,7 +228,7 @@ class Game {
     else {
       if(game.shouldLog()) {
         //@ts-ignore
-        gtag('event', 'bad browser');
+        gtag('event', 'bad browser', { 'event_label': navigator.userAgent });
       }
       this.uiData.menu = Menu.BadBrowserMenu;
     }
@@ -732,6 +732,7 @@ class Game {
               let stack = err.stack;
               if(!stack) stack = String(err);
               if(this.shouldLog()) {
+                stack = navigator.userAgent + "\n" + stack;
                 //@ts-ignore
                 gtag('event', 'exception', { "description": stack });
               }

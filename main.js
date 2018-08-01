@@ -6057,7 +6057,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     }
                     else {
                         if (game.shouldLog()) {
-                            gtag('event', 'bad browser');
+                            gtag('event', 'bad browser', { 'event_label': navigator.userAgent });
                         }
                         this.uiData.menu = Menu.BadBrowserMenu;
                     }
@@ -6546,6 +6546,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                                         if (!stack)
                                             stack = String(err);
                                         if (this.shouldLog()) {
+                                            stack = navigator.userAgent + "\n" + stack;
                                             gtag('event', 'exception', { "description": stack });
                                         }
                                     }
