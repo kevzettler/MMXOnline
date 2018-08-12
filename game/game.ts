@@ -39,7 +39,7 @@ export enum Menu {
 }
 
 export class UIData {
-  isProd: boolean = true;
+  isProd: boolean = false;
   logInDev: boolean = true;
   playerName: string = "Player 1";
   menu: Menu;
@@ -158,8 +158,9 @@ class Game {
     filter.blur = 2;
   }
   
-  doQuickStart: boolean = true;
+  doQuickStart: boolean = false;
   quickStart() {
+    /*
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "powerplant";
     this.uiData.selectedGameMode = "team deathmatch";
@@ -168,7 +169,7 @@ class Game {
     this.uiData.playTo = 20;
     $("#options").show();
     game.loadLevel(this.uiData.selectedArenaMap, false);
-    /*
+    */
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
     this.uiData.maxPlayers = 1;
@@ -177,7 +178,6 @@ class Game {
     this.uiData.numBots = 0;
     $("#options").show();
     game.loadLevel("sm_bossroom", false);
-    */
   }
 
   shouldLog() {
@@ -452,7 +452,8 @@ class Game {
     this.loadMenuMusic();
     this.loadImages([
       game.path.effectsSpritesheetPath,
-      game.path.megaManXSpritesheetPath
+      game.path.megaManXSpritesheetPath,
+      game.path.zeroSpritesheetPath
     ], () => {
       this.loadSprites();
       this.loadLevels();

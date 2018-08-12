@@ -15,6 +15,7 @@ export class Path {
 
   effectsSpritesheetPath: string = "assets/spritesheets/effects.png?v=1.0.1";
   megaManXSpritesheetPath: string = "assets/spritesheets/MegamanX.png?v=1.0.1";
+  zeroSpritesheetPath: string = "assets/spritesheets/zero.png?v=1.0.1";
 
   redPalette: string = "assets/palettes/red.png?v=1.0.1";
   boomerangPalette: string = "assets/palettes/boomerang.png?v=1.0.1";

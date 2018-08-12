@@ -7,12 +7,13 @@ import { Collider, CollideData } from "./collider";
 import { Rect } from "./rect";
 import { Projectile } from "./projectile";
 import * as Helpers from "./helpers";
-import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield } from "./weapon";
+import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield, ZSaber, ZSaber2, ZSaber3, ZSaberAir } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
 import { AI } from "./ai";
 import { Ladder, KillZone } from "./wall";
 import { KillFeedEntry } from "./killFeedEntry";
 import { FFADeathMatch, Brawl } from "./gameMode";
+import { Damager } from "./damager";
 
 export class Character extends Actor {
 
@@ -50,11 +51,19 @@ export class Character extends Actor {
   healthBarOuter: PIXI.Graphics;
   healthBarInner: PIXI.Graphics;
   healthBarInnerWidth: number;
+  zSaberWeapon: ZSaber;
+  zSaberWeapon2: ZSaber2;
+  zSaberWeapon3: ZSaber3;
+  zSaberAirWeapon: ZSaberAir;
 
   constructor(player: Player, x: number, y: number) {
     super(undefined, new Point(x, y), true);
     this.player = player;
     this.isDashing = false;
+    this.zSaberWeapon = new ZSaber(this.player);
+    this.zSaberWeapon2 = new ZSaber2(this.player);
+    this.zSaberWeapon3 = new ZSaber3(this.player);
+    this.zSaberAirWeapon = new ZSaberAir(this.player);
 
     this.globalCollider = this.getStandingCollider();
     
@@ -116,12 +125,12 @@ export class Character extends Actor {
 
   getStandingCollider() {
     let rect = new Rect(0, 0, 18, 34);
-    return new Collider(rect.getPoints(), false, this, false, false);
+    return new Collider(rect.getPoints(), false, this, false, false, 0, new Point(0, 0));
   }
 
   getDashingCollider() {
     let rect = new Rect(0, 0, 18, 22);
-    return new Collider(rect.getPoints(), false, this, false, false);
+    return new Collider(rect.getPoints(), false, this, false, false, 0, new Point(0, 0));
   }
 
   preUpdate() {
@@ -131,6 +140,10 @@ export class Character extends Actor {
 
   onCollision(other: CollideData) {
     super.onCollision(other);
+    //Hit by zero's attack
+    if(other.collider.flag === 1 && other.gameObject instanceof Character && other.gameObject.player.alliance !== this.player.alliance) {
+      this.applyDamage(other.gameObject.player, undefined, 4);
+    }
     if(other.gameObject instanceof KillZone) {
       this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
     }
@@ -154,18 +167,6 @@ export class Character extends Actor {
         this.playSound("heal");
       }
     }
-    if(this.player.weapon.ammo >= this.player.weapon.maxAmmo) {
-      this.weaponHealAmount = 0;
-    }
-    if(this.weaponHealAmount > 0 && this.player.health > 0) {
-      this.weaponHealTime += game.deltaTime;
-      if(this.weaponHealTime > 0.05) {
-        this.weaponHealTime = 0;
-        this.weaponHealAmount--;
-        this.player.weapon.ammo = Helpers.clampMax(this.player.weapon.ammo + 1, this.player.weapon.maxAmmo);
-        this.playSound("heal");
-      }
-    }
 
     if(!(this.charState instanceof Dash) && !(this.charState instanceof AirDash) && !(this.charState instanceof Die)) {
       let standingCollider = this.getStandingCollider();
@@ -182,13 +183,6 @@ export class Character extends Actor {
       let cooldown = this.projectileCooldown[projName];
       if(cooldown) {
         this.projectileCooldown[projName] = Helpers.clampMin(cooldown - game.deltaTime, 0);
-      }
-    }
-    if(this.shootAnimTime > 0) {
-      this.shootAnimTime -= game.deltaTime;
-      if(this.shootAnimTime <= 0) {
-        this.shootAnimTime = 0;
-        this.changeSprite(this.charState.sprite, false);
       }
     }
     if(this.invulnFrames > 0) {
@@ -211,8 +205,41 @@ export class Character extends Actor {
     if(this.ai) {
       this.ai.update();
     }
+
+    if(this.player.isZero) {
+      this.updateZero();
+    }
+
     this.charState.update();
     super.update();
+
+    if(!this.player.isZero) {
+      this.updateX();
+    }
+  }
+
+  updateX() {
+    
+    if(this.player.weapon.ammo >= this.player.weapon.maxAmmo) {
+      this.weaponHealAmount = 0;
+    }
+    if(this.weaponHealAmount > 0 && this.player.health > 0) {
+      this.weaponHealTime += game.deltaTime;
+      if(this.weaponHealTime > 0.05) {
+        this.weaponHealTime = 0;
+        this.weaponHealAmount--;
+        this.player.weapon.ammo = Helpers.clampMax(this.player.weapon.ammo + 1, this.player.weapon.maxAmmo);
+        this.playSound("heal");
+      }
+    }
+
+    if(this.shootAnimTime > 0) {
+      this.shootAnimTime -= game.deltaTime;
+      if(this.shootAnimTime <= 0) {
+        this.shootAnimTime = 0;
+        this.changeSpriteFromName(this.charState.sprite, false);
+      }
+    }
 
     this.player.weapon.update();
     if(this.charState.canShoot) {
@@ -283,6 +310,69 @@ export class Character extends Actor {
       }
       this.chargeEffect.update(this.pos, this.getChargeLevel());
     }
+  }
+
+  isAttacking() {
+    return this.sprite.name.includes("attack"); 
+  }
+
+  updateZero() {
+    if(this.charState.canAttack && this.player.isPressed("shoot")) {
+      if(!this.isAttacking()) {
+        if(this.charState.constructor.name === "Run") this.changeState(new Idle(), true);
+        else if(this.charState.constructor.name === "Jump") this.changeState(new Fall(), true);
+        this.changeSprite(this.getSprite(this.charState.attackSprite), false);
+      }
+    }
+    if(this.isAttacking()) {
+      if(this.isAnimOver()) {
+        this.changeSprite(this.getSprite(this.charState.defaultSprite), false);
+      }
+    }
+    if(this.isAttacking()) {
+      let attackHitboxes = this.currentFrame.hitboxes;
+      for(let hitbox of attackHitboxes) {
+        if(hitbox.flag === 0) continue;
+        let collideData = game.level.checkCollisionShape(hitbox.shape, [this]);
+        if(collideData && collideData.gameObject instanceof Character && collideData.gameObject.player.alliance !== this.player.alliance) {
+          if(this.charState instanceof Idle) this.zSaberWeapon.damager.applyDamage(collideData.gameObject, false, this.zSaberWeapon, this, "zsaber1");
+          else if(this.charState instanceof Fall) this.zSaberAirWeapon.damager.applyDamage(collideData.gameObject, false, this.zSaberWeapon, this, "zsaberair");
+        }
+      }
+    }
+  }
+
+  shoot() {
+    if(this.shootTime > 0) return;
+    if(this.player.weapon.ammo <= 0) return;
+    this.shootTime = this.player.weapon.rateOfFire;
+    if(this.shootAnimTime === 0) {
+      this.changeSprite(this.getSprite(this.charState.shootSprite), false);
+    }
+    else if(this.charState instanceof Idle) {
+      this.frameIndex = 0;
+      this.frameTime = 0;
+    }
+    if(this.charState instanceof LadderClimb) {
+      if(this.player.isHeld("left")) {
+        this.xDir = -1;
+      }
+      else if(this.player.isHeld("right")) {
+        this.xDir = 1;
+      }
+    }
+
+    //Sometimes transitions cause the shoot sprite not to be played immediately, so force it here
+    if(!this.currentFrame.getBusterOffset()) { 
+      this.changeSprite(this.getSprite(this.charState.shootSprite), false);
+    }
+    
+    this.shootAnimTime = 0.3;
+    let xDir = this.xDir;
+    if(this.charState instanceof WallSlide) xDir *= -1;
+    this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
+    this.chargeTime = 0;
+    
   }
 
   changeWeapon(newWeaponIndex: number) {
@@ -357,37 +447,13 @@ export class Character extends Actor {
     this.chargeEffect.stop();
   }
 
-  shoot() {
-    if(this.shootTime > 0) return;
-    if(this.player.weapon.ammo <= 0) return;
-    this.shootTime = this.player.weapon.rateOfFire;
-    if(this.shootAnimTime === 0) {
-      this.changeSprite(this.charState.shootSprite, false);
-    }
-    else if(this.charState instanceof Idle) {
-      this.frameIndex = 0;
-      this.frameTime = 0;
-    }
-    if(this.charState instanceof LadderClimb) {
-      if(this.player.isHeld("left")) {
-        this.xDir = -1;
-      }
-      else if(this.player.isHeld("right")) {
-        this.xDir = 1;
-      }
-    }
+  getSprite(spriteName: string) {
+    if(this.player.isZero) return game.sprites["zero_"+ spriteName];
+    else return game.sprites["mmx_" + spriteName];
+  }
 
-    //Sometimes transitions cause the shoot sprite not to be played immediately, so force it here
-    if(!this.currentFrame.getBusterOffset()) { 
-      this.changeSprite(this.charState.shootSprite, false);
-    }
-    
-    this.shootAnimTime = 0.3;
-    let xDir = this.xDir;
-    if(this.charState instanceof WallSlide) xDir *= -1;
-    this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
-    this.chargeTime = 0;
-    
+  changeSpriteFromName(spriteName: string, resetFrame: boolean) {
+    this.changeSprite(this.getSprite(spriteName), resetFrame);
   }
 
   getChargeLevel() {
@@ -411,10 +477,10 @@ export class Character extends Actor {
     this.changedStateInFrame = true;
     newState.character = this;
     if(this.shootAnimTime === 0 || !newState.canShoot) {
-      this.changeSprite(newState.sprite, true);
+      this.changeSprite(this.getSprite(newState.sprite), true);
     }
     else { 
-      this.changeSprite(newState.shootSprite, true);
+      this.changeSprite(this.getSprite(newState.shootSprite), true);
     }
     let oldState = this.charState;
     if(oldState) oldState.onExit(newState);
@@ -493,10 +559,11 @@ export class Character extends Actor {
 
 class CharState {
 
-  sprite: Sprite;
-  defaultSprite: Sprite;
-  shootSprite: Sprite;
-  transitionSprite: Sprite;
+  sprite: string;
+  defaultSprite: string;
+  attackSprite: string;
+  shootSprite: string;
+  transitionSprite: string;
   busterOffset: Point;
   character: Character;
   lastLeftWall: Collider;
@@ -505,16 +572,21 @@ class CharState {
   enterSound: string;
   framesJumpNotHeld: number = 0;
 
-  constructor(sprite: Sprite, shootSprite?: Sprite, transitionSprite?: Sprite) {
+  constructor(sprite: string, shootSprite?: string, attackSprite?: string, transitionSprite?: string) {
     this.sprite = transitionSprite || sprite;
     this.transitionSprite = transitionSprite;
     this.defaultSprite = sprite;
     this.shootSprite = shootSprite;
+    this.attackSprite = attackSprite;
     this.stateTime = 0;
   }
 
   get canShoot(): boolean {
     return !!this.shootSprite;
+  }
+
+  get canAttack(): boolean {
+    return !!this.attackSprite;
   }
 
   get player() {
@@ -533,14 +605,14 @@ class CharState {
   }
 
   inTransition() {
-    return this.transitionSprite && this.sprite.name === this.transitionSprite.name;
+    return this.transitionSprite && this.sprite === this.transitionSprite;
   }
 
   update() {
     
     if(this.inTransition() && this.character.isAnimOver()) {
       this.sprite = this.defaultSprite;
-      this.character.changeSprite(this.sprite, true);
+      this.character.changeSpriteFromName(this.sprite, true);
     }
 
     this.stateTime += game.deltaTime;
@@ -557,7 +629,7 @@ class CharState {
   airCode() {
     if(this.character.grounded) {
       this.character.playSound("land");
-      this.character.changeState(new Idle(game.sprites["mmx_land"]));
+      this.character.changeState(new Idle("land"));
       this.character.dashedInAir = false;
       return;
     }
@@ -662,28 +734,28 @@ class CharState {
 
 class Idle extends CharState {
 
-  constructor(transitionSprite?: Sprite) {
-    super(game.sprites["mmx_idle"], game.sprites["mmx_shoot"], transitionSprite);
+  constructor(transitionSprite?: string) {
+    super("idle", "shoot", "attack", transitionSprite);
   }
 
   update() {
     super.update();
     if(this.player.isHeld("left") || this.player.isHeld("right")) {
-      this.character.changeState(new Run());
+      if(!this.character.isAttacking()) this.character.changeState(new Run());
     }
     this.groundCode();
     if(this.player.isPressed("dash")) {
-      this.character.changeState(new Dash());
+      if(!this.character.isAttacking()) this.character.changeState(new Dash());
     }
     if(game.level.gameMode.isOver) {
       if(this.player.won) {
-        if(this.character.sprite.name !== "mmx_win") {
-          this.character.changeSprite(game.sprites["mmx_win"], true);
+        if(this.character.sprite.name !== "win") {
+          this.character.changeSpriteFromName("win", true);
         }
       }
       else {
-        if(this.character.sprite.name !== "mmx_kneel") {
-          this.character.changeSprite(game.sprites["mmx_kneel"], true);
+        if(this.character.sprite.name !== "kneel") {
+          this.character.changeSpriteFromName("kneel", true);
         }
       }
     }
@@ -694,7 +766,7 @@ class Idle extends CharState {
 class Run extends CharState {
 
   constructor() {
-    super(game.sprites["mmx_run"], game.sprites["mmx_run_shoot"]);
+    super("run", "run_shoot", "attack");
   }
 
   update() {
@@ -725,7 +797,7 @@ class Run extends CharState {
 class Jump extends CharState {
 
   constructor() {
-    super(game.sprites["mmx_jump"], game.sprites["mmx_jump_shoot"]);
+    super("jump", "jump_shoot", "attack_air");
     this.enterSound = "jump";
   }
 
@@ -751,8 +823,8 @@ class Jump extends CharState {
 class Fall extends CharState {
 
   constructor() {
-    super(game.sprites["mmx_fall"], game.sprites["mmx_fall_shoot"]);
-  }
+    super("fall", "fall_shoot", "attack_air");
+}
 
   update() {
     super.update();
@@ -766,7 +838,7 @@ class Dash extends CharState {
   dashTime: number = 0;
 
   constructor() {
-    super(game.sprites["mmx_dash"], game.sprites["mmx_dash_shoot"]);
+    super("dash", "dash_shoot");
     this.enterSound = "dash";
   }
 
@@ -809,7 +881,7 @@ class AirDash extends CharState {
   dashTime: number = 0;
 
   constructor() {
-    super(game.sprites["mmx_dash"], game.sprites["mmx_dash_shoot"]);
+    super("dash", "dash_shoot");
     this.enterSound = "dash";
   }
 
@@ -855,7 +927,7 @@ class WallSlide extends CharState {
   wallDir: number;
   dustTime: number = 0;
   constructor(wallDir: number) {
-    super(game.sprites["mmx_wall_slide"], game.sprites["mmx_wall_slide_shoot"]);
+    super("wall_slide", "wall_slide_shoot");
     this.wallDir = wallDir;
     this.enterSound = "land";
   }
@@ -911,7 +983,7 @@ class WallKick extends CharState {
   kickDir: number;
   kickSpeed: number;
   constructor(kickDir: number) {
-    super(game.sprites["mmx_wall_kick"], game.sprites["mmx_wall_kick_shoot"]);
+    super("wall_kick", "wall_kick_shoot");
     this.kickDir = kickDir;
     this.kickSpeed = kickDir * 150;
     this.enterSound = "jump";
@@ -948,7 +1020,7 @@ class LadderClimb extends CharState {
   ladder: Ladder;
   snapX: number;
   constructor(ladder: Ladder, snapX?: number) {
-    super(game.sprites["mmx_ladder_climb"], game.sprites["mmx_ladder_shoot"], game.sprites["mmx_ladder_start"]);
+    super("ladder_climb", "ladder_shoot", "", "ladder_start");
     this.ladder = ladder;
     this.snapX = snapX;
   }
@@ -1014,7 +1086,7 @@ class LadderClimb extends CharState {
 class LadderEnd extends CharState {
   targetY: number;
   constructor(targetY: number) {
-    super(game.sprites["mmx_ladder_end"]);
+    super("ladder_end");
     this.targetY = targetY;
   }
 
@@ -1045,7 +1117,7 @@ class Hurt extends CharState {
   hurtDir: number;
   hurtSpeed: number;
   constructor(dir: number) {
-    super(game.sprites["mmx_hurt"]);
+    super("hurt");
     this.hurtDir = dir;
     this.hurtSpeed = dir * 100;
   }
@@ -1072,7 +1144,7 @@ class Hurt extends CharState {
 class Die extends CharState {
 
   constructor() {
-    super(game.sprites["mmx_die"]);
+    super("die");
   }
 
   onEnter(oldState: CharState) {
@@ -1083,7 +1155,7 @@ class Die extends CharState {
     game.level.removeFromGrid(this.character);
     this.character.globalCollider = undefined;
     this.character.stopCharge();
-    new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"], 1);
+    new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"],1);
   }
 
   onExit(newState: CharState) {

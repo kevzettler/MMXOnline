@@ -1,11 +1,13 @@
--Favicon broken
--Add Online button, disabled with tooltip coming soon!
--Google analytics, after site is deployed
--Deploy and hook up analytics (don't forget to change the ProdUrl)
+==========
+Leave off:
+==========
+-Need to find a way to output hitboxes to ui canvas
+-Need to figure out why Zero's attack hitboxes are not aligned facing left
 
 ===============
 Post-V1 Features
 ===============
+-No blocker for right side of powerplant stage
 -MTV occasionally snaps out too far
 -DOM nodes growing and not getting GC'd
 -Have a level loading screen that only loads level backgrounds/music
@@ -64,6 +66,7 @@ Optimization
 ===============
 Level editor
 ===============
+-Rename sprites/levels/etc
 -Remember last tool used and keep it open
 -Basic undo
 -The json data binding is weird/has issues

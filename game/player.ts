@@ -32,13 +32,15 @@ export class Player {
   deaths: number = 0;
   won: boolean = false;
   lockWeapon: boolean = false;
+  isZero: boolean = false;
 
-  constructor(name: string, isAI: boolean, alliance: number, maxHealth: number, palette?: Palette) {
+  constructor(name: string, isZero: boolean, isAI: boolean, alliance: number, maxHealth: number, palette?: Palette) {
     this.name = name;
     this.alliance = alliance;
     this.id = Helpers.getAutoIncId();
     this.isAI = isAI;
     this.palette = palette;
+    this.isZero = isZero;
 
     if(!isAI && alliance === 0) {
       this.inputMapping = game.getPlayerControls(1);

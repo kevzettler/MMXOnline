@@ -12,15 +12,19 @@ export class Collider {
   isClimbable: boolean = true;
   //gameObject: GameObject;
   actor: Actor;
+  offset: Point;
   isStatic: boolean = false;
+  flag: number = 0;
 
-  constructor(points: Point[], isTrigger: boolean, actor: Actor, isClimbable: boolean, isStatic: boolean) {
+  constructor(points: Point[], isTrigger: boolean, actor: Actor, isClimbable: boolean, isStatic: boolean, flag: number, offset: Point) {
     this._shape = new Shape(points);
     this.isTrigger = isTrigger;
     //this.gameObject = gameObject;
     this.actor = actor;
     this.isClimbable = isClimbable;
     this.isStatic = isStatic;
+    this.flag = flag;
+    this.offset = offset;
   }
 
   getWorldCollider(actor: Actor) {
@@ -31,9 +35,9 @@ export class Collider {
     let offset = new Point(0, 0);
     if(this.actor) {
       let rect = this._shape.getRect();
-      offset = this.actor.sprite.getAlignOffsetHelper(rect, new Point(0,0), this.actor.xDir, this.actor.yDir);
+      offset = this.actor.sprite.getAlignOffsetHelper(rect, this.offset, this.actor.xDir, this.actor.yDir);
       offset.x += this.actor.pos.x;
-      offset.y += this.actor.pos.y
+      offset.y += this.actor.pos.y;
     }
     return this._shape.clone(offset.x, offset.y);
   }

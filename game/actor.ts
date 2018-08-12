@@ -82,6 +82,11 @@ export class Actor {
     for(let hitbox of this.sprite.hitboxes) {
       hitbox.actor = this;
     }
+    for(let frame of this.sprite.frames) {
+      for(let hitbox of frame.hitboxes) {
+        hitbox.actor = this;
+      }
+    }
     
     if(resetFrame) {
       this.frameIndex = 0;
@@ -277,8 +282,11 @@ export class Actor {
     }
     
     if(game.options.showHitboxes && this.collider) {
-      Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
-      Helpers.drawCircle(game.uiCtx, this.pos.x + x, this.pos.y + y, 1, "red");
+      let allColliders = this.getAllColliders();
+      for(let collider of allColliders) {
+        Helpers.drawPolygon(game.uiCtx, collider.shape, true, "blue", "", 0, 0.5);
+      }
+      Helpers.drawCircle(game.uiCtx, drawX, drawY, 1, "red");
     }
     
     this.sprite.pixiSprite.visible = true;
@@ -311,15 +319,24 @@ export class Actor {
   }
 
   get collider(): Collider {
-    if(this.sprite.hitboxes.length === 0) {
-      if(this.globalCollider) {
-        return this.globalCollider;
-      }
-      return undefined;
+    if(this.globalCollider) {
+      return this.globalCollider;
     }
-    //let offset = this.sprite.getAlignOffset(this.frameIndex, this.xDir, this.yDir);
-    //this.sprite.hitboxes[0].changePos(this.pos.x + offset.x, this.pos.y + offset.y);
-    return this.sprite.hitboxes[0];
+    if(this.sprite.hitboxes.length > 0) {
+      return this.sprite.hitboxes[0];
+    }
+  }
+
+  getAllColliders(): Collider[] {
+    let colliders = [];
+    if(this.globalCollider) colliders.push(this.globalCollider);
+    for(let collider of this.sprite.hitboxes) {
+      //colliders.push(collider);
+    }
+    for(let collider of this.currentFrame.hitboxes) {
+      colliders.push(collider);
+    }
+    return colliders;
   }
 
   hasCollisionBox() {

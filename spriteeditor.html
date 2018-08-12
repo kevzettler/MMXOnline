@@ -58,7 +58,7 @@
           h<input type="text" v-model.number="hitbox.height" class="short-input" @change="redraw()" />
           x-off<input type="text" v-model.number="hitbox.offset.x" class="short-input" @change="redraw()" />
           y-off<input type="text" v-model.number="hitbox.offset.y" class="short-input" @change="redraw()" />
-          flag<input type="text" class="hitbox-tag-input" v-model="hitbox.tags" @change="redraw()" />
+          flag<input type="text" class="hitbox-tag-input" v-model="hitbox.flag" @change="redraw()" />
           trigger?<input type="checkbox" class="hitbox-tag-input" v-model="hitbox.isTrigger" @change="redraw()" />
           <button v-on:click="selectHitbox(hitbox)">Select</button>
           <button v-on:click="deleteHitbox(selectedSprite.hitboxes, hitbox)">Delete</button>
@@ -73,12 +73,12 @@
           h<input type="text" v-model.number="hitbox.height" class="short-input" @change="redraw()" />
           x-off<input type="text" v-model.number="hitbox.offset.x" class="short-input" @change="redraw()" />
           y-off<input type="text" v-model.number="hitbox.offset.y" class="short-input" @change="redraw()" />
-          flag<input type="text" class="hitbox-tag-input" v-model="hitbox.tags" @change="redraw()" />
+          flag<input type="text" class="hitbox-tag-input" v-model="hitbox.flag" @change="redraw()" />
           tr?<input type="checkbox" class="hitbox-tag-input" v-model="hitbox.isTrigger" @change="redraw()" />
           <button v-on:click="selectHitbox(hitbox)">Select</button>
           <button v-on:click="deleteHitbox(selectedFrame.hitboxes, hitbox)">Delete</button>
         </div>
-        <button v-on:click="addHitbox(selectedSprite)">New hitbox</button>
+        <button v-on:click="addHitbox(selectedFrame)">New hitbox</button>
       </div>
 
       <br/>
@@ -98,7 +98,7 @@
   </div>
 </div>
 <div class="canvas-section">
-  <div class="canvas-wrapper" style="width:450px;height:600px">
+  <div class="canvas-wrapper" style="width:1000px;height:1000px">
     <canvas id="canvas2" id="canvas"></canvas>  
   </div>
   <div id="app3">

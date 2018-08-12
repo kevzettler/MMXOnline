@@ -6,6 +6,7 @@ import * as Helpers from "./helpers";
 import { Sprite } from "./sprite";
 import { Anim } from "./actor";
 import { Palette } from "./color";
+import { Damager } from "./damager";
 
 export class Weapon {
   
@@ -86,6 +87,42 @@ export class Weapon {
     }
   }
 
+}
+
+export class ZSaber extends Weapon {
+  damager: Damager;
+  constructor(player: Player) {
+    super();
+    this.index = 9;
+    this.damager = new Damager(player, 3, true, 0.5);
+  }
+}
+
+export class ZSaber2 extends Weapon {
+  damager: Damager;
+  constructor(player: Player) {
+    super();
+    this.index = 9;
+    this.damager = new Damager(player, 2, true, 0.5);
+  }
+}
+
+export class ZSaber3 extends Weapon {
+  damager: Damager;
+  constructor(player: Player) {
+    super();
+    this.index = 9;
+    this.damager = new Damager(player, 4, true, 0.5);
+  }
+}
+
+export class ZSaberAir extends Weapon {
+  damager: Damager;
+  constructor(player: Player) {
+    super();
+    this.index = 9;
+    this.damager = new Damager(player, 2, true, 0.5);
+  }
 }
 
 export class Buster extends Weapon {

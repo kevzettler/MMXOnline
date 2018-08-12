@@ -34,14 +34,11 @@ export class Sprite {
     
     for(let hitboxJson of spriteJson.hitboxes) {
       let hitbox: Collider = new Collider([
-        new Point(hitboxJson.offset.x, hitboxJson.offset.y),
-        new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y),
-        new Point(hitboxJson.offset.x + hitboxJson.width, hitboxJson.offset.y + hitboxJson.height),
-        new Point(hitboxJson.offset.x, hitboxJson.offset.y + hitboxJson.height)
-      ], hitboxJson.isTrigger ? true : false, undefined, false, false);
-      //if(Helpers.hasTag(hitboxJson.tags, "t")) {
-      //  hitbox.isTrigger = true;
-      //}
+        new Point(0, 0),
+        new Point(0 + hitboxJson.width, 0),
+        new Point(0 + hitboxJson.width, 0 + hitboxJson.height),
+        new Point(0, 0 + hitboxJson.height)
+      ], hitboxJson.isTrigger ? true : false, undefined, false, false, hitboxJson.flag, new Point(hitboxJson.offset.x, hitboxJson.offset.y));
       this.hitboxes.push(hitbox);
     }
     for(let frameJson of spriteJson.frames) {
@@ -54,6 +51,16 @@ export class Sprite {
         for(let poi of frameJson.POIs) {
           frame.POIs.push(new Point(poi.x, poi.y));
         }
+      }
+      frame.hitboxes = [];
+      for(let hitboxJson of frameJson.hitboxes) {
+        let hitbox: Collider = new Collider([
+          new Point(0, 0),
+          new Point(0 + hitboxJson.width, 0),
+          new Point(0 + hitboxJson.width, 0 + hitboxJson.height),
+          new Point(0, 0 + hitboxJson.height)
+        ], hitboxJson.isTrigger ? true : false, undefined, false, false, hitboxJson.flag, new Point(hitboxJson.offset.x, hitboxJson.offset.y));
+        frame.hitboxes.push(hitbox);
       }
       this.frames.push(frame);
     }

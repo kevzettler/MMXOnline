@@ -367,6 +367,11 @@ export class Level {
 
   render() {
     
+    Helpers.noCanvasSmoothing(game.uiCtx);
+    
+    game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
+    game.uiCtx.clearRect(0, 0, this.screenWidth, this.screenHeight);
+
     this.gameContainer.x = 0;
     this.gameContainer.y = 0;
     this.backgroundSprite.x = -this.camX;
@@ -403,11 +408,6 @@ export class Level {
     this.hud.updateHUD();
     this.gameMode.drawHUD();
     
-    Helpers.noCanvasSmoothing(game.uiCtx);
-    
-    game.uiCtx.setTransform(this.zoomScale, 0, 0, this.zoomScale, 0, 0);
-    game.uiCtx.clearRect(0, 0, this.screenWidth, this.screenHeight);
-
     if(!game.uiData.isProd) {
       Helpers.drawText(game.uiCtx, this.debugString, 10, 50, "white", "black", 8, "left", "top", "");
       Helpers.drawText(game.uiCtx, this.debugString2, 10, 70, "white", "black", 8, "left", "top", "");
@@ -422,7 +422,7 @@ export class Level {
     }
     */
 
-    //game.ctx.drawImage(game.uiCanvas, this.camX, this.camY);
+    //game.uiCtx.drawImage(game.uiCanvas, 0, 0);
   }
 
   get width() { return this.backgroundSprite.width; }

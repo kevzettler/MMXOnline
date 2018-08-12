@@ -16,23 +16,20 @@ import { Pickup } from "./pickup";
 export class Projectile extends Actor {
 
   damager: Damager;
-  flinch: boolean;
   fadeSprite: Sprite;
   fadeSound: string;
   speed: number;
   time: number = 0;
-  hitCooldown: number = 0;
   weapon: Weapon;
   destroyOnCharHit: boolean = true;
 
-  constructor(weapon: Weapon, pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite) {
+  constructor(weapon: Weapon, pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite, flinch: boolean, hitCooldown: number) {
     super(sprite, pos);
     this.weapon = weapon;
     this.vel = vel;
     this.speed = this.vel.magnitude;
     this.useGravity = false;
-    this.flinch = false;
-    this.damager = new Damager(player, damage);
+    this.damager = new Damager(player, damage, flinch, hitCooldown);
     this.xDir = Math.sign(vel.x);
     if(game.level.gameMode.isTeamMode) {
       if(player.alliance === 0) {
@@ -74,59 +71,22 @@ export class Projectile extends Actor {
 
     let character = other.gameObject;
     if(character instanceof Character && character.player.alliance !== this.damager.owner.alliance) {
+      
       let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
       if(pos) this.changePos(pos.clone());
-      let character = other.gameObject;
-      if(character instanceof Character) {
-
-        let key: string = this.constructor.toString() + this.damager.owner.id.toString();
-        
-        if(!character.projectileCooldown[key] && !character.invulnFrames) {
-          character.projectileCooldown[key] = this.hitCooldown;
-
-          character.renderEffects.add("hit");
-          character.renderEffectTime = 0.1;
-          
-          let weakness = false;
-          if(this instanceof TorpedoProj && character.player.weapon instanceof Boomerang) weakness = true;
-          if(this instanceof StingProj && character.player.weapon instanceof Tornado) weakness = true;
-          if(this instanceof RollingShieldProj && character.player.weapon instanceof Torpedo) weakness = true;
-          if(this instanceof FireWaveProj && character.player.weapon instanceof ShotgunIce) weakness = true;
-          if(this instanceof TornadoProj && character.player.weapon instanceof FireWave) weakness = true;
-          if(this instanceof BoomerangProj && character.player.weapon instanceof Sting) weakness = true;
-          if(this instanceof ElectricSparkProj && character.player.weapon instanceof RollingShield) weakness = true;
-          if(this instanceof ShotgunIceProj && character.player.weapon instanceof ElectricSpark) weakness = true;
-          
-          character.applyDamage(this.damager.owner, this.weapon, this.damager.damage * (weakness ? 2 : 1));
-
-          if(this.flinch || game.options.alwaysFlinch || weakness) {
-            if(game.useInvulnFrames()) {
-              this.playSound("weakness");
-            }
-            else {
-              this.playSound("hurt");
-            }
-            character.setHurt(this.pos.x > character.pos.x ? -1 : 1);
-          }
-          else {
-            if(game.useInvulnFrames()) {
-              this.playSound("weakness");
-            }
-            else {
-              this.playSound("hit");
-            }
-          }
-          if(game.useInvulnFrames()) {
-            character.invulnFrames = 1;
-            character.renderEffectTime = 1;
-          }
-        }
-        else if(character.invulnFrames && !character.projectileCooldown[key] && 
-          !(this instanceof TornadoProj) && !(this instanceof FireWaveProj)) {
-            this.playSound("hit");
-        }
-        this.onHitChar(character);
-      }
+              
+      let weakness = false;
+      if(this instanceof TorpedoProj && character.player.weapon instanceof Boomerang) weakness = true;
+      if(this instanceof StingProj && character.player.weapon instanceof Tornado) weakness = true;
+      if(this instanceof RollingShieldProj && character.player.weapon instanceof Torpedo) weakness = true;
+      if(this instanceof FireWaveProj && character.player.weapon instanceof ShotgunIce) weakness = true;
+      if(this instanceof TornadoProj && character.player.weapon instanceof FireWave) weakness = true;
+      if(this instanceof BoomerangProj && character.player.weapon instanceof Sting) weakness = true;
+      if(this instanceof ElectricSparkProj && character.player.weapon instanceof RollingShield) weakness = true;
+      if(this instanceof ShotgunIceProj && character.player.weapon instanceof ElectricSpark) weakness = true;
+      
+      this.damager.applyDamage(character, weakness, this.weapon, this, this.constructor.name);
+      this.onHitChar(character);
     }
     let wall = other.gameObject;
     if(wall instanceof Wall) {
@@ -149,7 +109,7 @@ export class Projectile extends Actor {
 export class BusterProj extends Projectile {
 
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 1, player, game.sprites["buster1"]);
+    super(weapon, pos, vel, 1, player, game.sprites["buster1"], false, 0);
     this.fadeSprite = game.sprites["buster1_fade"];
   }
 
@@ -158,9 +118,8 @@ export class BusterProj extends Projectile {
 export class Buster2Proj extends Projectile {
 
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 3, player, game.sprites["buster2"]);
+    super(weapon, pos, vel, 3, player, game.sprites["buster2"], true, 0);
     this.fadeSprite = game.sprites["buster2_fade"];
-    this.flinch = true;
   }
 
 }
@@ -168,9 +127,8 @@ export class Buster2Proj extends Projectile {
 export class Buster3Proj extends Projectile {
 
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 6, player, game.sprites["buster3"]);
+    super(weapon, pos, vel, 6, player, game.sprites["buster3"], true, 0);
     this.fadeSprite = game.sprites["buster3_fade"];
-    this.flinch = true;
   }
 
 }
@@ -183,15 +141,13 @@ export class Buster4Proj extends Projectile {
   initY: number = 0;
   
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number, num: number, offsetTime: number) {
-    super(weapon, pos, vel, 8, player, game.sprites["buster4"]);
+    super(weapon, pos, vel, 8, player, game.sprites["buster4"], true, 1);
     this.fadeSprite = game.sprites["buster4_fade"];
-    this.flinch = true;
     this.type = type;
     //this.vel.x = 0;
     this.initY = this.pos.y;
     this.offsetTime = offsetTime;
     this.num = num;
-    this.hitCooldown = 1;
   }
 
   update() {
@@ -208,7 +164,7 @@ export class TorpedoProj extends Projectile {
   target: Character;
   smokeTime: number = 0;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 2, player, game.sprites["torpedo"]);
+    super(weapon, pos, vel, 2, player, game.sprites["torpedo"], false, 0);
     this.fadeSprite = game.sprites["explosion"];
     this.fadeSound = "explosion";
     this.angle = this.xDir === -1 ? 180 : 0;
@@ -294,7 +250,7 @@ export class StingProj extends Projectile {
   type: number = 0; //0 = initial proj, 1 = horiz, 2 = up, 3 = down
   origVel: Point;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number) {
-    super(weapon, pos, vel, 2, player, game.sprites["sting_start"]);
+    super(weapon, pos, vel, 2, player, game.sprites["sting_start"], false, 0);
     this.origVel = vel.clone();
     if(type === 1) {
       let sprite = game.sprites["sting_flat"];
@@ -331,7 +287,7 @@ export class StingProj extends Projectile {
 export class RollingShieldProj extends Projectile {
  
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 2, player, game.sprites["rolling_shield"]);
+    super(weapon, pos, vel, 2, player, game.sprites["rolling_shield"], false, 0);
     this.fadeSprite = game.sprites["explosion"];
     this.fadeSound = "explosion";
     this.useGravity = true;
@@ -362,10 +318,8 @@ export class RollingShieldProj extends Projectile {
 export class FireWaveProj extends Projectile {
  
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 1, player, game.sprites["fire_wave"]);
+    super(weapon, pos, vel, 1, player, game.sprites["fire_wave"], false, 0.225);
     this.fadeSprite = game.sprites["fire_wave_fade"];
-    this.hitCooldown = 0.225;
-    //this.fadeSound = "explosion";
   }
 
   update() {
@@ -387,7 +341,7 @@ export class TornadoProj extends Projectile {
   spriteEnd: Sprite;
   length: number = 1;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 1, player, game.sprites["tornado_mid"]);
+    super(weapon, pos, vel, 1, player, game.sprites["tornado_mid"], false, 0.3);
     this.sprite.pixiSprite.visible = false;
     this.spriteStart = new Sprite(game.sprites["tornado_start"].spriteJson, true, this.container);
     for(let i = 0; i < 6; i++) {
@@ -397,7 +351,6 @@ export class TornadoProj extends Projectile {
     }
     this.spriteEnd = new Sprite(game.sprites["tornado_end"].spriteJson, true, this.container);
     this.vel.x = 0;
-    this.hitCooldown = 0.3;
   }
   
   render(x: number, y: number) {
@@ -428,7 +381,7 @@ export class TornadoProj extends Projectile {
     let botY = this.spriteStart.frames[0].rect.h * 2;
 
     let rect = new Rect(topX, topY, botX, botY);
-    this.globalCollider = new Collider(rect.getPoints(), true, this, false, false);
+    this.globalCollider = new Collider(rect.getPoints(), true, this, false, false, 0, new Point(0, 0));
 
     if(this.time > 0.2) {
       if(this.length < 6) {
@@ -465,7 +418,7 @@ export class ElectricSparkProj extends Projectile {
  
   type: number = 0;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number) {
-    super(weapon, pos, vel, 2, player, game.sprites["electric_spark"]);
+    super(weapon, pos, vel, 2, player, game.sprites["electric_spark"], false, 0);
     this.fadeSprite = game.sprites["electric_spark_fade"];
     //this.fadeSound = "explosion";
     this.type = type;
@@ -492,11 +445,9 @@ export class ElectricSparkProj extends Projectile {
 export class ElectricSparkProjCharged extends Projectile {
 
   constructor(weapon: Weapon, pos: Point, player: Player, dir: number) {
-    super(weapon, pos, new Point(dir * 450, 0), 4, player, game.sprites["electric_spark_charge"]);
+    super(weapon, pos, new Point(dir * 450, 0), 4, player, game.sprites["electric_spark_charge"], true, 0.5);
     this.xDir = dir;
     this.destroyOnCharHit = false;
-    this.hitCooldown = 0.5;
-    this.flinch = true;
   }
 
 }
@@ -507,7 +458,7 @@ export class BoomerangProj extends Projectile {
   turnDir: number = 1;
   pickup: Pickup;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 2, player, game.sprites["boomerang"]);
+    super(weapon, pos, vel, 2, player, game.sprites["boomerang"], false, 0);
     //this.fadeSprite = game.sprites["electric_spark_fade"];
     //this.fadeSound = "explosion";
     this.angle = 0;
@@ -575,7 +526,7 @@ export class ShotgunIceProj extends Projectile {
   type: number = 0;
   sparkleTime: number = 0;
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number) {
-    super(weapon, pos, vel, 2, player, game.sprites["shotgun_ice"]);
+    super(weapon, pos, vel, 2, player, game.sprites["shotgun_ice"], false, 0);
     
     if(type === 1) {
       this.changeSprite(game.sprites["shotgun_ice_piece"], true);

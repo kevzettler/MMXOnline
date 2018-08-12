@@ -193,7 +193,7 @@ export class GameMode {
   }
 
   drawWeaponSwitchHUD() {
-    this.weaponHUDContainer.visible = game.options.showWeaponHUD;
+    this.weaponHUDContainer.visible = game.options.showWeaponHUD && !game.level.mainPlayer.isZero;
     let startX = Math.round(this.screenWidth * 0.225);
     let width = 20;
     let iconW = 9;
@@ -320,8 +320,8 @@ export class Brawl extends GameMode {
       p2Name += " 1";
     }
 
-    let player1 = new Player(p1Name, uiData.isPlayer1CPU, 0, health);
-    let player2 = new Player(p2Name, uiData.isPlayer2CPU, 1, health, game.palettes["red"]);
+    let player1 = new Player(p1Name, true, uiData.isPlayer1CPU, 0, health);
+    let player2 = new Player(p2Name, false, uiData.isPlayer2CPU, 1, health, game.palettes["red"]);
     
     this.players.push(player1);
     this.localPlayers.push(player1);
@@ -393,13 +393,13 @@ export class FFADeathMatch extends GameMode {
     super(level);
     this.killsToWin = uiData.playTo;
     let health = 16;
-    let player1 = new Player(game.uiData.playerName, false, 0, health);
+    let player1 = new Player(game.uiData.playerName, true, false, 0, health);
     this.players.push(player1);
     this.localPlayers.push(player1);
     this.mainPlayer = player1;
     
     for(var i = 0; i < uiData.numBots; i++) {
-      let cpu: Player = new Player("CPU" + String(i+1), true, i + 1, health, game.palettes["red"]);
+      let cpu: Player = new Player("CPU" + String(i+1), false, true, i + 1, health, game.palettes["red"]);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }
@@ -543,14 +543,14 @@ export class TeamDeathMatch extends GameMode {
     this.isTeamMode = true;
     this.killsToWin = uiData.playTo;
     let health = 16;
-    let player1 = new Player(game.uiData.playerName, false, 0, health);
+    let player1 = new Player(game.uiData.playerName, true, false, 0, health);
     this.players.push(player1);
     this.localPlayers.push(player1);
     this.mainPlayer = player1;
     
     for(var i = 0; i < uiData.numBots; i++) {
       let alliance = (i+1) % 2;
-      let cpu: Player = new Player("CPU" + String(i+1), true, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
+      let cpu: Player = new Player("CPU" + String(i+1), false, true, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }
