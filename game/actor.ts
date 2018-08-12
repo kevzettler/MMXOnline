@@ -18,6 +18,7 @@ export class Actor {
   frameIndex: number; //Current frame index of sprite
   frameSpeed: number; //Multiplier for how fast frameIndex gets incremented. defaults to 1
   frameTime: number;  //The current time of the frame
+  animTime: number = 0; //The current time of the whole sprite animation
   xDir: number; //-1 or 1
   yDir: number;
   pos: Point; //Current location
@@ -91,9 +92,12 @@ export class Actor {
     if(resetFrame) {
       this.frameIndex = 0;
       this.frameTime = 0;
+      this.animTime = 0;
     }
     else if(this.frameIndex >= this.sprite.frames.length) {
       this.frameIndex = 0;
+      this.frameTime = 0;
+      this.animTime = 0;
     }
   }
 
@@ -111,6 +115,14 @@ export class Actor {
     return this.sprite.frames[this.frameIndex];
   }
 
+  get framePercent() {
+    let entireDuration = 0;
+    for(let frame of this.sprite.frames) {
+      entireDuration += frame.duration;
+    }
+    return this.animTime / entireDuration;
+  }
+
   update() {
     
     this.renderEffectTime = Helpers.clampMin0(this.renderEffectTime - game.deltaTime);
@@ -120,12 +132,16 @@ export class Actor {
     }
 
     this.frameTime += game.deltaTime * this.frameSpeed;
+    this.animTime += game.deltaTime * this.frameSpeed;
     if(this.frameTime >= this.currentFrame.duration) {
       let onceEnd = this.sprite.wrapMode === "once" && this.frameIndex === this.sprite.frames.length - 1;
       if(!onceEnd) {
         this.frameTime = this.sprite.loopStartFrame;
         this.frameIndex++;
-        if(this.frameIndex >= this.sprite.frames.length) this.frameIndex = 0;
+        if(this.frameIndex >= this.sprite.frames.length) {
+          this.frameIndex = 0;
+          this.animTime = 0;
+        }
       }
     }
 

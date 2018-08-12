@@ -399,7 +399,7 @@ export class FFADeathMatch extends GameMode {
     this.mainPlayer = player1;
     
     for(var i = 0; i < uiData.numBots; i++) {
-      let cpu: Player = new Player("CPU" + String(i+1), false, true, i + 1, health, game.palettes["red"]);
+      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? true : false, true, i + 1, health, game.palettes["red"]);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }
@@ -550,7 +550,7 @@ export class TeamDeathMatch extends GameMode {
     
     for(var i = 0; i < uiData.numBots; i++) {
       let alliance = (i+1) % 2;
-      let cpu: Player = new Player("CPU" + String(i+1), false, true, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
+      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? true : false, true, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }

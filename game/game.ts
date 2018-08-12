@@ -45,8 +45,7 @@ export class UIData {
   menu: Menu;
   isBrawl: boolean = false;
   brawlMaps: string[] = ["sm_bossroom"];
-  //arenaMaps: string[] = ["powerplant", "highway", "gallery"];
-  arenaMaps: string[] = ["highway", "powerplant"];
+  arenaMaps: string[] = ["powerplant", "highway", "gallery"];
   selectedBrawlMap: string = this.brawlMaps[0];
   selectedArenaMap: string = this.arenaMaps[0];
   gameModes: string[] = ["deathmatch", "team deathmatch"];
@@ -158,18 +157,18 @@ class Game {
     filter.blur = 2;
   }
   
-  doQuickStart: boolean = false;
+  doQuickStart: boolean = true;
   quickStart() {
-    /*
+    
     this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "powerplant";
+    this.uiData.selectedArenaMap = "highway";
     this.uiData.selectedGameMode = "team deathmatch";
     this.uiData.maxPlayers = 7;
     this.uiData.numBots = 7;
     this.uiData.playTo = 20;
     $("#options").show();
     game.loadLevel(this.uiData.selectedArenaMap, false);
-    */
+    /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
     this.uiData.maxPlayers = 1;
@@ -178,6 +177,7 @@ class Game {
     this.uiData.numBots = 0;
     $("#options").show();
     game.loadLevel("sm_bossroom", false);
+    */
   }
 
   shouldLog() {

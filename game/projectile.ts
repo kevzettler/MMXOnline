@@ -79,7 +79,7 @@ export class Projectile extends Actor {
       if(this instanceof TorpedoProj && character.player.weapon instanceof Boomerang) weakness = true;
       if(this instanceof StingProj && character.player.weapon instanceof Tornado) weakness = true;
       if(this instanceof RollingShieldProj && character.player.weapon instanceof Torpedo) weakness = true;
-      if(this instanceof FireWaveProj && character.player.weapon instanceof ShotgunIce) weakness = true;
+      if(this instanceof FireWaveProj && (character.player.weapon instanceof ShotgunIce || character.player.isZero)) weakness = true;
       if(this instanceof TornadoProj && character.player.weapon instanceof FireWave) weakness = true;
       if(this instanceof BoomerangProj && character.player.weapon instanceof Sting) weakness = true;
       if(this instanceof ElectricSparkProj && character.player.weapon instanceof RollingShield) weakness = true;
@@ -102,6 +102,22 @@ export class Projectile extends Actor {
 
   onHitWall(other: CollideData) {
 
+  }
+
+}
+
+export class ZSaberProj extends Projectile {
+
+  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
+    super(weapon, pos, vel, 2, player, game.sprites["zsaber_shot"], false, 0);
+    this.fadeSprite = game.sprites["zsaber_shot_fade"];
+  }
+
+  update() {
+    super.update();
+    if(this.time > 0.5) {
+      this.destroySelf(this.fadeSprite);
+    }
   }
 
 }
@@ -318,7 +334,7 @@ export class RollingShieldProj extends Projectile {
 export class FireWaveProj extends Projectile {
  
   constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 1, player, game.sprites["fire_wave"], false, 0.225);
+    super(weapon, pos, vel, 1, player, game.sprites["fire_wave"], false, 0.222);
     this.fadeSprite = game.sprites["fire_wave_fade"];
   }
 

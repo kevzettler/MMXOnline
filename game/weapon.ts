@@ -125,6 +125,15 @@ export class ZSaberAir extends Weapon {
   }
 }
 
+export class ZSaberDash extends Weapon {
+  damager: Damager;
+  constructor(player: Player) {
+    super();
+    this.index = 9;
+    this.damager = new Damager(player, 2, true, 0.5);
+  }
+}
+
 export class Buster extends Weapon {
 
   constructor() {

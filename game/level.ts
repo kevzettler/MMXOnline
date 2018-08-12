@@ -778,6 +778,20 @@ export class Level {
     return undefined;
   }
 
+  checkCollisionsShape(shape: Shape, exclusions: GameObject[]) : CollideData[] {
+    let hitDatas = [];
+    let gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
+    for(let go of gameObjects) {
+      if(!go.collider) continue;
+      if(exclusions.indexOf(go) !== -1) continue;
+      let hitData = shape.intersectsShape(go.collider.shape);
+      if(hitData) {
+        hitDatas.push(new CollideData(go.collider, undefined, false, go, hitData));
+      }
+    }
+    return hitDatas;
+  }
+
   //Checks for collisions and returns the first one collided.
   checkCollisionActor(actor: Actor, offsetX: number, offsetY: number, vel?: Point): CollideData {
     if(!actor.collider || actor.collider.isTrigger) return undefined;

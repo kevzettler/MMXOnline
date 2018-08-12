@@ -5,9 +5,9 @@ import { Point } from "./point";
 import { Player } from "./player";
 import { Collider, CollideData } from "./collider";
 import { Rect } from "./rect";
-import { Projectile } from "./projectile";
+import { Projectile, TorpedoProj, ZSaberProj } from "./projectile";
 import * as Helpers from "./helpers";
-import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield, ZSaber, ZSaber2, ZSaber3, ZSaberAir } from "./weapon";
+import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield, ZSaber, ZSaber2, ZSaber3, ZSaberAir, ZSaberDash } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
 import { AI } from "./ai";
 import { Ladder, KillZone } from "./wall";
@@ -55,7 +55,9 @@ export class Character extends Actor {
   zSaberWeapon2: ZSaber2;
   zSaberWeapon3: ZSaber3;
   zSaberAirWeapon: ZSaberAir;
-
+  zSaberDashWeapon: ZSaberDash;
+  slideVel: number = 0;
+  
   constructor(player: Player, x: number, y: number) {
     super(undefined, new Point(x, y), true);
     this.player = player;
@@ -64,6 +66,7 @@ export class Character extends Actor {
     this.zSaberWeapon2 = new ZSaber2(this.player);
     this.zSaberWeapon3 = new ZSaber3(this.player);
     this.zSaberAirWeapon = new ZSaberAir(this.player);
+    this.zSaberDashWeapon = new ZSaberDash(this.player);
 
     this.globalCollider = this.getStandingCollider();
     
@@ -210,6 +213,11 @@ export class Character extends Actor {
       this.updateZero();
     }
 
+    if(this.slideVel !== 0) {
+      this.slideVel = Helpers.toZero(this.slideVel, game.deltaTime * 350, Math.sign(this.slideVel));
+      this.move(new Point(this.slideVel, 0), true);
+    }
+
     this.charState.update();
     super.update();
 
@@ -319,24 +327,47 @@ export class Character extends Actor {
   updateZero() {
     if(this.charState.canAttack && this.player.isPressed("shoot")) {
       if(!this.isAttacking()) {
+        let attackSprite = this.charState.attackSprite;
         if(this.charState.constructor.name === "Run") this.changeState(new Idle(), true);
         else if(this.charState.constructor.name === "Jump") this.changeState(new Fall(), true);
-        this.changeSprite(this.getSprite(this.charState.attackSprite), false);
+        else if(this.charState.constructor.name === "Dash") {
+          this.slideVel = this.xDir * this.getDashSpeed() * this.runSpeed;
+          this.changeState(new Idle(), true);
+        }
+        this.changeSprite(this.getSprite(attackSprite), true);
+      }
+      else if(this.charState instanceof Idle && this.sprite.name === "zero_attack" && this.framePercent > 0.75) {
+        this.changeSprite(game.sprites["zero_attack2"], true);
+      }
+      else if(this.charState instanceof Idle && this.sprite.name === "zero_attack2" && this.framePercent > 0.75) {
+        this.changeSprite(game.sprites["zero_attack3"], true);
+        new ZSaberProj(this.zSaberWeapon3, this.pos.addxy(0, -20), new Point(300*this.xDir, 0), this.player);
       }
     }
     if(this.isAttacking()) {
       if(this.isAnimOver()) {
-        this.changeSprite(this.getSprite(this.charState.defaultSprite), false);
+        this.changeSprite(this.getSprite(this.charState.defaultSprite), true);
       }
     }
     if(this.isAttacking()) {
       let attackHitboxes = this.currentFrame.hitboxes;
       for(let hitbox of attackHitboxes) {
         if(hitbox.flag === 0) continue;
-        let collideData = game.level.checkCollisionShape(hitbox.shape, [this]);
-        if(collideData && collideData.gameObject instanceof Character && collideData.gameObject.player.alliance !== this.player.alliance) {
-          if(this.charState instanceof Idle) this.zSaberWeapon.damager.applyDamage(collideData.gameObject, false, this.zSaberWeapon, this, "zsaber1");
-          else if(this.charState instanceof Fall) this.zSaberAirWeapon.damager.applyDamage(collideData.gameObject, false, this.zSaberWeapon, this, "zsaberair");
+        let collideDatas = game.level.checkCollisionsShape(hitbox.shape, [this]);
+        for(let collideData of collideDatas) {
+          let go = collideData.gameObject;
+          if(go instanceof Character && go.player.alliance !== this.player.alliance) {
+            if(this.charState instanceof Idle) {
+              if(this.sprite.name === "zero_attack") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1");
+              if(this.sprite.name === "zero_attack2") this.zSaberWeapon2.damager.applyDamage(go, false, this.zSaberWeapon2, this, "zsaber2");
+              if(this.sprite.name === "zero_attack3") this.zSaberWeapon3.damager.applyDamage(go, false, this.zSaberWeapon3, this, "zsaber3");
+              if(this.sprite.name === "zero_attack_dash") this.zSaberDashWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash");
+            }
+            else if(this.charState instanceof Fall) this.zSaberAirWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair");
+          }
+          else if(go instanceof TorpedoProj) {
+            go.destroySelf(go.fadeSprite, go.fadeSound);
+          }
         }
       }
     }
@@ -637,6 +668,12 @@ class CharState {
     if(this.player.isHeld("dash") && !this.character.isDashing && !this.character.dashedInAir) {
       this.character.changeState(new AirDash());
     }
+    if(this.player.isZero && this.player.isPressed("jump") && !this.character.isDashing && !this.character.dashedInAir) {
+      this.character.dashedInAir = true;
+      this.character.vel.y = -this.character.jumpPower;
+      this.character.changeState(new Jump());
+      return;
+    }
 
     if(!this.player.isHeld("jump") && this.character.vel.y < 0) {
       this.framesJumpNotHeld++;
@@ -749,12 +786,12 @@ class Idle extends CharState {
     }
     if(game.level.gameMode.isOver) {
       if(this.player.won) {
-        if(this.character.sprite.name !== "win") {
+        if(!this.character.sprite.name.includes("_win")) {
           this.character.changeSpriteFromName("win", true);
         }
       }
       else {
-        if(this.character.sprite.name !== "kneel") {
+        if(!this.character.sprite.name.includes("kneel")) {
           this.character.changeSpriteFromName("kneel", true);
         }
       }
@@ -838,7 +875,7 @@ class Dash extends CharState {
   dashTime: number = 0;
 
   constructor() {
-    super("dash", "dash_shoot");
+    super("dash", "dash_shoot", "attack_dash");
     this.enterSound = "dash";
   }
 

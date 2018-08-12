@@ -59,7 +59,7 @@ export class AI {
           this.player.press("jump");
         }
         let xDist = this.target.pos.x - this.character.pos.x;
-        if(Math.abs(xDist) > game.level.halfScreenWidth) {
+        if(Math.abs(xDist) > this.getMaxDist()) {
           this.aiState = new MoveTowardsTarget(this.character);
         }
       }
@@ -79,7 +79,6 @@ export class AI {
         if(this.character.isFacing(this.target)) {
           this.player.press("shoot");
         }
-        //}
       }
       this.shootTime += game.deltaTime;
       if(this.shootTime > 0.1) {
@@ -137,6 +136,12 @@ export class AI {
     this.aiState = newState;
   }
 
+  getMaxDist() {
+    let maxDist = game.level.halfScreenWidth;
+    if(this.player.isZero) maxDist = 70;
+    return maxDist;
+  }
+
 }
 
 class AIState {
@@ -191,10 +196,10 @@ class MoveTowardsTarget extends AIState {
 
   update() {
     super.update();
-    if(this.character.pos.x - this.ai.target.pos.x > game.level.halfScreenWidth) {
+    if(this.character.pos.x - this.ai.target.pos.x > this.ai.getMaxDist()) {
       this.player.press("left");
     }
-    else if(this.character.pos.x - this.ai.target.pos.x < -game.level.halfScreenWidth) {
+    else if(this.character.pos.x - this.ai.target.pos.x < -this.ai.getMaxDist()) {
       this.player.press("right");
     }
     else {
