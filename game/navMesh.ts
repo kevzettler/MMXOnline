@@ -8,6 +8,8 @@ export class NavMeshNode {
   pos: Point;
   neighbors: NavMeshNeighbor[] = [];
   neighborJson: string;
+  isRedFlagNode: boolean; 
+  isBlueFlagNode: boolean;
   
   constructor(name: string, pos: Point, neighborJson: any) {
     this.name = name;
@@ -17,6 +19,8 @@ export class NavMeshNode {
 
   setNeighbors(nodeList: NavMeshNode[], gameObjects: GameObject[]) {
     let properties: any = this.neighborJson;
+    if(properties.isBlueFlagNode) this.isBlueFlagNode = true;
+    if(properties.isRedFlagNode) this.isRedFlagNode = true;
     for(let jsonNeighbor of properties.neighbors) {
       //@ts-ignore
       let node = _.find(nodeList, (iterNode) => {
@@ -62,8 +66,7 @@ export class NavMeshNode {
 
       if(!found && curNode === destNode) {
         found = true;
-        //@ts-ignore
-        foundPath = _.clone(pathToNode);
+        foundPath = pathToNode.slice(0);
         return;
       }
 
@@ -75,8 +78,9 @@ export class NavMeshNode {
     }
     
     getNextNodeDfs(this);
-    if(foundPath.length > 0)
+    if(foundPath.length > 0) {
       return foundPath[0];
+    }
     console.log("Dest node is " + destNode.name);
     console.log("This node: " + this.name);
     throw "Next node not found!";

@@ -5,7 +5,7 @@ import { Point } from "./point";
 import { Player } from "./player";
 import { Collider, CollideData } from "./collider";
 import { Rect } from "./rect";
-import { Projectile, TorpedoProj, ZSaberProj } from "./projectile";
+import { Projectile, TorpedoProj, ZSaberProj, ShotgunIceProjCharged, RollingShieldProjCharged } from "./projectile";
 import * as Helpers from "./helpers";
 import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield, ZSaber, ZSaber2, ZSaber3, ZSaberAir, ZSaberDash } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
@@ -14,6 +14,8 @@ import { Ladder, KillZone } from "./wall";
 import { KillFeedEntry } from "./killFeedEntry";
 import { FFADeathMatch, Brawl } from "./gameMode";
 import { Damager } from "./damager";
+import { Flag } from "./flag";
+import { LoopingSound } from "./loopingSound";
 
 export class Character extends Actor {
 
@@ -29,10 +31,6 @@ export class Character extends Actor {
   charge2Time: number;
   charge3Time: number;
   chargeFlashTime: number;
-  chargeSound: Howl;
-  chargeSoundId: number;
-  chargeLoopSound: Howl;
-  chargeLoopSoundId: number;
   chargeEffect: ChargeEffect;
   shootAnimTime: number = 0;
   ai: AI;
@@ -52,25 +50,26 @@ export class Character extends Actor {
   healthBarInner: PIXI.Graphics;
   healthBarInnerWidth: number;
   zSaberWeapon: ZSaber;
-  zSaberWeapon2: ZSaber2;
-  zSaberWeapon3: ZSaber3;
-  zSaberAirWeapon: ZSaberAir;
-  zSaberDashWeapon: ZSaberDash;
   slideVel: number = 0;
-  
-  constructor(player: Player, x: number, y: number) {
+  flag: Flag;
+  isStingCharged: boolean = false;
+  stingChargeTime: number = 0;
+  shotgunIceChargeTime: number = 0;
+  shotgunIceChargeCooldown: number = 0;
+  shotgunIceChargeMod: number = 0;
+  freezeTime: number = 0;
+  chargeSound: LoopingSound;
+  chargedRollingShieldProj: RollingShieldProjCharged;
+
+  constructor(player: Player, x: number, y: number, charState: CharState) {
     super(undefined, new Point(x, y), true);
     this.player = player;
     this.isDashing = false;
     this.zSaberWeapon = new ZSaber(this.player);
-    this.zSaberWeapon2 = new ZSaber2(this.player);
-    this.zSaberWeapon3 = new ZSaber3(this.player);
-    this.zSaberAirWeapon = new ZSaberAir(this.player);
-    this.zSaberDashWeapon = new ZSaberDash(this.player);
 
     this.globalCollider = this.getStandingCollider();
     
-    this.changeState(new Idle());
+    this.changeState(charState);
     
     this.jumpPower = 230;
     this.runSpeed = 80;
@@ -81,15 +80,14 @@ export class Character extends Actor {
     this.charge3Time = 3;
 
     this.chargeFlashTime = 0;
-    this.chargeSound = game.sounds["charge_start"];
-    this.chargeLoopSound = game.sounds["charge_loop"];
-    this.chargeLoopSound.loop(true);
+
+    this.chargeSound = new LoopingSound("chargeStart", "chargeLoop", this);
 
     if(this.player !== game.level.mainPlayer) {
-      this.zIndex = ++game.level.zChar;
+      this._zIndex = ++game.level.zChar;
     }
     else {
-      this.zIndex = game.level.zMainPlayer;
+      this._zIndex = game.level.zMainPlayer;
     }
 
     game.level.addGameObject(this);
@@ -117,22 +115,26 @@ export class Character extends Actor {
         this.characterTag.visible = false;
       }
 
-      if(this.player.alliance === 0) {
-        this.renderEffects.add("blueshadow");
-      }
-      else {
-        this.renderEffects.add("redshadow");
+      if(game.uiData.isPlayer1Zero === game.uiData.isPlayer2Zero) {
+        if(this.player.alliance === 0) {
+          this.renderEffects.add("blueshadow");
+        }
+        else {
+          this.renderEffects.add("redshadow");
+        }
       }
     }
   }
 
   getStandingCollider() {
     let rect = new Rect(0, 0, 18, 34);
+    if(this.player.isZero) rect.botRightPoint.y = 40;
     return new Collider(rect.getPoints(), false, this, false, false, 0, new Point(0, 0));
   }
 
   getDashingCollider() {
     let rect = new Rect(0, 0, 18, 22);
+    if(this.player.isZero) rect.botRightPoint.y = 27;
     return new Collider(rect.getPoints(), false, this, false, false, 0, new Point(0, 0));
   }
 
@@ -143,16 +145,21 @@ export class Character extends Actor {
 
   onCollision(other: CollideData) {
     super.onCollision(other);
-    //Hit by zero's attack
-    if(other.collider.flag === 1 && other.gameObject instanceof Character && other.gameObject.player.alliance !== this.player.alliance) {
-      this.applyDamage(other.gameObject.player, undefined, 4);
-    }
     if(other.gameObject instanceof KillZone) {
+      if(other.gameObject.stingInvuln && this.isStingCharged) return;
       this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
     }
   }
 
   update() {
+
+    if(this.isStingCharged) {
+      this.stingChargeTime += game.deltaTime;
+      if(this.stingChargeTime > 10 && !game.level.checkCollisionShape(this.collider.shape, [this])) {
+        this.stingChargeTime = 0;
+        this.setStingCharged(false);
+      }
+    }
 
     if(game.level.levelData.killY !== undefined && this.pos.y > game.level.levelData.killY) {
       this.applyDamage(undefined, undefined, this.player.maxHealth * 2);
@@ -224,6 +231,33 @@ export class Character extends Actor {
     if(!this.player.isZero) {
       this.updateX();
     }
+
+    if(this.flag) {
+      this.flag.pos.x = this.getCenterPos().x;
+      this.flag.pos.y = this.getCenterPos().y;
+    }
+    
+    if(this.freezeTime > 0) {
+      this.changeSpriteFromName("frozen", true);
+      this.freezeTime -= game.deltaTime;
+      if(this.freezeTime < 0) {
+        this.unfreeze();
+        this.changeSpriteFromName("idle", true);
+      }
+    }
+
+  }
+
+  unfreeze() {
+    this.breakFreeze(this.getCenterPos());
+    this.playSound("iceBreak");
+    this.freezeTime = 0;
+  }
+
+  unfreezeIfFrozen() {
+    if(this.freezeTime > 0) {
+      this.unfreeze();
+    }
   }
 
   updateX() {
@@ -251,20 +285,17 @@ export class Character extends Actor {
 
     this.player.weapon.update();
     if(this.charState.canShoot) {
-      if(this.player.weapon.canShoot(this.player) && this.shootTime === 0 &&
-        (
-          this.player.isPressed("shoot") ||  
-          (this.player.isHeld("shoot") && this.player.weapon instanceof FireWave)
-        )
-      ) {
-        this.shoot();
+      let shootPressed = this.player.isPressed("shoot");
+      let shootHeld = this.player.isHeld("shoot");
+      if(this.shootTime === 0 && ((shootPressed) || (shootHeld && this.player.weapon.isStream))) {
+        this.shoot(false);
       }
-      if(this.player.isHeld("shoot") && this.player.weapon.ammo > 0 && this.player.weaponIndex === 0) {
+      if(shootHeld && this.canCharge()) {
         this.chargeTime += game.deltaTime;
       }
       else {
         if(this.isCharging()) {
-          this.shoot();
+          this.shoot(true);
           this.stopCharge();
         }
       }
@@ -272,12 +303,7 @@ export class Character extends Actor {
     if(this.shootTime > 0) {
       this.shootTime -= game.deltaTime;
       if(this.shootTime <= 0) {
-        if(this.player.isHeld("shoot") && this.player.weapon instanceof FireWave) {
-          this.shootTime = 0;
-        }
-        else {
-          this.shootTime = 0;
-        }
+       this.shootTime = 0;
       }
     }
     if(this.player.isPressed("weaponleft")) {
@@ -298,13 +324,9 @@ export class Character extends Actor {
     
     if(this.isCharging()) {
       let maxFlashTime = 0.1;
-      if(!this.chargeSoundId && !this.chargeLoopSoundId) {
-        this.chargeSoundId = game.playClip(this.chargeSound, this.getSoundVolume());
-      }
-      if(this.chargeSoundId && !this.chargeSound.playing(this.chargeSoundId)) {
-        this.chargeSoundId = undefined;
-        this.chargeLoopSoundId = game.playClip(this.chargeLoopSound, this.getSoundVolume());
-      }
+      
+      this.chargeSound.play();
+
       this.chargeFlashTime += game.deltaTime;
       if(this.chargeFlashTime > maxFlashTime) {
         this.chargeFlashTime = 0;
@@ -318,6 +340,34 @@ export class Character extends Actor {
       }
       this.chargeEffect.update(this.pos, this.getChargeLevel());
     }
+
+    if(this.shotgunIceChargeTime > 0) {
+      this.changeSprite(game.sprites["mmx_" + this.charState.shootSprite], true);
+      this.shotgunIceChargeTime -= game.deltaTime;
+      let busterPos = this.getShootPos();
+      if(this.shotgunIceChargeCooldown === 0) {
+        new ShotgunIceProjCharged(this.player.weapon, busterPos, this.xDir, this.player, this.shotgunIceChargeMod % 2);
+        this.shotgunIceChargeMod++;
+      }
+      this.shotgunIceChargeCooldown += game.deltaTime;
+      if(this.shotgunIceChargeCooldown > 0.1) {
+        this.shotgunIceChargeCooldown = 0;
+      }
+      if(this.shotgunIceChargeTime < 0) {
+        this.shotgunIceChargeTime = 0;
+        this.shotgunIceChargeCooldown = 0;
+        this.changeSprite(game.sprites["mmx_" + this.charState.defaultSprite], true);
+      }
+    }
+  }
+
+  canCharge() {
+    let weapon = this.player.weapon;
+    if(weapon.ammo <= 0) return false;
+    if(weapon instanceof RollingShield && this.chargedRollingShieldProj) return false;
+    if(this.isStingCharged) return false;
+    if(this.flag) return false;
+    return true;
   }
 
   isAttacking() {
@@ -327,6 +377,14 @@ export class Character extends Actor {
   updateZero() {
     if(this.charState.canAttack && this.player.isPressed("shoot")) {
       if(!this.isAttacking()) {
+        if(this.charState instanceof LadderClimb) {
+          if(this.player.isHeld("left")) {
+            this.xDir = -1;
+          }
+          else if(this.player.isHeld("right")) {
+            this.xDir = 1;
+          }
+        }
         let attackSprite = this.charState.attackSprite;
         if(this.charState.constructor.name === "Run") this.changeState(new Idle(), true);
         else if(this.charState.constructor.name === "Jump") this.changeState(new Fall(), true);
@@ -341,7 +399,7 @@ export class Character extends Actor {
       }
       else if(this.charState instanceof Idle && this.sprite.name === "zero_attack2" && this.framePercent > 0.75) {
         this.changeSprite(game.sprites["zero_attack3"], true);
-        new ZSaberProj(this.zSaberWeapon3, this.pos.addxy(0, -20), new Point(300*this.xDir, 0), this.player);
+        new ZSaberProj(this.zSaberWeapon, this.pos.addxy(0, -20), this.xDir, this.player);
       }
     }
     if(this.isAttacking()) {
@@ -356,14 +414,16 @@ export class Character extends Actor {
         let collideDatas = game.level.checkCollisionsShape(hitbox.shape, [this]);
         for(let collideData of collideDatas) {
           let go = collideData.gameObject;
-          if(go instanceof Character && go.player.alliance !== this.player.alliance) {
+          if(go instanceof Character && go.player.alliance !== this.player.alliance && !go.isStingCharged) {
             if(this.charState instanceof Idle) {
-              if(this.sprite.name === "zero_attack") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1");
-              if(this.sprite.name === "zero_attack2") this.zSaberWeapon2.damager.applyDamage(go, false, this.zSaberWeapon2, this, "zsaber2");
-              if(this.sprite.name === "zero_attack3") this.zSaberWeapon3.damager.applyDamage(go, false, this.zSaberWeapon3, this, "zsaber3");
-              if(this.sprite.name === "zero_attack_dash") this.zSaberDashWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash");
+              if(this.sprite.name === "zero_attack") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 3, false);
+              if(this.sprite.name === "zero_attack2") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 2, false);
+              if(this.sprite.name === "zero_attack3") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 3, false);
+              if(this.sprite.name === "zero_attack_dash") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 2, false);
             }
-            else if(this.charState instanceof Fall) this.zSaberAirWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair");
+            else if(this.charState instanceof Fall) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 2, false);
+            else if(this.charState instanceof LadderClimb) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberladder", 2, false);
+            else if(this.charState instanceof WallSlide) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberslide", 2, false);
           }
           else if(go instanceof TorpedoProj) {
             go.destroySelf(go.fadeSprite, go.fadeSound);
@@ -373,8 +433,8 @@ export class Character extends Actor {
     }
   }
 
-  shoot() {
-    if(this.shootTime > 0) return;
+  shoot(doCharge: boolean) {
+    if(!doCharge && this.getChargeLevel() === 3) return;
     if(this.player.weapon.ammo <= 0) return;
     this.shootTime = this.player.weapon.rateOfFire;
     if(this.shootAnimTime === 0) {
@@ -401,15 +461,29 @@ export class Character extends Actor {
     this.shootAnimTime = 0.3;
     let xDir = this.xDir;
     if(this.charState instanceof WallSlide) xDir *= -1;
-    this.player.weapon.shoot(this.getShootPos(), xDir, this.player, this.getChargeLevel());
-    this.chargeTime = 0;
+    this.player.weapon.shoot(this.getShootPos(), xDir, this.player, doCharge ? this.getChargeLevel() : 0);
+    if(!this.player.weapon.isStream) {
+      this.chargeTime = 0;
+    }
     
   }
 
   changeWeapon(newWeaponIndex: number) {
+    if(newWeaponIndex >= this.player.weapons.length) return;
     if(this.charState.constructor.name === "Die") return;
+    this.setStingCharged(false);
     this.player.weaponIndex = newWeaponIndex;
     this.changePaletteWeapon(); 
+  }
+
+  setStingCharged(val: boolean) {
+    this.isStingCharged = val;
+    if(val) {
+      this.renderEffects.add("invisible");
+    }
+    else {
+      this.renderEffects.delete("invisible");
+    }
   }
 
   changePaletteWeapon() {
@@ -451,9 +525,11 @@ export class Character extends Actor {
   getShootPos() {
     let busterOffsetPos = this.currentFrame.getBusterOffset();
     if(!busterOffsetPos) {
-      console.log(this.frameIndex);
-      console.log(this.sprite.name);
-      throw "No buster offset!";
+      //console.log(this.frameIndex);
+      //console.log(this.sprite.name);
+      //Appears to throw on mmx_hurt, frame index 9 and 10
+      //throw "No buster offset!";
+      return this.getCenterPos();
     }
     let busterOffset = busterOffsetPos.clone();
     busterOffset.x *= this.xDir;
@@ -467,14 +543,8 @@ export class Character extends Actor {
     this.chargeTime = 0;
     //this.renderEffect = "";
     this.chargeFlashTime = 0;
-    if(this.chargeSoundId) {
-      this.chargeSound.stop(this.chargeSoundId);
-      this.chargeSoundId = undefined;
-    }
-    if(this.chargeLoopSoundId) {
-      this.chargeLoopSound.stop(this.chargeLoopSoundId);
-      this.chargeLoopSoundId = undefined;
-    }
+    this.chargeSound.stop();
+
     this.chargeEffect.stop();
   }
 
@@ -487,7 +557,7 @@ export class Character extends Actor {
     this.changeSprite(this.getSprite(spriteName), resetFrame);
   }
 
-  getChargeLevel() {
+  getChargeLevel() : number {
     if(this.chargeTime < this.charge1Time) {
       return 0;
     }
@@ -498,8 +568,9 @@ export class Character extends Actor {
       return 2;
     }
     else if(this.chargeTime >= this.charge3Time) {
-      return 2; //return 3;
+      return 3;
     }
+    return -1;
   }
 
   changeState(newState: CharState, forceChange?: boolean) {
@@ -535,6 +606,7 @@ export class Character extends Actor {
     else if(game.level.gameMode.isTeamMode
       && this.player !== game.level.mainPlayer
       && this.player.alliance === game.level.mainPlayer.alliance
+      && !(this.charState instanceof WarpIn)
     ) {
       this.characterTag.visible = true;
       this.characterTag.x = this.pos.x;
@@ -588,7 +660,7 @@ export class Character extends Actor {
 
 }
 
-class CharState {
+export class CharState {
 
   sprite: string;
   defaultSprite: string;
@@ -769,7 +841,58 @@ class CharState {
 
 }
 
-class Idle extends CharState {
+export class WarpIn extends CharState {
+  warpBeam: Anim;
+  warpSoundPlayed: boolean;
+  constructor() {
+    super("warp_in");
+  }
+
+  update() {
+    if(!game.level.gameMode.spawnChar) {
+      this.character.isVisible = false;
+      this.character.frameSpeed = 0;
+    }
+    else {
+      if(this.warpBeam) {
+        if(this.character.player === game.level.mainPlayer && !this.warpSoundPlayed) {
+          this.warpSoundPlayed = true;
+          this.character.playSound("warpIn");
+        }
+        this.warpBeam.isVisible = true;
+        this.warpBeam.pos.y += game.deltaTime * 450;
+        if(this.warpBeam.pos.y >= this.character.pos.y) {
+          this.warpBeam.destroySelf();
+          this.warpBeam = undefined;
+        }
+      }
+      else {
+        this.character.isVisible = true;
+        this.character.frameSpeed = 1;
+        if(this.character.isAnimOver()) {
+          this.character.changeState(new Idle());
+        }
+      }
+    }
+    
+  }
+
+  onEnter(oldState: CharState) {
+    super.onEnter(oldState);
+    this.character.useGravity = false;
+    this.character.globalCollider.isTrigger = true;
+    this.warpBeam = new Anim(this.character.pos.addxy(0, -200), game.sprites[this.player.isZero ? "zero_warp_beam" : "mmx_warp_beam"], 1, false);
+    this.warpBeam.isVisible = false;
+  }
+
+  onExit(newState: CharState) {
+    super.onEnter(newState);
+    this.character.useGravity = true;
+    this.character.globalCollider.isTrigger = false;
+  }
+}
+
+export class Idle extends CharState {
 
   constructor(transitionSprite?: string) {
     super("idle", "shoot", "attack", transitionSprite);
@@ -964,7 +1087,7 @@ class WallSlide extends CharState {
   wallDir: number;
   dustTime: number = 0;
   constructor(wallDir: number) {
-    super("wall_slide", "wall_slide_shoot");
+    super("wall_slide", "wall_slide_shoot", "wall_slide_attack");
     this.wallDir = wallDir;
     this.enterSound = "land";
   }
@@ -1057,7 +1180,7 @@ class LadderClimb extends CharState {
   ladder: Ladder;
   snapX: number;
   constructor(ladder: Ladder, snapX?: number) {
-    super("ladder_climb", "ladder_shoot", "", "ladder_start");
+    super("ladder_climb", "ladder_shoot", "ladder_attack", "ladder_start");
     this.ladder = ladder;
     this.snapX = snapX;
   }
@@ -1088,14 +1211,19 @@ class LadderClimb extends CharState {
       return;
     }
 
-    this.character.frameSpeed = 0;
-    if(this.character.shootAnimTime === 0) {
+    if(this.character.isAttacking()) {
+      this.character.frameSpeed = 1;
+    }
+    else {
+      this.character.frameSpeed = 0;
+    }
+    if(this.character.shootAnimTime === 0 && !this.character.isAttacking()) {
       if(this.player.isHeld("up")) {
-        this.character.move(new Point(0, -100));
+        this.character.move(new Point(0, -75));
         this.character.frameSpeed = 1;
       }
       else if(this.player.isHeld("down")) {
-        this.character.move(new Point(0, 100));
+        this.character.move(new Point(0, 75));
         this.character.frameSpeed = 1;
       }
     }
@@ -1163,6 +1291,7 @@ class Hurt extends CharState {
     super.onEnter(oldState);
     this.character.vel.y = -100;
     this.character.stopCharge();
+    this.character.unfreezeIfFrozen();
   }
 
   update() {
@@ -1193,6 +1322,12 @@ class Die extends CharState {
     this.character.globalCollider = undefined;
     this.character.stopCharge();
     new Anim(this.character.pos.addxy(0, -12), game.sprites["die_sparks"],1);
+    if(this.character.flag) {
+      this.character.flag.dropFlag();
+      this.character.flag = undefined;
+    }
+    this.character.unfreezeIfFrozen();
+    this.character.setStingCharged(false);
   }
 
   onExit(newState: CharState) {
@@ -1210,7 +1345,7 @@ class Die extends CharState {
         this.character.playSound("die");
       }
       
-      new DieEffect(this.character.pos);
+      new DieEffect(this.character.pos, this.player.isZero);
       this.player.destroyCharacter();
     }
   }

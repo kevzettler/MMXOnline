@@ -8,17 +8,19 @@ import { Player } from "./player";
 import { Rect } from "./rect";
 import { Collider, CollideData, HitData } from "./collider";
 import { Effect } from "./effects";
-import { RollingShieldProj } from "./projectile";
+import { RollingShieldProj, ShotgunIceProjCharged, ShotgunIceProjSled } from "./projectile";
 import { Character } from "./character";
-import { SpawnPoint } from "./spawnPoint";
+import { SpawnPoint, Team } from "./spawnPoint";
 import { NoScroll, Direction } from "./noScroll";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 import { Line, Shape } from "./shape";
 import { KillFeedEntry } from "./killFeedEntry";
-import { GameMode, FFADeathMatch } from "./gameMode";
+import { GameMode, FFADeathMatch, CTF } from "./gameMode";
 import { LargeHealthPickup, PickupSpawner, SmallAmmoPickup, LargeAmmoPickup, SmallHealthPickup } from "./pickup";
 import { HUD } from "./hud";
 import { ObjectPool } from "./objectPool";
+import { Flag } from "./flag";
+import { ShotgunIce } from "./weapon";
 
 export class Level {
 
@@ -53,7 +55,11 @@ export class Level {
   zDefault: number = 0;
   zMainPlayer: number = -1000000000;
   zChar: number = -2000000000;
-  zBackground: number = -3000000000
+  zBackground: number = -3000000000;
+  blueFlag: Flag;
+  redFlag: Flag;
+  redFlagNode: NavMeshNode;
+  blueFlagNode: NavMeshNode;
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
@@ -134,7 +140,7 @@ export class Level {
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        let killZone = new KillZone(instance.name, points);
+        let killZone = new KillZone(instance.name, points, instance.properties.stingInvuln);
         this.addGameObject(killZone);
       }
       else if(instance.objectName === "Jump Zone") {
@@ -142,17 +148,39 @@ export class Level {
         for(var point of instance.points) {
           points.push(new Point(point.x, point.y));
         }
-        let jumpZone = new JumpZone(instance.name, points);
+        let jumpZone = new JumpZone(instance.name, points, instance.properties.targetNode);
         this.addGameObject(jumpZone);
       }
       else if(instance.objectName === "Spawn Point") {
         let properties = instance.properties;
-        this.spawnPoints.push(new SpawnPoint(instance.name, new Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num));
+        this.spawnPoints.push(new SpawnPoint(instance.name, new Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num, Team.Neutral));
+      }
+      else if(instance.objectName === "Red Spawn") {
+        let properties = instance.properties;
+        this.spawnPoints.push(new SpawnPoint(instance.name, new Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num, Team.Red));
+      }
+      else if(instance.objectName === "Blue Spawn") {
+        let properties = instance.properties;
+        this.spawnPoints.push(new SpawnPoint(instance.name, new Point(instance.pos.x, instance.pos.y), properties.xDir, properties.num, Team.Blue));
+      }
+      else if(instance.objectName === "Red Flag") {
+        if(gameMode instanceof CTF) {
+          this.redFlag = new Flag(1, new Point(instance.pos.x, instance.pos.y));
+        }
+      }
+      else if(instance.objectName === "Blue Flag") {
+        if(gameMode instanceof CTF) {
+          this.blueFlag = new Flag(0, new Point(instance.pos.x, instance.pos.y));
+        }
       }
       else if(instance.objectName === "Node") {
         let name = instance.name;
         let pos = new Point(instance.pos.x, instance.pos.y);
         let node: NavMeshNode = new NavMeshNode(name, pos, instance.properties);
+        if(gameMode instanceof CTF) {
+          if(node.isBlueFlagNode) this.blueFlagNode = node;
+          else if(node.isRedFlagNode) this.redFlagNode = node;
+        }
         this.navMeshNodes.push(node);
       }
       else if(instance.objectName === "Large Health") {
@@ -183,11 +211,15 @@ export class Level {
 
     this.gameMode = gameMode;
 
-    if(this.levelData.levelMusic) {
+    let music = this.levelData.levelMusic;
+    if(game.uiData.isPlayer1Zero !== game.uiData.isPlayer2Zero && game.uiData.isBrawl) {
+      music = game.zeroMusic;
+    }
+    if(music) {
       if(game.music) {
         game.music.stop();
       }
-      game.music = this.levelData.levelMusic;
+      game.music = music;
       game.music.seek(0);
       setTimeout(() => { game.music.play("musicStart"); }, 500);
     }
@@ -510,12 +542,12 @@ export class Level {
     }
   }
 
-  computeCamPos(character: Character) {
+  computeCamPos(point: Point) {
     let scaledCanvasW = game.defaultCanvasWidth;
     let scaledCanvasH = game.defaultCanvasHeight;
     
-    let camX = character.getCamCenterPos().x - scaledCanvasW/2;
-    let camY = character.getCamCenterPos().y - scaledCanvasH/2;
+    let camX = point.x - scaledCanvasW/2;
+    let camY = point.y - scaledCanvasH/2;
 
     if(camX < 0) camX = 0;
     if(camY < 0) camY = 0;
@@ -584,7 +616,8 @@ export class Level {
       let curY = point1.y;
       let dist = 0;
       let maxDist = point1.distanceTo(point2);
-      let mag = maxDist / (this.cellWidth/2);
+      //let mag = maxDist / (this.cellWidth/2);
+      let mag = this.cellWidth/2;
       let usedCoords: Set<string> = new Set();
       while(dist < maxDist) {
         curX += dir.x * mag;
@@ -708,6 +741,12 @@ export class Level {
       if(gameObject.collider.wallOnly) return true;
     }
     if(actor instanceof Character && gameObject instanceof Character && actor.player.alliance === gameObject.player.alliance) {
+      return true;
+    }
+    if(actor instanceof Character && gameObject instanceof Character && actor.player.alliance !== gameObject.player.alliance && (actor.isStingCharged || gameObject.isStingCharged)) {
+      return true;
+    }
+    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner.alliance !== gameObject.player.alliance) {
       return true;
     }
     return false;
@@ -876,7 +915,6 @@ export class Level {
     return hits;
   }
 
-  /*
   raycast(pos1: Point, pos2: Point, classNames: string[]): CollideData {
     let hits = this.raycastAll(pos1, pos2, classNames);
     //@ts-ignore
@@ -884,7 +922,8 @@ export class Level {
       return collideData.hitData.hitPoint.distanceTo(pos1);
     });
   }
-
+  
+  /*
   shapecastAll(shape: Shape, origin: Point, dir: Point, classNames: string[]): CollideData[] {
     let hits: CollideData[] = [];
     for(let go of this.gameObjects) {
@@ -944,6 +983,16 @@ export class Level {
         }
       }
     }
+    if(minNode) return minNode;
+
+    for(let node of this.navMeshNodes) {
+      let dist = pos.distanceTo(node.pos);
+      if(dist < minDist) {
+        minDist = dist;
+        minNode = node;
+      }
+    }
+
     return minNode;
   }
 
@@ -955,7 +1004,7 @@ export class Level {
   getSpawnPoint(player: Player) {
     //@ts-ignore
     let unoccupied = _.filter(this.spawnPoints, (spawnPoint) => {
-      return !spawnPoint.occupied();
+      return !spawnPoint.occupied() && (!this.gameMode.isTeamMode && spawnPoint.team === Team.Neutral) || (this.gameMode.isTeamMode && spawnPoint.team !== Team.Neutral && spawnPoint.alliance === player.alliance);
     });
     if(game.level.levelData.fixedCam) {
       //@ts-ignore
@@ -1033,7 +1082,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
 
-    this.levelMusic = game.loadMusic(musicPath, this.musicLoopStart, this.musicLoopEnd);    
+    this.levelMusic = game.loadMusic(musicPath, this.musicLoopStart, this.musicLoopEnd);
 
   }
 

@@ -12,25 +12,25 @@ import { GameObject } from "./gameObject";
 import { Rect } from "./rect";
 import { FireWave, Tornado, Torpedo, ShotgunIce, RollingShield, ElectricSpark, Sting, Boomerang, Weapon } from "./weapon";
 import { Pickup } from "./pickup";
+import { Transform } from "pixi.js";
+import { LoopingSound } from "./loopingSound";
 
 export class Projectile extends Actor {
 
   damager: Damager;
   fadeSprite: Sprite;
   fadeSound: string;
-  speed: number;
   time: number = 0;
   weapon: Weapon;
   destroyOnCharHit: boolean = true;
 
-  constructor(weapon: Weapon, pos: Point, vel: Point, damage: number, player: Player, sprite: Sprite, flinch: boolean, hitCooldown: number) {
+  constructor(weapon: Weapon, pos: Point, xDir: number, speed: number, damage: number, player: Player, sprite: Sprite, flinch: boolean, hitCooldown: number) {
     super(sprite, pos);
     this.weapon = weapon;
-    this.vel = vel;
-    this.speed = this.vel.magnitude;
+    this.vel = new Point(speed * xDir, 0);
     this.useGravity = false;
     this.damager = new Damager(player, damage, flinch, hitCooldown);
-    this.xDir = Math.sign(vel.x);
+    this.xDir = xDir;
     if(game.level.gameMode.isTeamMode) {
       if(player.alliance === 0) {
         this.renderEffects.add("blueshadow");
@@ -39,6 +39,10 @@ export class Projectile extends Actor {
         this.renderEffects.add("redshadow");
       }
     }
+  }
+
+  getSpeed() {
+    return this.vel.magnitude;
   }
 
   update() {
@@ -52,6 +56,11 @@ export class Projectile extends Actor {
   }
 
   onCollision(other: CollideData) {
+
+    if(this instanceof ShotgunIceProj) {
+      if(this.hitChar === other.gameObject) return;
+    }
+
     //Destroy torpedo if it hits something else
     if(this instanceof TorpedoProj && other.gameObject instanceof Projectile && this.damager.owner.alliance !== other.gameObject.damager.owner.alliance) {
       this.destroySelf(this.fadeSprite, this.fadeSound);
@@ -63,14 +72,19 @@ export class Projectile extends Actor {
     }
 
     //If this is rolling shield, destroy the other projectile
-    if(this instanceof RollingShieldProj && other.gameObject instanceof Projectile && this.damager.owner.alliance !== other.gameObject.damager.owner.alliance) {
+    if((this instanceof RollingShieldProj || this instanceof RollingShieldProjCharged) && other.gameObject instanceof Projectile && this.damager.owner.alliance !== other.gameObject.damager.owner.alliance) {
       if(!(other.gameObject instanceof TornadoProj) && !(other.gameObject instanceof RollingShieldProj) && !(other.gameObject instanceof ElectricSparkProj)) {
         other.gameObject.destroySelf(other.gameObject.fadeSprite, other.gameObject.fadeSound);
       }
     }
 
+    //If this is electric spark, destroy the other projectile
+    if((this instanceof ElectricSparkProj || this instanceof ElectricSparkProjCharged) && other.gameObject instanceof RollingShieldProjCharged && this.damager.owner.alliance !== other.gameObject.damager.owner.alliance) {
+      other.gameObject.destroySelf(other.gameObject.fadeSprite, other.gameObject.fadeSound);
+    }
+
     let character = other.gameObject;
-    if(character instanceof Character && character.player.alliance !== this.damager.owner.alliance) {
+    if(character instanceof Character && character.player.alliance !== this.damager.owner.alliance && !character.isStingCharged) {
       
       let pos = other.collider.shape.getIntersectPoint(this.pos, this.vel);
       if(pos) this.changePos(pos.clone());
@@ -79,7 +93,7 @@ export class Projectile extends Actor {
       if(this instanceof TorpedoProj && character.player.weapon instanceof Boomerang) weakness = true;
       if(this instanceof StingProj && character.player.weapon instanceof Tornado) weakness = true;
       if(this instanceof RollingShieldProj && character.player.weapon instanceof Torpedo) weakness = true;
-      if(this instanceof FireWaveProj && (character.player.weapon instanceof ShotgunIce || character.player.isZero)) weakness = true;
+      if(this instanceof FireWaveProj && (character.player.weapon instanceof ShotgunIce)) weakness = true;
       if(this instanceof TornadoProj && character.player.weapon instanceof FireWave) weakness = true;
       if(this instanceof BoomerangProj && character.player.weapon instanceof Sting) weakness = true;
       if(this instanceof ElectricSparkProj && character.player.weapon instanceof RollingShield) weakness = true;
@@ -108,8 +122,8 @@ export class Projectile extends Actor {
 
 export class ZSaberProj extends Projectile {
 
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 2, player, game.sprites["zsaber_shot"], false, 0);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 300, 2, player, game.sprites["zsaber_shot"], false, 0);
     this.fadeSprite = game.sprites["zsaber_shot_fade"];
   }
 
@@ -124,8 +138,8 @@ export class ZSaberProj extends Projectile {
 
 export class BusterProj extends Projectile {
 
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 1, player, game.sprites["buster1"], false, 0);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 350, 1, player, game.sprites["buster1"], false, 0);
     this.fadeSprite = game.sprites["buster1_fade"];
   }
 
@@ -133,8 +147,8 @@ export class BusterProj extends Projectile {
 
 export class Buster2Proj extends Projectile {
 
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 3, player, game.sprites["buster2"], true, 0);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 350, 3, player, game.sprites["buster2"], false, 0);
     this.fadeSprite = game.sprites["buster2_fade"];
   }
 
@@ -142,8 +156,8 @@ export class Buster2Proj extends Projectile {
 
 export class Buster3Proj extends Projectile {
 
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 6, player, game.sprites["buster3"], true, 0);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 350, 6, player, game.sprites["buster3"], false, 0);
     this.fadeSprite = game.sprites["buster3_fade"];
   }
 
@@ -156,8 +170,8 @@ export class Buster4Proj extends Projectile {
   offsetTime: number = 0;
   initY: number = 0;
   
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number, num: number, offsetTime: number) {
-    super(weapon, pos, vel, 8, player, game.sprites["buster4"], true, 1);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, type: number, num: number, offsetTime: number) {
+    super(weapon, pos, xDir, 400, 2, player, game.sprites["buster4"], true, 0.05);
     this.fadeSprite = game.sprites["buster4_fade"];
     this.type = type;
     //this.vel.x = 0;
@@ -179,12 +193,22 @@ export class TorpedoProj extends Projectile {
 
   target: Character;
   smokeTime: number = 0;
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 2, player, game.sprites["torpedo"], false, 0);
+  maxSpeed: number = 150;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, type: number, angle?: number) {
+    super(weapon, pos, xDir, 150, 2, player, game.sprites[type === 0 ? "torpedo" : "torpedo_charge"], false, 0);
+    if(type === 1) {
+      this.damager.damage = 4;
+      this.damager.flinch = true;
+      this.damager.hitCooldown = 0.1;
+      //this.maxSpeed *= 2;
+    }
     this.fadeSprite = game.sprites["explosion"];
     this.fadeSound = "explosion";
     this.angle = this.xDir === -1 ? 180 : 0;
-    this.vel.x = this.vel.x * 0.25;
+    if(angle !== undefined) {
+      this.angle = angle + (this.xDir === -1 ? 180 : 0);
+    }
+    
   }
 
   update() {
@@ -192,14 +216,8 @@ export class TorpedoProj extends Projectile {
     
     if(this.target) {
       if(this.time < 7.5) {
-        this.vel = this.vel.add(new Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.speed * 0.25));
-        if(this.vel.magnitude > this.speed) {
-          this.vel = this.vel.normalize().times(this.speed);
-        }
         let dTo = this.pos.directionTo(this.target.centerPos).normalize();
-        
         var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
-
         destAngle = Helpers.to360(destAngle);
         this.angle = Helpers.lerpAngle(this.angle, destAngle, game.deltaTime * 3);
       }
@@ -211,8 +229,17 @@ export class TorpedoProj extends Projectile {
       this.target = game.level.getClosestTarget(this.pos, this.damager.owner.alliance);
     }
     else if(this.time < 0.15) {
-      this.vel.x += this.xDir * game.deltaTime * 300;
+      //this.vel.x += this.xDir * game.deltaTime * 300;
     }
+
+    /*
+    this.vel = this.vel.add(new Point(Helpers.cos(this.angle), Helpers.sin(this.angle)).times(this.maxSpeed * 0.25));
+    if(this.vel.magnitude > this.maxSpeed) {
+      this.vel = this.vel.normalize().times(this.maxSpeed);
+    }
+    */
+    this.vel.x = Helpers.cos(this.angle) * this.maxSpeed;
+    this.vel.y = Helpers.sin(this.angle) * this.maxSpeed;
 
     this.smokeTime += game.deltaTime;
     if(this.smokeTime > 0.2) {
@@ -265,10 +292,12 @@ export class StingProj extends Projectile {
 
   type: number = 0; //0 = initial proj, 1 = horiz, 2 = up, 3 = down
   origVel: Point;
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number) {
-    super(weapon, pos, vel, 2, player, game.sprites["sting_start"], false, 0);
-    this.origVel = vel.clone();
-    if(type === 1) {
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, type: number, vel?: Point) {
+    super(weapon, pos, xDir, 300, 2, player, game.sprites["sting_start"], false, 0);
+    if(type === 0) {
+      this.origVel = this.vel.clone();
+    }
+    else if(type === 1) {
       let sprite = game.sprites["sting_flat"];
       this.changeSprite(sprite, false);
     }
@@ -279,6 +308,7 @@ export class StingProj extends Projectile {
       }
       this.changeSprite(sprite, false);
     }
+    if(vel) this.vel = vel;
     this.fadeSprite = game.sprites["buster1_fade"];
     this.type = type;
   }
@@ -290,9 +320,9 @@ export class StingProj extends Projectile {
     }
     if(this.type === 0) {
       if(this.isAnimOver()) {
-        new StingProj(this.weapon, this.pos.addxy(15*this.xDir, 0), this.origVel, this.damager.owner, 1);
-        new StingProj(this.weapon, this.pos.addxy(15*this.xDir, -8), this.origVel.addxy(0, -150), this.damager.owner, 2);
-        new StingProj(this.weapon, this.pos.addxy(15*this.xDir, 8), this.origVel.addxy(0, 150), this.damager.owner, 3);
+        new StingProj(this.weapon, this.pos.addxy(15*this.xDir, 0), this.xDir, this.damager.owner, 1, this.origVel);
+        new StingProj(this.weapon, this.pos.addxy(15*this.xDir, -8), this.xDir, this.damager.owner, 2, this.origVel.addxy(0, -150));
+        new StingProj(this.weapon, this.pos.addxy(15*this.xDir, 8), this.xDir, this.damager.owner, 3, this.origVel.addxy(0, 150));
         this.destroySelf();
       }
     }
@@ -302,8 +332,8 @@ export class StingProj extends Projectile {
 
 export class RollingShieldProj extends Projectile {
  
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 2, player, game.sprites["rolling_shield"], false, 0);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 200, 2, player, game.sprites["rolling_shield"], false, 0);
     this.fadeSprite = game.sprites["explosion"];
     this.fadeSound = "explosion";
     this.useGravity = true;
@@ -330,11 +360,49 @@ export class RollingShieldProj extends Projectile {
 
 }
 
+export class RollingShieldProjCharged extends Projectile {
+  
+  character: Character;
+  rollingShieldSound: LoopingSound;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 200, 2, player, game.sprites["rolling_shield_charge_flash"], false, 0);
+    this.fadeSprite = game.sprites["rolling_shield_charge_break"];
+    this.fadeSound = "hit";
+    this.useGravity = false;
+    this.character = player.character;
+    this.rollingShieldSound = new LoopingSound("rollingShieldCharge", "rollingShieldChargeLoop", this);
+    player.character.chargedRollingShieldProj = this;
+  }
+
+  update() {
+    super.update();
+    if(this.isAnimOver() && this.sprite.name === "rolling_shield_charge_flash") {
+      this.changeSprite(game.sprites["rolling_shield_charge"], true);
+    }
+    if(!this.character || this.character.dead || !(this.character.player.weapon instanceof RollingShield)) {
+      this.destroySelf();
+      return;
+    }
+    if(this.rollingShieldSound) {
+      this.rollingShieldSound.play();
+    }
+    this.pos = this.character.getCenterPos();
+  }
+
+  destroySelf(sprite?: Sprite, fadeSound?: string) {
+    super.destroySelf(this.fadeSprite, this.fadeSound);
+    if(this.damager.owner.character) this.damager.owner.character.chargedRollingShieldProj = undefined;
+    this.rollingShieldSound.stop();
+    this.rollingShieldSound = undefined;
+  }
+
+}
+
 
 export class FireWaveProj extends Projectile {
  
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 1, player, game.sprites["fire_wave"], false, 0.222);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 400, 1, player, game.sprites["fire_wave"], false, 0.222);
     this.fadeSprite = game.sprites["fire_wave_fade"];
   }
 
@@ -350,14 +418,96 @@ export class FireWaveProj extends Projectile {
 
 }
 
+export class FireWaveProjChargedStart extends Projectile {
+  
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 150, 2, player, game.sprites["fire_wave_charge"], true, 0.222);    
+    this.collider.wallOnly = true;
+    this.destroyOnCharHit = false;
+  }
+
+  update() {
+    super.update();
+    this.incPos(new Point(0, game.deltaTime * 100));
+    if(this.grounded) {
+      this.destroySelf();
+      new FireWaveProjCharged(this.weapon, this.pos, this.xDir, this.damager.owner, 0);
+      this.playSound("fireWave");
+    }
+  }
+
+}
+
+export class FireWaveProjCharged extends Projectile {
+
+  spriteMid: Sprite;
+  spriteTop: Sprite;
+  riseY: number = 0;
+  parentTime: number = 0;
+  child: FireWaveProjCharged;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, parentTime: number) {
+    super(weapon, pos, xDir, 0, 1, player, game.sprites["fire_wave_charge"], false, 0.2);
+    this.spriteMid = new Sprite(game.sprites["fire_wave_charge"].spriteJson, true, this.container);
+    this.spriteMid.pixiSprite.visible = false;
+    this.spriteTop = new Sprite(game.sprites["fire_wave_charge"].spriteJson, true, this.container);
+    this.spriteTop.pixiSprite.visible = false;
+    this.useGravity = true;
+    this.collider.wallOnly = true;
+    this.frameSpeed = 0;
+    this.parentTime = parentTime;
+    this.destroyOnCharHit = false;
+    new Anim(this.pos.clone(), game.sprites["fire_wave_charge_flash"], 1, true);
+  }
+
+  render(x: number, y: number) {
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y - this.riseY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
+    this.spriteMid.draw(Math.round(this.frameIndex + (this.sprite.frames.length/3)) % this.sprite.frames.length, this.pos.x + x, this.pos.y + y - 6 - this.riseY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
+    this.spriteTop.draw(Math.round(this.frameIndex + (this.sprite.frames.length/2)) % this.sprite.frames.length, this.pos.x + x, this.pos.y + y - 12 - this.riseY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
+  }
+
+  update() {
+    super.update();
+    this.frameSpeed = 1;
+    if(this.loopCount >= 1) {
+      this.spriteTop.pixiSprite.visible = true;
+      this.spriteMid.pixiSprite.visible = true;
+      this.riseY += (game.deltaTime * 75);
+    }
+    if(this.loopCount === 3) {
+      this.destroySelf();
+    }
+    if(this.time > 0.2 && !this.child && this.parentTime < 15) {
+      this.playSound("fireWave");
+      let wall = game.level.checkCollisionActor(this, 16*this.xDir, 0);
+      let sign = 1;
+      if(wall && wall.gameObject instanceof Wall) {
+        sign = -1;
+      }
+      this.child = new FireWaveProjCharged(this.weapon, this.pos.addxy(16*this.xDir, 0), this.xDir * sign, this.damager.owner, this.time + this.parentTime);
+    }
+  }
+
+  destroySelf(sprite?: Sprite, fadeSound?: string) {
+    super.destroySelf();
+    let newPos = this.pos.addxy(0, - 24-this.riseY);
+    new Anim(newPos, game.sprites["fire_wave_charge_fade"], 1, true);
+    this.container.removeChild(this.spriteTop.pixiSprite);
+    this.spriteTop.pixiSprite.destroy();
+    this.container.removeChild(this.spriteMid.pixiSprite);
+    this.spriteMid.pixiSprite.destroy();
+  }
+
+}
+
 export class TornadoProj extends Projectile {
  
   spriteStart: Sprite;
   spriteMids: Sprite[] = [];
   spriteEnd: Sprite;
   length: number = 1;
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 1, player, game.sprites["tornado_mid"], false, 0.3);
+  maxSpeed: number = 400;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 400, 1, player, game.sprites["tornado_mid"], false, 0.3);
     this.sprite.pixiSprite.visible = false;
     this.spriteStart = new Sprite(game.sprites["tornado_start"].spriteJson, true, this.container);
     for(let i = 0; i < 6; i++) {
@@ -367,6 +517,7 @@ export class TornadoProj extends Projectile {
     }
     this.spriteEnd = new Sprite(game.sprites["tornado_end"].spriteJson, true, this.container);
     this.vel.x = 0;
+    this.destroyOnCharHit = false;
   }
   
   render(x: number, y: number) {
@@ -404,14 +555,14 @@ export class TornadoProj extends Projectile {
         this.length++;
       }
       else {
-        this.vel.x = this.speed * this.xDir;
+        this.vel.x = this.maxSpeed * this.xDir;
       }
       this.time = 0;
     }
   }
 
   onHitChar(character: Character) {
-    character.move(new Point(this.speed * 0.9 * this.xDir, 0));
+    character.move(new Point(this.maxSpeed * 0.9 * this.xDir, 0));
     if(character.isClimbingLadder()) {
       character.setFall();
     }
@@ -430,14 +581,114 @@ export class TornadoProj extends Projectile {
   }
 }
 
+export class TornadoProjCharged extends Projectile {
+
+  spriteStart: Sprite;
+  bodySprites: Sprite[] = [];
+  length: number = 1;
+  groundY: number = 0;
+  maxLength: number = 6;
+  maxSpeed: number = 100;
+  pieceHeight: number;
+  growTime: number = 0;
+  maxLengthTime: number = 0;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 0, 2, player, game.sprites["tornado_charge"], true, 0.2);
+    this.sprite.pixiSprite.visible = false;
+    this.spriteStart = new Sprite(game.sprites["tornado_charge"].spriteJson, true, this.container);
+    this.pieceHeight = this.spriteStart.frames[0].rect.h;
+    this.maxLength = game.level.height / this.pieceHeight;
+    for(let i = 0; i < this.maxLength; i++) {
+      let midSprite = new Sprite(game.sprites["tornado_charge"].spriteJson, true, this.container);
+      midSprite.pixiSprite.visible = false;
+      this.bodySprites.push(midSprite);
+    }
+    //this.ground();
+    this.destroyOnCharHit = false;
+  }
+  
+  render(x: number, y: number) {
+    this.spriteStart.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, this.xDir, this.yDir, this.renderEffects, 1, this.palette);
+    let i = 0;
+    let spriteMidHeight = this.bodySprites[0].frames[this.frameIndex].rect.h;
+    for(i; i < this.length; i++) {
+      this.bodySprites[i].pixiSprite.visible = true;
+      this.bodySprites[i].draw(this.frameIndex, this.pos.x + x, this.pos.y + y - (i*spriteMidHeight), this.xDir, this.yDir, this.renderEffects, 1, this.palette);
+    }
+    if(game.options.showHitboxes && this.collider) {
+      Helpers.drawPolygon(game.uiCtx, this.collider.shape.clone(x, y), true, "blue", "", 0, 0.5);
+    }
+  }
+
+  ground() {
+    let ground = game.level.raycast(this.pos.addxy(0, -10), this.pos.addxy(0, game.level.height), ["Wall"]);
+    if(ground) {
+      this.pos.y = ground.hitData.hitPoint.y;
+    }
+  }
+
+  update() {
+    super.update();
+
+    let spriteMidHeight = this.bodySprites[0].frames[this.frameIndex].rect.h;
+
+    let botX = this.spriteStart.frames[0].rect.w;
+    let botY = spriteMidHeight + (this.length*spriteMidHeight);
+    
+    let rect = new Rect(0, 0, botX, botY);
+    this.globalCollider = new Collider(rect.getPoints(), true, this, false, false, 0, new Point(0, 0));
+
+    this.growTime += game.deltaTime;
+    if(this.growTime > 0.025) {
+      if(this.length < this.maxLength) {
+        this.length++;
+        this.incPos(new Point(0, this.pieceHeight/2));
+      }
+      else {
+        //this.vel.x = this.maxSpeed * this.xDir;
+      }
+      this.growTime = 0;
+    }
+
+    if(this.length >= this.maxLength) {
+      this.maxLengthTime += game.deltaTime;
+      if(this.maxLengthTime > 1) {
+        this.destroySelf();
+      }
+    }
+    
+  }
+
+  onHitChar(character: Character) {
+    /*
+    character.move(new Point(this.speed * 0.9 * this.xDir, 0));
+    if(character.isClimbingLadder()) {
+      character.setFall();
+    }
+    */
+  }
+
+  destroySelf(sprite?: Sprite, fadeSound?: string) {
+    super.destroySelf(sprite, fadeSound);
+    this.container.removeChild(this.spriteStart.pixiSprite);
+    this.spriteStart.pixiSprite.destroy();
+    for(let sprite of this.bodySprites) {
+      this.container.removeChild(sprite.pixiSprite);
+      sprite.pixiSprite.destroy();
+    }
+  }
+
+}
+
 export class ElectricSparkProj extends Projectile {
  
   type: number = 0;
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number) {
-    super(weapon, pos, vel, 2, player, game.sprites["electric_spark"], false, 0);
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, type: number, vel?: Point) {
+    super(weapon, pos, xDir, 150, 2, player, game.sprites["electric_spark"], false, 0);
     this.fadeSprite = game.sprites["electric_spark_fade"];
     //this.fadeSound = "explosion";
     this.type = type;
+    if(vel) this.vel = vel;
   }
 
   onHitWall(other: CollideData) {
@@ -449,10 +700,10 @@ export class ElectricSparkProj extends Projectile {
       else {
         normal = new Point(0, 1)
       }
-      normal.multiply(this.speed * 3);
+      normal.multiply(this.getSpeed() * 3);
       this.destroySelf(this.fadeSprite);
-      new ElectricSparkProj(this.weapon, this.pos.clone(), normal, this.damager.owner, 1);
-      new ElectricSparkProj(this.weapon, this.pos.clone(), normal.times(-1), this.damager.owner, 1);
+      new ElectricSparkProj(this.weapon, this.pos.clone(), this.xDir, this.damager.owner, 1, normal);
+      new ElectricSparkProj(this.weapon, this.pos.clone(), this.xDir, this.damager.owner, 1, normal.times(-1));
     }
   }
 
@@ -460,9 +711,8 @@ export class ElectricSparkProj extends Projectile {
 
 export class ElectricSparkProjCharged extends Projectile {
 
-  constructor(weapon: Weapon, pos: Point, player: Player, dir: number) {
-    super(weapon, pos, new Point(dir * 450, 0), 4, player, game.sprites["electric_spark_charge"], true, 0.5);
-    this.xDir = dir;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 450, 4, player, game.sprites["electric_spark_charge"], true, 0.5);
     this.destroyOnCharHit = false;
   }
 
@@ -473,12 +723,13 @@ export class BoomerangProj extends Projectile {
   angleDist: number = 0;
   turnDir: number = 1;
   pickup: Pickup;
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player) {
-    super(weapon, pos, vel, 2, player, game.sprites["boomerang"], false, 0);
+  maxSpeed: number = 250;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 250, 2, player, game.sprites["boomerang"], false, 0);
     //this.fadeSprite = game.sprites["electric_spark_fade"];
     //this.fadeSound = "explosion";
     this.angle = 0;
-    if(Math.sign(vel.x) === -1) this.angle = -180;
+    if(xDir === -1) this.angle = -180;
     if(!player.character.grounded) {
       this.turnDir = -1;
     }
@@ -518,16 +769,16 @@ export class BoomerangProj extends Projectile {
         let angInc = (-this.xDir * this.turnDir) * game.deltaTime * 300;
         this.angle += angInc;
         this.angleDist += Math.abs(angInc);
-        this.vel.x = Helpers.cos(this.angle) * this.speed;
-        this.vel.y = Helpers.sin(this.angle) * this.speed;
+        this.vel.x = Helpers.cos(this.angle) * this.maxSpeed;
+        this.vel.y = Helpers.sin(this.angle) * this.maxSpeed;
       }
       else if(this.damager.owner.character) {
         let dTo = this.pos.directionTo(this.damager.owner.character.centerPos).normalize();
         var destAngle = Math.atan2(dTo.y, dTo.x) * 180 / Math.PI;
         destAngle = Helpers.to360(destAngle);
         this.angle = Helpers.lerpAngle(this.angle, destAngle, game.deltaTime * 10);
-        this.vel.x = Helpers.cos(this.angle) * this.speed;
-        this.vel.y = Helpers.sin(this.angle) * this.speed;
+        this.vel.x = Helpers.cos(this.angle) * this.maxSpeed;
+        this.vel.y = Helpers.sin(this.angle) * this.maxSpeed;
       }
       else {
         this.destroySelf();
@@ -537,19 +788,56 @@ export class BoomerangProj extends Projectile {
 
 }
 
+export class BoomerangProjCharged extends Projectile {
+ 
+  angleDist: number = 0;
+  turnDir: number = 1;
+  pickup: Pickup;
+  maxSpeed: number = 400;
+  type: number = 0;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, angle: number, type: number) {
+    super(weapon, pos, xDir, 400, 6, player, game.sprites[type === 0 ? "boomerang_charge2" : "boomerang_charge"], true, 0);
+    this.angle = angle;
+    this.type = type;
+  }
+
+  renderFromAngle(x: number, y: number) {
+    this.sprite.draw(this.frameIndex, this.pos.x + x, this.pos.y + y, 1, 1, this.renderEffects, 1, this.palette);
+  }
+
+  update() {
+    super.update();
+    this.vel.x = Helpers.cos(this.angle) * this.maxSpeed;
+    this.vel.y = Helpers.sin(this.angle) * this.maxSpeed;
+    if(this.type === 0) {
+      if(this.time > 0.1 && this.time < 0.72) {
+        this.angle += game.deltaTime * 500;
+      }
+    }
+    else {
+      if(this.time > 0.15 && this.time < 0.77) {
+        this.angle += game.deltaTime * 500;
+      }
+    }
+  }
+
+}
 export class ShotgunIceProj extends Projectile {
  
   type: number = 0;
   sparkleTime: number = 0;
-  constructor(weapon: Weapon, pos: Point, vel: Point, player: Player, type: number) {
-    super(weapon, pos, vel, 2, player, game.sprites["shotgun_ice"], false, 0);
-    
+  hitChar: Character;
+  maxSpeed: number = 400;
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, type: number, vel?: Point, hitChar?: Character) {
+    super(weapon, pos, xDir, 400, 2, player, game.sprites["shotgun_ice"], false, 0);
+    this.hitChar = hitChar;
     if(type === 1) {
       this.changeSprite(game.sprites["shotgun_ice_piece"], true);
     }
 
     this.fadeSprite = game.sprites["buster1_fade"];
     this.type = type;
+    if(vel) this.vel = vel;
     //this.fadeSound = "explosion";
   }
 
@@ -565,13 +853,16 @@ export class ShotgunIceProj extends Projectile {
   }
 
   onHit(other: GameObject) {
+    if(other === this.hitChar) return;  //Prevent meatshot if ice went deep inside
     if(this.type === 0) {
       this.destroySelf();
-      new ShotgunIceProj(this.weapon, this.pos.clone(), new Point(-this.vel.x, -this.speed), this.damager.owner, 1);
-      new ShotgunIceProj(this.weapon, this.pos.clone(), new Point(-this.vel.x, -this.speed*0.5), this.damager.owner, 1);
-      new ShotgunIceProj(this.weapon, this.pos.clone(), new Point(-this.vel.x, 0 * 3), this.damager.owner, 1);
-      new ShotgunIceProj(this.weapon, this.pos.clone(), new Point(-this.vel.x, this.speed*0.5), this.damager.owner, 1);
-      new ShotgunIceProj(this.weapon, this.pos.clone(), new Point(-this.vel.x, this.speed), this.damager.owner, 1);
+      let char: Character = undefined;
+      if(other instanceof Character) char = other;
+      new ShotgunIceProj(this.weapon, this.pos.clone(), this.xDir, this.damager.owner, 1, new Point(-this.vel.x, -this.maxSpeed), char);
+      new ShotgunIceProj(this.weapon, this.pos.clone(), this.xDir, this.damager.owner, 1, new Point(-this.vel.x, -this.maxSpeed*0.5), char);
+      new ShotgunIceProj(this.weapon, this.pos.clone(), this.xDir, this.damager.owner, 1, new Point(-this.vel.x, 0 * 3), char);
+      new ShotgunIceProj(this.weapon, this.pos.clone(), this.xDir, this.damager.owner, 1, new Point(-this.vel.x, this.maxSpeed*0.5), char);
+      new ShotgunIceProj(this.weapon, this.pos.clone(), this.xDir, this.damager.owner, 1, new Point(-this.vel.x, this.maxSpeed), char);
     }
   }
 
@@ -580,8 +871,74 @@ export class ShotgunIceProj extends Projectile {
   }
 
   onHitChar(character: Character) {
-    //this.onHit(character);
-    super.onHitChar(character);
+    this.onHit(character);
+    this.destroySelf();
+  }
+
+}
+
+export class ShotgunIceProjCharged extends Projectile {
+ 
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player, type: number) {
+    super(weapon, pos, xDir, 150, 1, player, game.sprites[type === 0 ? "shotgun_ice_charge_wind" : "shotgun_ice_charge_wind2"], false, 0.5);
+  }
+
+  update() {
+    super.update();
+    if(this.time > 0.5) {
+      this.destroySelf();
+    }
+  }
+
+  onHitChar(character: Character) {
+    if(character.freezeTime === 0) {
+      character.freezeTime = 5;
+    }
+  }
+
+}
+
+export class ShotgunIceProjSled extends Projectile {
+ 
+  constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
+    super(weapon, pos, xDir, 0, 2, player, game.sprites["shotgun_ice_charge"], false, 1);
+    this.useGravity = true;
+    this.fadeSound = "iceBreak";
+  }
+
+  update() {
+    super.update();
+    if(this.time > 3) {
+      this.vel.x = this.xDir * 175;
+      this.damager.damage = 4;
+      this.damager.flinch = true;
+    }
+    let hit = game.level.checkCollisionActor(this, this.xDir, 0);
+    if(hit && hit.gameObject instanceof Wall) {
+      this.destroySelf();
+      return;
+    }
+    let hitAbove = game.level.checkCollisionActor(this, 0, -1);
+    if(hitAbove && hitAbove.gameObject instanceof Character && hitAbove.gameObject.player.alliance === this.damager.owner.alliance) {
+      hitAbove.gameObject.move(new Point(this.vel.x, this.vel.y));
+      //hitAbove.gameObject.pos.x = this.pos.x;
+      //hitAbove.gameObject.pos.y = this.pos.y - 16;
+      //hitAbove.vel = this.vel.clone();
+    }
+  }
+
+  preUpdate() {
+    super.preUpdate();
+    
+  }
+
+  onHictChar(character: Character) {
+    this.destroySelf();
+  }
+
+  destroySelf() {
+    super.destroySelf(this.fadeSprite, this.fadeSound);
+    this.breakFreeze();
   }
 
 }

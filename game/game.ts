@@ -7,7 +7,7 @@ import { Palette } from "./color";
 import * as Helpers from "./helpers";
 import * as Tests from "./tests";
 import { Point } from "./point";
-import { GameMode, Brawl, FFADeathMatch, TeamDeathMatch } from "./gameMode";
+import { GameMode, Brawl, FFADeathMatch, TeamDeathMatch, CTF } from "./gameMode";
 import AddColorFilter from "./AddColorFilter";
 import { Path } from "./paths";
 
@@ -35,7 +35,8 @@ export enum Menu {
   Controls,
   ExitMenu,
   OptionsMenu,
-  BadBrowserMenu = 9
+  BadBrowserMenu = 9,
+  SwitchMenu
 }
 
 export class UIData {
@@ -48,13 +49,19 @@ export class UIData {
   arenaMaps: string[] = ["powerplant", "highway", "gallery"];
   selectedBrawlMap: string = this.brawlMaps[0];
   selectedArenaMap: string = this.arenaMaps[0];
-  gameModes: string[] = ["deathmatch", "team deathmatch"];
+  gameModes: string[] = ["deathmatch", "team deathmatch", "ctf"];
   selectedGameMode: string = this.gameModes[0];
   maxPlayers: number = 4;
   numBots: number = 4;
   playTo: number = 20;
   isPlayer1CPU: boolean = false;
   isPlayer2CPU: boolean = true;
+  isPlayer1Zero: boolean = false;
+  isPlayer2Zero: boolean = false;
+  player1WeaponsCopy: boolean[] = [];
+  isPlayer1ZeroCopy: boolean = false;
+  player1Weapons: boolean[] = [true, true, true, false, false, false, false, false, false];
+  player2Weapons: boolean[] = [true, true, true, false, false, false, false, false, false];
   whoseControls: number = 1;
   currentControls: { [code: number]: string } = {};
   optionsCopy: Options;
@@ -80,6 +87,7 @@ class Game {
   palettes: { [path: string]: Palette } = {};
 
   music: Howl;
+  zeroMusic: Howl;
 
   isServer: boolean = false;
   isClient: boolean = true;
@@ -121,10 +129,10 @@ class Game {
   hitFilter: AddColorFilter;
   blueShadowFilter: PIXI.filters.DropShadowFilter;
   redShadowFilter: PIXI.filters.DropShadowFilter;
-
   errorLogged: boolean = false;
 
   path: Path = new Path();
+  displacementSprite: PIXI.Sprite;
 
   constructor() {
 
@@ -161,10 +169,10 @@ class Game {
   quickStart() {
     
     this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "highway";
-    this.uiData.selectedGameMode = "team deathmatch";
-    this.uiData.maxPlayers = 7;
-    this.uiData.numBots = 7;
+    this.uiData.selectedArenaMap = "gallery";
+    this.uiData.selectedGameMode = "ctf";
+    this.uiData.maxPlayers = 9;
+    this.uiData.numBots = 9;
     this.uiData.playTo = 20;
     $("#options").show();
     game.loadLevel(this.uiData.selectedArenaMap, false);
@@ -192,8 +200,8 @@ class Game {
     return Number(this.options.soundVolume) / 100;
   }
   useInvulnFrames() {
-    //return this.options.invulnFrames;
-    return this.uiData.isBrawl;
+    return this.options.invulnFrames;
+    //return this.uiData.isBrawl;
   }
 
   start() {
@@ -248,6 +256,10 @@ class Game {
             this.uiData.numBots = 0;
           }
         },
+        gameModeChange: function() {
+          if(this.uiData.selectedGameMode === "ctf") this.uiData.playTo = 3;
+          else this.uiData.playTo = 20;
+        },
         playToChange: function() {
           if(this.uiData.playTo > 100) {
             this.uiData.playTo = 100;
@@ -256,8 +268,55 @@ class Game {
             this.uiData.playTo = 1;
           }
         },
+        onWeaponSelect: function(whichPlayer: number) {
+          //game.refreshUI();
+        },
+        numWepSel: function(whichPlayer: number) {
+          let arr = this.uiData.player1Weapons;
+          if(whichPlayer === 2) arr = this.uiData.player2Weapons;
+          let count = 0;
+          for(let i = 0; i < arr.length; i++) {
+            if(arr[i]) count++;
+          }
+          return count;
+        },
+        numWepSelCopy: function(whichPlayer: number) {
+          let arr = this.uiData.player1WeaponsCopy;
+          let count = 0;
+          for(let i = 0; i < arr.length; i++) {
+            if(arr[i]) count++;
+          }
+          return count;
+        },
+        wepDisabled: function(whichPlayer: number, weaponIndex: number) {
+          let arr = this.uiData.player1Weapons;
+          if(whichPlayer === 2) arr = this.uiData.player2Weapons;
+          let count = this.numWepSel(whichPlayer);
+          if(count >= 3) {
+            return arr[weaponIndex] === false;
+          }
+          return false;
+        },
+        wepCopyDisabled: function(whichPlayer: number, weaponIndex: number) {
+          let arr = this.uiData.player1WeaponsCopy;
+          let count = this.numWepSelCopy(whichPlayer);
+          if(count >= 3) {
+            return arr[weaponIndex] === false;
+          }
+          return false;
+        },
         onArenaMapChange: function() {
           this.uiData.numBots = game.levelDatas[this.uiData.selectedArenaMap].maxPlayers - 1;
+          let ctfIndex = this.uiData.gameModes.indexOf("ctf");
+          if(this.uiData.selectedArenaMap !== "powerplant") {
+            if(ctfIndex === -1) this.uiData.gameModes.push("ctf");
+          }
+          else {
+            if(ctfIndex !== -1) {
+              this.uiData.gameModes.splice(ctfIndex, 1);
+              if(this.uiData.selectedGameMode === "ctf") this.uiData.selectedGameMode = this.uiData.gameModes[0];
+            }
+          }
         },
         mapImage: function(selectedMap: any) {
           if(selectedMap === "sm_bossroom") return "sm_bossroom.png";
@@ -392,11 +451,37 @@ class Game {
             $("#ingame-pause").hide();
           }
         },
+        weaponsSelected: function() {
+          if(!this.uiData.isPlayer1Zero && this.numWepSel(1) < 3) return false;
+          if(!this.uiData.isPlayer2Zero && this.numWepSel(2) < 3) return false;
+          return true;
+        },
+        weaponsCopySelected: function() {
+          if(!this.uiData.isPlayer1Zero && this.numWepSelCopy(1) < 3) return false;
+          return true;
+        },
         isBrawlReady: function() {
-          return this.uiData.selectedBrawlMap !== "";
+          return this.uiData.selectedBrawlMap !== "" && this.weaponsSelected();
         },
         isArenaReady: function() {
-          return this.uiData.selectedArenaMap !== "";
+          return this.uiData.selectedArenaMap !== "" && this.weaponsSelected();
+        },
+        goToSwitchMenu: function() {
+          this.uiData.isPlayer1ZeroCopy = this.uiData.isPlayer1Zero;
+          this.uiData.player1WeaponsCopy = this.uiData.player1Weapons.slice(0);
+          $("#ingame-pause").show();
+          this.uiData.menu = Menu.SwitchMenu;
+        },
+        exitSwitchMenu: function(doSwitch: boolean, killSelf: boolean) {
+          if(doSwitch) {
+            this.uiData.isPlayer1Zero = this.uiData.isPlayer1ZeroCopy;
+            this.uiData.player1Weapons = this.uiData.player1WeaponsCopy;
+          }
+          if(killSelf && game.level.mainPlayer.character) {
+            game.level.mainPlayer.character.applyDamage(undefined, undefined, 1000);
+          }
+          $("#ingame-pause").hide();
+          this.uiData.menu = Menu.None;
         },
         goToExitMenu: function() {
           $("#ingame-pause").show();
@@ -437,7 +522,8 @@ class Game {
           game.ui.goToExitMenu();
         },
         switchClick() {
-
+          $("#ingame-pause").show();
+          game.ui.goToSwitchMenu();
         },
         goToControls: function(whoseControls: any) {
           $("#ingame-pause").show();
@@ -453,7 +539,9 @@ class Game {
     this.loadImages([
       game.path.effectsSpritesheetPath,
       game.path.megaManXSpritesheetPath,
-      game.path.zeroSpritesheetPath
+      game.path.zeroSpritesheetPath,
+      game.path.flagSpritesheetPath,
+      game.path.displacementMap
     ], () => {
       this.loadSprites();
       this.loadLevels();
@@ -462,9 +550,12 @@ class Game {
       if(this.uiData.menu !== Menu.BadBrowserMenu) {
         this.appLoadInterval = window.setInterval(() => this.onLoad(), 1);
       }
+      this.displacementSprite = new PIXI.Sprite(PIXI.loader.resources[game.path.displacementMap].texture);
+      this.cloakFilter = new PIXI.filters.DisplacementFilter(this.displacementSprite);
     });
 
   }
+  cloakFilter: PIXI.filters.DisplacementFilter;
 
   onLoad() {
     if(this.isLoaded()) {
@@ -499,6 +590,8 @@ class Game {
     let music = this.loadMusic(game.path.menuMusic, 2006, 25083);
     music.volume(!game.options.muteMusic ? game.getMusicVolume01() : 0);
     this.music = music;
+    
+    this.zeroMusic = this.loadMusic(game.path.zeroMusic, 4972, 26447);
   }
 
   loadMusic(path: string, musicLoopStart: number, musicLoopEnd: number) {
@@ -563,6 +656,9 @@ class Game {
       }
       else if(this.uiData.selectedGameMode === "team deathmatch") {
         gameMode = new TeamDeathMatch(this.level, this.uiData);
+      }
+      else if(this.uiData.selectedGameMode === "ctf") {
+        gameMode = new CTF(this.level, this.uiData);
       }
       
       if(!restart) {
@@ -659,7 +755,15 @@ class Game {
         electricSpark: [180000 + 16554, 919],
         tornado: [180000 + 7359, 2962],
         boomerang: [180000 + 5766, 1190],
-        fireWave: [180000 + 4404, 478]
+        fireWave: [180000 + 4404, 478],
+        warpIn: [31997, 965],
+        iceBreak: [42827, 680],
+        icyWind: [180000 + 22229, 2514],
+        stingCharge: [60000 + 16394, 920],
+        rollingShieldCharge: [60000 + 16394, 635],
+        rollingShieldChargeLoop: [180000 + 11150, 292],
+        chargeStart: [6934, 1490],
+        chargeLoop: [8424, 547]
       },
       onload: () => {
         this.loadCount++;
@@ -761,11 +865,22 @@ class Game {
       let id = this.sounds[clip].play();
       this.sounds[clip].volume(volume * game.getSoundVolume01(), id);
       this.sounds[clip].mute(false, id);
+      return id;
     }
     else {
       let id = this.soundSheet.play(clip);
       this.soundSheet.volume(volume * game.getSoundVolume01(), id);
       this.soundSheet.mute(false, id);
+      return id;
+    }
+  }
+
+  getClip(clip: string): Howl {
+    if(this.sounds[clip]) {
+      return this.sounds[clip];
+    }
+    else {
+      return this.soundSheet;
     }
   }
 

@@ -10,27 +10,29 @@ export function cheat(key: string, keycode: number) {
   //F1
   if(keycode === 112) {
     for(let player of game.level.players) {
-      player.health = 1;
+      //player.health = 32;
     }
     if(game.level.mainPlayer) {
-      //game.level.mainPlayer.character.pos.x = 200;
-      //game.level.mainPlayer.character.pos.y = 200;
+      game.level.mainPlayer.character.pos.x = game.level.redFlag.pos.x - 100;
+      game.level.mainPlayer.character.pos.y = game.level.redFlag.pos.y;
+      game.level.computeCamPos(game.level.mainPlayer.character.getCamCenterPos());
     }
   }
   //F2
   if(keycode === 113) {
     for(let player of game.level.players) { 
-      /*
+      
       if(!player.isAI && player !== game.level.mainPlayer) {
         player.isAI = true;
         player.character.addAI();
       }
-     if(player.isAI) {
-       player.character.ai = undefined;
-       player.isAI = false;
-       player.inputMapping = game.getPlayerControls(2);
-       game.level.localPlayers.push(player);
-     }
+      /*
+      if(player.isAI) {
+        player.character.ai = undefined;
+        player.isAI = false;
+        player.inputMapping = game.getPlayerControls(2);
+        game.level.localPlayers.push(player);
+      }
       */
     }
   }

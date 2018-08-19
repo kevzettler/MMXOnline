@@ -21,9 +21,11 @@ export class Damager {
     this.hitCooldown = hitCooldown;
   }
 
-  applyDamage(victim: Character, weakness: boolean, weapon: Weapon, actor: Actor, idString: string) {
+  applyDamage(victim: Character, weakness: boolean, weapon: Weapon, actor: Actor, idString: string, overrideDamage?: number, overrideFlinch?: boolean) {
 
+    let damage = (overrideDamage !== undefined ? overrideDamage : this.damage);
     let key: string = idString + this.owner.id.toString();
+    let flinch = (overrideFlinch !== undefined ? overrideFlinch : this.flinch);
       
     if(!victim.projectileCooldown[key] && !victim.invulnFrames) {
       victim.projectileCooldown[key] = this.hitCooldown;
@@ -32,7 +34,7 @@ export class Damager {
       victim.renderEffectTime = 0.1;
       victim.applyDamage(this.owner, weapon, this.damage * (weakness ? 2 : 1));
 
-      if(this.flinch || game.options.alwaysFlinch || weakness) {
+      if(flinch || game.options.alwaysFlinch || weakness) {
         if(game.useInvulnFrames()) {
           actor.playSound("weakness");
         }

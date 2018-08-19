@@ -47,11 +47,11 @@ export class PlayerHUD {
     
     baseY = game.level.screenHeight/2;
     baseY += 25;
-    this.ammoBase = game.sprites["hud_weapon_base"].createAndDraw(this.ammoContainer, this.player.weapon.index - 1, baseX, baseY);
+    this.ammoBase = game.sprites["hud_weapon_base"].createAndDraw(this.ammoContainer, this.player.weapon.spriteIndex, baseX, baseY);
     baseY -= 16;
     for(let i = 0; i < Math.ceil(this.player.weapon.ammo); i++) {
       this.emptyAmmoBars.push(game.sprites["hud_health_empty"].createAndDraw(this.ammoContainer, 0, baseX, baseY));
-      this.fullAmmoBars.push(game.sprites["hud_weapon_full"].createAndDraw(this.ammoContainer, this.player.weapon.index - 1, baseX, baseY));
+      this.fullAmmoBars.push(game.sprites["hud_weapon_full"].createAndDraw(this.ammoContainer, this.player.weapon.spriteIndex, baseX, baseY));
       baseY -= 2;
     }
     this.ammoTop = game.sprites["hud_health_top"].createAndDraw(this.ammoContainer, 0, baseX, baseY);
@@ -75,11 +75,11 @@ export class PlayerHUD {
     }
 
     //Weapon
-    if(this.player.weaponIndex !== 0) {
+    if(!this.player.isZero) {
       this.ammoContainer.visible = true;
-      this.ammoBase.draw(this.player.weapon.index - 1);
+      this.ammoBase.draw(this.player.weapon.spriteIndex);
       for(let i = 0; i < Math.ceil(this.player.weapon.maxAmmo); i++) {
-        this.fullAmmoBars[i].draw(this.player.weapon.index - 1);
+        this.fullAmmoBars[i].draw(this.player.weapon.spriteIndex);
         if(i < Math.ceil(this.player.weapon.ammo)) {
           this.fullAmmoBars[i].pixiSprite.visible = true;
           this.emptyAmmoBars[i].pixiSprite.visible = false;

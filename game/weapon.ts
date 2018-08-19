@@ -1,4 +1,4 @@
-import { Projectile, BusterProj, TorpedoProj, Buster2Proj, Buster3Proj, StingProj, RollingShieldProj, ElectricSparkProj, ShotgunIceProj, BoomerangProj, TornadoProj, FireWaveProj, Buster4Proj, ElectricSparkProjCharged } from "./projectile";
+import { Projectile, BusterProj, TorpedoProj, Buster2Proj, Buster3Proj, StingProj, RollingShieldProj, ElectricSparkProj, ShotgunIceProj, BoomerangProj, TornadoProj, FireWaveProj, Buster4Proj, ElectricSparkProjCharged, TornadoProjCharged, BoomerangProjCharged, FireWaveProjCharged, FireWaveProjChargedStart, RollingShieldProjCharged, ShotgunIceProjCharged, ShotgunIceProjSled } from "./projectile";
 import { game } from "./game";
 import { Player } from "./player";
 import { Point } from "./point";
@@ -15,9 +15,9 @@ export class Weapon {
   maxAmmo: number;
   index: number;
   rateOfFire: number;
-  speed: number = 350;
   soundTime: number = 0;
   palette: Palette;
+  isStream: boolean = false;
 
   constructor() {
     this.ammo = 32;
@@ -28,6 +28,10 @@ export class Weapon {
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number): void {
   }
 
+  get spriteIndex() {
+    return this.index === 1 ? 9 : this.index - 1;
+  }
+
   update() {
     if(this.soundTime > 0) {
       this.soundTime = Helpers.clampMin(this.soundTime - game.deltaTime, 0);
@@ -36,11 +40,11 @@ export class Weapon {
 
   createBuster4Line(x: number, y: number, xDir: number, player: Player, offsetTime: number) {
     let buster4Speed = 350;
-    new Buster4Proj(this, new Point(x + xDir, y), new Point(xDir * buster4Speed, 0), player, 3, 4, offsetTime);
-    new Buster4Proj(this, new Point(x + xDir*8, y), new Point(xDir * buster4Speed, 0), player, 2, 3, offsetTime);
-    new Buster4Proj(this, new Point(x + xDir*18, y), new Point(xDir * buster4Speed, 0), player, 2, 2, offsetTime);
-    new Buster4Proj(this, new Point(x + xDir*32, y), new Point(xDir * buster4Speed, 0), player, 1, 1, offsetTime);
-    new Buster4Proj(this, new Point(x + xDir*46, y), new Point(xDir * buster4Speed, 0), player, 0, 0, offsetTime);
+    new Buster4Proj(this, new Point(x + xDir, y), xDir, player, 3, 4, offsetTime);
+    new Buster4Proj(this, new Point(x + xDir*8, y), xDir, player, 2, 3, offsetTime);
+    new Buster4Proj(this, new Point(x + xDir*18, y), xDir, player, 2, 2, offsetTime);
+    new Buster4Proj(this, new Point(x + xDir*32, y), xDir, player, 1, 1, offsetTime);
+    new Buster4Proj(this, new Point(x + xDir*46, y), xDir, player, 0, 0, offsetTime);
   }
 
   canShoot(player: Player) {
@@ -77,13 +81,11 @@ export class Weapon {
       }
     }
     
-    if(!(this instanceof Buster)) {
-      if(this instanceof FireWave) {
-        this.ammo -= game.deltaTime * 10;
-      }
-      else {
-        this.ammo--;
-      }
+    if(this instanceof FireWave) {
+      this.ammo -= game.deltaTime * 10;
+    }
+    else {
+      this.ammo -= (chargeLevel + 1);
     }
   }
 
@@ -143,10 +145,9 @@ export class Buster extends Weapon {
   }
 
   getProjectile (pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    if(chargeLevel === 0) new BusterProj(this, pos, vel, player);
-    else if(chargeLevel === 1) new Buster2Proj(this, pos, vel, player);
-    else if(chargeLevel === 2) new Buster3Proj(this, pos, vel, player);
+    if(chargeLevel === 0) new BusterProj(this, pos, xDir, player);
+    else if(chargeLevel === 1) new Buster2Proj(this, pos, xDir, player);
+    else if(chargeLevel === 2) new Buster3Proj(this, pos, xDir, player);
     else if(chargeLevel === 3) undefined;
   }
   
@@ -156,16 +157,22 @@ export class Torpedo extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["torpedo", "torpedo", "torpedo", "torpedo"];
+    this.shootSounds = ["torpedo", "torpedo", "torpedo", "buster3"];
     this.index = 1;
-    this.speed = 150;
     this.rateOfFire = 0.5;
     this.palette = game.palettes["torpedo"];
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    new TorpedoProj(this, pos, vel, player);
+    if(chargeLevel !== 3) {
+      new TorpedoProj(this, pos, xDir, player, 0);
+    }
+    else {      
+      new TorpedoProj(this, pos.addxy(0,2), xDir, player, 1, 30);
+      new TorpedoProj(this, pos.addxy(0,1), xDir, player, 1, 15);
+      new TorpedoProj(this, pos.addxy(0,-1), xDir, player, 1, -15);
+      new TorpedoProj(this, pos.addxy(0,-2), xDir, player, 1, -30);
+    }
   }
   
 }
@@ -174,16 +181,19 @@ export class Sting extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["csting", "csting", "csting", "csting"];
+    this.shootSounds = ["csting", "csting", "csting", "stingCharge"];
     this.index = 2;
-    this.speed = 300;
     this.rateOfFire = 0.75;
     this.palette = game.palettes["sting"];
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    new StingProj(this, pos, vel, player, 0);
+    if(chargeLevel !== 3) {
+      new StingProj(this, pos, xDir, player, 0);
+    }
+    else {
+      player.character.setStingCharged(true);
+    }
   }
 
 }
@@ -192,16 +202,19 @@ export class RollingShield extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["rollingShield", "rollingShield", "rollingShield", "rollingShield"];
+    this.shootSounds = ["rollingShield", "rollingShield", "rollingShield", ""];
     this.index = 3;
-    this.speed = 200;
     this.rateOfFire = 0.75;
     this.palette = game.palettes["rolling_shield"];
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    new RollingShieldProj(this, pos, vel, player);
+    if(chargeLevel !== 3) {
+      new RollingShieldProj(this, pos, xDir, player);
+    }
+    else {
+      new RollingShieldProjCharged(this, pos, xDir, player);
+    }
   }
 
 }
@@ -212,15 +225,19 @@ export class FireWave extends Weapon {
     super();
     this.shootSounds = ["fireWave", "fireWave", "fireWave", "fireWave"];
     this.index = 4;
-    this.speed = 400;
     this.rateOfFire = 0.05;
     this.palette = game.palettes["fire_wave"];
+    this.isStream = true;
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    vel.inc(player.character.vel.times(-0.5));
-    new FireWaveProj(this, pos, vel, player);
+    if(chargeLevel !== 3) {
+      let proj = new FireWaveProj(this, pos, xDir, player);
+      proj.vel.inc(player.character.vel.times(-0.5));
+    }
+    else {
+      let proj = new FireWaveProjChargedStart(this, pos, xDir, player);
+    }
   }
 
 }
@@ -229,16 +246,19 @@ export class Tornado extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["tornado", "tornado", "tornado", "tornado"];
+    this.shootSounds = ["tornado", "tornado", "tornado", "buster3"];
     this.index = 5;
-    this.speed = 400;
     this.rateOfFire = 1.5;
     this.palette = game.palettes["tornado"];
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    new TornadoProj(this, pos, vel, player);
+    if(chargeLevel !== 3) {
+      new TornadoProj(this, pos, xDir, player);
+    }
+    else {
+      new TornadoProjCharged(this, pos, xDir, player);
+    }
   }
  
 }
@@ -249,19 +269,17 @@ export class ElectricSpark extends Weapon {
     super();
     this.shootSounds = ["electricSpark", "electricSpark", "electricSpark", "electricSpark"];
     this.index = 6;
-    this.speed = 150;
     this.rateOfFire = 0.5;
     this.palette = game.palettes["electric_spark"];
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    if(chargeLevel === 0) {
-      let vel = new Point(xDir * this.speed, 0);
-      new ElectricSparkProj(this, pos, vel, player, 0);
+    if(chargeLevel !== 3) {
+      new ElectricSparkProj(this, pos, xDir, player, 0);
     }
     else {
-      new ElectricSparkProjCharged(this, pos.addxy(-1, 0), player, -1);
-      new ElectricSparkProjCharged(this, pos.addxy(1, 0), player, 1);
+      new ElectricSparkProjCharged(this, pos.addxy(-1, 0), -1, player);
+      new ElectricSparkProjCharged(this, pos.addxy(1, 0), 1, player);
     }
   }
 
@@ -271,16 +289,26 @@ export class Boomerang extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["boomerang", "boomerang", "boomerang", "boomerang"];
+    this.shootSounds = ["boomerang", "boomerang", "boomerang", "buster3"];
     this.index = 7;
-    this.speed = 250;
     this.rateOfFire = 0.5;
     this.palette = game.palettes["boomerang"];
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    new BoomerangProj(this, pos, vel, player);
+    pos = player.character.getCenterPos();
+    if(chargeLevel !== 3) new BoomerangProj(this, pos, xDir, player);
+    else {
+      new BoomerangProjCharged(this, pos.addxy(0,35), xDir, player, 90, 0);
+      new BoomerangProjCharged(this, pos.addxy(35, 0), xDir, player, 0, 0);
+      new BoomerangProjCharged(this, pos.addxy(0,-35), xDir, player, -90, 0);
+      new BoomerangProjCharged(this, pos.addxy(-35,0), xDir, player, -180, 0);
+
+      new BoomerangProjCharged(this, pos.addxy(0,5), xDir, player, 90, 1);
+      new BoomerangProjCharged(this, pos.addxy(5, 0), xDir, player, 0, 1);
+      new BoomerangProjCharged(this, pos.addxy(0,-5), xDir, player, -90, 1);
+      new BoomerangProjCharged(this, pos.addxy(-5,0), xDir, player, -180, 1);
+    }
   }
 
 }
@@ -289,16 +317,23 @@ export class ShotgunIce extends Weapon {
 
   constructor() {
     super();
-    this.shootSounds = ["buster", "buster", "buster", "buster"];
+    this.shootSounds = ["buster", "buster", "buster", "icyWind"];
     this.index = 8;
-    this.speed = 400;
     this.rateOfFire = 0.75;
     this.palette = game.palettes["shotgun_ice"];
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
-    let vel = new Point(xDir * this.speed, 0);
-    new ShotgunIceProj(this, pos, vel, player, 0);
+    if(chargeLevel !== 3) {
+      new ShotgunIceProj(this, pos, xDir, player, 0);
+    }
+    else {
+      pos = pos.addxy(xDir * 25, 0);
+      pos.y = player.character.pos.y;
+      new ShotgunIceProjSled(this, pos, xDir, player);
+      player.character.shotgunIceChargeTime = 1.5;
+      //player.character.playSound("icyWind");
+    }
   }
 
 }

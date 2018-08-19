@@ -1,10 +1,12 @@
-import { Character } from "./character";
+import { Character, CharState, Idle, WarpIn } from "./character";
 import { Weapon, Buster, Torpedo, Sting, RollingShield, ShotgunIce, FireWave, Tornado, Boomerang, ElectricSpark } from "./weapon";
 import { game, Menu } from "./game";
 import { Palette } from "./color";
 import { ElectricSparkProj } from "./projectile";
 import * as Helpers from "./helpers";
 import { cheat } from "./cheats";
+import { Point } from "./point";
+import { SpawnPoint } from "./spawnPoint";
 
 export class Player {
   
@@ -33,12 +35,14 @@ export class Player {
   won: boolean = false;
   lockWeapon: boolean = false;
   isZero: boolean = false;
+  isPlayer2: boolean = false;
 
-  constructor(name: string, isZero: boolean, isAI: boolean, alliance: number, maxHealth: number, palette?: Palette) {
+  constructor(name: string, isZero: boolean, isAI: boolean, isPlayer2: boolean, alliance: number, maxHealth: number, palette?: Palette) {
     this.name = name;
     this.alliance = alliance;
     this.id = Helpers.getAutoIncId();
     this.isAI = isAI;
+    this.isPlayer2 = isPlayer2;
     this.palette = palette;
     this.isZero = isZero;
 
@@ -51,18 +55,52 @@ export class Player {
 
     this.health = maxHealth;
     this.maxHealth = maxHealth;
-    this.weapons = [
-      new Buster(),
-      new Torpedo(),
-      new Sting(),
-      new RollingShield(),
-      new FireWave(),
-      new Tornado(),
-      new ElectricSpark(),
-      new Boomerang(),
-      new ShotgunIce()
-    ];
+
+    this.configureWeapons(isAI, isPlayer2);
+  }
+  
+  configureWeapons(isAI: boolean, isPlayer2: boolean) {
+    this.weapons = [];
+    if(!isAI || isPlayer2) {
+      let arr = isPlayer2 ? game.uiData.player2Weapons : game.uiData.player1Weapons;
+      if(!game.uiData.isProd) arr = [true,true,true,true,true,true,true,true,true];
+      if(arr[0]) this.weapons.push(new Buster());
+      if(arr[1]) this.weapons.push(new Torpedo());
+      if(arr[2]) this.weapons.push(new Sting());
+      if(arr[3]) this.weapons.push(new RollingShield());
+      if(arr[4]) this.weapons.push(new FireWave());
+      if(arr[5]) this.weapons.push(new Tornado());
+      if(arr[6]) this.weapons.push(new ElectricSpark());
+      if(arr[7]) this.weapons.push(new Boomerang());
+      if(arr[8]) this.weapons.push(new ShotgunIce());
+    }
+    else {
+      let pool = [0,1,2,3,4,5,6,7,8];
+      let nums: number[] = this.getRandomSubarray(pool, 3);
+      for(let i = 0; i < nums.length; i++) {
+        if(nums[i] === 0) this.weapons.push(new Buster());
+        if(nums[i] === 1) this.weapons.push(new Torpedo());
+        if(nums[i] === 2) this.weapons.push(new Sting());
+        if(nums[i] === 3) this.weapons.push(new RollingShield());
+        if(nums[i] === 4) this.weapons.push(new FireWave());
+        if(nums[i] === 5) this.weapons.push(new Tornado());
+        if(nums[i] === 6) this.weapons.push(new ElectricSpark());
+        if(nums[i] === 7) this.weapons.push(new Boomerang());
+        if(nums[i] === 8) this.weapons.push(new ShotgunIce());
+      }
+    }
     this.weaponIndex = 0;
+  }
+
+  getRandomSubarray(arr: number[], size: number) {
+    var shuffled = arr.slice(0), i = arr.length, temp, index;
+    while (i--) {
+        index = Math.floor((i + 1) * Math.random());
+        temp = shuffled[index];
+        shuffled[index] = shuffled[i];
+        shuffled[i] = temp;
+    }
+    return shuffled.slice(0, size);
   }
 
   updateControls() {
@@ -76,14 +114,35 @@ export class Player {
 
   }
 
+  warpedIn: boolean = false;
   update() {
     if(this.respawnTime === 0 && !this.character) {
+      
+      let spawnPoint = game.level.getSpawnPoint(this);
+      if(!spawnPoint) return;
+        
+      if(game.level.mainPlayer === this) {
+        this.isZero = game.uiData.isPlayer1Zero;
+      }
+      this.configureWeapons(this.isAI, this.isPlayer2);
+
       this.health = this.maxHealth;
       for(let weapon of this.weapons) {
         weapon.ammo = weapon.maxAmmo;
       }
-      let spawnPoint = game.level.getSpawnPoint(this);
-      this.character = new Character(this, spawnPoint.pos.x, spawnPoint.pos.y);
+
+      let charState: CharState = undefined;
+      if(!this.warpedIn) {
+        charState = new WarpIn();
+      }
+      else {
+        charState = new Idle();
+      }
+
+      this.character = new Character(this, spawnPoint.pos.x, spawnPoint.getGroundY(), charState);
+      if(!this.warpedIn) {
+        this.character.isVisible = false;
+      }
       if(this.isAI) {
         this.character.addAI();
       }
@@ -92,10 +151,10 @@ export class Player {
       this.character.xDir = spawnPoint.xDir;
       
       if(this === game.level.mainPlayer) {
-        game.level.computeCamPos(this.character);
+        game.level.computeCamPos(this.character.getCamCenterPos());
         //console.log(game.level.camX + "," + game.level.camY);
       }
-
+      this.warpedIn = true;
     }
     if(this.respawnTime > 0 && !game.level.gameMode.isOver) {
       this.respawnTime = Helpers.clampMin0(this.respawnTime - game.deltaTime);
@@ -107,6 +166,9 @@ export class Player {
       return false;
     }
     if(game.uiData.menu !== Menu.None && !this.isAI) {
+      return false;
+    }
+    if(this.character && (this.character.shotgunIceChargeTime > 0 || this.character.freezeTime > 0)) {
       return false;
     }
     return true;
@@ -241,6 +303,9 @@ export class Player {
 
   clearAiInput() {
     this.input = {};
+    if(this.character && this.character.ai.framesChargeHeld > 0) {
+      this.input["shoot"] = true;
+    }
     this.controllerInputPressed = {};
   }
 

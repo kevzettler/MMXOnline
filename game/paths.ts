@@ -6,6 +6,7 @@ export class Path {
   powerPlantMusic: string = "assets/music/PowerPlant.mp3?v=1.0.1";
   highwayMusic: string = "assets/music/highway.mp3?v=1.0.1";
   galleryMusic: string = "assets/music/gallery.mp3?v=1.0.1";
+  zeroMusic: string = "assets/music/x_vs_zero.mp3?v=1.0.0";
 
   powerPlantParallax: string = "assets/backgrounds/powerplant_parallex.png?v=1.0.1";
   highwayParallax: string = "assets/backgrounds/highway_parallax.png?v=1.0.1";
@@ -16,6 +17,8 @@ export class Path {
   effectsSpritesheetPath: string = "assets/spritesheets/effects.png?v=1.0.1";
   megaManXSpritesheetPath: string = "assets/spritesheets/MegamanX.png?v=1.0.1";
   zeroSpritesheetPath: string = "assets/spritesheets/zero.png?v=1.0.1";
+  flagSpritesheetPath: string = "assets/spritesheets/flags.png?v=1.0.1";
+  displacementMap: string = "assets/spritesheets/displacement_map.png?v=1.0.1";
 
   redPalette: string = "assets/palettes/red.png?v=1.0.1";
   boomerangPalette: string = "assets/palettes/boomerang.png?v=1.0.1";

@@ -18,6 +18,7 @@ export class Sprite {
   spriteJson: string;
   pixiSprite: PIXI.extras.AnimatedSprite;
   freeForPool: boolean = false;
+  invisibleFilter = new PIXI.filters.AlphaFilter(0.5);
 
   constructor(spriteJson: any, shouldInit: boolean, container: PIXI.Container) {
     this.spriteJson = spriteJson;
@@ -29,6 +30,7 @@ export class Sprite {
     if(!this.wrapMode) { 
       console.error("NO WRAP MODE FOR SPRITE " + this.name);
     }
+    
     this.frames = [];
     this.hitboxes = [];
     
@@ -164,6 +166,11 @@ export class Sprite {
         }
         else if(option === "redshadow") {
           filterArray.push(game.redShadowFilter);
+        }
+        else if(option === "invisible") {
+          filterArray.push(this.invisibleFilter);
+          //filterArray.push(game.cloakFilter);
+          this.invisibleFilter.alpha = 0.5 - (Math.sin(game.time * 5) * 0.25);
         }
       }
     }

@@ -4,7 +4,9 @@ import { Projectile, BusterProj } from "./projectile";
 import { Point } from "./point";
 import * as Helpers from "./helpers";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
-import { JumpZone } from "./wall";
+import { JumpZone, Wall } from "./wall";
+import { CTF } from "./gameMode";
+import { Flag } from "./flag";
 
 export class AI {
 
@@ -15,6 +17,8 @@ export class AI {
   dashTime: number = 0;
   jumpTime: number = 0;
   weaponTime: number = 0;
+  maxChargeTime: number = 0;
+  framesChargeHeld: number = 0;
 
   get player() {
     return this.character.player;
@@ -27,21 +31,53 @@ export class AI {
 
   update() {
 
+    if(this.framesChargeHeld > 0) {
+      if(this.character.chargeTime < this.maxChargeTime) {
+        //console.log("HOLD");
+        this.player.press("shoot");
+      }
+      else {
+        //this.player.release("shoot");
+      }
+    }
+
     if(!game.level.gameObjects.has(this.target)) {
       this.target = undefined;
     }
 
     this.target = game.level.getClosestTarget(this.character.pos, this.player.alliance);
-
+    let inDrop = false;
     if(!(this.aiState instanceof InJumpZone)) {
       let jumpZones = game.level.getTriggerList(this.character, 0, 0, undefined, JumpZone);
       if(jumpZones.length > 0) {
-        let jumpZone = jumpZones[0].gameObject;
-        let jumpZoneDir = Helpers.randomRange(0, 1);
+        let jumpZone = <JumpZone>jumpZones[0].gameObject;
+        let jumpZoneDir = this.character.xDir; //Helpers.randomRange(0, 1);
         if(jumpZoneDir === 0) jumpZoneDir = -1;
-        this.aiState = new InJumpZone(this.character, jumpZone, jumpZoneDir);
+
+        if(!jumpZone.targetNode || jumpZone.targetNode === this.aiState.getNextNodeName()) {
+          if(!(this.aiState instanceof FindPlayer)) {
+            this.aiState = new InJumpZone(this.character, jumpZone, jumpZoneDir);
+          }
+          else {
+            this.player.press("jump");
+          }
+        }
+        else {
+          inDrop = true;
+        }
       }
     }
+
+    /*
+    if(!inDrop) {
+      let sweepForward = this.character.sweepTest(new Point(this.character.xDir * 30, 0));
+      let raycastUp = game.level.raycast(this.character.getCenterPos(), this.character.getCenterPos().addxy(0, -75), ["Wall"]);
+      if(sweepForward && !raycastUp && sweepForward.gameObject instanceof Wall) {
+        this.player.press("jump");
+      }
+    }
+    */
+
     if(!(this.aiState instanceof InJumpZone)) {
       if(!this.target) {
         if(this.aiState.constructor.name !== "FindPlayer") {
@@ -77,7 +113,15 @@ export class AI {
       if(this.shootTime === 0) {
         //if(this.character.withinY(this.target, 25)) {
         if(this.character.isFacing(this.target)) {
-          this.player.press("shoot");
+          if(this.framesChargeHeld > 0) {
+            if(this.character.chargeTime >= this.maxChargeTime) {
+              this.player.release("shoot");
+              this.framesChargeHeld = 0;
+            }
+          }
+          else {
+            this.player.press("shoot");
+          }
         }
       }
       this.shootTime += game.deltaTime;
@@ -92,6 +136,13 @@ export class AI {
             this.player.press("jump");
           }
         }
+      }
+    }
+    if(this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.weaponIndex === 0) {
+      if(Helpers.randomRange(0, 300) < 5) {
+        this.maxChargeTime = Helpers.randomRange(0.75, 3);
+        this.framesChargeHeld = 1;
+        this.player.press("shoot");
       }
     }
     if(this.aiState.randomlyChangeState) {
@@ -125,7 +176,7 @@ export class AI {
       this.weaponTime += game.deltaTime;
       if(this.weaponTime > 5) {
         this.weaponTime = 0;
-        this.character.changeWeapon(Helpers.randomRange(0, 8));
+        this.character.changeWeapon(Helpers.randomRange(0, this.player.weapons.length - 1));
       }
     }
 
@@ -154,6 +205,7 @@ class AIState {
   randomlyDash: boolean;
   randomlyJump: boolean;
   randomlyChangeWeapon: boolean;
+  randomlyChargeWeapon: boolean;
 
   get player() {
     return this.character.player;
@@ -163,6 +215,12 @@ class AIState {
   }
   get target() {
     return this.ai.target;
+  }
+  getNextNodeName() {
+    if(this instanceof FindPlayer) {
+      return this.nextNode.name;
+    }
+    return "";
   }
 
   constructor(character: Character) {
@@ -174,6 +232,7 @@ class AIState {
     this.randomlyDash = true;
     this.randomlyJump = true;
     this.randomlyChangeWeapon = true;
+    this.randomlyChargeWeapon = true;
   }
 
   update() {
@@ -192,6 +251,7 @@ class MoveTowardsTarget extends AIState {
     this.randomlyDash = true;
     this.randomlyJump = false;
     this.randomlyChangeWeapon = false;
+    this.randomlyChargeWeapon = true;
   }
 
   update() {
@@ -215,6 +275,7 @@ class FindPlayer extends AIState {
   nextNode: NavMeshNode;
   prevNode: NavMeshNode;
   ladderDir: string;
+  holdJumpTime: number = 0;
   constructor(character: Character) {
     super(character);
     this.facePlayer = false;
@@ -224,8 +285,24 @@ class FindPlayer extends AIState {
     this.randomlyDash = true;
     this.randomlyJump = false;
     this.randomlyChangeWeapon = false;
+    this.randomlyChargeWeapon = true;
     
-    this.destNode = game.level.getRandomNode();
+    if(game.level.gameMode instanceof CTF) {
+      if(!this.character.flag) {
+        let targetFlag: Flag;
+        if(this.player.alliance === 0) targetFlag = game.level.redFlag;
+        else if(this.player.alliance === 1) targetFlag = game.level.blueFlag;
+        this.destNode = game.level.getClosestNodeInSight(targetFlag.pos);
+      }
+      else {
+        if(this.player.alliance === 0) this.destNode = game.level.blueFlagNode;
+        else if(this.player.alliance === 1) this.destNode = game.level.redFlagNode;
+      }
+      
+    }
+    else {
+      this.destNode = game.level.getRandomNode();
+    }
     this.nextNode = game.level.getClosestNodeInSight(this.character.centerPos);
     this.prevNode = undefined;
 
@@ -233,6 +310,11 @@ class FindPlayer extends AIState {
 
   update() {
     super.update();
+
+    if(this.holdJumpTime > 0) {
+      this.player.press("jump");
+      this.holdJumpTime = Helpers.clampMin0(this.holdJumpTime - game.deltaTime);
+    }
 
     if(!this.nextNode) {
       this.ai.changeState(new FindPlayer(this.character));
@@ -257,13 +339,17 @@ class FindPlayer extends AIState {
       this.player.press("right");
     }
     else {
-      if(Math.abs(this.character.pos.y - this.nextNode.pos.y) < 15) {
+      if(Math.abs(this.character.pos.y - this.nextNode.pos.y) < 30) {
         if(this.nextNode === this.destNode) {
           this.ai.changeState(new FindPlayer(this.character));
           return;
         }
         this.prevNode = this.nextNode;
         this.nextNode = this.nextNode.getNextNode(this.destNode);
+        let neighbor: NavMeshNeighbor = this.prevNode.getNeighbor(this.nextNode);
+        if(neighbor.isJumpNode && !neighbor.ladder) {
+          this.holdJumpTime = 2;
+        }
       }
       else {
         if(!this.prevNode) {
@@ -302,6 +388,7 @@ class MoveToPos extends AIState {
     this.dest = dest;
     this.facePlayer = false;
     this.randomlyChangeState = false;
+    this.randomlyChargeWeapon = true;
   }
 
   update() {
@@ -353,6 +440,7 @@ class AimAtPlayer extends AIState {
 class InJumpZone extends AIState {
   jumpZone: JumpZone;
   jumpZoneDir: number;
+  time: number = 0.25;
   constructor(character: Character, jumpZone: JumpZone, jumpZoneDir: number) {
     super(character);
     this.jumpZone = jumpZone;
@@ -364,9 +452,11 @@ class InJumpZone extends AIState {
     this.randomlyDash = true;
     this.randomlyJump = false;
     this.randomlyChangeWeapon = false;
+    this.randomlyChargeWeapon = true;
   }
   update() {
     super.update();
+    this.time += game.deltaTime;
     this.player.press("jump");
     if(this.jumpZoneDir === -1) {
       this.player.press("left");

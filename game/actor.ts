@@ -19,6 +19,7 @@ export class Actor {
   frameSpeed: number; //Multiplier for how fast frameIndex gets incremented. defaults to 1
   frameTime: number;  //The current time of the frame
   animTime: number = 0; //The current time of the whole sprite animation
+  loopCount: number = 0;
   xDir: number; //-1 or 1
   yDir: number;
   pos: Point; //Current location
@@ -33,7 +34,8 @@ export class Actor {
   renderEffectTime: number = 0;
   renderEffects: Set<string> = new Set();
   container: PIXI.Container;
-  zIndex: number = 0;
+  _zIndex: number = 0;
+  isVisible: boolean = true;
 
   constructor(sprite: Sprite, pos: Point, dontAddToLevel?: boolean, container?: PIXI.Container) {
     if(container) {
@@ -54,7 +56,7 @@ export class Actor {
     this.yDir = 1;
     this.grounded = false;
     this.collidedInFrame = new Set<Collider>();
-    this.zIndex = ++game.level.zDefault;
+    this._zIndex = ++game.level.zDefault;
     this.changeSprite(sprite, true);
 
     if(!dontAddToLevel) {
@@ -66,6 +68,7 @@ export class Actor {
     if(!sprite) return;
 
     if(this.sprite) {
+      if(this.sprite.name === sprite.name) return;
       this.sprite.free();
     }
 
@@ -76,7 +79,7 @@ export class Actor {
       this.sprite = newSprite;
     }
     //@ts-ignore
-    this.sprite.pixiSprite.zIndex = this.zIndex;
+    this.sprite.pixiSprite.zIndex = this._zIndex;
     
     //this.sprite.pixiSprite.visible = false;
 
@@ -103,6 +106,16 @@ export class Actor {
 
   get angle() {
     return this._angle;
+  }
+
+  get zIndex() {
+    return this._zIndex;
+  }
+
+  setzIndex(index: number) {
+    this._zIndex = index;
+    //@ts-ignore
+    this.sprite.pixiSprite.zIndex = this._zIndex;
   }
 
   set angle(value: number) {
@@ -141,6 +154,7 @@ export class Actor {
         if(this.frameIndex >= this.sprite.frames.length) {
           this.frameIndex = 0;
           this.animTime = 0;
+          this.loopCount++;
         }
       }
     }
@@ -178,7 +192,7 @@ export class Actor {
           if(mtv.magnitude > 30 && !game.uiData.isProd) {
             let shape1 = this.collider.shape.clone(0, yDist);
             let shape2 = collideData.collider.shape;
-            throw "MTV too big";
+            //throw "MTV too big";
           }
           
           this.incPos(yVel);
@@ -218,9 +232,9 @@ export class Actor {
     let inc: Point = offset.clone();
     let collideData = game.level.checkCollisionActor(this, inc.x, inc.y);
     if(collideData) {
-      return true;
+      return collideData;
     }
-    return false;
+    return undefined;
   }
 
   move(amount: Point, useDeltaTime: boolean = true, pushIncline: boolean = true, snapInclineGravity: boolean = true) {
@@ -305,7 +319,7 @@ export class Actor {
       Helpers.drawCircle(game.uiCtx, drawX, drawY, 1, "red");
     }
     
-    this.sprite.pixiSprite.visible = true;
+    this.sprite.pixiSprite.visible = this.isVisible;
     let alignOffset = this.sprite.getAlignOffset(this.frameIndex, this.xDir, this.yDir);
     let rx = this.pos.x + offsetX + alignOffset.x;
     let ry = this.pos.y + offsetY + alignOffset.y;
@@ -431,6 +445,27 @@ export class Actor {
     }
 
     return this.pos;
+  }
+
+  breakFreeze(pos?: Point) {
+    if(!pos) pos = this.pos;
+    let pieces = [
+      new Anim(pos.addxy(Helpers.randomRange(-20, 20),Helpers.randomRange(-20, 20)), game.sprites["shotgun_ice_break"], 1, false),
+      new Anim(pos.addxy(Helpers.randomRange(-20, 20),Helpers.randomRange(-20, 20)), game.sprites["shotgun_ice_break"], 1, false),
+      new Anim(pos.addxy(Helpers.randomRange(-20, 20),Helpers.randomRange(-20, 20)), game.sprites["shotgun_ice_break"], 1, false),
+      new Anim(pos.addxy(Helpers.randomRange(-20, 20),Helpers.randomRange(-20, 20)), game.sprites["shotgun_ice_break"], 1, false),
+      new Anim(pos.addxy(Helpers.randomRange(-20, 20),Helpers.randomRange(-20, 20)), game.sprites["shotgun_ice_break"], 1, false),
+      new Anim(pos.addxy(Helpers.randomRange(-20, 20),Helpers.randomRange(-20, 20)), game.sprites["shotgun_ice_break"], 1, false)
+    ];
+    for(let piece of pieces) {
+      piece.frameSpeed = 0;
+      piece.useGravity = true;
+      piece.vel = new Point(Helpers.randomRange(-300, 300), Helpers.randomRange(-300, 25));
+    }
+    pieces[2].frameIndex = 1;
+    pieces[3].frameIndex = 1;
+    pieces[4].frameIndex = 2;
+    pieces[5].frameIndex = 2;
   }
 
 }

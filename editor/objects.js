@@ -33,6 +33,22 @@ var objects = [
     "image": "spawnPoint.png"
   },
   {
+    "name": "Red Spawn",
+    "image": "redSpawnPoint.png"
+  },
+  {
+    "name": "Blue Spawn",
+    "image": "blueSpawnPoint.png"
+  },
+  {
+    "name": "Red Flag",
+    "image": "redFlag.png"
+  },
+  {
+    "name": "Blue Flag",
+    "image": "blueFlag.png"
+  },
+  {
     "name": "Large Health",
     "spriteName": "pickup_health_large"
   },

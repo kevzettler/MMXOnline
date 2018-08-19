@@ -16,15 +16,19 @@ export class Ladder extends Geometry {
 }
 
 export class KillZone extends Geometry {
-  constructor(name: string, points: Point[]) {
+  stingInvuln: boolean;
+  constructor(name: string, points: Point[], stingInvuln: boolean) {
     super(name, points);
+    this.stingInvuln = stingInvuln;
     this.collider.isTrigger = true;
   }
 }
 
 export class JumpZone extends Geometry {
-  constructor(name: string, points: Point[]) {
+  targetNode: string;
+  constructor(name: string, points: Point[], targetNode: string) {
     super(name, points);
     this.collider.isTrigger = true;
+    this.targetNode = targetNode;
   }
 }

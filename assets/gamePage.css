@@ -14,6 +14,10 @@ body {
   /*background-image: url("images/bg2.jpg?v=1.0.1");*/
   height:100vh;
   overflow: scroll;
+  -webkit-user-select: none; /* Safari */        
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
 }
 
 #mainMenu {
@@ -126,9 +130,14 @@ button {
 }
 
 .player-block {
-  width: 45%;
+  width: 48%;
+  height:300px;
   display:inline-block;
   text-align: center;
+  vertical-align: top;
+  -moz-box-sizing: border-box; 
+  -webkit-box-sizing: border-box; 
+   box-sizing: border-box; 
 }
 
 .map-img {
@@ -136,17 +145,22 @@ button {
   height: 200px;
 }
 
-.battlemenu-button-group {
-  float: right;
-  margin-top: 25px;
-  margin-right: 125px;
+.player-img {
+  vertical-align: middle;
 }
 
-.player-img {
-  /*image-rendering: pixelated;*/
-  width: 90px;
-  height: 102px;
-  vertical-align: middle;
+.player-img-zero {
+  display: inline-block;
+  margin-top: -18px;
+}
+
+.flipped {
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+  filter: FlipH;
+  -ms-filter: "FlipH";
 }
 
 .back-button {
@@ -161,7 +175,7 @@ button {
 .game-config {
   display: inline-block;
   vertical-align: top;
-  margin-top:80px;
+  margin-top:20px;
   margin-left: 20px;
 }
 
@@ -300,4 +314,64 @@ body:after{
 
 #dev-options {
   background: white;
+}
+
+.weapon {
+  display: inline-block;
+  text-align: center;
+}
+
+#weapon1, #weapon2, #weapon3, #weapon4, #weapon5, #weapon6, #weapon7, #weapon8, #weapon9 {
+  background: url("images/weapons.png?v=1.0.0");
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+}
+
+#weapon1 {
+  background-position: 0 0;
+}
+
+#weapon2 {
+  background-position: -32px 0;
+}
+
+#weapon3 {
+  background-position: -64px 0;
+}
+
+#weapon4 {
+  background-position: -96px 0;
+}
+
+#weapon5 {
+  background-position: -128px 0;
+}
+
+#weapon6 {
+  background-position: -160px 0;
+}
+
+#weapon7 {
+  background-position: -192px 0;
+}
+
+#weapon8 {
+  background-position: -224px 0;
+}
+
+#weapon9 {
+  background-position: -256px 0;
+}
+
+.no-padding {
+  padding: 0;
+  margin: 0;
+}
+
+.battlemenu-button-group {
+  display:inline-block;
+  vertical-align: top;
+  margin-top:65px;
+  margin-left:145px;
 }

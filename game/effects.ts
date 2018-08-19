@@ -110,12 +110,13 @@ export class DieEffectParticles {
   dieParts: Actor[] = [];
   destroyed: boolean = false;
 
-  constructor(centerPos: Point) {
+  constructor(centerPos: Point, isZero: boolean) {
     this.centerPos = centerPos;
     for(let i = this.ang; i < this.ang + 360; i += 22.5) {
       let x = this.centerPos.x + Helpers.cos(i) * this.time * 150;
       let y = this.centerPos.y + Helpers.sin(i) * this.time * 150;
-      let diePart = new Actor(game.sprites["die_particle"], new Point(centerPos.x, centerPos.y), true, game.level.foregroundContainer);
+      let diePartSprite = isZero ? "die_particle_zero" : "die_particle";
+      let diePart = new Actor(game.sprites[diePartSprite], new Point(centerPos.x, centerPos.y), true, game.level.foregroundContainer);
       this.dieParts.push(diePart);
     }
   }
@@ -181,9 +182,11 @@ export class DieEffect extends Effect {
   spawnCount: number = 0;
   dieEffects: DieEffectParticles[] = [];
   repeatCount: number = 0;
+  isZero: boolean;
 
-  constructor(centerPos: Point) {
+  constructor(centerPos: Point, isZero: boolean) {
     super(centerPos);
+    this.isZero = isZero;
   }
 
   update() {
@@ -197,7 +200,7 @@ export class DieEffect extends Effect {
       if(this.repeatCount > repeat) {
       }
       else {
-        let dieEffect = new DieEffectParticles(this.pos);
+        let dieEffect = new DieEffectParticles(this.pos, this.isZero);
         this.dieEffects.push(dieEffect);
       }
     }

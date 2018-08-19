@@ -13,6 +13,7 @@ export class GameMode {
   isOver: boolean = false;
   isTeamMode: boolean = false;
   overTime: number = 0;
+  time: number = 0;
 
   localPlayers: Player[] = [];
   players: Player[] = [];
@@ -31,6 +32,9 @@ export class GameMode {
   winScreenContainer: PIXI.Container;
   winScreenTitle: PIXI.Text;
   winScreenSubtitle: PIXI.Text;
+  scoreboardCharIcons: Sprite[] = [];
+  readySprite: Sprite;
+  spawnChar: boolean = false;
   
   get screenWidth() { return this.level.screenWidth }
   get screenHeight() { return this.level.screenHeight; }
@@ -102,6 +106,24 @@ export class GameMode {
 
   update() {
     
+    this.time += game.deltaTime;
+    if(this.time < 0.4) {
+      this.readySprite.draw(Math.round( (this.time/0.4)*9 ));
+    }
+    else if(this.time < 1.75) {
+      this.readySprite.draw(9);
+      if(Math.round(this.time*7.5) % 2 === 0) {
+        this.readySprite.pixiSprite.visible = true;
+      }
+      else {
+        this.readySprite.pixiSprite.visible = false;
+      }
+    }
+    else {
+      this.spawnChar = true
+      this.readySprite.pixiSprite.visible = false;
+    }
+
     let removed = false;
     for(let i = this.killFeed.length - 1; i >= 0; i--) {
       let killFeed = this.killFeed[i];
@@ -140,6 +162,7 @@ export class GameMode {
     game.level.uiContainer.addChild(this.killFeedContainer);
     this.createWinScreenHUD();
     this.createScoreboardHUD();
+    this.readySprite = game.sprites["ready"].createAndDraw(game.level.uiContainer, 0, (this.screenWidth/2) - 21, this.screenHeight/2);
   }
 
   createScoreboardHUD() {
@@ -177,12 +200,12 @@ export class GameMode {
   createWeaponSwitchHUD() {
     this.weaponHUDContainer = new PIXI.Container();
     game.level.uiContainer.addChild(this.weaponHUDContainer);
-    let startX = Math.round(this.screenWidth * 0.225);
+    let startX = Math.round(this.screenWidth * 0.43);
     let width = 20;
     let iconW = 9;
     let iconH = 9;
     let startY = this.screenHeight - 18;
-    for(let i = 0; i < 9; i++) {
+    for(let i = 0; i < this.mainPlayer.weapons.length; i++) {
       let x = startX + (i * width);
       let y = startY;
       let sprite = game.sprites["hud_weapon_icon"].createAndDraw(this.weaponHUDContainer, i, x, y);
@@ -194,18 +217,19 @@ export class GameMode {
 
   drawWeaponSwitchHUD() {
     this.weaponHUDContainer.visible = game.options.showWeaponHUD && !game.level.mainPlayer.isZero;
-    let startX = Math.round(this.screenWidth * 0.225);
+    let startX = Math.round(this.screenWidth * 0.43);
     let width = 20;
     let iconW = 9;
     let iconH = 9;
     let startY = this.screenHeight - 18;
-    for(let i = 0; i < 9; i++) {
+    for(let i = 0; i < this.mainPlayer.weapons.length; i++) {
       let x = startX + (i * width);
       let y = startY;
       if(this.mainPlayer.weaponIndex === i) {
         this.selectedWeaponRect.x = x - iconW;
         this.selectedWeaponRect.y = y - iconH;
       }
+      this.weaponHUDSprites[i].draw(this.mainPlayer.weapons[i].index);
     }
   }
 
@@ -261,8 +285,11 @@ export class GameMode {
       if(killFeed.killer) {
         msg = killFeed.killer.name + "    " + killFeed.victim.name;
       }
-      else {
+      else if(killFeed.victim && !killFeed.customMessage) {
         msg = killFeed.victim.name + " died";
+      }
+      else {
+        msg = killFeed.customMessage;
       }
       game.uiCtx.font = "6px mmx_font";
       if(killFeed.killer === this.mainPlayer || killFeed.victim == this.mainPlayer) {
@@ -272,7 +299,8 @@ export class GameMode {
       }
 
       let isKillerRed = killFeed.killer && killFeed.killer.alliance === 1 && this.isTeamMode;
-      let isVictimRed = killFeed.victim.alliance === 1 && this.isTeamMode;
+      let isVictimRed = killFeed.victim && killFeed.victim.alliance === 1 && this.isTeamMode;
+      if(!killFeed.victim) isVictimRed = killFeed.customMessageAlliance === 0 ? false : true;
 
       if(killFeed.killer) {
         let nameLen = game.uiCtx.measureText(killFeed.victim.name).width;
@@ -308,10 +336,10 @@ export class Brawl extends GameMode {
 
     this.isBrawl = true;
     
-    let health = 32;
+    let health = 100;
 
     let p1Name = uiData.isPlayer1CPU ? "CPU 1" : "Player 1";
-    let p2Name = uiData.isPlayer2CPU ? "CPU" : "Player";
+    let p2Name = uiData.isPlayer2CPU ? "CPU" : "Player 2";
 
     if(p1Name.includes(p2Name)) {
       p2Name += " 2";
@@ -320,8 +348,8 @@ export class Brawl extends GameMode {
       p2Name += " 1";
     }
 
-    let player1 = new Player(p1Name, true, uiData.isPlayer1CPU, 0, health);
-    let player2 = new Player(p2Name, false, uiData.isPlayer2CPU, 1, health, game.palettes["red"]);
+    let player1 = new Player(p1Name, uiData.isPlayer1Zero, uiData.isPlayer1CPU, false, 0, health);
+    let player2 = new Player(p2Name, uiData.isPlayer2Zero, uiData.isPlayer2CPU, true, 1, health, game.palettes["red"]);
     
     this.players.push(player1);
     this.localPlayers.push(player1);
@@ -393,13 +421,13 @@ export class FFADeathMatch extends GameMode {
     super(level);
     this.killsToWin = uiData.playTo;
     let health = 16;
-    let player1 = new Player(game.uiData.playerName, true, false, 0, health);
+    let player1 = new Player(game.uiData.playerName, uiData.isPlayer1Zero, false, false, 0, health);
     this.players.push(player1);
     this.localPlayers.push(player1);
     this.mainPlayer = player1;
     
     for(var i = 0; i < uiData.numBots; i++) {
-      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? true : false, true, i + 1, health, game.palettes["red"]);
+      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? true : false, true, false, i + 1, health, game.palettes["red"]);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }
@@ -440,8 +468,9 @@ export class FFADeathMatch extends GameMode {
     let top = padding + 2;
     let fontSize = 8;
     let col1x = padding + 10;
-    let col2x = this.screenWidth * 0.5;
-    let col3x = this.screenWidth * 0.75;
+    let col2x = this.screenWidth * 0.33;
+    let col3x = this.screenWidth * 0.5;
+    let col4x = this.screenWidth * 0.75;
     let lineY = padding + 35;
     let labelY = lineY - 1;
     let labelTextY = labelY + 3;
@@ -453,15 +482,17 @@ export class FFADeathMatch extends GameMode {
     Helpers.createAndDrawText(this.scoreboardContainer, "Playing to: " + String(this.killsToWin), padding + 10, top + 20, fontSize, "left", "top", undefined, "white");
     Helpers.createAndDrawLine(this.scoreboardContainer, padding + 10, lineY, this.screenWidth - padding - 10, lineY, 0xFFFFFF, 1);
     Helpers.createAndDrawText(this.scoreboardContainer, "Player", col1x, labelTextY, fontSize, "left", "top", undefined, "white");
-    Helpers.createAndDrawText(this.scoreboardContainer, "Kills", col2x, labelTextY, fontSize, "left", "top", undefined, "white");
-    Helpers.createAndDrawText(this.scoreboardContainer, "Deaths", col3x, labelTextY, fontSize, "left", "top", undefined, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "Char", col2x, labelTextY, fontSize, "left", "top", undefined, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "Kills", col3x, labelTextY, fontSize, "left", "top", undefined, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "Deaths", col4x, labelTextY, fontSize, "left", "top", undefined, "white");
     Helpers.createAndDrawLine(this.scoreboardContainer, padding + 10, line2Y, this.screenWidth - padding - 10, line2Y, 0xFFFFFF, 1);
     let rowH = 10;
     for(let i = 0; i < this.scoreboardRowCount; i++) {
       let text1 = Helpers.createAndDrawText(this.scoreboardContainer, "", col1x, topPlayerY + (i)*rowH, fontSize, "left", "top", undefined, "white");
-      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", col2x, topPlayerY + (i)*rowH, fontSize, "left", "top", undefined, "white");
-      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", undefined, "white");
+      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", undefined, "white");
+      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", col4x, topPlayerY + (i)*rowH, fontSize, "left", "top", undefined, "white");
       this.scoreboardTexts.push([text1, text2, text3]);
+      this.scoreboardCharIcons.push(game.sprites["char_icon"].createAndDraw(this.scoreboardContainer, 0, col2x + 4, topPlayerY + (i)*rowH));
     }
     this.scoreboardContainer.visible = false;
   }
@@ -478,6 +509,7 @@ export class FFADeathMatch extends GameMode {
     this.scoreboardContainer.visible = true;
     for(let i = 0; i < this.scoreboardRowCount; i++) {
       let row = this.scoreboardTexts[i];
+      let charIcon = this.scoreboardCharIcons[i];
       if(i < this.players.length) {
         let player = this.players[i];
         let color = (player === this.mainPlayer) ? "lightgreen" : "white";
@@ -488,8 +520,12 @@ export class FFADeathMatch extends GameMode {
         row[0].text = player.name;
         row[1].text = String(player.kills);
         row[2].text = String(player.deaths);
+        
+        charIcon.pixiSprite.visible = true;
+        charIcon.draw(player.isZero ? 1 : 0);
       }
       else {
+        charIcon.pixiSprite.visible = false;
         row[0].visible = false;
         row[1].visible = false;
         row[2].visible = false;
@@ -543,14 +579,14 @@ export class TeamDeathMatch extends GameMode {
     this.isTeamMode = true;
     this.killsToWin = uiData.playTo;
     let health = 16;
-    let player1 = new Player(game.uiData.playerName, true, false, 0, health);
+    let player1 = new Player(game.uiData.playerName, uiData.isPlayer1Zero, false, false, 0, health);
     this.players.push(player1);
     this.localPlayers.push(player1);
     this.mainPlayer = player1;
     
     for(var i = 0; i < uiData.numBots; i++) {
       let alliance = (i+1) % 2;
-      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? true : false, true, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
+      let cpu: Player = new Player("CPU" + String(i+1), /*alliance*/Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }
@@ -602,6 +638,8 @@ export class TeamDeathMatch extends GameMode {
     this.winScreenContainer.visible = true;
   }
   
+  blueCharIcons: Sprite[] = [];
+  redCharIcons: Sprite[] = [];
   blueScoreText: PIXI.Text;
   redScoreText: PIXI.Text;
   blueScoreboardTexts: PIXI.Text[][] = [];
@@ -616,15 +654,16 @@ export class TeamDeathMatch extends GameMode {
     let hPadding = padding + 5;
     let fontSize = 8;
     let col1x = padding + 5;
-    let col2x = this.screenWidth * 0.3;
-    let col3x = this.screenWidth * 0.4;
+    let col2x = col1x - 11;
+    let col3x = this.screenWidth * 0.3;
+    let col4x = this.screenWidth * 0.4;
     let teamLabelY = padding + 40;
     let lineY = teamLabelY + 10;
     let labelY = lineY + 5;
     let line2Y = labelY + 10;
     let topPlayerY = line2Y + 5;
 
-    Helpers.createAndDrawRect(this.scoreboardContainer, new Rect(padding, padding, this.screenWidth - padding, this.screenHeight - padding), 0x000000, undefined, undefined, 0.75);
+    Helpers.createAndDrawRect(this.scoreboardContainer, new Rect(0, 0, this.screenWidth, this.screenHeight), 0x000000, undefined, undefined, 0.75);
     Helpers.createAndDrawText(this.scoreboardContainer, "Game Mode: Team Deathmatch", hPadding, padding + 10 - 5, fontSize, "left", "top", false, "white");
     Helpers.createAndDrawText(this.scoreboardContainer, "Map: " + this.level.levelData.name, hPadding, padding + 20 - 5, fontSize, "left", "top", false, "white");
     Helpers.createAndDrawText(this.scoreboardContainer, "Playing to: " + String(this.killsToWin), hPadding, padding + 30 - 5, fontSize, "left", "top", false, "white");
@@ -633,14 +672,16 @@ export class TeamDeathMatch extends GameMode {
     //Blue
     this.blueScoreText = Helpers.createAndDrawText(this.scoreboardContainer, "Blue: ", col1x, teamLabelY, fontSize, "left", "top");
     Helpers.createAndDrawText(this.scoreboardContainer, "Player", col1x, labelY, fontSize, "left", "top", false, "white");
-    Helpers.createAndDrawText(this.scoreboardContainer, "K", col2x, labelY, fontSize, "left", "top", false, "white");
-    Helpers.createAndDrawText(this.scoreboardContainer, "D", col3x, labelY, fontSize, "left", "top", false, "white");
+    //Helpers.createAndDrawText(this.scoreboardContainer, "C", col2x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "K", col3x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "D", col4x, labelY, fontSize, "left", "top", false, "white");
 
     //Red
     this.redScoreText = Helpers.createAndDrawText(this.scoreboardContainer, "Red: ", this.screenWidth*0.5 + col1x, teamLabelY, fontSize, "left", "top", true);
     Helpers.createAndDrawText(this.scoreboardContainer, "Player", this.screenWidth*0.5 + col1x, labelY, fontSize, "left", "top", false, "white");
-    Helpers.createAndDrawText(this.scoreboardContainer, "K", this.screenWidth*0.5 + col2x, labelY, fontSize, "left", "top", false, "white");
-    Helpers.createAndDrawText(this.scoreboardContainer, "D", this.screenWidth*0.5 + col3x, labelY, fontSize, "left", "top", false, "white");
+    //Helpers.createAndDrawText(this.scoreboardContainer, "C", this.screenWidth*0.5 + col2x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "K", this.screenWidth*0.5 + col3x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "D", this.screenWidth*0.5 + col4x, labelY, fontSize, "left", "top", false, "white");
     
     /*
     Helpers.drawLine(this.scoreboardContainer, col2x - 5, lineY, col2x - 5, lineY + this.screenHeight * 0.5, "white", 1);
@@ -653,15 +694,17 @@ export class TeamDeathMatch extends GameMode {
     let rowH = 10;
     for(let i = 0; i < this.scoreboardRowCount; i++) {
       let text1 = Helpers.createAndDrawText(this.scoreboardContainer, "", col1x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
-      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", col2x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
-      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
+      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
+      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", col4x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
       this.blueScoreboardTexts.push([text1, text2, text3]);
+      this.blueCharIcons.push(game.sprites["char_icon"].createAndDraw(this.scoreboardContainer, 0, col2x + 4, topPlayerY + (i)*rowH));
     }
     for(let i = 0; i < this.scoreboardRowCount; i++) {
       let text1 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col1x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
-      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col2x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
-      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
+      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
+      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col4x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
       this.redScoreboardTexts.push([text1, text2, text3]);
+      this.redCharIcons.push(game.sprites["char_icon"].createAndDraw(this.scoreboardContainer, 0, this.screenWidth*0.5 + col2x + 4, topPlayerY  + (i)*rowH));
     }
 
     this.scoreboardContainer.visible = false;
@@ -699,6 +742,7 @@ export class TeamDeathMatch extends GameMode {
     for(let i = 0; i < this.scoreboardRowCount; i++) {
       //Blue
       let rowBlue = this.blueScoreboardTexts[i];
+      let charIconBlue = this.blueCharIcons[i];
       if(i < bluePlayers.length) {
         let player = bluePlayers[i];
         let color = (player === this.mainPlayer) ? "lightgreen" : "lightblue";
@@ -709,14 +753,18 @@ export class TeamDeathMatch extends GameMode {
         rowBlue[0].text = player.name;
         rowBlue[1].text = String(player.kills);
         rowBlue[2].text = String(player.deaths);
+        charIconBlue.pixiSprite.visible = true;
+        charIconBlue.draw(player.isZero ? 1 : 0);
       }
       else {
         rowBlue[0].visible = false;
         rowBlue[1].visible = false;
         rowBlue[2].visible = false;
+        charIconBlue.pixiSprite.visible = false;
       }
       //Red
       let rowRed = this.redScoreboardTexts[i];
+      let charIconRed = this.redCharIcons[i];
       if(i < redPlayers.length) {
         let player = redPlayers[i];
         let color = (player === this.mainPlayer) ? "lightgreen" : "pink";
@@ -727,11 +775,13 @@ export class TeamDeathMatch extends GameMode {
         rowRed[0].text = player.name;
         rowRed[1].text = String(player.kills);
         rowRed[2].text = String(player.deaths);
+        charIconRed.draw(player.isZero ? 1 : 0);
       }
       else {
         rowRed[0].visible = false;
         rowRed[1].visible = false;
         rowRed[2].visible = false;
+        charIconRed.pixiSprite.visible = false;
       }
     }
   }
@@ -755,6 +805,264 @@ export class TeamDeathMatch extends GameMode {
         });
       }
       else if(redKills >= this.killsToWin) {
+        this.isOver = true;
+        //@ts-ignore
+        _.each(this.players, (player) => {
+          if(player.alliance === 1) {
+            player.won = true;
+          }
+        });
+      }
+
+      if(this.isOver) {
+        if(game.music) {
+          game.music.stop();
+        }
+        if(this.level.mainPlayer && this.level.mainPlayer.won) {
+          game.music = new Howl({
+            src: [game.path.winMusic],
+          });
+          game.music.play();
+        }
+        else if(this.level.mainPlayer && !this.level.mainPlayer.won) {
+          game.music = new Howl({
+            src: [game.path.loseMusic],
+          });
+          game.music.play();
+        }
+      }
+    }
+    else {
+      this.overTime += game.deltaTime;
+      if(this.overTime > 10) {
+        this.restart();
+      }
+    }
+
+  }
+
+}
+
+
+export class CTF extends GameMode {
+
+  capturesToWin: number = 3;
+  blueCaptures: number = 0;
+  redCaptures: number = 0;
+
+  constructor(level: Level, uiData: UIData) {
+    super(level);
+    this.isTeamMode = true;
+    this.capturesToWin = uiData.playTo;
+    let health = 16;
+    let player1 = new Player(game.uiData.playerName, uiData.isPlayer1Zero, false, false, 0, health);
+    this.players.push(player1);
+    this.localPlayers.push(player1);
+    this.mainPlayer = player1;
+    
+    for(var i = 0; i < uiData.numBots; i++) {
+      let alliance = (i+1) % 2;
+      let cpu: Player = new Player("CPU" + String(i+1), /*alliance*/Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
+      this.players.push(cpu);
+      this.localPlayers.push(cpu);
+    }
+
+    this.setupPlayers();
+  }
+
+  drawHUD() {
+    
+    super.drawHUD();
+
+    this.drawTopHUD();
+    this.drawWeaponSwitchHUD();
+
+    this.drawScoreboard();
+  }
+
+  drawTopHUD() {
+    if(this.redCaptures > this.blueCaptures) {
+      this.topText.text = "Red: " + String(this.redCaptures);
+      this.botText.text = "Blue: " + String(this.blueCaptures);
+      Helpers.setTextGradient(this.topText, true);
+      Helpers.setTextGradient(this.botText, false);
+    }
+    else {
+      this.botText.text = "Red: " + String(this.redCaptures);
+      this.topText.text = "Blue: " + String(this.blueCaptures);
+      Helpers.setTextGradient(this.botText, true);
+      Helpers.setTextGradient(this.topText, false);
+    }
+  }
+
+  drawWinScreen() {
+    let team: string;
+    if(this.mainPlayer.won) {
+      team = this.mainPlayer.alliance === 0 ? "Blue" : "Red";
+    }
+    else {
+      team = this.mainPlayer.alliance === 0 ? "Red" : "Blue";
+    }
+    this.winScreenTitle.text = team + " team won!";
+    this.winScreenTitle.style.fontSize = 48;
+    this.winScreenContainer.visible = true;
+  }
+  
+  blueCharIcons: Sprite[] = [];
+  redCharIcons: Sprite[] = [];
+  blueScoreText: PIXI.Text;
+  redScoreText: PIXI.Text;
+  blueScoreboardTexts: PIXI.Text[][] = [];
+  redScoreboardTexts: PIXI.Text[][] = [];
+  scoreboardRowCount: number = 12;
+  scoreboardContainer: PIXI.Container;
+  createScoreboardHUD() {
+    this.scoreboardContainer = new PIXI.Container();
+    game.level.uiContainer.addChild(this.scoreboardContainer);
+
+    let padding = 10;
+    let hPadding = padding + 5;
+    let fontSize = 8;
+    let col1x = padding + 5;
+    let col2x = col1x - 11;
+    let col3x = this.screenWidth * 0.3;
+    let col4x = this.screenWidth * 0.4;
+    let teamLabelY = padding + 40;
+    let lineY = teamLabelY + 10;
+    let labelY = lineY + 5;
+    let line2Y = labelY + 10;
+    let topPlayerY = line2Y + 5;
+
+    Helpers.createAndDrawRect(this.scoreboardContainer, new Rect(0, 0, this.screenWidth, this.screenHeight), 0x000000, undefined, undefined, 0.75);
+    Helpers.createAndDrawText(this.scoreboardContainer, "Game Mode: Team Deathmatch", hPadding, padding + 10 - 5, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "Map: " + this.level.levelData.name, hPadding, padding + 20 - 5, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "Playing to: " + String(this.capturesToWin), hPadding, padding + 30 - 5, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawLine(this.scoreboardContainer, hPadding, lineY, this.screenWidth - hPadding, lineY, 0xFFFFFF, 1);
+
+    //Blue
+    this.blueScoreText = Helpers.createAndDrawText(this.scoreboardContainer, "Blue: ", col1x, teamLabelY, fontSize, "left", "top");
+    Helpers.createAndDrawText(this.scoreboardContainer, "Player", col1x, labelY, fontSize, "left", "top", false, "white");
+    //Helpers.createAndDrawText(this.scoreboardContainer, "C", col2x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "K", col3x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "D", col4x, labelY, fontSize, "left", "top", false, "white");
+
+    //Red
+    this.redScoreText = Helpers.createAndDrawText(this.scoreboardContainer, "Red: ", this.screenWidth*0.5 + col1x, teamLabelY, fontSize, "left", "top", true);
+    Helpers.createAndDrawText(this.scoreboardContainer, "Player", this.screenWidth*0.5 + col1x, labelY, fontSize, "left", "top", false, "white");
+    //Helpers.createAndDrawText(this.scoreboardContainer, "C", this.screenWidth*0.5 + col2x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "K", this.screenWidth*0.5 + col3x, labelY, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "D", this.screenWidth*0.5 + col4x, labelY, fontSize, "left", "top", false, "white");
+    
+    /*
+    Helpers.drawLine(this.scoreboardContainer, col2x - 5, lineY, col2x - 5, lineY + this.screenHeight * 0.5, "white", 1);
+    Helpers.drawLine(this.scoreboardContainer, col3x - 5, lineY, col3x - 5, lineY + this.screenHeight * 0.5, "white", 1);
+    Helpers.drawLine(this.scoreboardContainer, this.screenWidth*0.5 + col2x - 5, lineY, this.screenWidth*0.5 + col2x - 5, lineY + this.screenHeight * 0.5, "white", 1);
+    Helpers.drawLine(this.scoreboardContainer, this.screenWidth*0.5 + col3x - 5, lineY, this.screenWidth*0.5 + col3x - 5, lineY + this.screenHeight * 0.5, "white", 1);
+    */
+
+    Helpers.createAndDrawLine(this.scoreboardContainer, hPadding, line2Y, this.screenWidth - hPadding, line2Y, 0xFFFFFF, 1);
+    let rowH = 10;
+    for(let i = 0; i < this.scoreboardRowCount; i++) {
+      let text1 = Helpers.createAndDrawText(this.scoreboardContainer, "", col1x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
+      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
+      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", col4x, topPlayerY + (i)*rowH, fontSize, "left", "top", false, "blue");
+      this.blueScoreboardTexts.push([text1, text2, text3]);
+      this.blueCharIcons.push(game.sprites["char_icon"].createAndDraw(this.scoreboardContainer, 0, col2x + 4, topPlayerY + (i)*rowH));
+    }
+    for(let i = 0; i < this.scoreboardRowCount; i++) {
+      let text1 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col1x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
+      let text2 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col3x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
+      let text3 = Helpers.createAndDrawText(this.scoreboardContainer, "", this.screenWidth*0.5 + col4x, topPlayerY + (i)*rowH, fontSize, "left", "top", true, "red");
+      this.redScoreboardTexts.push([text1, text2, text3]);
+      this.redCharIcons.push(game.sprites["char_icon"].createAndDraw(this.scoreboardContainer, 0, this.screenWidth*0.5 + col2x + 4, topPlayerY  + (i)*rowH));
+    }
+
+    this.scoreboardContainer.visible = false;
+  }
+
+  drawScoreboard() {
+    if(!this.mainPlayer) {
+      this.scoreboardContainer.visible = false;
+      return;
+    }
+    if(!this.mainPlayer.isHeld("scoreboard", false)) {
+      this.scoreboardContainer.visible = false;
+      return;  
+    }
+
+    this.scoreboardContainer.visible = true;
+
+    //@ts-ignore
+    let redPlayers = _.filter(this.players, (player) => {
+      return player.alliance === 1;
+    });
+    //@ts-ignore
+    let bluePlayers = _.filter(this.players, (player) => {
+      return player.alliance === 0;
+    });
+
+    this.blueScoreText.text = "Blue: " + String(this.blueCaptures);
+    this.redScoreText.text = "Red: " + String(this.redCaptures);
+    for(let i = 0; i < this.scoreboardRowCount; i++) {
+      //Blue
+      let rowBlue = this.blueScoreboardTexts[i];
+      let charIconBlue = this.blueCharIcons[i];
+      if(i < bluePlayers.length) {
+        let player = bluePlayers[i];
+        let color = (player === this.mainPlayer) ? "lightgreen" : "lightblue";
+        for(let text of rowBlue) {
+          text.visible = true;
+          text.style.fill = color;
+        }
+        rowBlue[0].text = player.name;
+        rowBlue[1].text = String(player.kills);
+        rowBlue[2].text = String(player.deaths);
+        charIconBlue.pixiSprite.visible = true;
+        charIconBlue.draw(player.isZero ? 1 : 0);
+      }
+      else {
+        rowBlue[0].visible = false;
+        rowBlue[1].visible = false;
+        rowBlue[2].visible = false;
+        charIconBlue.pixiSprite.visible = false;
+      }
+      //Red
+      let rowRed = this.redScoreboardTexts[i];
+      let charIconRed = this.redCharIcons[i];
+      if(i < redPlayers.length) {
+        let player = redPlayers[i];
+        let color = (player === this.mainPlayer) ? "lightgreen" : "pink";
+        for(let text of rowRed) {
+          text.visible = true;
+          text.style.fill = color;
+        }
+        rowRed[0].text = player.name;
+        rowRed[1].text = String(player.kills);
+        rowRed[2].text = String(player.deaths);
+        charIconRed.draw(player.isZero ? 1 : 0);
+      }
+      else {
+        rowRed[0].visible = false;
+        rowRed[1].visible = false;
+        rowRed[2].visible = false;
+        charIconRed.pixiSprite.visible = false;
+      }
+    }
+  }
+
+  checkIfWin() {
+    if(!this.isOver) {
+      
+      if(this.blueCaptures >= this.capturesToWin) {
+        this.isOver = true;
+        //@ts-ignore
+        _.each(this.players, (player) => {
+          if(player.alliance === 0) {
+            player.won = true;
+          }
+        });
+      }
+      else if(this.redCaptures >= this.capturesToWin) {
         this.isOver = true;
         //@ts-ignore
         _.each(this.players, (player) => {
