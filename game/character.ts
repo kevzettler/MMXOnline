@@ -428,6 +428,9 @@ export class Character extends Actor {
           else if(go instanceof TorpedoProj) {
             go.destroySelf(go.fadeSprite, go.fadeSound);
           }
+          else if(go instanceof Projectile && go.damager.owner.alliance !== this.player.alliance && go.reflectable && go.time > 0.1) {
+            go.reflect(this.player);
+          }
         }
       }
     }

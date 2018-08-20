@@ -7,12 +7,29 @@ export class Path {
   highwayMusic: string = "assets/music/highway.mp3?v=1.0.1";
   galleryMusic: string = "assets/music/gallery.mp3?v=1.0.1";
   zeroMusic: string = "assets/music/x_vs_zero.mp3?v=1.0.0";
+  towerMusic: string = "assets/music/tower.mp3?v=1.0.0";
+  mountainMusic: string = "assets/music/mountain.mp3?v=1.0.0";
+  forestMusic: string = "assets/music/forest.mp3?v=1.0.0";
+  oceanMusic: string = "assets/music/ocean.mp3?v=1.0.0";
+  factoryMusic: string = "assets/music/factory.mp3?v=1.0.0";
+  airportMusic: string = "assets/music/airport.mp3?v=1.0.0";
 
   powerPlantParallax: string = "assets/backgrounds/powerplant_parallex.png?v=1.0.1";
   highwayParallax: string = "assets/backgrounds/highway_parallax.png?v=1.0.1";
-  galleryParallax: string = "assets/backgrounds/gallery_parallax.png?v=1.0.1";  
+  galleryParallax: string = "assets/backgrounds/gallery_parallax.png?v=1.0.1";
+  towerParallax: string = "assets/backgrounds/tower_parallax.png?v=1.0.1";
+  mountainParallax: string = "assets/backgrounds/mountain_parallax.png?v=1.0.1";
+  forestParallax: string = "assets/backgrounds/forest_parallax.png?v=1.0.1";
+  oceanParallax: string = "assets/backgrounds/ocean_parallax.png?v=1.0.1";
+  factoryParallax: string = "assets/backgrounds/factory_parallax.png?v=1.0.1";
+  airportParallax: string = "assets/backgrounds/airport_parallax.png?v=1.0.1";
   highwayForeground: string = "assets/backgrounds/highway_foreground.png?v=1.0.1";
   galleryForeground: string = "assets/backgrounds/gallery_foreground.png?v=1.0.1";
+  mountainForeground: string = "assets/backgrounds/mountain_foreground.png?v=1.0.1";
+  forestForeground: string = "assets/backgrounds/forest_foreground.png?v=1.0.1";
+  oceanForeground: string = "assets/backgrounds/ocean_foreground.png?v=1.0.1";
+  factoryForeground: string = "assets/backgrounds/factory_foreground.png?v=1.0.1";
+  airportForeground: string = "assets/backgrounds/airport_foreground.png?v=1.0.1";
 
   effectsSpritesheetPath: string = "assets/spritesheets/effects.png?v=1.0.1";
   megaManXSpritesheetPath: string = "assets/spritesheets/MegamanX.png?v=1.0.1";

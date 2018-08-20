@@ -23,6 +23,7 @@ export class Projectile extends Actor {
   time: number = 0;
   weapon: Weapon;
   destroyOnCharHit: boolean = true;
+  reflectable: boolean = false;
 
   constructor(weapon: Weapon, pos: Point, xDir: number, speed: number, damage: number, player: Player, sprite: Sprite, flinch: boolean, hitCooldown: number) {
     super(sprite, pos);
@@ -53,6 +54,16 @@ export class Projectile extends Actor {
     if(this.pos.x > game.level.width + leeway || this.pos.x < -leeway || this.pos.y > game.level.height + leeway || this.pos.y < -leeway) {
       this.destroySelf();
     }
+  }
+
+  reflect(player: Player) {
+    this.playSound("ding");
+    this.damager.owner = player;
+    this.xDir *= -1;
+    if(this instanceof ElectricSparkProj) {
+      this.vel.y *= -1;
+    }
+    this.vel.x *= -1;
   }
 
   onCollision(other: CollideData) {
@@ -125,6 +136,7 @@ export class ZSaberProj extends Projectile {
   constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
     super(weapon, pos, xDir, 300, 2, player, game.sprites["zsaber_shot"], false, 0);
     this.fadeSprite = game.sprites["zsaber_shot_fade"];
+    this.reflectable = true;
   }
 
   update() {
@@ -141,6 +153,7 @@ export class BusterProj extends Projectile {
   constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
     super(weapon, pos, xDir, 350, 1, player, game.sprites["buster1"], false, 0);
     this.fadeSprite = game.sprites["buster1_fade"];
+    this.reflectable = true;
   }
 
 }
@@ -150,6 +163,7 @@ export class Buster2Proj extends Projectile {
   constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
     super(weapon, pos, xDir, 350, 3, player, game.sprites["buster2"], false, 0);
     this.fadeSprite = game.sprites["buster2_fade"];
+    this.reflectable = true;
   }
 
 }
@@ -159,6 +173,7 @@ export class Buster3Proj extends Projectile {
   constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
     super(weapon, pos, xDir, 350, 6, player, game.sprites["buster3"], false, 0);
     this.fadeSprite = game.sprites["buster3_fade"];
+    this.reflectable = true;
   }
 
 }
@@ -178,6 +193,7 @@ export class Buster4Proj extends Projectile {
     this.initY = this.pos.y;
     this.offsetTime = offsetTime;
     this.num = num;
+    this.reflectable = true;
   }
 
   update() {
@@ -311,6 +327,7 @@ export class StingProj extends Projectile {
     if(vel) this.vel = vel;
     this.fadeSprite = game.sprites["buster1_fade"];
     this.type = type;
+    this.reflectable = true;
   }
 
   update() {
@@ -392,8 +409,10 @@ export class RollingShieldProjCharged extends Projectile {
   destroySelf(sprite?: Sprite, fadeSound?: string) {
     super.destroySelf(this.fadeSprite, this.fadeSound);
     if(this.damager.owner.character) this.damager.owner.character.chargedRollingShieldProj = undefined;
-    this.rollingShieldSound.stop();
-    this.rollingShieldSound = undefined;
+    if(this.rollingShieldSound) {
+      this.rollingShieldSound.stop();
+      this.rollingShieldSound = undefined;
+    }
   }
 
 }
@@ -689,6 +708,7 @@ export class ElectricSparkProj extends Projectile {
     //this.fadeSound = "explosion";
     this.type = type;
     if(vel) this.vel = vel;
+    this.reflectable = true;
   }
 
   onHitWall(other: CollideData) {
@@ -838,6 +858,7 @@ export class ShotgunIceProj extends Projectile {
     this.fadeSprite = game.sprites["buster1_fade"];
     this.type = type;
     if(vel) this.vel = vel;
+    this.reflectable = true;
     //this.fadeSound = "explosion";
   }
 

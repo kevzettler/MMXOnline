@@ -13,13 +13,10 @@ export class Flag extends Actor {
   char: Character;
   timeDropped: number = 0;
   pickedUpOnce: boolean = false;
+  isInit: boolean = false;
   constructor(alliance: number, pos: Point) {
     super(game.sprites[alliance === 0 ? "blue_flag" : "red_flag"], pos);
     this.alliance = alliance;
-    let hit = game.level.raycast(this.pos, this.pos.addxy(0, 60), ["Wall"]);
-    this.pos = hit.hitData.hitPoint.clone();
-    let pedestal = new FlagPedestal(alliance, hit.hitData.hitPoint.clone());
-    this.pedestalPos = pedestal.pos.clone();
     this.collider.wallOnly = true;
     this.setzIndex(game.level.zChar - 2);
     if(this.alliance === 0) {
@@ -30,7 +27,18 @@ export class Flag extends Actor {
     }
   }
 
+  init() {
+    this.isInit = true;
+    let hit = game.level.raycast(this.pos.addxy(0, -10), this.pos.addxy(0, 60), ["Wall"]);
+    this.pos = hit.hitData.hitPoint.clone();
+    let pedestal = new FlagPedestal(this.alliance, hit.hitData.hitPoint.clone());
+    this.pedestalPos = pedestal.pos.clone();
+  }
+
   update() {
+    if(!this.isInit) {
+      this.init();
+    }
     super.update();
     this.timeDropped += game.deltaTime;
     if(this.pos.y > game.level.levelData.killY) {

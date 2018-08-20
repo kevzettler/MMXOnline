@@ -1,3 +1,11 @@
+-Charge parts sometimes linger
+-Why chars spawn on same team next to eachother?
+-Dash hitbox: only shorten on ground
+-Comp shouldn't turn around when frozen
+-Can't be on red
+-Ai stuck climbing walls sometimes (esp. zero)
+-AI 
+
 -More maps:
   -Boomer kwanger (no new features needed)
   -Launch octopus (underwater coding)

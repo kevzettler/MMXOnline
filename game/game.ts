@@ -46,7 +46,7 @@ export class UIData {
   menu: Menu;
   isBrawl: boolean = false;
   brawlMaps: string[] = ["sm_bossroom"];
-  arenaMaps: string[] = ["powerplant", "highway", "gallery"];
+  arenaMaps: string[] = ["powerplant", "highway", "gallery", "tower", "mountain", "factory", "ocean", "forest", "airport"];
   selectedBrawlMap: string = this.brawlMaps[0];
   selectedArenaMap: string = this.arenaMaps[0];
   gameModes: string[] = ["deathmatch", "team deathmatch", "ctf"];
@@ -169,16 +169,17 @@ class Game {
   quickStart() {
     
     this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "gallery";
-    this.uiData.selectedGameMode = "ctf";
-    this.uiData.maxPlayers = 9;
-    this.uiData.numBots = 9;
+    this.uiData.selectedArenaMap = "mountain";
+    this.uiData.selectedGameMode = "deathmatch";
+    this.uiData.maxPlayers = 7;
+    this.uiData.numBots = 7;
     this.uiData.playTo = 20;
     $("#options").show();
     game.loadLevel(this.uiData.selectedArenaMap, false);
     /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
+    this.uiData.isPlayer1Zero = true;
     this.uiData.maxPlayers = 1;
     this.uiData.isPlayer2CPU = false;
     this.uiData.maxPlayers = 0;
@@ -763,7 +764,8 @@ class Game {
         rollingShieldCharge: [60000 + 16394, 635],
         rollingShieldChargeLoop: [180000 + 11150, 292],
         chargeStart: [6934, 1490],
-        chargeLoop: [8424, 547]
+        chargeLoop: [8424, 547],
+        ding: [34846, 405]
       },
       onload: () => {
         this.loadCount++;

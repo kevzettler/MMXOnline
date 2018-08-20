@@ -15,12 +15,18 @@ export class NavMeshNode {
     this.name = name;
     this.pos = pos;
     this.neighborJson = neighborJson;
+    if(neighborJson.isBlueFlagNode) {
+      console.log("BLUE FOUND");
+      this.isBlueFlagNode = true;
+    }
+    if(neighborJson.isRedFlagNode) {
+      console.log("RED FOUND");
+      this.isRedFlagNode = true;
+    }
   }
 
   setNeighbors(nodeList: NavMeshNode[], gameObjects: GameObject[]) {
     let properties: any = this.neighborJson;
-    if(properties.isBlueFlagNode) this.isBlueFlagNode = true;
-    if(properties.isRedFlagNode) this.isRedFlagNode = true;
     for(let jsonNeighbor of properties.neighbors) {
       //@ts-ignore
       let node = _.find(nodeList, (iterNode) => {
@@ -49,7 +55,6 @@ export class NavMeshNode {
   }
 
   getNextNode(destNode: NavMeshNode) {
-
     if(this === destNode) {
       return destNode;
     }

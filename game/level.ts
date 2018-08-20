@@ -414,8 +414,22 @@ export class Level {
     this.gameUIContainer.y = -this.camY;
   
     if(this.parallaxSprite) {
-      this.parallaxSprite.x = -this.camX * 0.5;
-      this.parallaxSprite.y = -this.camY * 0.5;
+      if(this.levelData.name === "tower") {
+        this.parallaxSprite.x = -this.camX;
+        this.parallaxSprite.y = -this.camY;
+      }
+      else if(this.levelData.name === "forest") {
+        this.parallaxSprite.x = -this.camX * 0.5;
+        this.parallaxSprite.y = (-this.camY-250) * 0.5;
+      }
+      else if(this.levelData.name === "mountain") {
+        this.parallaxSprite.x = -this.camX * 0.5;
+        this.parallaxSprite.y = (-this.camY-63) * 0.5;
+      }
+      else {
+        this.parallaxSprite.x = -this.camX * 0.5;
+        this.parallaxSprite.y = -this.camY * 0.5;
+      }
     }
     
     this.gameContainer.children.sort((a, b) => {
@@ -1081,6 +1095,67 @@ export class LevelData {
       this.foreground = game.path.galleryForeground;
       this.maxPlayers = 10;
     }
+    else if(this.name === "tower") {
+      this.fixedCam = false;
+      musicPath = game.path.towerMusic;
+      this.parallax = game.path.towerParallax;
+      this.musicLoopStart = 6492;
+      this.musicLoopEnd = 60000 + 7361;
+      //this.killY = 1034;
+      //this.foreground = game.path.galleryForeground;
+      this.maxPlayers = 10;
+    }
+    else if(this.name === "mountain") {
+      this.fixedCam = false;
+      musicPath = game.path.mountainMusic;
+      this.parallax = game.path.mountainParallax;
+      this.musicLoopStart = 17361;
+      this.musicLoopEnd = 50207;
+      this.killY = 600;
+      //this.foreground = game.path.galleryForeground;
+      this.maxPlayers = 8;
+    }
+    else if(this.name === "factory") {
+      this.fixedCam = false;
+      musicPath = game.path.factoryMusic;
+      this.parallax = game.path.factoryParallax;
+      this.musicLoopStart = 6149;
+      this.musicLoopEnd = 60000 + 52181;
+      //this.killY = 600;
+      //this.foreground = game.path.galleryForeground;
+      this.maxPlayers = 10;
+    }
+    else if(this.name === "ocean") {
+      this.fixedCam = false;
+      musicPath = game.path.oceanMusic;
+      this.parallax = game.path.oceanParallax;
+      this.musicLoopStart = 0;
+      this.musicLoopEnd = 48680;
+      //this.killY = 600;
+      this.foreground = game.path.oceanForeground;
+      this.maxPlayers = 10;
+    }
+    else if(this.name === "forest") {
+      this.fixedCam = false;
+      musicPath = game.path.forestMusic;
+      this.parallax = game.path.forestParallax;
+      this.musicLoopStart = 0;
+      this.musicLoopEnd = 33905;
+      //this.killY = 600;
+      //this.foreground = game.path.galleryForeground;
+      this.maxPlayers = 10;
+    }
+    else if(this.name === "airport") {
+      this.fixedCam = false;
+      musicPath = game.path.airportMusic;
+      this.parallax = game.path.airportParallax;
+      this.musicLoopStart = 5719;
+      this.musicLoopEnd = 36731;
+      //this.killY = 600;
+      //this.foreground = game.path.galleryForeground;
+      this.maxPlayers = 10;
+    }
+
 
     this.levelMusic = game.loadMusic(musicPath, this.musicLoopStart, this.musicLoopEnd);
 
