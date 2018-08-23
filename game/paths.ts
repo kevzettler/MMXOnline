@@ -36,6 +36,7 @@ export class Path {
   zeroSpritesheetPath: string = "assets/spritesheets/zero.png?v=1.0.1";
   flagSpritesheetPath: string = "assets/spritesheets/flags.png?v=1.0.1";
   displacementMap: string = "assets/spritesheets/displacement_map.png?v=1.0.1";
+  lavaSpritesheetPath: string = "assets/spritesheets/lava.png?v=1.0.1";
 
   redPalette: string = "assets/palettes/red.png?v=1.0.1";
   boomerangPalette: string = "assets/palettes/boomerang.png?v=1.0.1";

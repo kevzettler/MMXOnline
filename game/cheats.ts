@@ -10,13 +10,19 @@ export function cheat(key: string, keycode: number) {
   //F1
   if(keycode === 112) {
     for(let player of game.level.players) {
-      //player.health = 32;
+      player.health = 1;
+      if(player !== game.level.mainPlayer) {
+        //player.character.applyDamage(undefined, undefined, 1000);
+      }
+      //player.health = 1;
     }
+    /*
     if(game.level.mainPlayer) {
       game.level.mainPlayer.character.pos.x = game.level.redFlag.pos.x - 100;
       game.level.mainPlayer.character.pos.y = game.level.redFlag.pos.y;
       game.level.computeCamPos(game.level.mainPlayer.character.getCamCenterPos());
     }
+    */
   }
   //F2
   if(keycode === 113) {

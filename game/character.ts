@@ -5,7 +5,7 @@ import { Point } from "./point";
 import { Player } from "./player";
 import { Collider, CollideData } from "./collider";
 import { Rect } from "./rect";
-import { Projectile, TorpedoProj, ZSaberProj, ShotgunIceProjCharged, RollingShieldProjCharged } from "./projectile";
+import { Projectile, TorpedoProj, ZSaberProj, ShotgunIceProjCharged, RollingShieldProjCharged, ShotgunIceProjSled } from "./projectile";
 import * as Helpers from "./helpers";
 import { Weapon, Buster, FireWave, Torpedo, Sting, RollingShield, ZSaber, ZSaber2, ZSaber3, ZSaberAir, ZSaberDash } from "./weapon";
 import { ChargeEffect, DieEffect } from "./effects";
@@ -60,6 +60,8 @@ export class Character extends Actor {
   freezeTime: number = 0;
   chargeSound: LoopingSound;
   chargedRollingShieldProj: RollingShieldProjCharged;
+  iceSled: ShotgunIceProjSled;
+  stopCamUpdate: boolean = false;
 
   constructor(player: Player, x: number, y: number, charState: CharState) {
     super(undefined, new Point(x, y), true);
@@ -115,7 +117,7 @@ export class Character extends Actor {
         this.characterTag.visible = false;
       }
 
-      if(game.uiData.isPlayer1Zero === game.uiData.isPlayer2Zero) {
+      if(!game.level.gameMode.isBrawl || game.uiData.isPlayer1Zero === game.uiData.isPlayer2Zero) {
         if(this.player.alliance === 0) {
           this.renderEffects.add("blueshadow");
         }
@@ -244,6 +246,11 @@ export class Character extends Actor {
         this.unfreeze();
         this.changeSpriteFromName("idle", true);
       }
+    }
+
+    if(this.iceSled) {
+      this.pos = this.iceSled.pos.addxy(0, -16.1);
+      this.changeState(new Idle(), true);
     }
 
   }
@@ -418,7 +425,7 @@ export class Character extends Actor {
             if(this.charState instanceof Idle) {
               if(this.sprite.name === "zero_attack") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 3, false);
               if(this.sprite.name === "zero_attack2") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 2, false);
-              if(this.sprite.name === "zero_attack3") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 3, false);
+              if(this.sprite.name === "zero_attack3") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 3, true);
               if(this.sprite.name === "zero_attack_dash") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 2, false);
             }
             else if(this.charState instanceof Fall) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 2, false);
@@ -716,7 +723,7 @@ export class CharState {
 
   update() {
     
-    if(this.inTransition() && this.character.isAnimOver()) {
+    if(this.inTransition() && this.character.isAnimOver() && !game.level.gameMode.isOver) {
       this.sprite = this.defaultSprite;
       this.character.changeSpriteFromName(this.sprite, true);
     }
@@ -823,6 +830,7 @@ export class CharState {
       return;
     }
     else if(this.player.isPressed("jump")) {
+      this.character.iceSled = undefined;
       this.character.vel.y = -this.character.jumpPower;
       this.character.changeState(new Jump());
       return;
@@ -836,6 +844,7 @@ export class CharState {
         if(!game.level.checkCollisionActor(this.character, snapX - this.character.pos.x, 30)) {
           this.character.changeState(new LadderClimb(ladders[0].gameObject, snapX)); 
           this.character.move(new Point(0, 30), false);
+          this.character.stopCamUpdate = true;
         }
       }
       this.character.checkLadderDown = false;
@@ -904,7 +913,11 @@ export class Idle extends CharState {
   update() {
     super.update();
     if(this.player.isHeld("left") || this.player.isHeld("right")) {
-      if(!this.character.isAttacking()) this.character.changeState(new Run());
+      if(!this.character.isAttacking()) {
+        if(this.player.isHeld("left")) this.character.xDir = -1;
+        if(this.player.isHeld("right")) this.character.xDir = 1;
+        this.character.changeState(new Run());
+      }
     }
     this.groundCode();
     if(this.player.isPressed("dash")) {
@@ -966,6 +979,7 @@ class Jump extends CharState {
 
   update() {
     super.update();
+    this.character.iceSled = undefined;
     if(this.character.vel.y > 0) {
       this.character.changeState(new Fall());
       return;
@@ -1178,7 +1192,7 @@ class WallKick extends CharState {
 
 }
 
-class LadderClimb extends CharState {
+export class LadderClimb extends CharState {
 
   ladder: Ladder;
   snapX: number;
@@ -1191,7 +1205,8 @@ class LadderClimb extends CharState {
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
     if(this.snapX !== undefined) {
-      this.character.pos.x = this.snapX;
+      this.character.incPos(new Point(this.snapX - this.character.pos.x, 0));
+      //this.character.pos.x = this.snapX;
     }
     if(this.character.player === game.level.mainPlayer) {
       game.level.lerpCamTime = 0.25;
@@ -1247,6 +1262,11 @@ class LadderClimb extends CharState {
     else if(this.player.isPressed("jump")) {
       this.character.changeState(new Fall());
     }
+
+    if(this.character.grounded) {
+      this.character.changeState(new Idle());
+    }
+
   }
 
 }
@@ -1274,7 +1294,9 @@ class LadderEnd extends CharState {
       if(this.character.player === game.level.mainPlayer) {
         game.level.lerpCamTime = 0.25;
       }
-      this.character.pos.y = this.targetY;
+      //this.character.pos.y = this.targetY;
+      this.character.incPos(new Point(0, this.targetY - this.character.pos.y));
+      this.character.stopCamUpdate = true;
       this.character.changeState(new Idle());
     }
   }
@@ -1295,6 +1317,7 @@ class Hurt extends CharState {
     this.character.vel.y = -100;
     this.character.stopCharge();
     this.character.unfreezeIfFrozen();
+    this.character.iceSled = undefined;
   }
 
   update() {
@@ -1331,6 +1354,7 @@ class Die extends CharState {
     }
     this.character.unfreezeIfFrozen();
     this.character.setStingCharged(false);
+    this.character.iceSled = undefined;
   }
 
   onExit(newState: CharState) {

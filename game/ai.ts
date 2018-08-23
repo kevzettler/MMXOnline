@@ -1,4 +1,4 @@
-import { Character } from "./character";
+import { Character, LadderClimb } from "./character";
 import { game } from "./game";
 import { Projectile, BusterProj } from "./projectile";
 import { Point } from "./point";
@@ -7,6 +7,7 @@ import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 import { JumpZone, Wall } from "./wall";
 import { CTF } from "./gameMode";
 import { Flag } from "./flag";
+import { Buster } from "./weapon";
 
 export class AI {
 
@@ -29,6 +30,12 @@ export class AI {
     this.aiState = new AimAtPlayer(this.character);
   }
 
+  doJump() {
+    if(this.jumpTime === 0) {
+      this.jumpTime = 0.75;
+    }
+  }
+
   update() {
 
     if(this.framesChargeHeld > 0) {
@@ -44,8 +51,19 @@ export class AI {
     if(!game.level.gameObjects.has(this.target)) {
       this.target = undefined;
     }
+    
+    if(this.jumpTime > 0/* && !(this.character.charState instanceof LadderClimb)*/) {
+      this.jumpTime -= game.deltaTime;
+      if(this.jumpTime < 0) {
+        this.jumpTime = 0;
+      }
+      else {
+        this.player.release("jump");
+        this.player.press("jump");
+      }
+    }
 
-    this.target = game.level.getClosestTarget(this.character.pos, this.player.alliance);
+    this.target = game.level.getClosestTarget(this.character.pos, this.player.alliance, true);
     let inDrop = false;
     if(!(this.aiState instanceof InJumpZone)) {
       let jumpZones = game.level.getTriggerList(this.character, 0, 0, undefined, JumpZone);
@@ -59,7 +77,9 @@ export class AI {
             this.aiState = new InJumpZone(this.character, jumpZone, jumpZoneDir);
           }
           else {
-            this.player.press("jump");
+            if(this.character.charState.constructor.name !== "LadderClimb") {
+              this.doJump();
+            }
           }
         }
         else {
@@ -92,7 +112,7 @@ export class AI {
 
       if(this.target) {
         if(this.character.charState.constructor.name === "LadderClimb") {
-          this.player.press("jump");
+          this.doJump();
         }
         let xDist = this.target.pos.x - this.character.pos.x;
         if(Math.abs(xDist) > this.getMaxDist()) {
@@ -103,10 +123,14 @@ export class AI {
 
     if(this.aiState.facePlayer) {
       if(this.character.pos.x > this.target.pos.x) {
-        this.character.xDir = -1;
+        if(this.character.xDir !== -1) {
+          this.player.press("left");
+        }
       }
       else {
-        this.character.xDir = 1;
+        if(this.character.xDir !== 1) {
+          this.player.press("right");
+        }
       }
     }
     if(this.aiState.shouldAttack) {
@@ -133,14 +157,19 @@ export class AI {
       for(let proj of game.level.gameObjects) {
         if(proj instanceof Projectile && !(proj instanceof BusterProj)) {
           if(proj.isFacing(this.character) && this.character.withinX(proj, 100) && this.character.withinY(proj, 30) && proj.damager.owner.alliance !== this.player.alliance) {
-            this.player.press("jump");
+            this.doJump();
           }
         }
       }
     }
-    if(this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.weaponIndex === 0) {
+    if(this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.weaponIndex === 0 && this.player.character.canCharge()) {
       if(Helpers.randomRange(0, 300) < 5) {
-        this.maxChargeTime = Helpers.randomRange(0.75, 3);
+        if(this.player.weapon instanceof Buster) {
+          this.maxChargeTime = Helpers.randomRange(0.75, 3);
+        }
+        else {
+          this.maxChargeTime = 3;
+        }
         this.framesChargeHeld = 1;
         this.player.press("shoot");
       }
@@ -166,13 +195,8 @@ export class AI {
       if(Helpers.randomRange(0, 150) < 5) {
         this.jumpTime = Helpers.randomRange(0.25, 0.75);
       }
-      if(this.jumpTime > 0) {
-        this.player.press("jump");
-        this.jumpTime -= game.deltaTime;
-        if(this.jumpTime < 0) this.jumpTime = 0;
-      }
     }
-    if(this.aiState.randomlyChangeWeapon && !this.player.lockWeapon) {
+    if(this.aiState.randomlyChangeWeapon && !this.player.lockWeapon && !this.character.isStingCharged && !this.character.chargedRollingShieldProj) {
       this.weaponTime += game.deltaTime;
       if(this.weaponTime > 5) {
         this.weaponTime = 0;
@@ -275,7 +299,6 @@ class FindPlayer extends AIState {
   nextNode: NavMeshNode;
   prevNode: NavMeshNode;
   ladderDir: string;
-  holdJumpTime: number = 0;
   constructor(character: Character) {
     super(character);
     this.facePlayer = false;
@@ -311,11 +334,6 @@ class FindPlayer extends AIState {
   update() {
     super.update();
 
-    if(this.holdJumpTime > 0) {
-      this.player.press("jump");
-      this.holdJumpTime = Helpers.clampMin0(this.holdJumpTime - game.deltaTime);
-    }
-
     if(!this.nextNode) {
       this.ai.changeState(new FindPlayer(this.character));
       return;
@@ -326,7 +344,7 @@ class FindPlayer extends AIState {
       let dir = 1;
       if(this.ladderDir === "up") dir = -1;
       if(this.character.sweepTest(new Point(0, dir * 5))) {
-        this.player.press("jump");
+        this.ai.doJump();
         this.ai.changeState(new FindPlayer(this.character));
       }
       return;
@@ -348,7 +366,7 @@ class FindPlayer extends AIState {
         this.nextNode = this.nextNode.getNextNode(this.destNode);
         let neighbor: NavMeshNeighbor = this.prevNode.getNeighbor(this.nextNode);
         if(neighbor.isJumpNode && !neighbor.ladder) {
-          this.holdJumpTime = 2;
+          this.ai.jumpTime = 2;
         }
       }
       else {
@@ -357,7 +375,7 @@ class FindPlayer extends AIState {
         }
         let neighbor: NavMeshNeighbor = this.prevNode.getNeighbor(this.nextNode);
         if(neighbor.isJumpNode) {
-          this.player.press("jump");  
+          this.ai.doJump();
           if(neighbor.ladder) {
             this.ladderDir = "up";
             this.player.press("up");
@@ -428,7 +446,7 @@ class AimAtPlayer extends AIState {
     if(this.character.pos.y > this.target.pos.y && this.character.pos.y < this.target.pos.y + 80) {
       this.jumpDelay += game.deltaTime;
       if(this.jumpDelay > 0.3) {
-        this.player.press("jump");
+        this.ai.doJump();
       }
     }
     else {
@@ -457,7 +475,7 @@ class InJumpZone extends AIState {
   update() {
     super.update();
     this.time += game.deltaTime;
-    this.player.press("jump");
+    this.ai.doJump();
     if(this.jumpZoneDir === -1) {
       this.player.press("left");
     }

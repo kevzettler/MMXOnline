@@ -60,6 +60,7 @@ export class Level {
   redFlag: Flag;
   redFlagNode: NavMeshNode;
   blueFlagNode: NavMeshNode;
+  oceanSeaLevel: number = 158;
 
   get localPlayers() { return this.gameMode.localPlayers; }
   get players() { return this.gameMode.players; }
@@ -226,6 +227,19 @@ export class Level {
 
     this.hud = new HUD(this);
     this.gameMode.createHUD();
+
+    if(this.levelData.name === "factory") {
+      for(let i = 0; i < 46; i++) {
+        let anim = new Anim(new Point(2560 + i*32, 725), game.sprites["lava1"], 1, false);
+        anim.setzIndex(game.level.zChar - 5);
+      }  
+      let xs = [2608,2736,2864,2928,3056,3184,3248,3376,3504,3600,3760,3888];
+      for(let x of xs) {
+        let anim = new Anim(new Point(x, 725), game.sprites["lava2"], 1, false);
+        anim.setzIndex(game.level.zChar - 4);
+      }
+    }
+
   }
   
   getGameObjectArray() {
@@ -268,6 +282,7 @@ export class Level {
     let playerX = 0;
     let playerY = 0;
     if(this.mainPlayer.character) {
+      this.mainPlayer.character.stopCamUpdate = false;
       playerX = this.mainPlayer.character.pos.x;
       playerY = this.mainPlayer.character.pos.y;
     }
@@ -282,11 +297,13 @@ export class Level {
     }
     
     if(this.mainPlayer.character) {
-      let deltaX = this.mainPlayer.character.pos.x - playerX;
-      let deltaY = this.mainPlayer.character.pos.y - playerY;
-      this.updateCamPos(deltaX, deltaY);
-      //console.log(deltaX + "," + deltaY);
-      //console.log(this.camX + "," + this.camY)
+      if(!this.mainPlayer.character.stopCamUpdate) {
+        let deltaX = this.mainPlayer.character.pos.x - playerX;
+        let deltaY = this.mainPlayer.character.pos.y - playerY;
+        this.updateCamPos(deltaX, deltaY);
+        //console.log(deltaX + "," + deltaY);
+        //console.log(this.camX + "," + this.camY)
+      }
     }
 
     for(let effect of this.effects) {
@@ -412,7 +429,8 @@ export class Level {
     this.foregroundContainer.y = -this.camY;
     this.gameUIContainer.x = -this.camX;
     this.gameUIContainer.y = -this.camY;
-  
+    //this.uiContainer.visible = false;
+
     if(this.parallaxSprite) {
       if(this.levelData.name === "tower") {
         this.parallaxSprite.x = -this.camX;
@@ -486,6 +504,11 @@ export class Level {
 
   updateCamPos(deltaX: number, deltaY: number) {
 
+    if(this.levelData.fixedCam) {
+      this.camX = 0;
+      this.camY = 0;
+      return;
+    }
     let playerX = this.mainPlayer.character.pos.x;
     let playerY = this.mainPlayer.character.getCamCenterPos().y;
 
@@ -760,7 +783,7 @@ export class Level {
     if(actor instanceof Character && gameObject instanceof Character && actor.player.alliance !== gameObject.player.alliance && (actor.isStingCharged || gameObject.isStingCharged)) {
       return true;
     }
-    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner.alliance !== gameObject.player.alliance) {
+    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner !== gameObject.player) {
       return true;
     }
     return false;
@@ -822,6 +845,7 @@ export class Level {
     let gameObjects = this.getGameObjectsInSameCell(shape, 0, 0);
     for(let go of gameObjects) {
       if(!go.collider) continue;
+      if(go.collider.isTrigger || go.collider.wallOnly) continue;
       if(exclusions.indexOf(go) !== -1) continue;
       let hitData = shape.intersectsShape(go.collider.shape);
       if(hitData) {
@@ -962,12 +986,12 @@ export class Level {
   }
   */
 
-  getClosestTarget(pos: Point, alliance: number) {
+  getClosestTarget(pos: Point, alliance: number, checkWalls: boolean) {
     //@ts-ignore
     let players = _.filter(this.players, (player) => { 
       if(!player.character) return false;
       if(player.alliance === alliance) return false;
-      if(!this.noWallsInBetween(pos, player.character.pos)) return false;
+      if(checkWalls && !this.noWallsInBetween(pos, player.character.pos)) return false;
       return true;
     });
     //@ts-ignore
@@ -1018,9 +1042,9 @@ export class Level {
   getSpawnPoint(player: Player) {
     //@ts-ignore
     let unoccupied = _.filter(this.spawnPoints, (spawnPoint) => {
-      return !spawnPoint.occupied() && (!this.gameMode.isTeamMode && spawnPoint.team === Team.Neutral) || (this.gameMode.isTeamMode && spawnPoint.team !== Team.Neutral && spawnPoint.alliance === player.alliance);
+      return !spawnPoint.occupied() && ((!this.gameMode.isTeamMode && spawnPoint.team === Team.Neutral) || (this.gameMode.isTeamMode && spawnPoint.team !== Team.Neutral && spawnPoint.alliance === player.alliance));
     });
-    if(game.level.levelData.fixedCam) {
+    if(game.level.gameMode.isBrawl) {
       //@ts-ignore
       return _.find(unoccupied, (spawnPoint) => {
         return spawnPoint.num === player.alliance;
@@ -1028,6 +1052,10 @@ export class Level {
     }
     //@ts-ignore
     return _.sample(unoccupied);
+  }
+
+  isUnderwater(actor: Actor) {
+    return game.level.levelData.name === "ocean" && actor.pos.y > game.level.oceanSeaLevel;
   }
 
 }
@@ -1155,7 +1183,7 @@ export class LevelData {
       //this.foreground = game.path.galleryForeground;
       this.maxPlayers = 10;
     }
-
+    if(this.killY === undefined) this.killY = 100000;
 
     this.levelMusic = game.loadMusic(musicPath, this.musicLoopStart, this.musicLoopEnd);
 

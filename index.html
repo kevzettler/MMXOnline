@@ -148,9 +148,17 @@
               <td><input v-model:number="uiData.maxPlayers" type="number"></td>
             </tr>
             -->
-            <tr>
+            <tr v-show="!isTeamMode()">
               <td><label>Bots</label></td>
               <td><input v-model:number="uiData.numBots" @change="numBotsChange" type="number"></td>
+            </tr>
+            <tr v-show="isTeamMode()">
+              <td><label>Red Bot Count</label></td>
+              <td><input v-model:number="uiData.numRed" @change="numRedChange" type="number"></td>
+            </tr>
+            <tr v-show="isTeamMode()">
+              <td><label>Blue Bot Count</label></td>
+              <td><input v-model:number="uiData.numBlue" @change="numBlueChange" type="number"></td>
             </tr>
             <tr>
               <td><label>Play to</label></td>
@@ -165,6 +173,10 @@
             <img class="player-img" v-bind:class="{ 'player-img-zero': uiData.isPlayer1Zero }" v-bind:src="uiData.isPlayer1Zero ? 'assets/images/player1_zero.png?v=1.0.2' : 'assets/images/player1.png?v=1.0.2'" />
           </div>
           <label>Zero</label><input v-model="uiData.isPlayer1Zero" type="checkbox" />
+          <div v-show="isTeamMode()">
+            <label>Red</label><input type="radio" name="team2" id="red" value="red" v-model="uiData.player1Team" v-bind:disabled="isRedMax()" />&nbsp;&nbsp;
+            <label>Blue</label><input type="radio" name="team2" id="blue" value="blue" v-model="uiData.player1Team" v-bind:disabled="isBlueMax()" />
+          </div>
           <div v-show="!uiData.isPlayer1Zero" style="margin-top:5px">
             <div class="weapon"><div id="weapon1"></div><br><input v-model="uiData.player1Weapons[0]" v-bind:disabled="wepDisabled(1,0)" type="checkbox" /></div>
             <div class="weapon"><div id="weapon2"></div><br><input v-model="uiData.player1Weapons[1]" v-bind:disabled="wepDisabled(1,1)" type="checkbox" /></div>
@@ -293,11 +305,15 @@
       <div id="switchMenu" v-show="uiData.menu === 10">
         <div class="player-block" style="width:100%;margin-left:auto;margin-right:auto">
           <h1>Switch Character / Weapons</h1>
-          <h3 style="display:block">(Changes will apply on next life)</h3>
+          <!--<h3 style="display:block">(Changes will apply on next life)</h3>-->
           <div class="player-img-box" style="margin-top:25px">
             <img class="player-img" v-bind:class="{ 'player-img-zero': uiData.isPlayer1ZeroCopy }" v-bind:src="uiData.isPlayer1ZeroCopy ? 'assets/images/player1_zero.png?v=1.0.2' : 'assets/images/player1.png?v=1.0.2'" />
           </div>
           <label>Zero</label><input v-model="uiData.isPlayer1ZeroCopy" type="checkbox" />
+          <div v-show="uiData.selectedGameMode === 'team deathmatch' || uiData.selectedGameMode === 'ctf'">
+            <label>Red</label><input type="radio" name="team" id="red" value="red" v-model="uiData.player1TeamCopy" v-bind:disabled="isRedMax()" />&nbsp;&nbsp;
+            <label>Blue</label><input type="radio" name="team" id="blue" value="blue" v-model="uiData.player1TeamCopy" v-bind:disabled="isBlueMax()" />
+          </div>
           <div v-show="!uiData.isPlayer1ZeroCopy" style="margin-top:5px">
             <div class="weapon"><div id="weapon1"></div><br><input v-model="uiData.player1WeaponsCopy[0]" v-bind:disabled="wepCopyDisabled(1,0)" type="checkbox" /></div>
             <div class="weapon"><div id="weapon2"></div><br><input v-model="uiData.player1WeaponsCopy[1]" v-bind:disabled="wepCopyDisabled(1,1)" type="checkbox" /></div>
@@ -312,8 +328,7 @@
           <!--<label>CPU?</label><input v-model="uiData.isPlayer1CPU" type="checkbox" />-->
         </div>
         <div style="margin-top:110px">
-          <button :disabled="!weaponsCopySelected()" v-on:click="exitSwitchMenu(true, false)">Switch</button>
-          <button :disabled="!weaponsCopySelected()" v-on:click="exitSwitchMenu(true, true)">Switch & Kill</button>
+          <button :disabled="!weaponsCopySelected()" v-on:click="exitSwitchMenu(true, true)">Switch</button>
           <button v-on:click="exitSwitchMenu(false, false)" class="back-button">Cancel</button>
         </div>
       </div>

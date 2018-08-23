@@ -54,6 +54,8 @@ export class UIData {
   maxPlayers: number = 4;
   numBots: number = 4;
   playTo: number = 20;
+  player1Team: string = "blue";
+  player1TeamCopy: string = "blue";
   isPlayer1CPU: boolean = false;
   isPlayer2CPU: boolean = true;
   isPlayer1Zero: boolean = false;
@@ -65,9 +67,12 @@ export class UIData {
   whoseControls: number = 1;
   currentControls: { [code: number]: string } = {};
   optionsCopy: Options;
+  numRed: number = 0;
+  numBlue: number = 0;
   constructor() { }
 
   getSelectedMapMaxPlayers() {
+    if(!game.levelDatas[this.selectedBrawlMap]) return 0;
     if(this.isBrawl) {
       return game.levelDatas[this.selectedBrawlMap].maxPlayers;
     }
@@ -167,15 +172,20 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    
+ 
     this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "mountain";
-    this.uiData.selectedGameMode = "deathmatch";
-    this.uiData.maxPlayers = 7;
-    this.uiData.numBots = 7;
+    this.uiData.selectedArenaMap = "gallery";
+    this.uiData.selectedGameMode = "ctf";
+    this.uiData.player1Team = "blue";
+    this.uiData.maxPlayers = 3;
+    this.uiData.numBots = 0;
+    this.uiData.numRed = 4;
+    this.uiData.numBlue = 3;
     this.uiData.playTo = 20;
+    //this.uiData.isPlayer1Zero = true;
     $("#options").show();
-    game.loadLevel(this.uiData.selectedArenaMap, false);
+    game.loadLevel(this.uiData.selectedArenaMap, false); 
+  
     /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
@@ -249,6 +259,9 @@ class Game {
         uiData: this.uiData
       },
       methods: {
+        isTeamMode: function() {
+          return this.uiData.selectedGameMode === "team deathmatch" || this.uiData.selectedGameMode === "ctf";
+        },
         numBotsChange: function() {
           if(this.uiData.numBots > this.uiData.getSelectedMapMaxPlayers() - 1) {
             this.uiData.numBots = this.uiData.getSelectedMapMaxPlayers() - 1;
@@ -256,6 +269,36 @@ class Game {
           else if(this.uiData.numBots < 0) {
             this.uiData.numBots = 0;
           }
+        },
+        isRedMax: function() {
+          return this.uiData.numRed >= this.uiData.getSelectedMapMaxPlayers()/2;
+        },
+        isBlueMax: function() {
+          return this.uiData.numBlue >= this.uiData.getSelectedMapMaxPlayers()/2;
+        },
+        numRedChange: function() {
+          let redCount = Number(this.uiData.numRed) + (this.uiData.player1Team === "red" ? 1 : 0);
+          let blueCount = Number(this.uiData.numBlue) + (this.uiData.player1Team === "blue" ? 1 : 0);
+          let total = this.uiData.getSelectedMapMaxPlayers();
+          while(redCount + blueCount > total) {
+            redCount--;
+          }
+          if(redCount > Math.floor(total / 2)) redCount = Math.floor(total/2);
+          if(redCount <= 0) redCount = 0;
+
+          this.uiData.numRed = String(redCount - (this.uiData.player1Team === "red" ? 1 : 0));
+        },
+        numBlueChange: function() {
+          let redCount = Number(this.uiData.numRed) + (this.uiData.player1Team === "red" ? 1 : 0);
+          let blueCount = Number(this.uiData.numBlue) + (this.uiData.player1Team === "blue" ? 1 : 0);
+          let total = this.uiData.getSelectedMapMaxPlayers();
+          while(redCount + blueCount > total) {
+            blueCount--;
+          }
+          if(blueCount > Math.floor(total / 2)) blueCount = Math.floor(total/2);
+          if(blueCount <= 0) blueCount = 0;
+
+          this.uiData.numBlue = String(blueCount - (this.uiData.player1Team === "blue" ? 1 : 0));
         },
         gameModeChange: function() {
           if(this.uiData.selectedGameMode === "ctf") this.uiData.playTo = 3;
@@ -308,6 +351,8 @@ class Game {
         },
         onArenaMapChange: function() {
           this.uiData.numBots = game.levelDatas[this.uiData.selectedArenaMap].maxPlayers - 1;
+          this.uiData.numRed = Math.round(this.uiData.numBots / 2) - (this.uiData.player1Team === "red" ? 1 : 0);
+          this.uiData.numBlue = Math.round(this.uiData.numBots / 2) - (this.uiData.player1Team === "blue" ? 1 : 0);
           let ctfIndex = this.uiData.gameModes.indexOf("ctf");
           if(this.uiData.selectedArenaMap !== "powerplant") {
             if(ctfIndex === -1) this.uiData.gameModes.push("ctf");
@@ -324,6 +369,12 @@ class Game {
           else if(selectedMap === "highway") return "highway.png";
           else if(selectedMap === "powerplant") return "powerplant.png";
           else if(selectedMap === "gallery") return "gallery.png";
+          else if(selectedMap === "ocean") return "ocean.png";
+          else if(selectedMap === "forest") return "forest.png";
+          else if(selectedMap === "factory") return "factory.png";
+          else if(selectedMap === "mountain") return "mountain.png";
+          else if(selectedMap === "airport") return "airport.png";
+          else if(selectedMap === "tower") return "tower.png";
           else return "";
         },
         goToControls: function(whoseControls: number) {
@@ -477,6 +528,7 @@ class Game {
           if(doSwitch) {
             this.uiData.isPlayer1Zero = this.uiData.isPlayer1ZeroCopy;
             this.uiData.player1Weapons = this.uiData.player1WeaponsCopy;
+            this.uiData.player1Team = this.uiData.player1TeamCopy;
           }
           if(killSelf && game.level.mainPlayer.character) {
             game.level.mainPlayer.character.applyDamage(undefined, undefined, 1000);
@@ -542,7 +594,8 @@ class Game {
       game.path.megaManXSpritesheetPath,
       game.path.zeroSpritesheetPath,
       game.path.flagSpritesheetPath,
-      game.path.displacementMap
+      game.path.displacementMap,
+      game.path.lavaSpritesheetPath
     ], () => {
       this.loadSprites();
       this.loadLevels();

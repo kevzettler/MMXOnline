@@ -16,11 +16,9 @@ export class NavMeshNode {
     this.pos = pos;
     this.neighborJson = neighborJson;
     if(neighborJson.isBlueFlagNode) {
-      console.log("BLUE FOUND");
       this.isBlueFlagNode = true;
     }
     if(neighborJson.isRedFlagNode) {
-      console.log("RED FOUND");
       this.isRedFlagNode = true;
     }
   }

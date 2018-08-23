@@ -336,7 +336,7 @@ export class Brawl extends GameMode {
 
     this.isBrawl = true;
     
-    let health = 100;
+    let health = 32;
 
     let p1Name = uiData.isPlayer1CPU ? "CPU 1" : "Player 1";
     let p2Name = uiData.isPlayer2CPU ? "CPU" : "Player 2";
@@ -579,14 +579,20 @@ export class TeamDeathMatch extends GameMode {
     this.isTeamMode = true;
     this.killsToWin = uiData.playTo;
     let health = 16;
-    let player1 = new Player(game.uiData.playerName, uiData.isPlayer1Zero, false, false, 0, health);
+    let player1 = new Player(game.uiData.playerName, uiData.isPlayer1Zero, false, false, game.uiData.player1Team === "red" ? 1 : 0, health);
     this.players.push(player1);
     this.localPlayers.push(player1);
     this.mainPlayer = player1;
     
-    for(var i = 0; i < uiData.numBots; i++) {
-      let alliance = (i+1) % 2;
-      let cpu: Player = new Player("CPU" + String(i+1), /*alliance*/Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
+    for(var i = 0; i < uiData.numRed; i++) {
+      let alliance = 1;
+      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, undefined);
+      this.players.push(cpu);
+      this.localPlayers.push(cpu);
+    }
+    for(var i = 0; i < uiData.numBlue; i++) {
+      let alliance = 0;
+      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, undefined);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }
@@ -855,14 +861,20 @@ export class CTF extends GameMode {
     this.isTeamMode = true;
     this.capturesToWin = uiData.playTo;
     let health = 16;
-    let player1 = new Player(game.uiData.playerName, uiData.isPlayer1Zero, false, false, 0, health);
+    let player1 = new Player(game.uiData.playerName, uiData.isPlayer1Zero, false, false, uiData.player1Team === "red" ? 1 : 0, health);
     this.players.push(player1);
     this.localPlayers.push(player1);
     this.mainPlayer = player1;
     
-    for(var i = 0; i < uiData.numBots; i++) {
-      let alliance = (i+1) % 2;
-      let cpu: Player = new Player("CPU" + String(i+1), /*alliance*/Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, alliance === 0 ? undefined : game.palettes["red"]);
+    for(var i = 0; i < uiData.numRed; i++) {
+      let alliance = 1;
+      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, undefined);
+      this.players.push(cpu);
+      this.localPlayers.push(cpu);
+    }
+    for(var i = 0; i < uiData.numBlue; i++) {
+      let alliance = 0;
+      let cpu: Player = new Player("CPU" + String(i+1), Helpers.randomRange(0, 1) === 0 ? false : true, true, false, alliance, health, undefined);
       this.players.push(cpu);
       this.localPlayers.push(cpu);
     }
@@ -934,7 +946,7 @@ export class CTF extends GameMode {
     let topPlayerY = line2Y + 5;
 
     Helpers.createAndDrawRect(this.scoreboardContainer, new Rect(0, 0, this.screenWidth, this.screenHeight), 0x000000, undefined, undefined, 0.75);
-    Helpers.createAndDrawText(this.scoreboardContainer, "Game Mode: Team Deathmatch", hPadding, padding + 10 - 5, fontSize, "left", "top", false, "white");
+    Helpers.createAndDrawText(this.scoreboardContainer, "Game Mode: Capture the Flag", hPadding, padding + 10 - 5, fontSize, "left", "top", false, "white");
     Helpers.createAndDrawText(this.scoreboardContainer, "Map: " + this.level.levelData.name, hPadding, padding + 20 - 5, fontSize, "left", "top", false, "white");
     Helpers.createAndDrawText(this.scoreboardContainer, "Playing to: " + String(this.capturesToWin), hPadding, padding + 30 - 5, fontSize, "left", "top", false, "white");
     Helpers.createAndDrawLine(this.scoreboardContainer, hPadding, lineY, this.screenWidth - hPadding, lineY, 0xFFFFFF, 1);
@@ -1039,6 +1051,7 @@ export class CTF extends GameMode {
         rowRed[0].text = player.name;
         rowRed[1].text = String(player.kills);
         rowRed[2].text = String(player.deaths);
+        charIconRed.pixiSprite.visible = true;
         charIconRed.draw(player.isZero ? 1 : 0);
       }
       else {

@@ -89,6 +89,11 @@ export class Weapon {
     }
   }
 
+  addAmmo(amount: number) {
+    this.ammo += amount;
+    this.ammo = Helpers.clamp(this.ammo, 0, this.maxAmmo);
+  }
+
 }
 
 export class ZSaber extends Weapon {
@@ -231,6 +236,7 @@ export class FireWave extends Weapon {
   }
 
   getProjectile(pos: Point, xDir: number, player: Player, chargeLevel: number) {
+    if(game.level.isUnderwater(player.character)) return;
     if(chargeLevel !== 3) {
       let proj = new FireWaveProj(this, pos, xDir, player);
       proj.vel.inc(player.character.vel.times(-0.5));

@@ -160,7 +160,9 @@ export class Actor {
     }
 
     if(this.useGravity && !this.grounded) {
-      this.vel.y += game.level.gravity * game.deltaTime;
+      let grav = game.level.gravity;
+      if(game.level.isUnderwater(this)) grav *= 0.5;
+      this.vel.y += grav * game.deltaTime;
       if(this.vel.y > 1000) {
         this.vel.y = 1000;
       }
@@ -320,6 +322,7 @@ export class Actor {
     }
     
     this.sprite.pixiSprite.visible = this.isVisible;
+    /*
     let alignOffset = this.sprite.getAlignOffset(this.frameIndex, this.xDir, this.yDir);
     let rx = this.pos.x + offsetX + alignOffset.x;
     let ry = this.pos.y + offsetY + alignOffset.y;
@@ -331,7 +334,7 @@ export class Actor {
     else {
       this.sprite.pixiSprite.renderable = true;
     }
-    
+    */
   }
 
   renderFromAngle(x: number, y: number) {

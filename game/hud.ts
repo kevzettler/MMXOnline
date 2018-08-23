@@ -28,7 +28,7 @@ export class PlayerHUD {
     
     let baseY = game.level.screenHeight/2;
     baseY += 25;
-    let healthBaseSprite = player.isZero ? "hud_health_base_zero" : "hud_health_base";
+    let healthBaseSprite = "hud_health_base";
     this.healthBase = game.sprites[healthBaseSprite].createAndDraw(container, 0, baseX, baseY, 1, 1, undefined, 1, this.player.palette);
     baseY -= 16;
     for(let i = 0; i < Math.ceil(this.player.maxHealth); i++) {
@@ -76,6 +76,7 @@ export class PlayerHUD {
 
     //Weapon
     if(!this.player.isZero) {
+      this.healthBase.draw(0);
       this.ammoContainer.visible = true;
       this.ammoBase.draw(this.player.weapon.spriteIndex);
       for(let i = 0; i < Math.ceil(this.player.weapon.maxAmmo); i++) {
@@ -91,6 +92,7 @@ export class PlayerHUD {
       }
     }
     else {
+      this.healthBase.draw(1);
       this.ammoContainer.visible = false;
     }
 
@@ -107,7 +109,7 @@ export class HUD {
   constructor(level: Level) {
     this.level = level;
     this.player1HUD = new PlayerHUD(this.level.localPlayers[0], 1, this.level.uiContainer);
-    if(this.level.localPlayers.length > 1 && this.level.levelData.fixedCam) {
+    if(this.level.localPlayers.length > 1 && this.level.gameMode.isBrawl) {
       this.player2HUD = new PlayerHUD(this.level.localPlayers[1], 2, this.level.uiContainer);
     }
     this.updateHUD();

@@ -46,11 +46,18 @@ export class Player {
     this.palette = palette;
     this.isZero = isZero;
 
-    if(!isAI && alliance === 0) {
-      this.inputMapping = game.getPlayerControls(1);
+    if(game.uiData.isBrawl) {
+      if(!isAI && alliance === 0) {
+        this.inputMapping = game.getPlayerControls(1);
+      }
+      else if(!isAI && alliance === 1) {
+        this.inputMapping = game.getPlayerControls(2);
+      }
     }
-    else if(!isAI && alliance === 1) {
-      this.inputMapping = game.getPlayerControls(2);
+    else {
+      if(!isAI) {
+        this.inputMapping = game.getPlayerControls(1);
+      }
     }
 
     this.health = maxHealth;
@@ -118,12 +125,22 @@ export class Player {
   update() {
     if(this.respawnTime === 0 && !this.character) {
       
+      if(game.level.mainPlayer === this && game.level.gameMode.isTeamMode) {
+        if(game.uiData.player1Team === "red") {
+          this.alliance = 1;
+        }
+        else {
+          this.alliance = 0;
+        }
+      }
+
       let spawnPoint = game.level.getSpawnPoint(this);
       if(!spawnPoint) return;
         
       if(game.level.mainPlayer === this) {
         this.isZero = game.uiData.isPlayer1Zero;
       }
+
       this.configureWeapons(this.isAI, this.isPlayer2);
 
       this.health = this.maxHealth;
@@ -305,6 +322,9 @@ export class Player {
     this.input = {};
     if(this.character && this.character.ai.framesChargeHeld > 0) {
       this.input["shoot"] = true;
+    }
+    if(this.character && this.character.ai.jumpTime > 0) {
+      this.input["jump"] = true; 
     }
     this.controllerInputPressed = {};
   }

@@ -371,6 +371,36 @@ document.onkeydown = function(e) {
   if(tool) tool.onKeyDown(key, !keysHeld[e.keyCode]);
   keysHeld[key] = true;
 
+  if(key === "e") {
+    for(let instance of data.selectedLevel.instances) {
+      if(!instance.name.includes("Collision Shape")) continue;
+      if(instance.points[0].y === instance.points[1].y && instance.points[2].y === instance.points[3].y && instance.points[1].x === instance.points[2].x && instance.points[3].x === instance.points[0].x) {
+        continue;
+      }
+      for(let instance2 of data.selectedLevel.instances) {
+        if(instance === instance2) continue;
+        if(!instance2.name.includes("Collision Shape")) continue;
+        for(let i = 0; i < instance.points.length; i++) {
+          let point = instance.points[i];
+          for(let point2 of instance2.points) {
+            let dist = Math.sqrt(Math.pow(point2.x - point.x, 2) + Math.pow(point2.y - point.y, 2));
+            if(dist < 5) {
+              instance.points[i].x = point2.x;
+              instance.points[i].y = point2.y;
+            }
+            
+          }
+        }
+      }
+      //if(instance.name.includes("Spawn")) {
+      //  instance.properties = {"dir":-1};
+      //}
+      //data.selectedInstances.add(instance);
+      //if(instance.pos) instance.pos.x += 21;
+      //else instance.move(21, 0);
+    }
+  }
+
   if(key === "+" || key === "-") {
     if(key === "+") delta = 0.1;
     else delta = -0.1;
