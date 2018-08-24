@@ -247,7 +247,10 @@ export class Character extends Actor {
         this.changeSpriteFromName("idle", true);
       }
     }
-
+    
+    if(this.iceSled && !game.level.gameObjects.has(this.iceSled)) {
+      this.iceSled = undefined;
+    }
     if(this.iceSled) {
       this.pos = this.iceSled.pos.addxy(0, -16.1);
       this.changeState(new Idle(), true);

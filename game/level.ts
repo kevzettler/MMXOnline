@@ -8,7 +8,7 @@ import { Player } from "./player";
 import { Rect } from "./rect";
 import { Collider, CollideData, HitData } from "./collider";
 import { Effect } from "./effects";
-import { RollingShieldProj, ShotgunIceProjCharged, ShotgunIceProjSled } from "./projectile";
+import { RollingShieldProj, ShotgunIceProjCharged, ShotgunIceProjSled, Projectile } from "./projectile";
 import { Character } from "./character";
 import { SpawnPoint, Team } from "./spawnPoint";
 import { NoScroll, Direction } from "./noScroll";
@@ -784,6 +784,9 @@ export class Level {
       return true;
     }
     if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner !== gameObject.player) {
+      return true;
+    }
+    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Projectile) {
       return true;
     }
     return false;

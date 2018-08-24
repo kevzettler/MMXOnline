@@ -1,13 +1,9 @@
--Prevent numerous of same sounds from being played at once
--AI isn't working well for CTF, not going after flag
--Make AI climb speed slower
--AI should switch weapons that have no ammo
--AI Use charged weapons
+AI Improvements:
+  -In FindPlayer, does not seem to walk, only dash
+  -AI isn't working well for CTF, not going after flag
+  -Make AI climb speed slower
+  -AI should switch weapons that have no ammo
 
--System of abstraction for handling collisions between entities
-  -Electric spark should destroy charged rolling shield, but not regular
-  -Enemy bullets should destroy homing torpedo, but not friendly ones
-  -Enemies should trigger with sled, but not allies
 -Bug: when 2 projectiles are right inside each other, they behave strangely. investigate
 -MTV issue:
   -MTV issue: log it to a DB or somewhere whenever it happens
@@ -27,9 +23,10 @@
 ===============
 Neat
 ===============
+Prevent numerous of same sounds from being played at once
 Game balancing: add costs to the weapon charges
-fire wave: don't fall if off a ledge, stay on it
 Add pickups to map
+Move arena to top
 
 ===============
 Abstraction
@@ -37,6 +34,10 @@ Abstraction
 -Investigate why debugging in Chrome is broken
 -CheckCollisionActor, add gameobject array param
 -Object instantiation
+-System of abstraction for handling collisions between entities
+  -Electric spark should destroy charged rolling shield, but not regular
+  -Enemy bullets should destroy homing torpedo, but not friendly ones
+  -Enemies should trigger with sled, but not allies
 
 ===============
 Optimization

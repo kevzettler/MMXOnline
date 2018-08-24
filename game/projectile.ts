@@ -544,6 +544,13 @@ export class FireWaveProjCharged extends Projectile {
       if(wall && wall.gameObject instanceof Wall) {
         sign = -1;
       }
+      else {
+        let nextPos = this.pos.addxy(this.xDir * 32, 0);
+        let ground = game.level.raycast(nextPos, nextPos.addxy(0, 10), ["Wall"]);
+        if(!ground) {
+          sign = -1;
+        }
+      }
       this.child = new FireWaveProjCharged(this.weapon, this.pos.addxy(16*this.xDir, 0), this.xDir * sign, this.damager.owner, this.time + this.parentTime);
     }
   }
@@ -980,6 +987,7 @@ export class ShotgunIceProjSled extends Projectile {
     this.useGravity = true;
     this.fadeSound = "iceBreak";
     this.shouldShieldBlock = false;
+    //this.collider.wallOnly = true;
   }
 
   update() {
