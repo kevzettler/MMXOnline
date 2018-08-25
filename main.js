@@ -2343,6 +2343,10 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                         gtag('event', 'end game', {
                             'event_label': this.level.mainPlayer.won ? "win" : "lose"
                         });
+                        gtag('event', 'fps2', {
+                            'event_label': String(game_7.game.getAvgFps()),
+                            'value': game_7.game.getAvgFps()
+                        });
                     }
                     game_7.game.restartLevel(this.level.levelData.name);
                 };
@@ -5986,6 +5990,10 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.doQuickStart = true;
                     this.timePassed = 0;
                     this.lag = 0;
+                    this.avgFps = 0;
+                    this.totalFpsEntries = 0;
+                    this.totalFps = 0;
+                    this.fpsLogged = false;
                     this.MS_PER_UPDATE = 16.6666;
                     this.defaultCanvasWidth = 298;
                     this.defaultCanvasHeight = 224;
@@ -6505,6 +6513,9 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 Game.prototype.isLoaded = function () {
                     return this.loadCount >= this.maxLoadCount;
                 };
+                Game.prototype.getAvgFps = function () {
+                    return this.totalFps / this.totalFpsEntries;
+                };
                 Game.prototype.gameLoop = function (currentTime) {
                     var _this = this;
                     var elapsed = currentTime - this.previousTime;
@@ -6518,8 +6529,21 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         this.deltaTime = 1 / 15;
                     this.time += this.deltaTime;
                     this.timePassed += this.deltaTime;
+                    if (this.time >= 30 && !this.fpsLogged) {
+                        this.fpsLogged = true;
+                        if (this.shouldLog()) {
+                            gtag('event', 'fps1', {
+                                'event_label': String(game.getAvgFps()),
+                                'value': game.getAvgFps()
+                            });
+                        }
+                    }
+                    var fps = (1 / this.deltaTime);
+                    if (isFinite(fps)) {
+                        this.totalFps += fps;
+                        this.totalFpsEntries++;
+                    }
                     if (this.options.showFPS) {
-                        var fps = (1 / this.deltaTime);
                         this.level.debugString = "FPS: " + fps;
                     }
                     this.level.input();
@@ -6545,7 +6569,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                                             stack = String(err);
                                         if (this.shouldLog()) {
                                             stack = navigator.userAgent + "\n" + stack;
-                                            gtag('event', 'exception', { "description": stack });
+                                            gtag('event', 'error', { 'event_label': stack });
                                         }
                                     }
                                 }

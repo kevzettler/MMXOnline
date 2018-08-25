@@ -295,6 +295,11 @@ export class GameMode {
       gtag('event', 'end game', {
         'event_label': this.level.mainPlayer.won ? "win" : "lose"
       });
+      //@ts-ignore
+      gtag('event', 'fps2', {
+        'event_label': String(game.getAvgFps()),
+        'value': game.getAvgFps()
+      });
     }
     game.restartLevel(this.level.levelData.name);
   }

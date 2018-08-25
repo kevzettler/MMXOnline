@@ -671,9 +671,16 @@ class Game {
     return this.loadCount >= this.maxLoadCount;
   }
 
+  getAvgFps() {
+    return this.totalFps / this.totalFpsEntries;
+  }
+
   timePassed: number = 0;
   lag: number = 0;
-  
+  avgFps: number = 0;
+  totalFpsEntries: number = 0;
+  totalFps: number = 0;
+  fpsLogged: boolean = false;
   MS_PER_UPDATE: number = 16.6666;
 
   //Main game loop
@@ -693,11 +700,26 @@ class Game {
     //this.deltaTime = 1/60;
     this.deltaTime = elapsed / 1000;
     if(this.deltaTime < 0 || this.deltaTime > 1/15) this.deltaTime = 1/15;
+    //console.log(this.deltaTime);
     this.time += this.deltaTime;
     this.timePassed += this.deltaTime;
+    if(this.time >= 30 && !this.fpsLogged) {
+      this.fpsLogged = true;
+      if(this.shouldLog()) {
+        ///@ts-ignore
+        gtag('event', 'fps1', {
+          'event_label': String(game.getAvgFps()),
+          'value': game.getAvgFps()
+        });
+      }
+    }
     
+    let fps = (1 / this.deltaTime);
+    if(isFinite(fps)) {
+      this.totalFps += fps;
+      this.totalFpsEntries++;
+    }
     if(this.options.showFPS) {
-      let fps = (1 / this.deltaTime);
       this.level.debugString = "FPS: " + fps;
       //console.log(fps);
     }
@@ -734,7 +756,8 @@ class Game {
               if(this.shouldLog()) {
                 stack = navigator.userAgent + "\n" + stack;
                 //@ts-ignore
-                gtag('event', 'exception', { "description": stack });
+                gtag('event', 'error', { 'event_label': stack });
+                //gtag('event', 'exception', { "description": stack });
               }
             }
           }
