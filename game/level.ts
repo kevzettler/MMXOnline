@@ -68,7 +68,7 @@ export class Level {
 
   constructor(levelData: LevelData) {
     this.levelData = levelData;
-    this.zoomScale = 3;
+    this.zoomScale = 1;
     this.gravity = 550;
     this.frameCount = 0;
     this.backgroundPath = levelData.levelJson.backgroundPath + game.path.version;
@@ -1099,7 +1099,7 @@ export class LevelData {
       this.maxPlayers = 2;
     }
     else if(this.name === "powerplant") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.powerPlantMusic;
       this.parallax = game.path.powerPlantParallax;
       this.musicLoopStart = 51040;
@@ -1107,7 +1107,7 @@ export class LevelData {
       this.maxPlayers = 8;
     }
     else if(this.name === "highway") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.highwayMusic;
       this.parallax = game.path.highwayParallax;
       this.musicLoopStart = 44440;
@@ -1117,7 +1117,7 @@ export class LevelData {
       this.maxPlayers = 8;
     }
     else if(this.name === "gallery") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.galleryMusic;
       this.parallax = game.path.galleryParallax;
       this.musicLoopStart = 0;
@@ -1127,7 +1127,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "tower") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.towerMusic;
       this.parallax = game.path.towerParallax;
       this.musicLoopStart = 6492;
@@ -1137,7 +1137,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "mountain") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.mountainMusic;
       this.parallax = game.path.mountainParallax;
       this.musicLoopStart = 17361;
@@ -1147,7 +1147,7 @@ export class LevelData {
       this.maxPlayers = 8;
     }
     else if(this.name === "factory") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.factoryMusic;
       this.parallax = game.path.factoryParallax;
       this.musicLoopStart = 6149;
@@ -1157,7 +1157,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "ocean") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.oceanMusic;
       this.parallax = game.path.oceanParallax;
       this.musicLoopStart = 0;
@@ -1167,7 +1167,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "forest") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.forestMusic;
       this.parallax = game.path.forestParallax;
       this.musicLoopStart = 0;
@@ -1177,7 +1177,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "airport") {
-      this.fixedCam = false;
+      this.fixedCam = true;
       musicPath = game.path.airportMusic;
       this.parallax = game.path.airportParallax;
       this.musicLoopStart = 5719;

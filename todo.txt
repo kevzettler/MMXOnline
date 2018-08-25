@@ -1,8 +1,7 @@
 AI Improvements:
-  -In FindPlayer, does not seem to walk, only dash
-  -AI isn't working well for CTF, not going after flag
-  -Make AI climb speed slower
-  -AI should switch weapons that have no ammo
+  -Need for node that jumping to floating platform, and limit this to one direction only
+  -AI goes for own flag before other, exception?
+  -May need random jump
 
 -Bug: when 2 projectiles are right inside each other, they behave strangely. investigate
 -MTV issue:
@@ -25,6 +24,7 @@ Neat
 ===============
 Prevent numerous of same sounds from being played at once
 Game balancing: add costs to the weapon charges
+25% chance for AI to be aggressive flag capturer
 Add pickups to map
 Move arena to top
 

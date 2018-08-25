@@ -323,8 +323,13 @@ export class Player {
     if(this.character && this.character.ai.framesChargeHeld > 0) {
       this.input["shoot"] = true;
     }
-    if(this.character && this.character.ai.jumpTime > 0) {
-      this.input["jump"] = true; 
+    if(this.character) {
+      if(this.character.ai.jumpTime > 0) {
+        this.input["jump"] = true;
+      }
+      else {
+        this.input["jump"] = false;
+      }
     }
     this.controllerInputPressed = {};
   }

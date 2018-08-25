@@ -5,6 +5,7 @@ import { CollideData } from "./collider";
 import { Character } from "./character";
 import { CTF } from "./gameMode";
 import { KillFeedEntry } from "./killFeedEntry";
+import { FindPlayer } from "./ai";
 
 export class Flag extends Actor {
 
@@ -114,6 +115,9 @@ export class FlagPedestal extends Actor {
     if(char instanceof Character && char.flag && char.player.alliance === this.alliance) {
       char.flag.returnFlag();
       char.flag = undefined;
+      if(char.ai) {
+        char.ai.changeState(new FindPlayer(char));
+      }
       let msg = char.player.name + " scored";
       game.level.gameMode.addKillFeedEntry(KillFeedEntry.CustomMessage(msg, char.player.alliance, char.player));
       let ctf = <CTF>game.level.gameMode;

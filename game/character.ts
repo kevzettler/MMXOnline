@@ -812,13 +812,13 @@ export class CharState {
 
     //This logic can be abit confusing, but we are trying to mirror the actual Mega man X wall climb physics
     //In the actual game, X will not initiate a climb if you directly hugging a wall, jump and push in its direction UNTIL you start falling OR you move away and jump into it
-    if(this.player.isPressed("left") || (this.player.isHeld("left") && (this.character.vel.y > 0 || !this.lastLeftWall))) {
+    if((this.player.isPressed("left") && !this.player.isAI) || (this.player.isHeld("left") && (this.character.vel.y > 0 || !this.lastLeftWall))) {
       if(this.lastLeftWall) {
         this.player.character.changeState(new WallSlide(-1));
         return;
       }
     }
-    else if(this.player.isPressed("right") || (this.player.isHeld("right") && (this.character.vel.y > 0 || !this.lastRightWall))) {
+    else if((this.player.isPressed("right") && !this.player.isAI) || (this.player.isHeld("right") && (this.character.vel.y > 0 || !this.lastRightWall))) {
       if(this.lastRightWall) {
         this.player.character.changeState(new WallSlide(1));
         return;
@@ -1115,6 +1115,9 @@ class WallSlide extends CharState {
   onEnter(oldState: CharState) {
     super.onEnter(oldState);
     this.character.dashedInAir = false;
+    if(this.player.isAI) {
+      this.character.ai.jumpTime = 0;
+    }
   }
 
   update() {
@@ -1158,7 +1161,7 @@ class WallSlide extends CharState {
 
 }
 
-class WallKick extends CharState {
+export class WallKick extends CharState {
 
   kickDir: number;
   kickSpeed: number;
@@ -1274,7 +1277,7 @@ export class LadderClimb extends CharState {
 
 }
 
-class LadderEnd extends CharState {
+export class LadderEnd extends CharState {
   targetY: number;
   constructor(targetY: number) {
     super("ladder_end");

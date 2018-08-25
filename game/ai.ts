@@ -1,10 +1,10 @@
-import { Character, LadderClimb } from "./character";
+import { Character, LadderClimb, LadderEnd, WallKick } from "./character";
 import { game } from "./game";
 import { Projectile, BusterProj } from "./projectile";
 import { Point } from "./point";
 import * as Helpers from "./helpers";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
-import { JumpZone, Wall } from "./wall";
+import { JumpZone, Wall, Ladder } from "./wall";
 import { CTF } from "./gameMode";
 import { Flag } from "./flag";
 import { Buster } from "./weapon";
@@ -32,12 +32,14 @@ export class AI {
 
   doJump() {
     if(this.jumpTime === 0) {
+      //this.player.release("jump");
+      this.player.press("jump");
       this.jumpTime = 0.75;
     }
   }
 
   update() {
-
+    console.log(this.player.isHeld("jump"));
     if(this.framesChargeHeld > 0) {
       if(this.character.chargeTime < this.maxChargeTime) {
         //console.log("HOLD");
@@ -52,17 +54,6 @@ export class AI {
       this.target = undefined;
     }
     
-    if(this.jumpTime > 0/* && !(this.character.charState instanceof LadderClimb)*/) {
-      this.jumpTime -= game.deltaTime;
-      if(this.jumpTime < 0) {
-        this.jumpTime = 0;
-      }
-      else {
-        this.player.release("jump");
-        this.player.press("jump");
-      }
-    }
-
     this.target = game.level.getClosestTarget(this.character.pos, this.player.alliance, true);
     let inDrop = false;
     if(!(this.aiState instanceof InJumpZone)) {
@@ -74,7 +65,7 @@ export class AI {
 
         if(!jumpZone.targetNode || jumpZone.targetNode === this.aiState.getNextNodeName()) {
           if(!(this.aiState instanceof FindPlayer)) {
-            this.aiState = new InJumpZone(this.character, jumpZone, jumpZoneDir);
+            this.changeState(new InJumpZone(this.character, jumpZone, jumpZoneDir));
           }
           else {
             if(this.character.charState.constructor.name !== "LadderClimb") {
@@ -101,12 +92,12 @@ export class AI {
     if(!(this.aiState instanceof InJumpZone)) {
       if(!this.target) {
         if(this.aiState.constructor.name !== "FindPlayer") {
-          this.aiState = new FindPlayer(this.character);
+          this.changeState(new FindPlayer(this.character));
         }
       }
       else {
         if(this.aiState.constructor.name === "FindPlayer") {
-          this.aiState = new AimAtPlayer(this.character);
+          this.changeState(new AimAtPlayer(this.character));
         }
       }
 
@@ -116,7 +107,7 @@ export class AI {
         }
         let xDist = this.target.pos.x - this.character.pos.x;
         if(Math.abs(xDist) > this.getMaxDist()) {
-          this.aiState = new MoveTowardsTarget(this.character);
+          this.changeState(new MoveTowardsTarget(this.character));
         }
       }
     }
@@ -181,7 +172,7 @@ export class AI {
         return;
       }
     }
-    if(this.aiState.randomlyDash) {
+    if(this.aiState.randomlyDash && !(this.character.charState instanceof WallKick)) {
       if(Helpers.randomRange(0, 150) < 5) {
         this.dashTime = Helpers.randomRange(0.2, 0.5);
       }
@@ -200,15 +191,42 @@ export class AI {
       this.weaponTime += game.deltaTime;
       if(this.weaponTime > 5) {
         this.weaponTime = 0;
-        this.character.changeWeapon(Helpers.randomRange(0, this.player.weapons.length - 1));
+        this.character.changeWeapon(this.getRandomWeaponIndex());
       }
+    }
+    if(this.player.weapon.ammo === 0) {
+      this.character.changeWeapon(this.getRandomWeaponIndex());
     }
 
     this.aiState.update();
+
+    if(this.jumpTime > 0 && !(this.character.charState instanceof LadderClimb)) {
+      this.jumpTime -= game.deltaTime;
+      if(this.jumpTime < 0) {
+        this.jumpTime = 0;
+      }
+      else {
+        //this.player.press("jump");
+      }
+    }
+
   }
 
-  changeState(newState: AIState) {
-    this.aiState = newState;
+  getRandomWeaponIndex() {
+    //@ts-ignore
+    let weapons = _.filter(this.player.weapons, (weapon) => {
+      return weapon.ammo > 0;
+    });
+    if(weapons.length === 0) return 0;
+    let weapon = weapons[Helpers.randomRange(0, weapons.length - 1)];
+    let weaponIndex = weapons.indexOf(weapon);
+    return weaponIndex;
+  }
+
+  changeState(newState: AIState, forceChange: boolean = false) {
+    if(forceChange || newState.canChangeTo()) {
+      this.aiState = newState;
+    }
   }
 
   getMaxDist() {
@@ -245,6 +263,9 @@ class AIState {
       return this.nextNode.name;
     }
     return "";
+  }
+  canChangeTo() {
+    return !(this.character.charState instanceof LadderClimb) && !(this.character.charState instanceof LadderEnd);
   }
 
   constructor(character: Character) {
@@ -293,7 +314,7 @@ class MoveTowardsTarget extends AIState {
 
 }
 
-class FindPlayer extends AIState {
+export class FindPlayer extends AIState {
   
   destNode: NavMeshNode;
   nextNode: NavMeshNode;
