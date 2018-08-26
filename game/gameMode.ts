@@ -44,6 +44,8 @@ export class GameMode {
     this.level = level;
   }
 
+  isCtf() { return (this instanceof CTF); }
+
   setupPlayers() {
     document.onkeydown = (e) => {
       for(let player of this.localPlayers) {

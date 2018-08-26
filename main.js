@@ -2270,6 +2270,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                     enumerable: true,
                     configurable: true
                 });
+                GameMode.prototype.isCtf = function () { return (this instanceof CTF); };
                 GameMode.prototype.setupPlayers = function () {
                     var _this = this;
                     document.onkeydown = function (e) {
@@ -3720,7 +3721,7 @@ System.register("ai", ["character", "game", "projectile", "point", "helpers", "w
                             this.jumpTime = Helpers.randomRange(0.25, 0.75);
                         }
                     }
-                    if (this.aiState.randomlyChangeWeapon && !this.player.lockWeapon && !this.character.isStingCharged && !this.character.chargedRollingShieldProj) {
+                    if (this.aiState.randomlyChangeWeapon && !this.player.isZero && !this.player.lockWeapon && !this.character.isStingCharged && !this.character.chargedRollingShieldProj) {
                         this.weaponTime += game_10.game.deltaTime;
                         if (this.weaponTime > 5) {
                             this.weaponTime = 0;
@@ -7079,7 +7080,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                     if (actor instanceof character_6.Character && gameObject instanceof character_6.Character && actor.player.alliance !== gameObject.player.alliance && (actor.isStingCharged || gameObject.isStingCharged)) {
                         return true;
                     }
-                    if (actor instanceof projectile_5.ShotgunIceProjSled && gameObject instanceof character_6.Character && actor.damager.owner !== gameObject.player) {
+                    if (actor instanceof projectile_5.ShotgunIceProjSled && gameObject instanceof character_6.Character && actor.damager.owner.alliance !== gameObject.player.alliance) {
                         return true;
                     }
                     if (actor instanceof projectile_5.ShotgunIceProjSled && gameObject instanceof projectile_5.Projectile) {
@@ -7449,7 +7450,7 @@ System.register("level", ["wall", "point", "game", "helpers", "actor", "rect", "
                 Level.prototype.getSpawnPoint = function (player) {
                     var _this = this;
                     var unoccupied = _.filter(this.spawnPoints, function (spawnPoint) {
-                        return !spawnPoint.occupied() && ((!_this.gameMode.isTeamMode && spawnPoint.team === spawnPoint_1.Team.Neutral) || (_this.gameMode.isTeamMode && spawnPoint.team !== spawnPoint_1.Team.Neutral && spawnPoint.alliance === player.alliance));
+                        return !spawnPoint.occupied() && ((!_this.gameMode.isCtf() && spawnPoint.team === spawnPoint_1.Team.Neutral) || (_this.gameMode.isCtf() && spawnPoint.team !== spawnPoint_1.Team.Neutral && spawnPoint.alliance === player.alliance));
                     });
                     if (game_16.game.level.gameMode.isBrawl) {
                         return _.find(unoccupied, function (spawnPoint) {
@@ -8342,13 +8343,13 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                 };
                 Game.prototype.quickStart = function () {
                     this.uiData.menu = Menu.None;
-                    this.uiData.selectedArenaMap = "ocean";
-                    this.uiData.selectedGameMode = "deathmatch";
+                    this.uiData.selectedArenaMap = "factory";
+                    this.uiData.selectedGameMode = "team deathmatch";
                     this.uiData.player1Team = "blue";
                     this.uiData.maxPlayers = 9;
                     this.uiData.numBots = 9;
-                    this.uiData.numRed = 2;
-                    this.uiData.numBlue = 1;
+                    this.uiData.numRed = 3;
+                    this.uiData.numBlue = 3;
                     this.uiData.playTo = 20;
                     $("#options").show();
                     game.loadLevel(this.uiData.selectedArenaMap, false);
@@ -8809,7 +8810,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     music.volume(!game.options.muteMusic ? game.getMusicVolume01() : 0);
                     this.music = music;
                     this.zeroMusic = this.loadMusic(game.path.zeroMusic, 4972, 26447);
-                    this.winMusic = this.loadMusic(game.path.winMusic, 0, 6613);
+                    this.winMusic = this.loadMusic(game.path.winMusic, 0, 60000);
                     this.loseMusic = this.loadMusic(game.path.loseMusic, 0, 60000);
                 };
                 Game.prototype.loadMusic = function (path, musicLoopStart, musicLoopEnd) {
@@ -11434,7 +11435,10 @@ System.register("actor", ["sprite", "point", "game", "helpers"], function (expor
                 Actor.prototype.render = function (x, y) {
                     var offsetX = this.xDir * this.currentFrame.offset.x;
                     var offsetY = this.yDir * this.currentFrame.offset.y;
-                    var drawX = Math.floor(this.pos.x + x) + offsetX;
+                    if (offsetX !== 0 && this.currentFrame.rect.w % 2 !== 0) {
+                        offsetX += 0.5 * this.xDir;
+                    }
+                    var drawX = this.pos.x + x + offsetX;
                     var drawY = this.pos.y + y + offsetY;
                     if (this.angle === undefined) {
                         this.sprite.draw(this.frameIndex, drawX, drawY, this.xDir, this.yDir, this.renderEffects, 1, this.palette);

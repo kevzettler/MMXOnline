@@ -304,7 +304,11 @@ export class Actor {
     let offsetX = this.xDir * this.currentFrame.offset.x;
     let offsetY = this.yDir * this.currentFrame.offset.y;
 
-    let drawX = Math.floor(this.pos.x + x) + offsetX;
+    if(offsetX !== 0 && this.currentFrame.rect.w % 2 !== 0) {
+      offsetX += 0.5 * this.xDir;
+    }
+
+    let drawX = this.pos.x + x + offsetX;
     let drawY = this.pos.y + y + offsetY;
     
     if(this.angle === undefined) {

@@ -794,7 +794,7 @@ export class Level {
     if(actor instanceof Character && gameObject instanceof Character && actor.player.alliance !== gameObject.player.alliance && (actor.isStingCharged || gameObject.isStingCharged)) {
       return true;
     }
-    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner !== gameObject.player) {
+    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner.alliance !== gameObject.player.alliance) {
       return true;
     }
     if(actor instanceof ShotgunIceProjSled && gameObject instanceof Projectile) {
@@ -1061,7 +1061,7 @@ export class Level {
   getSpawnPoint(player: Player) {
     //@ts-ignore
     let unoccupied = _.filter(this.spawnPoints, (spawnPoint) => {
-      return !spawnPoint.occupied() && ((!this.gameMode.isTeamMode && spawnPoint.team === Team.Neutral) || (this.gameMode.isTeamMode && spawnPoint.team !== Team.Neutral && spawnPoint.alliance === player.alliance));
+      return !spawnPoint.occupied() && ((!this.gameMode.isCtf() && spawnPoint.team === Team.Neutral) || (this.gameMode.isCtf() && spawnPoint.team !== Team.Neutral && spawnPoint.alliance === player.alliance));
     });
     if(game.level.gameMode.isBrawl) {
       //@ts-ignore

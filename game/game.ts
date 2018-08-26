@@ -176,18 +176,18 @@ class Game {
   doQuickStart: boolean = true;
   quickStart() {
     this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "ocean";
-    this.uiData.selectedGameMode = "deathmatch";
+    this.uiData.selectedArenaMap = "factory";
+    this.uiData.selectedGameMode = "team deathmatch";
     this.uiData.player1Team = "blue";
     this.uiData.maxPlayers = 9;
     this.uiData.numBots = 9;
-    this.uiData.numRed = 2;
-    this.uiData.numBlue = 1;
+    this.uiData.numRed = 3;
+    this.uiData.numBlue = 3;
     this.uiData.playTo = 20;
     //this.uiData.isPlayer1Zero = true;
     $("#options").show();
     game.loadLevel(this.uiData.selectedArenaMap, false); 
-    /*  
+    /*
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
     this.uiData.isPlayer1Zero = true;
@@ -647,7 +647,7 @@ class Game {
     this.music = music;
     
     this.zeroMusic = this.loadMusic(game.path.zeroMusic, 4972, 26447);
-    this.winMusic = this.loadMusic(game.path.winMusic, 0, 6613);
+    this.winMusic = this.loadMusic(game.path.winMusic, 0, 60000);
     this.loseMusic = this.loadMusic(game.path.loseMusic, 0, 60000);
   }
 

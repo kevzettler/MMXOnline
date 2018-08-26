@@ -1,9 +1,3 @@
--Ice sled still collides with teammates
-Crazy incline MTV snapping
-
--Alignment issues:
-  -Jerky animations again
-  -Sprite transitions screw up win animation alignment
 -Optimization:
   -Remember to hide stuff off screen
 
@@ -19,9 +13,8 @@ Neat
 ===============
 Game balancing: add costs to the weapon charges
 Add pickups to map
-Move arena to top
-Randomly choose nav mesh path
 Give Zero a f-air slash, make the current one the second jump one
+Healing capsules in CTF
 
 ===============
 Optimization

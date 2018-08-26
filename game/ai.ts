@@ -189,7 +189,7 @@ export class AI {
         this.jumpTime = Helpers.randomRange(0.25, 0.75);
       }
     }
-    if(this.aiState.randomlyChangeWeapon && !this.player.lockWeapon && !this.character.isStingCharged && !this.character.chargedRollingShieldProj) {
+    if(this.aiState.randomlyChangeWeapon && !this.player.isZero && !this.player.lockWeapon && !this.character.isStingCharged && !this.character.chargedRollingShieldProj) {
       this.weaponTime += game.deltaTime;
       if(this.weaponTime > 5) {
         this.weaponTime = 0;
