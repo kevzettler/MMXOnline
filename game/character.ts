@@ -652,10 +652,13 @@ export class Character extends Actor {
   }
 
   addAmmo(amount: number) {
+    this.weaponHealAmount += amount;
+    /*
     this.player.weapon.ammo += amount;
     if(this.player.weapon.ammo > this.player.weapon.maxAmmo) {
       this.player.weapon.ammo = this.player.weapon.maxAmmo;
     }
+    */
   }
 
   setHurt(dir: number) {

@@ -177,9 +177,9 @@ class Game {
   quickStart() {
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "factory";
-    this.uiData.selectedGameMode = "team deathmatch";
+    this.uiData.selectedGameMode = "deathmatch";
     this.uiData.player1Team = "blue";
-    this.uiData.maxPlayers = 9;
+    this.uiData.maxPlayers = 0;
     this.uiData.numBots = 9;
     this.uiData.numRed = 3;
     this.uiData.numBlue = 3;

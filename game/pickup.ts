@@ -17,6 +17,7 @@ export class Pickup extends Actor {
   constructor(pos: Point, sprite: Sprite) {
     super(sprite, pos);
     this.collider.wallOnly = true;
+    this.collider.isTrigger = false;
   }
 
   onCollision(other: CollideData) {
@@ -83,10 +84,13 @@ export class PickupSpawner {
       this.time = 0;
       return;
     }
+    //let incAmount = game.deltaTime;
+    //if(!isFinite(incAmount) || isNaN(incAmount)) incAmount = 0;
+    //if(incAmount < 0 || incAmount > 1) incAmount = 0;
     this.time += game.deltaTime;
     if(this.time > 15) {
       this.time = 0;
-      this.currentPickup = new this.pickupClass(this.pos);
+      this.currentPickup = new this.pickupClass(this.pos.clone());
     }
   }
 
