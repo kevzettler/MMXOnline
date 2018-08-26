@@ -342,7 +342,7 @@ export class GameMode {
       });
       //@ts-ignore
       gtag('event', 'fps2', {
-        'event_label': String(game.getAvgFps()),
+        'event_label': game.userGameData,
         'value': game.getAvgFps()
       });
     }

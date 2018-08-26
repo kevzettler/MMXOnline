@@ -973,7 +973,7 @@ System.register("gameMode", ["game", "player", "helpers", "rect"], function (exp
                             'event_label': this.level.mainPlayer.won ? "win" : "lose"
                         });
                         gtag('event', 'fps2', {
-                            'event_label': String(game_3.game.getAvgFps()),
+                            'event_label': game_3.game.userGameData,
                             'value': game_3.game.getAvgFps()
                         });
                     }
@@ -2498,6 +2498,7 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                     _this.frameSpeed = 0;
                     _this.parentTime = parentTime;
                     _this.destroyOnCharHit = false;
+                    _this.shouldShieldBlock = false;
                     new actor_3.Anim(_this.pos.clone(), game_7.game.sprites["fire_wave_charge_flash"], 1, true);
                     return _this;
                 }
@@ -8368,7 +8369,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
             exports_29("Menu", Menu);
             UIData = (function () {
                 function UIData() {
-                    this.isProd = false;
+                    this.isProd = true;
                     this.logInDev = true;
                     this.playerName = "Player 1";
                     this.isBrawl = false;
@@ -8432,6 +8433,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     this.errorLogged = false;
                     this.path = new paths_1.Path();
                     this.doQuickStart = true;
+                    this.userGameData = "";
                     this.timePassed = 0;
                     this.lag = 0;
                     this.avgFps = 0;
@@ -9012,8 +9014,9 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         if (!restart) {
                             var playerInfo = this.uiData.isBrawl ? (this.uiData.isPlayer2CPU ? "1" : "0") : String(this.uiData.numBots);
                             if (this.shouldLog()) {
+                                this.userGameData = gameMode.constructor.name + "," + this.level.levelData.name + "," + playerInfo;
                                 gtag('event', 'start game', {
-                                    'event_label': gameMode.constructor.name + "," + this.level.levelData.name + "," + playerInfo
+                                    'event_label': this.userGameData
                                 });
                             }
                         }
@@ -9156,7 +9159,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         this.fpsLogged = true;
                         if (this.shouldLog()) {
                             gtag('event', 'fps1', {
-                                'event_label': String(game.getAvgFps()),
+                                'event_label': this.userGameData,
                                 'value': game.getAvgFps()
                             });
                         }

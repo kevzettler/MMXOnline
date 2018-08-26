@@ -513,6 +513,7 @@ export class FireWaveProjCharged extends Projectile {
     this.frameSpeed = 0;
     this.parentTime = parentTime;
     this.destroyOnCharHit = false;
+    this.shouldShieldBlock = false;
     new Anim(this.pos.clone(), game.sprites["fire_wave_charge_flash"], 1, true);
   }
 

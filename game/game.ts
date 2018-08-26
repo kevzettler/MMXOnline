@@ -40,7 +40,7 @@ export enum Menu {
 }
 
 export class UIData {
-  isProd: boolean = false;
+  isProd: boolean = true;
   logInDev: boolean = true;
   playerName: string = "Player 1";
   menu: Menu;
@@ -700,6 +700,7 @@ class Game {
     this.levelLoadInterval = window.setInterval(() => this.startLevel(restart), 1);
   }
 
+  userGameData: string = "";
   startLevel(restart: boolean) {
     if(this.isLoaded()) {
       window.clearInterval(this.levelLoadInterval);
@@ -726,9 +727,10 @@ class Game {
         //gamemode name/map name/number of bots
         
         if(this.shouldLog()) {
+          this.userGameData = gameMode.constructor.name + "," + this.level.levelData.name + "," + playerInfo;
           //@ts-ignore
           gtag('event', 'start game', {
-            'event_label': gameMode.constructor.name + "," + this.level.levelData.name + "," + playerInfo
+            'event_label': this.userGameData
           });
         }
       }
@@ -875,7 +877,7 @@ class Game {
       if(this.shouldLog()) {
         ///@ts-ignore
         gtag('event', 'fps1', {
-          'event_label': String(game.getAvgFps()),
+          'event_label': this.userGameData,
           'value': game.getAvgFps()
         });
       }
