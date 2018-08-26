@@ -176,7 +176,9 @@ export class Character extends Actor {
         this.healTime = 0;
         this.healAmount--;
         this.player.health = Helpers.clampMax(this.player.health + 1, this.player.maxHealth);
-        this.playSound("heal");
+        if(this.player === game.level.mainPlayer) {
+          this.playSound("heal", undefined, true, true);
+        }
       }
     }
 
@@ -431,7 +433,9 @@ export class Character extends Actor {
               if(this.sprite.name === "zero_attack3") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 3, true);
               if(this.sprite.name === "zero_attack_dash") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 2, false);
             }
-            else if(this.charState instanceof Fall) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 2, false);
+            else if(this.charState instanceof Fall) {
+              this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 2, false);
+            }
             else if(this.charState instanceof LadderClimb) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberladder", 2, false);
             else if(this.charState instanceof WallSlide) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberslide", 2, false);
           }

@@ -5,7 +5,7 @@ import { Point } from "./point";
 import * as Helpers from "./helpers";
 import { NavMeshNode, NavMeshNeighbor } from "./navMesh";
 import { JumpZone, Wall, Ladder } from "./wall";
-import { CTF } from "./gameMode";
+import { CTF, Brawl } from "./gameMode";
 import { Flag } from "./flag";
 import { Buster } from "./weapon";
 
@@ -42,6 +42,9 @@ export class AI {
   }
 
   update() {
+
+    if(game.level.gameMode.isOver) return;
+
     if(this.framesChargeHeld > 0) {
       if(this.character.chargeTime < this.maxChargeTime) {
         //console.log("HOLD");
@@ -114,7 +117,7 @@ export class AI {
       }
     }
 
-    if(this.aiState.facePlayer) {
+    if(this.aiState.facePlayer && this.target) {
       if(this.character.pos.x > this.target.pos.x) {
         if(this.character.xDir !== -1) {
           this.player.press("left");
@@ -126,7 +129,7 @@ export class AI {
         }
       }
     }
-    if(this.aiState.shouldAttack) {
+    if(this.aiState.shouldAttack && this.target) {
       if(this.shootTime === 0) {
         //if(this.character.withinY(this.target, 25)) {
         if(this.character.isFacing(this.target)) {
@@ -156,7 +159,7 @@ export class AI {
       }
     }
     if(this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.weaponIndex === 0 && this.player.character.canCharge()) {
-      if(Helpers.randomRange(0, 300) < 5) {
+      if(Helpers.randomRange(0, 300) === 1) {
         if(this.player.weapon instanceof Buster) {
           this.maxChargeTime = Helpers.randomRange(0.75, 3);
         }
@@ -238,6 +241,9 @@ export class AI {
   }
 
   changeState(newState: AIState, forceChange: boolean = false) {
+    if(game.level.gameMode instanceof Brawl && newState instanceof FindPlayer) {
+      return;
+    }
     if(this.aiState instanceof FindPlayer && this.character.flag) {
       return;
     }
@@ -321,6 +327,7 @@ class MoveTowardsTarget extends AIState {
 
   update() {
     super.update();
+    if(!this.ai.target) return;
     if(this.character.pos.x - this.ai.target.pos.x > this.ai.getMaxDist()) {
       this.player.press("left");
     }
@@ -354,6 +361,10 @@ export class FindPlayer extends AIState {
     this.randomlyChargeWeapon = true;
     this.ai.platformJumpDir = 0;
     
+    if(game.level.gameMode instanceof Brawl) {
+      return;
+    }
+
     if(game.level.gameMode instanceof CTF) {
       if(!this.character.flag) {
         let targetFlag: Flag;
@@ -506,7 +517,7 @@ class AimAtPlayer extends AIState {
       this.jumpDelay = 0;
     }
     
-    if(this.character.pos.y > this.target.pos.y && this.character.pos.y < this.target.pos.y + 80) {
+    if(this.target && this.character.pos.y > this.target.pos.y && this.character.pos.y < this.target.pos.y + 80) {
       this.jumpDelay += game.deltaTime;
       if(this.jumpDelay > 0.3) {
         this.ai.doJump();

@@ -12,8 +12,6 @@
 Neat
 ===============
 Game balancing: add costs to the weapon charges
-Add pickups to map
-Give Zero a f-air slash, make the current one the second jump one
 Healing capsules in CTF
 
 ===============

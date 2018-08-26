@@ -85,7 +85,7 @@ export class Weapon {
       this.ammo -= game.deltaTime * 10;
     }
     else {
-      this.ammo -= (chargeLevel + 1);
+      this.ammo -= (chargeLevel*2 + 1);
     }
   }
 

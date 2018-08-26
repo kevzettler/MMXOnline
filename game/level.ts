@@ -794,7 +794,7 @@ export class Level {
     if(actor instanceof Character && gameObject instanceof Character && actor.player.alliance !== gameObject.player.alliance && (actor.isStingCharged || gameObject.isStingCharged)) {
       return true;
     }
-    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner !== gameObject.player && actor.damager.owner.alliance === gameObject.player.alliance) {
+    if(actor instanceof ShotgunIceProjSled && gameObject instanceof Character && actor.damager.owner !== gameObject.player) {
       return true;
     }
     if(actor instanceof ShotgunIceProjSled && gameObject instanceof Projectile) {

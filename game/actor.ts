@@ -196,9 +196,10 @@ export class Actor {
             let shape2 = collideData.collider.shape;
             //throw "MTV too big";
           }
-          
-          this.incPos(yVel);
-          this.incPos(mtv.unitInc(0.01));
+          else {
+            this.incPos(yVel);
+            this.incPos(mtv.unitInc(0.01));
+          }
         }
       }
       else {
@@ -304,7 +305,7 @@ export class Actor {
     let offsetX = this.xDir * this.currentFrame.offset.x;
     let offsetY = this.yDir * this.currentFrame.offset.y;
 
-    if(offsetX !== 0 && this.currentFrame.rect.w % 2 !== 0) {
+    if(this.sprite.name !== "mmx_win" && this.currentFrame.offset.x !== 0 && this.currentFrame.rect.w % 2 !== 0) {
       offsetX += 0.5 * this.xDir;
     }
 
@@ -327,7 +328,7 @@ export class Actor {
     }
     
     this.sprite.pixiSprite.visible = this.isVisible;
-    /*
+    
     let alignOffset = this.sprite.getAlignOffset(this.frameIndex, this.xDir, this.yDir);
     let rx = this.pos.x + offsetX + alignOffset.x;
     let ry = this.pos.y + offsetY + alignOffset.y;
@@ -339,7 +340,6 @@ export class Actor {
     else {
       this.sprite.pixiSprite.renderable = true;
     }
-    */
   }
 
   renderFromAngle(x: number, y: number) {
@@ -423,11 +423,11 @@ export class Actor {
     return volume;
   }
 
-  playSound(soundName: string, overrideVolume?: number) {
+  playSound(soundName: string, overrideVolume?: number, forcePlay: boolean = false, forceSameVolume: boolean = false) {
     let volume = this.getSoundVolume();
     if(overrideVolume !== undefined) volume = overrideVolume;
     volume = Helpers.clampMin0(volume);
-    game.playSound(soundName, volume);
+    game.playSound(soundName, volume, forcePlay, forceSameVolume);
   }
 
   withinX(other: Actor, amount: number) {

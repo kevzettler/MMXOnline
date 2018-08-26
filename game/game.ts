@@ -46,7 +46,7 @@ export class UIData {
   menu: Menu;
   isBrawl: boolean = false;
   brawlMaps: string[] = ["sm_bossroom"];
-  arenaMaps: string[] = ["powerplant", "highway", "gallery", "tower", "mountain", "factory", "ocean", "forest", "airport"];
+  arenaMaps: string[] = ["highway", "powerplant", "gallery", "tower", "mountain", "factory", "ocean", "forest", "airport"];
   selectedBrawlMap: string = this.brawlMaps[0];
   selectedArenaMap: string = this.arenaMaps[0];
   gameModes: string[] = ["deathmatch", "team deathmatch", "ctf"];
@@ -175,29 +175,32 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    this.uiData.menu = Menu.None;
-    this.uiData.selectedArenaMap = "factory";
-    this.uiData.selectedGameMode = "deathmatch";
-    this.uiData.player1Team = "blue";
-    this.uiData.maxPlayers = 0;
-    this.uiData.numBots = 9;
-    this.uiData.numRed = 3;
-    this.uiData.numBlue = 3;
-    this.uiData.playTo = 20;
-    //this.uiData.isPlayer1Zero = true;
-    $("#options").show();
-    game.loadLevel(this.uiData.selectedArenaMap, false); 
-    /*
-    this.uiData.menu = Menu.None;
-    this.uiData.isBrawl = true;
-    this.uiData.isPlayer1Zero = true;
-    this.uiData.maxPlayers = 1;
-    this.uiData.isPlayer2CPU = false;
-    this.uiData.maxPlayers = 0;
-    this.uiData.numBots = 0;
-    $("#options").show();
-    game.loadLevel("sm_bossroom", false);
-    */
+    let quickStartType = 2;
+    if(quickStartType === 1) {
+      this.uiData.menu = Menu.None;
+      this.uiData.selectedArenaMap = "powerplant";
+      this.uiData.selectedGameMode = "deathmatch";
+      this.uiData.player1Team = "blue";
+      this.uiData.maxPlayers = 0;
+      this.uiData.numBots = 0;
+      this.uiData.numRed = 3;
+      this.uiData.numBlue = 3;
+      this.uiData.playTo = 20;
+      this.uiData.isPlayer1Zero = false;
+      $("#options").show();
+      game.loadLevel(this.uiData.selectedArenaMap, false); 
+    }
+    else {
+      this.uiData.menu = Menu.None;
+      this.uiData.isBrawl = true;
+      this.uiData.isPlayer1Zero = true;
+      this.uiData.maxPlayers = 1;
+      this.uiData.isPlayer2CPU = false;
+      this.uiData.maxPlayers = 0;
+      this.uiData.numBots = 0;
+      $("#options").show();
+      game.loadLevel("sm_bossroom", false);
+    }
   }
 
   shouldLog() {
@@ -943,15 +946,17 @@ class Game {
     return Math.round(1 / this.deltaTime);
   }
 
-  playSound(clip: string, volume: number, forcePlay: boolean = false) {
+  playSound(clip: string, volume: number, forcePlay: boolean = false, forceSameVolume: boolean = false) {
     let mult = 1;
     if(this.recentClipCount[clip] && this.recentClipCount[clip].length > 1) {
       if(!forcePlay) {
         return undefined;
       }
       else {
-        let amountOver = this.recentClipCount[clip].length - 1;
-        mult = 0.5 / amountOver;
+        if(!forceSameVolume) {
+          let amountOver = this.recentClipCount[clip].length - 1;
+          mult = 0.5 / amountOver;
+        }
       }
     }
     if(!this.recentClipCount[clip]) this.recentClipCount[clip] = [];

@@ -6,6 +6,7 @@ import { GameObject } from "./gameObject";
 import { Actor } from "./actor";
 import { Weapon } from "./weapon";
 import { TornadoProj, FireWaveProj } from "./projectile";
+import { Brawl } from "./gameMode";
 
 export class Damager {
 
@@ -24,6 +25,9 @@ export class Damager {
   applyDamage(victim: Character, weakness: boolean, weapon: Weapon, actor: Actor, idString: string, overrideDamage?: number, overrideFlinch?: boolean) {
 
     let damage = (overrideDamage !== undefined ? overrideDamage : this.damage);
+    if(game.level.gameMode instanceof Brawl) {
+      damage *= 0.375;
+    }
     let key: string = idString + this.owner.id.toString();
     let flinch = (overrideFlinch !== undefined ? overrideFlinch : this.flinch);
       
@@ -32,7 +36,7 @@ export class Damager {
 
       victim.renderEffects.add("hit");
       victim.renderEffectTime = 0.1;
-      victim.applyDamage(this.owner, weapon, this.damage * (weakness ? 2 : 1));
+      victim.applyDamage(this.owner, weapon, damage * (weakness ? 2 : 1));
 
       if(flinch || game.options.alwaysFlinch || weakness) {
         if(game.useInvulnFrames()) {

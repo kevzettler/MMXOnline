@@ -177,6 +177,9 @@ export class GameMode {
     this.createWinScreenHUD();
     this.createScoreboardHUD();
     this.readySprite = game.sprites["ready"].createAndDraw(game.level.uiContainer, 0, (this.screenWidth/2) - 21, this.screenHeight/2);
+    if(this.isBrawl) {
+      this.killFeedContainer.visible = false;
+    }
   }
 
   createScoreboardHUD() {
@@ -277,7 +280,7 @@ export class GameMode {
     for (var i = this.killFeedContainer.children.length - 1; i >= 0; i--) {	
       let child = this.killFeedContainer.children[i];
       this.killFeedContainer.removeChild(child);
-      child.destroy();  //KZTODO there may be a memory leak here, should I destroy textures too?
+      child.destroy(); 
     };
     /*
     game.level.uiContainer.removeChild(this.killFeedContainer);
@@ -357,15 +360,8 @@ export class Brawl extends GameMode {
     
     let health = 32;
 
-    let p1Name = uiData.isPlayer1CPU ? "CPU 1" : "Player 1";
+    let p1Name = uiData.isPlayer1CPU ? "CPU" : "Player 1";
     let p2Name = uiData.isPlayer2CPU ? "CPU" : "Player 2";
-
-    if(p1Name.includes(p2Name)) {
-      p2Name += " 2";
-    }
-    else {
-      p2Name += " 1";
-    }
 
     let player1 = new Player(p1Name, uiData.isPlayer1Zero, uiData.isPlayer1CPU, false, 0, health);
     let player2 = new Player(p2Name, uiData.isPlayer2Zero, uiData.isPlayer2CPU, true, 1, health, game.palettes["red"]);
