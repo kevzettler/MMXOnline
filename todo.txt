@@ -1,43 +1,27 @@
-AI Improvements:
-  -Need for node that jumping to floating platform, and limit this to one direction only
-  -AI goes for own flag before other, exception?
-  -May need random jump
+-Ice sled still collides with teammates
+Crazy incline MTV snapping
 
--Bug: when 2 projectiles are right inside each other, they behave strangely. investigate
--MTV issue:
+-Alignment issues:
+  -Jerky animations again
+  -Sprite transitions screw up win animation alignment
+-Optimization:
+  -Remember to hide stuff off screen
+
+-MTV issues:
+  -Bug: when 2 projectiles are right inside each other, they behave strangely. investigate
   -MTV issue: log it to a DB or somewhere whenever it happens
   -MTV occasionally snaps out too far
   -Some MTV issues (snapping out). Test the climb in gallery stage, and inclines
   -Build a visual collision tester?
--DOM nodes growing and not getting GC'd
--Have a level loading screen that only loads level backgrounds/music
--Jerky animations again
--Sprite transitions screw up win animation alignment
-
--Stage music continues playing in menu if quit right when it starts
--If pushing against wall don't play run animation
--Soft collision with allies
--Walls stop weapons
 
 ===============
 Neat
 ===============
-Prevent numerous of same sounds from being played at once
 Game balancing: add costs to the weapon charges
-25% chance for AI to be aggressive flag capturer
 Add pickups to map
 Move arena to top
-
-===============
-Abstraction
-===============
--Investigate why debugging in Chrome is broken
--CheckCollisionActor, add gameobject array param
--Object instantiation
--System of abstraction for handling collisions between entities
-  -Electric spark should destroy charged rolling shield, but not regular
-  -Enemy bullets should destroy homing torpedo, but not friendly ones
-  -Enemies should trigger with sled, but not allies
+Randomly choose nav mesh path
+Give Zero a f-air slash, make the current one the second jump one
 
 ===============
 Optimization
@@ -52,6 +36,17 @@ Optimization
   -HUD stuff
   -Backgrounds
   -Effects
+
+===============
+Abstraction
+===============
+-Investigate why debugging in Chrome is broken
+-CheckCollisionActor, add gameobject array param
+-Object instantiation
+-System of abstraction for handling collisions between entities
+  -Electric spark should destroy charged rolling shield, but not regular
+  -Enemy bullets should destroy homing torpedo, but not friendly ones
+  -Enemies should trigger with sled, but not allies
 
 ===============
 Level editor

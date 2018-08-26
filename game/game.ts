@@ -90,9 +90,12 @@ class Game {
 
   sounds: { [path: string]: Howl } = {};
   palettes: { [path: string]: Palette } = {};
+  recentClipCount: { [clip: string]: number[] } = {};
 
   music: Howl;
   zeroMusic: Howl;
+  winMusic: Howl;
+  loseMusic: Howl;
 
   isServer: boolean = false;
   isClient: boolean = true;
@@ -172,21 +175,19 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
- 
     this.uiData.menu = Menu.None;
     this.uiData.selectedArenaMap = "ocean";
-    this.uiData.selectedGameMode = "ctf";
+    this.uiData.selectedGameMode = "deathmatch";
     this.uiData.player1Team = "blue";
-    this.uiData.maxPlayers = 3;
-    this.uiData.numBots = 1;
-    this.uiData.numRed = 0;
+    this.uiData.maxPlayers = 9;
+    this.uiData.numBots = 9;
+    this.uiData.numRed = 2;
     this.uiData.numBlue = 1;
     this.uiData.playTo = 20;
     //this.uiData.isPlayer1Zero = true;
     $("#options").show();
     game.loadLevel(this.uiData.selectedArenaMap, false); 
-  
-    /*
+    /*  
     this.uiData.menu = Menu.None;
     this.uiData.isBrawl = true;
     this.uiData.isPlayer1Zero = true;
@@ -646,6 +647,8 @@ class Game {
     this.music = music;
     
     this.zeroMusic = this.loadMusic(game.path.zeroMusic, 4972, 26447);
+    this.winMusic = this.loadMusic(game.path.winMusic, 0, 6613);
+    this.loseMusic = this.loadMusic(game.path.loseMusic, 0, 60000);
   }
 
   loadMusic(path: string, musicLoopStart: number, musicLoopEnd: number) {
@@ -842,6 +845,7 @@ class Game {
   totalFps: number = 0;
   fpsLogged: boolean = false;
   MS_PER_UPDATE: number = 16.6666;
+  frameCount: number = 0;
 
   //Main game loop
   gameLoop(currentTime: number) {
@@ -896,6 +900,7 @@ class Game {
       this.deltaTime = this.timePassed;
       this.timePassed = 0;
       if(!this.paused) {
+        this.frameCount++;
         //In dev, don't catch errors
         if(!game.uiData.isProd) {
           this.level.update();
@@ -938,16 +943,29 @@ class Game {
     return Math.round(1 / this.deltaTime);
   }
 
-  playSound(clip: string, volume: number) {
+  playSound(clip: string, volume: number, forcePlay: boolean = false) {
+    let mult = 1;
+    if(this.recentClipCount[clip] && this.recentClipCount[clip].length > 1) {
+      if(!forcePlay) {
+        return undefined;
+      }
+      else {
+        let amountOver = this.recentClipCount[clip].length - 1;
+        mult = 0.5 / amountOver;
+      }
+    }
+    if(!this.recentClipCount[clip]) this.recentClipCount[clip] = [];
+    this.recentClipCount[clip].push(0);
+
     if(this.sounds[clip]) {
       let id = this.sounds[clip].play();
-      this.sounds[clip].volume(volume * game.getSoundVolume01(), id);
+      this.sounds[clip].volume(volume * game.getSoundVolume01() * mult, id);
       this.sounds[clip].mute(false, id);
       return id;
     }
     else {
       let id = this.soundSheet.play(clip);
-      this.soundSheet.volume(volume * game.getSoundVolume01(), id);
+      this.soundSheet.volume(volume * game.getSoundVolume01()* mult, id);
       this.soundSheet.mute(false, id);
       return id;
     }

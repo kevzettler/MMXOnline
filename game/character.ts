@@ -557,7 +557,7 @@ export class Character extends Actor {
     //this.renderEffect = "";
     this.chargeFlashTime = 0;
     this.chargeSound.stop();
-
+    this.chargeSound.reset();
     this.chargeEffect.stop();
   }
 

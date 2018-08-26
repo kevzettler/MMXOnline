@@ -153,6 +153,18 @@ export class GameMode {
 
   }
 
+  playWinMusic() {
+    game.music = game.winMusic;
+    game.music.seek(0);
+    game.music.play("musicStart");
+  }
+
+  playLoseMusic() {
+    game.music = game.loseMusic;
+    game.music.seek(0);
+    game.music.play("musicStart");
+  }
+
   createHUD() {
     if(!this.isBrawl) {
       this.createWeaponSwitchHUD();
@@ -398,10 +410,7 @@ export class Brawl extends GameMode {
         if(game.music) {
           game.music.stop();
         }
-        game.music = new Howl({
-          src: [game.path.winMusic],
-        });
-        game.music.play();
+        this.playWinMusic();
       }
     }
     else {
@@ -551,16 +560,10 @@ export class FFADeathMatch extends GameMode {
           game.music.stop();
         }
         if(this.level.mainPlayer && this.level.mainPlayer.won) {
-          game.music = new Howl({
-            src: [game.path.winMusic],
-          });
-          game.music.play();
+          this.playWinMusic();
         }
         else if(this.level.mainPlayer && !this.level.mainPlayer.won) {
-          game.music = new Howl({
-            src: [game.path.loseMusic],
-          });
-          game.music.play();
+          this.playLoseMusic();
         }
       }
     }
@@ -830,16 +833,10 @@ export class TeamDeathMatch extends GameMode {
           game.music.stop();
         }
         if(this.level.mainPlayer && this.level.mainPlayer.won) {
-          game.music = new Howl({
-            src: [game.path.winMusic],
-          });
-          game.music.play();
+          this.playWinMusic();
         }
         else if(this.level.mainPlayer && !this.level.mainPlayer.won) {
-          game.music = new Howl({
-            src: [game.path.loseMusic],
-          });
-          game.music.play();
+          this.playLoseMusic();
         }
       }
     }
@@ -1095,16 +1092,10 @@ export class CTF extends GameMode {
           game.music.stop();
         }
         if(this.level.mainPlayer && this.level.mainPlayer.won) {
-          game.music = new Howl({
-            src: [game.path.winMusic],
-          });
-          game.music.play();
+          this.playWinMusic();
         }
         else if(this.level.mainPlayer && !this.level.mainPlayer.won) {
-          game.music = new Howl({
-            src: [game.path.loseMusic],
-          });
-          game.music.play();
+          this.playLoseMusic();
         }
       }
     }

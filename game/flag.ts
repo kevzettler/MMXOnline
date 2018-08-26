@@ -41,7 +41,9 @@ export class Flag extends Actor {
       this.init();
     }
     super.update();
-    this.timeDropped += game.deltaTime;
+    if(!this.char) {
+      this.timeDropped += game.deltaTime;
+    }
     if(this.pos.y > game.level.levelData.killY) {
       this.returnFlag();
     }
@@ -61,6 +63,7 @@ export class Flag extends Actor {
         if(char.chargedRollingShieldProj) {
           char.chargedRollingShieldProj.destroySelf();
         }
+        this.timeDropped = 0;
         this.char = char;
         this.useGravity = false;
         this.pickedUpOnce = true;

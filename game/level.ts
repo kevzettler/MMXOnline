@@ -68,7 +68,7 @@ export class Level {
 
   constructor(levelData: LevelData) {
     this.levelData = levelData;
-    this.zoomScale = 1;
+    this.zoomScale = 3;
     this.gravity = 550;
     this.frameCount = 0;
     this.backgroundPath = levelData.levelJson.backgroundPath + game.path.version;
@@ -275,6 +275,17 @@ export class Level {
 
     if(game.music) {
       game.music.volume((!game.options.muteMusic ? game.getMusicVolume01() : 0));
+    }
+
+    for(let key in game.recentClipCount) {
+      let val = game.recentClipCount[key];
+      for(let i = val.length - 1; i >= 0; i--) {
+        val[i] += game.deltaTime;
+        if(val[i] >= 0.2) {
+          val.splice(i, 1);
+        }
+      }
+      game.recentClipCount[key] = val;
     }
 
     this.gameMode.checkIfWin();
@@ -814,13 +825,17 @@ export class Level {
     let collideDatas = overrideCollideDatas;
     if(!collideDatas) {
       collideDatas = game.level.getAllCollideDatas(actor, offsetX, offsetY, vel);
-    }
+    }    
+
+    //@ts-ignore
+    let onlyWalls = (_.filter(collideDatas, (cd) => { return !(cd.gameObject instanceof Wall); })).length === 0;
+
     let actorShape = actor.collider.shape.clone(offsetX, offsetY);
     let pushDir: Point = vel.times(-1).normalize();
 
     if(collideDatas.length > 0) {
       for(let collideData of collideDatas) { 
-        if(collideData.hitData && collideData.hitData.normal && collideData.hitData.normal.isAngled() && pushIncline) {
+        if(collideData.hitData && collideData.hitData.normal && collideData.hitData.normal.isAngled() && pushIncline && onlyWalls) {
           pushDir = new Point(0, -1); //Helpers.getInclinePushDir(collideData.hitData.normal, vel);
         }
       }
@@ -994,6 +1009,7 @@ export class Level {
     let players = _.filter(this.players, (player) => { 
       if(!player.character) return false;
       if(player.alliance === alliance) return false;
+      if(player.character.pos.distanceTo(pos) > game.level.screenWidth * 0.75) return false;
       if(checkWalls && !this.noWallsInBetween(pos, player.character.pos)) return false;
       return true;
     });
@@ -1099,7 +1115,7 @@ export class LevelData {
       this.maxPlayers = 2;
     }
     else if(this.name === "powerplant") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.powerPlantMusic;
       this.parallax = game.path.powerPlantParallax;
       this.musicLoopStart = 51040;
@@ -1107,7 +1123,7 @@ export class LevelData {
       this.maxPlayers = 8;
     }
     else if(this.name === "highway") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.highwayMusic;
       this.parallax = game.path.highwayParallax;
       this.musicLoopStart = 44440;
@@ -1117,7 +1133,7 @@ export class LevelData {
       this.maxPlayers = 8;
     }
     else if(this.name === "gallery") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.galleryMusic;
       this.parallax = game.path.galleryParallax;
       this.musicLoopStart = 0;
@@ -1127,7 +1143,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "tower") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.towerMusic;
       this.parallax = game.path.towerParallax;
       this.musicLoopStart = 6492;
@@ -1137,7 +1153,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "mountain") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.mountainMusic;
       this.parallax = game.path.mountainParallax;
       this.musicLoopStart = 17361;
@@ -1147,7 +1163,7 @@ export class LevelData {
       this.maxPlayers = 8;
     }
     else if(this.name === "factory") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.factoryMusic;
       this.parallax = game.path.factoryParallax;
       this.musicLoopStart = 6149;
@@ -1157,7 +1173,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "ocean") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.oceanMusic;
       this.parallax = game.path.oceanParallax;
       this.musicLoopStart = 0;
@@ -1167,7 +1183,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "forest") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.forestMusic;
       this.parallax = game.path.forestParallax;
       this.musicLoopStart = 0;
@@ -1177,7 +1193,7 @@ export class LevelData {
       this.maxPlayers = 10;
     }
     else if(this.name === "airport") {
-      this.fixedCam = true;
+      this.fixedCam = false;
       musicPath = game.path.airportMusic;
       this.parallax = game.path.airportParallax;
       this.musicLoopStart = 5719;

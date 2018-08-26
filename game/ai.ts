@@ -20,6 +20,8 @@ export class AI {
   weaponTime: number = 0;
   maxChargeTime: number = 0;
   framesChargeHeld: number = 0;
+  platformJumpDir: number = 0;
+  flagger: boolean = false; //Will this ai aggressively capture the flag?
 
   get player() {
     return this.character.player;
@@ -28,18 +30,18 @@ export class AI {
   constructor(character: Character) {
     this.character = character;
     this.aiState = new AimAtPlayer(this.character);
+    this.flagger = (Helpers.randomRange(0, 3) === 0 ? true: false);
   }
 
-  doJump() {
+  doJump(jumpTime: number = 0.75) {
     if(this.jumpTime === 0) {
       //this.player.release("jump");
       this.player.press("jump");
-      this.jumpTime = 0.75;
+      this.jumpTime = jumpTime;
     }
   }
 
   update() {
-    console.log(this.player.isHeld("jump"));
     if(this.framesChargeHeld > 0) {
       if(this.character.chargeTime < this.maxChargeTime) {
         //console.log("HOLD");
@@ -172,7 +174,7 @@ export class AI {
         return;
       }
     }
-    if(this.aiState.randomlyDash && !(this.character.charState instanceof WallKick)) {
+    if(this.aiState.randomlyDash && !(this.character.charState instanceof WallKick) && !this.platformJumpDir) {
       if(Helpers.randomRange(0, 150) < 5) {
         this.dashTime = Helpers.randomRange(0.2, 0.5);
       }
@@ -202,6 +204,18 @@ export class AI {
 
     if(this.jumpTime > 0 && !(this.character.charState instanceof LadderClimb)) {
       this.jumpTime -= game.deltaTime;
+      if(this.platformJumpDir === 1) {
+        let rightWall = game.level.checkCollisionActor(this.character, 30, 0);
+        if(rightWall && rightWall.gameObject instanceof Wall) {
+          this.platformJumpDir = 0;
+        }
+      }
+      else if(this.platformJumpDir === -1) {
+        let leftWall = game.level.checkCollisionActor(this.character, -30, 0);
+        if(leftWall && leftWall.gameObject instanceof Wall) {
+          this.platformJumpDir = 0;
+        }
+      }
       if(this.jumpTime < 0) {
         this.jumpTime = 0;
       }
@@ -224,6 +238,12 @@ export class AI {
   }
 
   changeState(newState: AIState, forceChange: boolean = false) {
+    if(this.aiState instanceof FindPlayer && this.character.flag) {
+      return;
+    }
+    if(this.flagger && this.aiState instanceof FindPlayer && game.level.gameMode instanceof CTF) {
+      //return;
+    }
     if(forceChange || newState.canChangeTo()) {
       this.aiState = newState;
     }
@@ -320,6 +340,8 @@ export class FindPlayer extends AIState {
   nextNode: NavMeshNode;
   prevNode: NavMeshNode;
   ladderDir: string;
+  nodePath: NavMeshNode[];
+  nodeTime: number = 0;
   constructor(character: Character) {
     super(character);
     this.facePlayer = false;
@@ -330,6 +352,7 @@ export class FindPlayer extends AIState {
     this.randomlyJump = false;
     this.randomlyChangeWeapon = false;
     this.randomlyChargeWeapon = true;
+    this.ai.platformJumpDir = 0;
     
     if(game.level.gameMode instanceof CTF) {
       if(!this.character.flag) {
@@ -347,9 +370,16 @@ export class FindPlayer extends AIState {
     else {
       this.destNode = game.level.getRandomNode();
     }
-    this.nextNode = game.level.getClosestNodeInSight(this.character.centerPos);
+    if(game.level.levelData.name === "highway") {
+      this.nextNode = this.destNode;
+    }
+    else {
+      this.nextNode = game.level.getClosestNodeInSight(this.character.centerPos);
+    }
     this.prevNode = undefined;
-
+    this.nodePath = this.nextNode.getNodePath(this.destNode);
+    //@ts-ignore
+    _.remove(this.nodePath, this.nextNode);
   }
 
   update() {
@@ -370,12 +400,19 @@ export class FindPlayer extends AIState {
       }
       return;
     }
+    else {
+      this.nodeTime += game.deltaTime;
+      if(this.nodeTime > 20) {
+        this.nodeTime = 0;
+        this.ai.changeState(new FindPlayer(this.character));
+      }
+    }
 
     if(this.character.pos.x - this.nextNode.pos.x > 5) {
-      this.player.press("left");
+      if(!this.ai.platformJumpDir) this.player.press("left");
     }
     else if(this.character.pos.x - this.nextNode.pos.x < -5) {
-      this.player.press("right");
+      if(!this.ai.platformJumpDir) this.player.press("right");
     }
     else {
       if(Math.abs(this.character.pos.y - this.nextNode.pos.y) < 30) {
@@ -383,11 +420,16 @@ export class FindPlayer extends AIState {
           this.ai.changeState(new FindPlayer(this.character));
           return;
         }
+        this.nodeTime = 0;
         this.prevNode = this.nextNode;
-        this.nextNode = this.nextNode.getNextNode(this.destNode);
+        this.nextNode = this.nodePath.shift();
         let neighbor: NavMeshNeighbor = this.prevNode.getNeighbor(this.nextNode);
         if(neighbor.isJumpNode && !neighbor.ladder) {
           this.ai.jumpTime = 2;
+        }
+        if(neighbor.platformJumpDir) {
+          this.ai.platformJumpDir = neighbor.platformJumpDir;
+          this.ai.doJump(1);
         }
       }
       else {

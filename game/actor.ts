@@ -256,6 +256,7 @@ export class Actor {
       let incAmount = inc.multiply(times);
 
       let mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, pushIncline);
+      if(mtv && mtv.magnitude > 10) mtv = game.level.getMtvDir(this, incAmount.x, incAmount.y, incAmount, false);
       this.incPos(incAmount);
       if(mtv) {
         /*

@@ -38,7 +38,8 @@ export class NavMeshNode {
         node, 
         jsonNeighbor.isJumpNode ? true : false,
         jsonNeighbor.isDropNode ? true: false, 
-        <Ladder>ladder
+        <Ladder>ladder,
+        jsonNeighbor.platformJumpDir ? jsonNeighbor.platformJumpDir : 0
       );
       this.neighbors.push(navMeshNeighbor);
     }
@@ -52,9 +53,9 @@ export class NavMeshNode {
     return node;
   }
 
-  getNextNode(destNode: NavMeshNode) {
+  getNodePath(destNode: NavMeshNode) {
     if(this === destNode) {
-      return destNode;
+      return [destNode];
     }
     let found = false;
     let pathToNode: NavMeshNode[] = [];
@@ -73,7 +74,9 @@ export class NavMeshNode {
         return;
       }
 
-      for(let neighbor of curNode.neighbors) {
+      //@ts-ignore
+      let neighbors = _.shuffle(curNode.neighbors);
+      for(let neighbor of neighbors) {
         pathToNode.push(neighbor.node);
         getNextNodeDfs(neighbor.node);
         pathToNode.pop();
@@ -82,7 +85,7 @@ export class NavMeshNode {
     
     getNextNodeDfs(this);
     if(foundPath.length > 0) {
-      return foundPath[0];
+      return foundPath;
     }
     console.log("Dest node is " + destNode.name);
     console.log("This node: " + this.name);
@@ -95,14 +98,16 @@ export class NavMeshNeighbor {
   
   node: NavMeshNode;
   isJumpNode: boolean;
+  platformJumpDir: number;
   isDropNode: boolean;
   ladder: Ladder;
 
-  constructor(node: NavMeshNode, isJumpNode: boolean, isDropNode: boolean, ladder: Ladder) {
+  constructor(node: NavMeshNode, isJumpNode: boolean, isDropNode: boolean, ladder: Ladder, platformJumpDir: number) {
     this.node = node;
     this.isJumpNode = isJumpNode;
     this.isDropNode = isDropNode;
     this.ladder = ladder;
+    this.platformJumpDir = platformJumpDir;
   }
 
 }
