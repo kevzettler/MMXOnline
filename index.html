@@ -12,24 +12,24 @@
   gtag('config', 'UA-122948333-1', { 'send_page_view': false });
 </script>
 
-<link rel="stylesheet" href="assets/gamePage.css?v=1.0.2">
-<link rel="shortcut icon" href="favicon.png?v=1.0.1" />
+<link rel="stylesheet" href="assets/gamePage.css?v=1.0.3">
+<link rel="shortcut icon" href="favicon.png?v=1.0.2" />
 <title>Mega Man X Online: Deathmatch</title>
 </head>
 <body>
-<!--<a href="https://github.com/gamemaker19/MMXOnline"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>-->
+<a href="https://github.com/gamemaker19/MMXOnline"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>
 <div id="top-flex">
   <div id="left-panel">
-    <img id="left-image" src="assets/images/X2.png?v=1.0.1" />
+    <img id="left-image" src="assets/images/X2.png?v=1.0.2" />
   </div>
   <div id="content">
-    <img id="logo" src="assets/images/logo.png?v=1.0.1" />
+    <img id="logo" src="assets/images/logo.png?v=1.0.2" />
     <div id="canvas-wrapper" style="display: none">
       <canvas id="canvas" width="298" height="222"></canvas>
       <canvas id="ui-canvas" width="298" height="222"></canvas>
     </div>
     <div id="ui" v-cloak>
-      <img src="assets/images/bg4.png?v=1.0.1" id="ui-background" />
+      <img src="assets/images/bg4.png?v=1.0.2" id="ui-background" />
       <!--Browser not supported menu-->
       <div id="bad-browser" v-show="uiData.menu === 9">
         <h1>Browser not supported!</h1><h1>Chrome, Edge and Firefox supported.</h1><h1>Mobile not supported.</h1>
@@ -45,7 +45,7 @@
       <!--Main menu-->
       <div id="mainMenu" v-show="uiData.menu === 3">
         <h1>Select Mode</h1>
-        <img src="assets/images/mmx.png?v=1.0.1" id="splash-image"/>
+        <img src="assets/images/mmx.png?v=1.0.2" id="splash-image"/>
         <div class="button-group" style="margin-top:350px">
           <button type="submit" v-on:click="goToArena()">Arena</button>
           <button type="submit" v-on:click="goTo1v1()">1 on 1</button>
@@ -102,7 +102,7 @@
           </div>
           <div class="map-box" style="vertical-align: top;width: 100%;margin-top: 20px;">
             <div style="display: inline-block;width: 300px;">
-              <img class="map-img" v-bind:src="'assets/images/maps/' + mapImage(uiData.selectedBrawlMap) + '?v=1.0.1'" />
+              <img class="map-img" v-bind:src="'assets/images/maps/' + mapImage(uiData.selectedBrawlMap) + '?v=1.0.2'" />
               <br>
               <h2 style="margin-left:20px;display:inline-block">Map</h2>
               <select v-model="uiData.selectedBrawlMap">
@@ -121,7 +121,7 @@
         <h1>Arena Map Select</h1>
         <br>
         <div class="map-box" style="display:inline-block">
-          <img class="map-img" v-bind:src="'assets/images/maps/' + mapImage(uiData.selectedArenaMap) + '?v=1.0.1'" />
+          <img class="map-img" v-bind:src="'assets/images/maps/' + mapImage(uiData.selectedArenaMap) + '?v=1.0.2'" />
         </div>
 
         <div class="game-config">
@@ -334,7 +334,7 @@
       </div>
     </div>
     <div id="ingame-pause" style="display:none"></div>
-    <img src="assets/images/border.png?v=1.0.1" id="border-image" style="pointer-events:none;" />
+    <img src="assets/images/border.png?v=1.0.2" id="border-image" style="pointer-events:none;" />
     
     <div id="options" style="display:none;width:100%;" v-cloak>
       <div id="button-group">
@@ -363,7 +363,7 @@
     </div>  
   </div>
   <div id="right-panel">
-    <img id="right-image" src="assets/images/X2.png?v=1.0.1" />
+    <img id="right-image" src="assets/images/X2.png?v=1.0.2" />
   </div>
 </div>
 
@@ -374,7 +374,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.21.4/system.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pixi-filters@2.6.1/dist/pixi-filters.min.js"></script>
-<script src="main.js?v=1.0.5"></script>
+<script src="main.js?v=1.0.6"></script>
 <script>
   SystemJS.import("game").then(function(game) {
     game.game.start();

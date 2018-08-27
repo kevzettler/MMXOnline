@@ -2125,6 +2125,8 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
                             weakness = true;
                         if (this instanceof ShotgunIceProj && character.player.weapon instanceof weapon_1.ElectricSpark)
                             weakness = true;
+                        if (character.player.isZero)
+                            weakness = false;
                         this.damager.applyDamage(character, weakness, this.weapon, this, this.constructor.name);
                         this.onHitChar(character);
                     }
@@ -4526,13 +4528,13 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                                         if (go instanceof Character && go.player.alliance !== this.player.alliance && !go.isStingCharged) {
                                             if (this.charState instanceof Idle) {
                                                 if (this.sprite.name === "zero_attack")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 1.5, false);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 2, false);
                                                 if (this.sprite.name === "zero_attack2")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 1.5, false);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 2, false);
                                                 if (this.sprite.name === "zero_attack3")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 1.5, false);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 2, true);
                                                 if (this.sprite.name === "zero_attack_dash")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 1.5, false);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 2, false);
                                             }
                                             else if (this.charState instanceof Fall) {
                                                 this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 1, false);
@@ -4604,7 +4606,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 };
                 Character.prototype.changeWeapon = function (newWeaponIndex) {
                     if (newWeaponIndex >= this.player.weapons.length)
-                        newWeaponIndex = 0;
+                        return;
                     if (this.charState.constructor.name === "Die")
                         return;
                     this.setStingCharged(false);
@@ -8469,18 +8471,18 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                     filter.blur = 2;
                 };
                 Game.prototype.quickStart = function () {
-                    var quickStartType = 2;
+                    var quickStartType = 1;
                     if (quickStartType === 1) {
                         this.uiData.menu = Menu.None;
-                        this.uiData.selectedArenaMap = "powerplant";
-                        this.uiData.selectedGameMode = "deathmatch";
+                        this.uiData.selectedArenaMap = "mountain";
+                        this.uiData.selectedGameMode = "ctf";
                         this.uiData.player1Team = "blue";
                         this.uiData.maxPlayers = 0;
                         this.uiData.numBots = 0;
-                        this.uiData.numRed = 3;
+                        this.uiData.numRed = 4;
                         this.uiData.numBlue = 3;
-                        this.uiData.playTo = 20;
-                        this.uiData.isPlayer1Zero = false;
+                        this.uiData.playTo = 1;
+                        this.uiData.isPlayer1Zero = true;
                         $("#options").show();
                         game.loadLevel(this.uiData.selectedArenaMap, false);
                     }
@@ -8489,6 +8491,7 @@ System.register("game", ["sprite", "level", "sprites", "levels", "color", "helpe
                         this.uiData.isBrawl = true;
                         this.uiData.isPlayer1Zero = true;
                         this.uiData.maxPlayers = 1;
+                        this.uiData.isPlayer1CPU = false;
                         this.uiData.isPlayer2CPU = false;
                         this.uiData.maxPlayers = 0;
                         this.uiData.numBots = 0;
@@ -11485,7 +11488,7 @@ System.register("actor", ["sprite", "point", "game", "helpers", "rect"], functio
                             var yVel = new point_14.Point(0, yDist);
                             var mtv = game_19.game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
                             if (mtv) {
-                                if (mtv.magnitude > 30 && !game_19.game.uiData.isProd) {
+                                if (mtv.magnitude > 30) {
                                     var shape1 = this.collider.shape.clone(0, yDist);
                                     var shape2 = collideData.collider.shape;
                                 }
@@ -11568,6 +11571,9 @@ System.register("actor", ["sprite", "point", "game", "helpers", "rect"], functio
                         for (var currentCollideDatas_1 = __values(currentCollideDatas), currentCollideDatas_1_1 = currentCollideDatas_1.next(); !currentCollideDatas_1_1.done; currentCollideDatas_1_1 = currentCollideDatas_1.next()) {
                             var collideData = currentCollideDatas_1_1.value;
                             var freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
+                            if (this.constructor.name === "Character" && freeVec.magnitude > 10) {
+                                return;
+                            }
                             this.incPos(freeVec.unitInc(0.01));
                         }
                     }

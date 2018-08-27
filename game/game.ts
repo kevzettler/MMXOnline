@@ -175,18 +175,18 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    let quickStartType = 2;
+    let quickStartType = 1;
     if(quickStartType === 1) {
       this.uiData.menu = Menu.None;
-      this.uiData.selectedArenaMap = "powerplant";
-      this.uiData.selectedGameMode = "deathmatch";
+      this.uiData.selectedArenaMap = "mountain";
+      this.uiData.selectedGameMode = "ctf";
       this.uiData.player1Team = "blue";
       this.uiData.maxPlayers = 0;
       this.uiData.numBots = 0;
-      this.uiData.numRed = 3;
+      this.uiData.numRed = 4;
       this.uiData.numBlue = 3;
-      this.uiData.playTo = 20;
-      this.uiData.isPlayer1Zero = false;
+      this.uiData.playTo = 1;
+      this.uiData.isPlayer1Zero = true;
       $("#options").show();
       game.loadLevel(this.uiData.selectedArenaMap, false); 
     }
@@ -195,6 +195,7 @@ class Game {
       this.uiData.isBrawl = true;
       this.uiData.isPlayer1Zero = true;
       this.uiData.maxPlayers = 1;
+      this.uiData.isPlayer1CPU = false;
       this.uiData.isPlayer2CPU = false;
       this.uiData.maxPlayers = 0;
       this.uiData.numBots = 0;

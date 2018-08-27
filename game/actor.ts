@@ -190,8 +190,7 @@ export class Actor {
         let yVel = new Point(0, yDist);
         let mtv = game.level.getMtvDir(this, 0, yDist, yVel, false, [collideData]);
         if(mtv) {
-          
-          if(mtv.magnitude > 30 && !game.uiData.isProd) {
+          if(mtv.magnitude > 30) {
             let shape1 = this.collider.shape.clone(0, yDist);
             let shape2 = collideData.collider.shape;
             //throw "MTV too big";
@@ -291,6 +290,9 @@ export class Actor {
     for(let collideData of currentCollideDatas) {
       //console.log("ALREADY COLLIDING")
       let freeVec = this.collider.shape.getMinTransVector(collideData.collider.shape);
+      if(this.constructor.name === "Character" && freeVec.magnitude > 10) {
+        return;
+      }
       this.incPos(freeVec.unitInc(0.01));
     }
   }

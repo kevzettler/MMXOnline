@@ -113,7 +113,8 @@ export class Projectile extends Actor {
       if(this instanceof BoomerangProj && character.player.weapon instanceof Sting) weakness = true;
       if(this instanceof ElectricSparkProj && character.player.weapon instanceof RollingShield) weakness = true;
       if(this instanceof ShotgunIceProj && character.player.weapon instanceof ElectricSpark) weakness = true;
-      
+      if(character.player.isZero) weakness = false;
+
       this.damager.applyDamage(character, weakness, this.weapon, this, this.constructor.name);
       this.onHitChar(character);
     }

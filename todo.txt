@@ -1,5 +1,4 @@
--Optimization:
-  -Remember to hide stuff off screen
+-Zeo balance
 
 -MTV issues:
   -Bug: when 2 projectiles are right inside each other, they behave strangely. investigate
