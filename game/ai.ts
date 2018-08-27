@@ -158,13 +158,13 @@ export class AI {
         }
       }
     }
-    if(this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.weaponIndex === 0 && this.player.character.canCharge()) {
-      if(Helpers.randomRange(0, 300) === 1) {
+    if(this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.character.canCharge()) {
+      if(Helpers.randomRange(0, 300) < 3) {
         if(this.player.weapon instanceof Buster) {
           this.maxChargeTime = Helpers.randomRange(0.75, 3);
         }
         else {
-          this.maxChargeTime = 3;
+          this.maxChargeTime = 3.5;
         }
         this.framesChargeHeld = 1;
         this.player.press("shoot");
@@ -196,10 +196,14 @@ export class AI {
       this.weaponTime += game.deltaTime;
       if(this.weaponTime > 5) {
         this.weaponTime = 0;
+        let wasBuster = (this.player.weapon instanceof Buster);
         this.character.changeWeapon(this.getRandomWeaponIndex());
+        if(wasBuster && this.maxChargeTime > 0) {
+          this.maxChargeTime = 3.5;
+        }
       }
     }
-    if(this.player.weapon.ammo === 0) {
+    if(this.player.weapon.ammo <= 0) {
       this.character.changeWeapon(this.getRandomWeaponIndex());
     }
 
@@ -236,7 +240,7 @@ export class AI {
     });
     if(weapons.length === 0) return 0;
     let weapon = weapons[Helpers.randomRange(0, weapons.length - 1)];
-    let weaponIndex = weapons.indexOf(weapon);
+    let weaponIndex = this.player.weapons.indexOf(weapon);
     return weaponIndex;
   }
 

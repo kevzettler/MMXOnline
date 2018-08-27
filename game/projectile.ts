@@ -176,7 +176,7 @@ export class Buster2Proj extends Projectile {
 export class Buster3Proj extends Projectile {
 
   constructor(weapon: Weapon, pos: Point, xDir: number, player: Player) {
-    super(weapon, pos, xDir, 350, 6, player, game.sprites["buster3"], false, 0);
+    super(weapon, pos, xDir, 350, 6, player, game.sprites["buster3"], true, 0);
     this.fadeSprite = game.sprites["buster3_fade"];
     this.reflectable = true;
   }

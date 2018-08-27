@@ -2186,7 +2186,7 @@ System.register("projectile", ["actor", "damager", "point", "sprite", "collider"
             Buster3Proj = (function (_super) {
                 __extends(Buster3Proj, _super);
                 function Buster3Proj(weapon, pos, xDir, player) {
-                    var _this = _super.call(this, weapon, pos, xDir, 350, 6, player, game_7.game.sprites["buster3"], false, 0) || this;
+                    var _this = _super.call(this, weapon, pos, xDir, 350, 6, player, game_7.game.sprites["buster3"], true, 0) || this;
                     _this.fadeSprite = game_7.game.sprites["buster3_fade"];
                     _this.reflectable = true;
                     return _this;
@@ -3693,13 +3693,13 @@ System.register("ai", ["character", "game", "projectile", "point", "helpers", "w
                             finally { if (e_25) throw e_25.error; }
                         }
                     }
-                    if (this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.weaponIndex === 0 && this.player.character.canCharge()) {
-                        if (Helpers.randomRange(0, 300) === 1) {
+                    if (this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.character.canCharge()) {
+                        if (Helpers.randomRange(0, 300) < 3) {
                             if (this.player.weapon instanceof weapon_2.Buster) {
                                 this.maxChargeTime = Helpers.randomRange(0.75, 3);
                             }
                             else {
-                                this.maxChargeTime = 3;
+                                this.maxChargeTime = 3.5;
                             }
                             this.framesChargeHeld = 1;
                             this.player.press("shoot");
@@ -3732,10 +3732,14 @@ System.register("ai", ["character", "game", "projectile", "point", "helpers", "w
                         this.weaponTime += game_10.game.deltaTime;
                         if (this.weaponTime > 5) {
                             this.weaponTime = 0;
+                            var wasBuster = (this.player.weapon instanceof weapon_2.Buster);
                             this.character.changeWeapon(this.getRandomWeaponIndex());
+                            if (wasBuster && this.maxChargeTime > 0) {
+                                this.maxChargeTime = 3.5;
+                            }
                         }
                     }
-                    if (this.player.weapon.ammo === 0) {
+                    if (this.player.weapon.ammo <= 0) {
                         this.character.changeWeapon(this.getRandomWeaponIndex());
                     }
                     this.aiState.update();
@@ -3768,7 +3772,7 @@ System.register("ai", ["character", "game", "projectile", "point", "helpers", "w
                     if (weapons.length === 0)
                         return 0;
                     var weapon = weapons[Helpers.randomRange(0, weapons.length - 1)];
-                    var weaponIndex = weapons.indexOf(weapon);
+                    var weaponIndex = this.player.weapons.indexOf(weapon);
                     return weaponIndex;
                 };
                 AI.prototype.changeState = function (newState, forceChange) {
@@ -4522,16 +4526,16 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                                         if (go instanceof Character && go.player.alliance !== this.player.alliance && !go.isStingCharged) {
                                             if (this.charState instanceof Idle) {
                                                 if (this.sprite.name === "zero_attack")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 3, false);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 1.5, false);
                                                 if (this.sprite.name === "zero_attack2")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 2, false);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 1.5, false);
                                                 if (this.sprite.name === "zero_attack3")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 3, true);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 1.5, false);
                                                 if (this.sprite.name === "zero_attack_dash")
-                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 2, false);
+                                                    this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 1.5, false);
                                             }
                                             else if (this.charState instanceof Fall) {
-                                                this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 2, false);
+                                                this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 1, false);
                                             }
                                             else if (this.charState instanceof LadderClimb)
                                                 this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberladder", 2, false);
@@ -4600,7 +4604,7 @@ System.register("character", ["actor", "game", "point", "collider", "rect", "pro
                 };
                 Character.prototype.changeWeapon = function (newWeaponIndex) {
                     if (newWeaponIndex >= this.player.weapons.length)
-                        return;
+                        newWeaponIndex = 0;
                     if (this.charState.constructor.name === "Die")
                         return;
                     this.setStingCharged(false);

@@ -428,13 +428,13 @@ export class Character extends Actor {
           let go = collideData.gameObject;
           if(go instanceof Character && go.player.alliance !== this.player.alliance && !go.isStingCharged) {
             if(this.charState instanceof Idle) {
-              if(this.sprite.name === "zero_attack") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 3, false);
-              if(this.sprite.name === "zero_attack2") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 2, false);
-              if(this.sprite.name === "zero_attack3") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 3, true);
-              if(this.sprite.name === "zero_attack_dash") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 2, false);
+              if(this.sprite.name === "zero_attack") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber1", 1.5, false);
+              if(this.sprite.name === "zero_attack2") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber2", 1.5, false);
+              if(this.sprite.name === "zero_attack3") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaber3", 1.5, false);
+              if(this.sprite.name === "zero_attack_dash") this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberdash", 1.5, false);
             }
             else if(this.charState instanceof Fall) {
-              this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 2, false);
+              this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberair", 1, false);
             }
             else if(this.charState instanceof LadderClimb) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberladder", 2, false);
             else if(this.charState instanceof WallSlide) this.zSaberWeapon.damager.applyDamage(go, false, this.zSaberWeapon, this, "zsaberslide", 2, false);
@@ -486,7 +486,7 @@ export class Character extends Actor {
   }
 
   changeWeapon(newWeaponIndex: number) {
-    if(newWeaponIndex >= this.player.weapons.length) return;
+    if(newWeaponIndex >= this.player.weapons.length) newWeaponIndex = 0;
     if(this.charState.constructor.name === "Die") return;
     this.setStingCharged(false);
     this.player.weaponIndex = newWeaponIndex;
