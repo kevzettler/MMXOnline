@@ -20,6 +20,39 @@ body {
   user-select: none; /* Standard */
 }
 
+#content {
+  width: 933px;
+  min-height: 100%;
+  /* Equal to height of footer */
+  /* But also accounting for potential margin-bottom of last child */
+  margin-bottom: -50px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.footer, .push {
+  height: 50px;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.footer {
+  width: 100%;
+  text-align: center;
+  color:#fefefe;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-size: 20px;
+  background-color: #101010;
+  line-height: 50px;
+}
+a {
+  text-decoration: none;
+  color: #dddddd
+}
+
 #mainMenu {
   width: 100%;
   height: 100%;
@@ -79,17 +112,6 @@ button {
 
 [v-cloak] {
   display: none;
-}
-
-#top-flex {
-  display: flex;
-  flex-direction: row;
-}
-
-#content {
-  width: 933px;
-  height: 98vh;
-  position: relative;
 }
 
 #canvas-wrapper {
@@ -218,16 +240,6 @@ button {
   margin-left:auto;
   margin-right:auto;
   height: 100px;
-}
-
-#left-panel {
-  flex-grow: 1;
-  height: 98vh;
-}
-
-#right-panel {
-  flex-grow: 1;
-  height: 98vh;
 }
 
 #button-switch, #button-controls, #button-controls2, #button-options, #button-quit {
@@ -375,25 +387,4 @@ body:after{
   vertical-align: top;
   margin-top:65px;
   margin-left:145px;
-}
-
-html, body {
-  height: 100%;
-  margin: 0;
-}
-.footer {
-  width: 100%;
-  padding-top: 15px;
-  padding-bottom: 15px;
-  text-align: center;
-  position: absolute;
-  bottom: 0;
-  color:#fefefe;
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-  font-size: 20px;
-  background-color: #101010;
-}
-a {
-  text-decoration: none;
-  color: #dddddd
 }
