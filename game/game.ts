@@ -175,7 +175,7 @@ class Game {
   
   doQuickStart: boolean = true;
   quickStart() {
-    let quickStartType = 1;
+    let quickStartType = 2;
     if(quickStartType === 1) {
       this.uiData.menu = Menu.None;
       this.uiData.selectedArenaMap = "mountain";
@@ -193,7 +193,8 @@ class Game {
     else {
       this.uiData.menu = Menu.None;
       this.uiData.isBrawl = true;
-      this.uiData.isPlayer1Zero = true;
+      this.uiData.isPlayer1Zero = false;
+      this.uiData.isPlayer2Zero = true;
       this.uiData.maxPlayers = 1;
       this.uiData.isPlayer1CPU = false;
       this.uiData.isPlayer2CPU = false;

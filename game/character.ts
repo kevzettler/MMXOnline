@@ -423,6 +423,7 @@ export class Character extends Actor {
       let attackHitboxes = this.currentFrame.hitboxes;
       for(let hitbox of attackHitboxes) {
         if(hitbox.flag === 0) continue;
+        //1. Check actors
         let collideDatas = game.level.checkCollisionsShape(hitbox.shape, [this]);
         for(let collideData of collideDatas) {
           let go = collideData.gameObject;
@@ -446,6 +447,24 @@ export class Character extends Actor {
             go.reflect(this.player);
           }
         }
+        //2. Check other enemy zero's sword hitboxes
+        for(let player of game.level.players) {
+          let clang = false;
+          if(player === this.player || !player.character || !player.isZero || player.alliance === this.player.alliance) continue;
+          let hitboxes = player.character.currentFrame.hitboxes;
+          for(let otherHitbox of hitboxes) {
+            if(otherHitbox.flag === 0) continue;
+            if(hitbox.isCollidingWith(otherHitbox)) {
+              this.changeSprite(this.getSprite(this.charState.defaultSprite), true);
+              player.character.changeSprite(player.character.getSprite(player.character.charState.defaultSprite), true);
+              this.playSound("ding");
+              clang = true;
+              break;
+            }
+          }
+          if(clang) break;
+        }
+        
       }
     }
   }

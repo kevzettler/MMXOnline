@@ -1006,7 +1006,7 @@ export class ShotgunIceProjSled extends Projectile {
     }
     
     let hitAbove = game.level.checkCollisionActor(this, 0, -1);
-    if(hitAbove && hitAbove.gameObject instanceof Character && hitAbove.gameObject.player.alliance === this.damager.owner.alliance) {
+    if(hitAbove && hitAbove.gameObject instanceof Character && hitAbove.gameObject.player === this.damager.owner) {
       this.character = hitAbove.gameObject;
       this.character.iceSled = this;
     }

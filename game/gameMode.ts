@@ -392,6 +392,21 @@ export class Brawl extends GameMode {
 
   checkIfWin() {
     if(!this.isOver) {
+      let allianceGroups: { [alliance: number]: Player[] } = {};
+      for(let player of this.level.players) {
+        if(!player.character) continue;
+        if(!allianceGroups[player.alliance]) allianceGroups[player.alliance] = [];
+        allianceGroups[player.alliance].push(player);
+      }
+      if(Object.keys(allianceGroups).length === 1) {
+        for(let alliance in allianceGroups) {
+          for(let player of allianceGroups[alliance]) {
+            player.won = true;
+            this.isOver = true;
+          }
+        }
+      }
+      /*
       //@ts-ignore
       let deadPlayer = _.find(this.level.players, (player) => {
         return !player.character;
@@ -404,6 +419,7 @@ export class Brawl extends GameMode {
           }
         }
       }
+      */
       if(this.isOver) {
         if(game.music) {
           game.music.stop();

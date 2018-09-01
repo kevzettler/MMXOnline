@@ -46,7 +46,8 @@ html, body {
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
   font-size: 20px;
   background-color: #101010;
-  line-height: 50px;
+  line-height: 46px;
+  vertical-align: middle;
 }
 a {
   text-decoration: none;

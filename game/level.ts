@@ -771,7 +771,7 @@ export class Level {
   }
 
   //Should actor collide with gameobject?
-  shouldTrigger(actor: Actor, gameObject: GameObject, offset: Point) {
+  shouldTrigger(actor: Actor, gameObject: GameObject, offset: Point, otherway: boolean = false): boolean {
 
     if(!actor.collider.isTrigger && gameObject instanceof Ladder) {
       if(actor.pos.y < gameObject.collider.shape.getRect().y1 && offset.y > 0) {
@@ -800,6 +800,13 @@ export class Level {
     if(actor instanceof ShotgunIceProjSled && gameObject instanceof Projectile) {
       return true;
     }
+
+    //Must go both ways
+    if(gameObject instanceof Actor && !otherway) {
+      let otherWay = this.shouldTrigger(gameObject, actor, offset.times(-1), true);
+      return otherWay;
+    }
+
     return false;
   }
 
@@ -1075,6 +1082,18 @@ export class Level {
 
   isUnderwater(actor: Actor) {
     return game.level.levelData.name === "ocean" && actor.pos.y > game.level.oceanSeaLevel;
+  }
+
+  addBot(isZero: boolean, alliance: number) {
+    if(!this.gameMode.isBrawl) {
+      return false;
+    }
+    
+    let bot = new Player("Bot", isZero, true, false, alliance, 32);
+    
+    this.players.push(bot);
+    this.localPlayers.push(bot);
+    return true;
   }
 
 }

@@ -175,6 +175,7 @@ export class Torpedo extends Weapon {
     else {      
       new TorpedoProj(this, pos.addxy(0,2), xDir, player, 1, 30);
       new TorpedoProj(this, pos.addxy(0,1), xDir, player, 1, 15);
+      new TorpedoProj(this, pos.addxy(0,0), xDir, player, 1, 0);
       new TorpedoProj(this, pos.addxy(0,-1), xDir, player, 1, -15);
       new TorpedoProj(this, pos.addxy(0,-2), xDir, player, 1, -30);
     }
