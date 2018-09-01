@@ -159,7 +159,7 @@ export class AI {
       }
     }
     if(this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.character.canCharge()) {
-      if(Helpers.randomRange(0, 300) < 3) {
+      if(Helpers.randomRange(0, 300) < 1) {
         if(this.player.weapon instanceof Buster) {
           this.maxChargeTime = Helpers.randomRange(0.75, 3);
         }

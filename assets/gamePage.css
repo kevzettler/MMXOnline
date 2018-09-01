@@ -12,8 +12,8 @@ body {
   margin: 0;
   background-color: black;
   /*background-image: url("images/bg2.jpg?v=1.0.1");*/
-  height:100vh;
-  overflow: scroll;
+  height:98vh;
+  overflow: auto;
   -webkit-user-select: none; /* Safari */        
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE10+/Edge */
@@ -88,7 +88,8 @@ button {
 
 #content {
   width: 933px;
-  height: 100vh;
+  height: 98vh;
+  position: relative;
 }
 
 #canvas-wrapper {
@@ -221,12 +222,12 @@ button {
 
 #left-panel {
   flex-grow: 1;
-  height: 100vh;
+  height: 98vh;
 }
 
 #right-panel {
   flex-grow: 1;
-  height: 100vh;
+  height: 98vh;
 }
 
 #button-switch, #button-controls, #button-controls2, #button-options, #button-quit {
@@ -374,4 +375,25 @@ body:after{
   vertical-align: top;
   margin-top:65px;
   margin-left:145px;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+.footer {
+  width: 100%;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  text-align: center;
+  position: absolute;
+  bottom: 0;
+  color:#fefefe;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-size: 20px;
+  background-color: #101010;
+}
+a {
+  text-decoration: none;
+  color: #dddddd
 }

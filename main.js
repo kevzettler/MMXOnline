@@ -3696,7 +3696,7 @@ System.register("ai", ["character", "game", "projectile", "point", "helpers", "w
                         }
                     }
                     if (this.aiState.randomlyChargeWeapon && !this.player.isZero && this.framesChargeHeld === 0 && this.player.character.canCharge()) {
-                        if (Helpers.randomRange(0, 300) < 3) {
+                        if (Helpers.randomRange(0, 300) < 1) {
                             if (this.player.weapon instanceof weapon_2.Buster) {
                                 this.maxChargeTime = Helpers.randomRange(0.75, 3);
                             }
